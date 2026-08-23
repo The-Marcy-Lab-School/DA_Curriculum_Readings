@@ -118,14 +118,19 @@ Type ls to begin.</div>
 
 <section>
 <h2>8. Save a copy of your work</h2>
-<p>Your answers are stored only in this browser while you work. There is no database. Keep a copy when you finish.</p>
+<p>Your answers are stored only in this browser while you work. There is no database. When you finish, keep a copy of your work in whichever format is most useful.</p>
 <div class="grid">
-<div class="card"><h3>Markdown</h3><p>Best if you want a readable file to store in GitHub.</p><button id="makeMD">Create Markdown file</button></div>
-<div class="card"><h3>JSON</h3><p>Useful if you want a machine-readable record of your responses.</p><button id="makeJSON">Create JSON file</button></div>
-<div class="card"><h3>Plain text</h3><p>Show a plain-text version you can copy into a document or LMS text box. You can also save it as a <span class="code">.txt</span> file.</p><button id="copyPlain">Show plain text</button> <button id="downloadPlain" style="margin-top:.5rem">Create TXT file</button></div>
+<div class="card"><h3>Markdown</h3><p>Best for GitHub because the file is readable right in the repository.</p><button id="makeMD" type="button">Create Markdown file</button></div>
+<div class="card"><h3>JSON</h3><p>Useful as a machine-readable record of your responses.</p><button id="makeJSON" type="button">Create JSON file</button></div>
+<div class="card"><h3>Plain text</h3><p>Show a plain-text version you can paste into a document or LMS text box, or save it as a <span class="code">.txt</span> file.</p><button id="showPlain" type="button">Show plain text</button><button id="makeTXT" type="button" style="margin-top:.5rem">Create TXT file</button></div>
 </div>
 <div id="submitfb" class="feedback" tabindex="-1"></div>
-<div id="manualCopyWrap" style="display:none;margin-top:1rem" class="card"><label for="manualCopy"><strong>Your plain-text submission:</strong></label><p>Select the text below and use your normal copy shortcut (<strong>Ctrl+C</strong> on Windows/ChromeOS or <strong>Command+C</strong> on macOS). This does not depend on browser clipboard permissions.</p><textarea id="manualCopy" style="min-height:260px"></textarea><button id="selectPlain" style="margin-top:.6rem">Select all text</button></div>
+<div id="plainPanel" class="card" style="display:none;margin-top:1rem">
+<label for="plainOutput"><strong>Your plain-text submission</strong></label>
+<p>Select the text below and copy it with <strong>Ctrl+C</strong> on Windows/ChromeOS or <strong>Command+C</strong> on macOS.</p>
+<textarea id="plainOutput" style="min-height:280px"></textarea>
+<button id="selectPlain" type="button" style="margin-top:.6rem">Select all text</button>
+</div>
 <details><summary>What do I do with the file?</summary><p>Keep a copy. If your instructor asks you to store it in GitHub, they will tell you which repository and folder to use. The reading never asks for your GitHub password or token.</p></details>
 </section>
 
@@ -239,71 +244,84 @@ const ev=document.getElementById("evidence");ev.value=localStorage.getItem("shap
 document.getElementById("starter").onclick=()=>show("starterfb","Try: <strong>“I classify members.csv as structured because each row uses the same fields: …”</strong>",true);
 function save(){localStorage.setItem("shapeReadingWork",JSON.stringify(work));localStorage.setItem("shapeReadingEvidence",work.evidence||ev?.value||"")}
 try{const old=JSON.parse(localStorage.getItem("shapeReadingWork")||"null");if(old){work.terminal=old.terminal||[];work.answers=old.answers||{};work.evidence=localStorage.getItem("shapeReadingEvidence")||old.evidence||""}}catch(e){}
-function snapshot(){return {activity:"Module 0 - What Shape Is This Data?",answers:work.answers,evidence:document.getElementById("evidence").value.trim(),terminal_commands:work.terminal,generated:new Date().toISOString()}}
-function md(s){return `# Module 0 — What Shape Is This Data?
-
-Generated: ${s.generated}
-
-## Classification Evidence
-
-${s.evidence||"(No written evidence recorded.)"}
-
-## Check Responses
-
-${Object.entries(s.answers).map(([k,v])=>`- ${k}: ${v}`).join("\n")||"(No responses recorded.)"}
-
-## Terminal Practice
-
-${s.terminal.map((x,i)=>`${i+1}. \`${x.command}\`\n\n   [Output]:\n   \`\`\`\n${x.output}\n   \`\`\``).join("\n\n")||"(No terminal commands recorded.)"}
-`}
-function plain(s){return `Module 0 - What Shape Is This Data?
-Generated: ${s.generated}
-
-Classification evidence:
-${s.evidence||"(none)"}
-
-Check responses:
-${Object.entries(s.answers).map(([k,v])=>`${k}: ${v}`).join("\n")||"(none)"}
-
-Terminal practice:
-${s.terminal.map((x,i)=>`${i+1}. ${x.command}\n[Output]:\n${x.output}`).join("\n\n")||"(none)"}`}
-function downloadFile(name,content,type){
-  const blob=new Blob([content],{type:type||"text/plain;charset=utf-8"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;
-  a.download=name;
-  a.style.display="none";
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},500);
+function snapshot(){
+  return {
+    activity:"Module 0 - What Shape Is This Data?",
+    answers:work.answers,
+    evidence:document.getElementById("evidence").value.trim(),
+    terminal_commands:work.terminal,
+    generated:new Date().toISOString()
+  };
 }
-function showPlainText(){
-  const box=document.getElementById("manualCopy");
-  const wrap=document.getElementById("manualCopyWrap");
-  box.value=plain(snapshot());
-  wrap.style.display="block";
+function markdownText(s){
+  let checks=Object.entries(s.answers).map(([k,v])=>"- "+k+": "+v).join("\n");
+  if(!checks) checks="(No responses recorded.)";
+  let terminal=s.terminal_commands.map((x,i)=>{
+    return (i+1)+". `"+x.command+"`\n\n[Output]:\n```\n"+x.output+"\n```";
+  }).join("\n\n");
+  if(!terminal) terminal="(No terminal commands recorded.)";
+  return "# Module 0 — What Shape Is This Data?\n\n"+
+    "Generated: "+s.generated+"\n\n"+
+    "## Classification Evidence\n\n"+(s.evidence||"(No written evidence recorded.)")+"\n\n"+
+    "## Check Responses\n\n"+checks+"\n\n"+
+    "## Terminal Practice\n\n"+terminal+"\n";
+}
+function plainText(s){
+  let checks=Object.entries(s.answers).map(([k,v])=>k+": "+v).join("\n");
+  if(!checks) checks="(none)";
+  let terminal=s.terminal_commands.map((x,i)=>(i+1)+". "+x.command+"\n[Output]:\n"+x.output).join("\n\n");
+  if(!terminal) terminal="(none)";
+  return "Module 0 - What Shape Is This Data?\n"+
+    "Generated: "+s.generated+"\n\n"+
+    "Classification evidence:\n"+(s.evidence||"(none)")+"\n\n"+
+    "Check responses:\n"+checks+"\n\n"+
+    "Terminal practice:\n"+terminal+"\n";
+}
+function downloadBlob(filename,content,mime){
+  try{
+    const blob=new Blob([content],{type:mime});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=filename;
+    a.rel="noopener";
+    document.body.appendChild(a);
+    a.click();
+    window.setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+    return true;
+  }catch(err){
+    console.error(err);
+    return false;
+  }
+}
+function exportMessage(ok,label){
+  show("submitfb",ok?"<strong>"+label+" created.</strong> Keep a copy of the file.":"<strong>The file could not be created in this browser.</strong> Use the plain-text option below instead.",ok);
+}
+document.getElementById("makeMD").addEventListener("click",()=>{
+  const ok=downloadBlob("module0_structured_data_responses.md",markdownText(snapshot()),"text/markdown;charset=utf-8");
+  exportMessage(ok,"Markdown file");
+});
+document.getElementById("makeJSON").addEventListener("click",()=>{
+  const ok=downloadBlob("module0_structured_data_responses.json",JSON.stringify(snapshot(),null,2),"application/json;charset=utf-8");
+  exportMessage(ok,"JSON file");
+});
+document.getElementById("makeTXT").addEventListener("click",()=>{
+  const ok=downloadBlob("module0_structured_data_responses.txt",plainText(snapshot()),"text/plain;charset=utf-8");
+  exportMessage(ok,"Plain-text file");
+});
+document.getElementById("showPlain").addEventListener("click",()=>{
+  const panel=document.getElementById("plainPanel");
+  const box=document.getElementById("plainOutput");
+  box.value=plainText(snapshot());
+  panel.style.display="block";
   box.focus();
   box.select();
-  show("submitfb","<strong>Plain text is ready below.</strong> Use your normal copy shortcut, or create a TXT file instead.",true);
-}
-document.getElementById("makeMD").onclick=()=>{
-  const content=md(snapshot());
-  downloadFile("module0_structured_data_responses.md",content,"text/plain;charset=utf-8");
-  show("submitfb","<strong>Markdown file created.</strong> Keep the <code>.md</code> file as your copy; it is GitHub-friendly and readable in the repository.",true);
-};
-document.getElementById("makeJSON").onclick=()=>{
-  downloadFile("module0_structured_data_responses.json",JSON.stringify(snapshot(),null,2),"application/json;charset=utf-8");
-  show("submitfb","<strong>JSON file created.</strong> Keep the <code>.json</code> file as a machine-readable copy of your work.",true);
-};
-document.getElementById("downloadPlain").onclick=()=>{
-  downloadFile("module0_structured_data_responses.txt",plain(snapshot()),"text/plain;charset=utf-8");
-  show("submitfb","<strong>Plain-text file created.</strong> Keep the <code>.txt</code> file or paste its contents wherever your instructor asks.",true);
-};
-document.getElementById("copyPlain").onclick=showPlainText;
-document.getElementById("selectPlain").onclick=()=>{
-  const box=document.getElementById("manualCopy");
-  box.focus();box.select();
-};
+  show("submitfb","<strong>Plain text is ready below.</strong> Use your normal copy shortcut.",true);
+});
+document.getElementById("selectPlain").addEventListener("click",()=>{
+  const box=document.getElementById("plainOutput");
+  box.focus();
+  box.select();
+});
 </script>
 </body></html>
