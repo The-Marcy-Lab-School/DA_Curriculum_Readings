@@ -24,15 +24,140 @@ details{background:#fff;border:1px solid var(--line);border-radius:12px;padding:
 <section><h2>5. Staging is the “what goes in the next snapshot?” step</h2><p>Editing a file does not automatically make that change part of your next commit. <span class="code">git add</span> places selected changes into the <strong>staging area</strong>.</p><div class="grid"><div class="card"><h3>Working files</h3><p>What currently exists in your project folder.</p></div><div class="card"><h3>Staging area</h3><p>The changes you have selected for the next commit.</p></div><div class="card"><h3>Commit history</h3><p>Snapshots you have already saved.</p></div></div><div class="card" style="margin-top:1rem"><p><strong>You edited two files but only want one in the next commit. What should you do?</strong></p><button class="choice stage" data-a="add">Use git add on the file you want to include.</button><button class="choice stage" data-a="push">Push first and decide later.</button><button class="choice stage" data-a="init">Run git init again to choose the file.</button><div id="stagefb" class="feedback" tabindex="-1"></div></div></section>
 <section><h2>6. Commit messages are for future humans</h2><p>A commit message should tell someone what changed without forcing them to open every file.</p><div class="card"><p><strong>Which message would be most useful six weeks from now?</strong></p><button class="choice msg" data-a="bad">update</button><button class="choice msg" data-a="bad2">stuff</button><button class="choice msg" data-a="good">Add tree-count summary to project notes</button><div id="msgfb" class="feedback" tabindex="-1"></div></div><div class="callout" style="margin-top:1rem"><strong>Good habit:</strong> make the message specific enough that the history tells a story.</div></section>
 <section><h2>7. Local vs. remote: one last check</h2><div class="card"><p>A classmate says, “I committed my work, so my instructor can already see it on GitHub.” What is missing from that reasoning?</p><button class="choice finalq" data-a="push">They may still need to push the local commit to the GitHub remote.</button><button class="choice finalq" data-a="status">They need to delete the local repository first.</button><button class="choice finalq" data-a="none">Nothing—commit and push are the same action.</button><div id="finalfb" class="feedback" tabindex="-1"></div></div></section>
-<section><h2>8. Optional practice</h2><div class="card"><h3>GitHub Hello World</h3><p>A hands-on GitHub walkthrough for repositories, commits, branches, and pull requests. It goes beyond today's lesson, so treat it as optional exploration.</p><p><a href="https://docs.github.com/en/get-started/using-github/hello-world" target="_blank" rel="noopener">Open GitHub Hello World</a></p></div></section>
+
+<section><h2>8. Save a copy of your work</h2>
+<p>Your responses are stored only in this browser while you work. There is no database. Keep a copy when you finish.</p>
+<div class="grid">
+  <div class="card"><h3>Markdown</h3><p>Best for GitHub because it is readable directly in the repository.</p><button id="makeMD" type="button">Create Markdown file</button></div>
+  <div class="card"><h3>JSON</h3><p>Useful as a machine-readable record of your responses.</p><button id="makeJSON" type="button">Create JSON file</button></div>
+  <div class="card"><h3>Plain text</h3><p>Show your responses as plain text or create a TXT file.</p><button id="showPlain" type="button">Show plain text</button><button id="makeTXT" type="button" style="margin-top:.5rem">Create TXT file</button></div>
+</div>
+<div id="submitfb" class="feedback" tabindex="-1"></div>
+<div id="plainPanel" class="card" style="display:none;margin-top:1rem">
+  <label for="plainOutput"><strong>Your plain-text submission</strong></label>
+  <p>Select the text below and copy it with <strong>Ctrl+C</strong> on Windows/ChromeOS or <strong>Command+C</strong> on macOS.</p>
+  <textarea id="plainOutput" style="min-height:280px"></textarea>
+  <button id="selectPlain" type="button" style="margin-top:.6rem">Select all text</button>
+</div>
+<details><summary>What do I do with the file?</summary><p>Keep a copy. If your instructor asks you to store it in GitHub, they will tell you which repository and folder to use. This reading never asks for your GitHub password or token.</p></details>
+</section>
+
+<div class="card"><h3>GitHub Hello World</h3><p>A hands-on GitHub walkthrough for repositories, commits, branches, and pull requests. It goes beyond today's lesson, so treat it as optional exploration.</p><p><a href="https://docs.github.com/en/get-started/using-github/hello-world" target="_blank" rel="noopener">Open GitHub Hello World</a></p></div></section>
 </main><footer><div class="wrap"><strong>Next:</strong> practice the workflow in a simulated terminal before doing it for real in class.</div></footer>
 <script>
-const bar=document.getElementById('bar');function prog(){const d=document.documentElement,m=d.scrollHeight-d.clientHeight;bar.style.width=(m?d.scrollTop/m*100:100)+'%'}document.addEventListener('scroll',prog,{passive:true});prog();
-function show(id,msg,ok=true){const e=document.getElementById(id);e.innerHTML=msg;e.className='feedback show'+(ok?'':' bad');e.focus()}
+const work={answers:{}};
+const bar=document.getElementById('bar');
+function prog(){const d=document.documentElement,m=d.scrollHeight-d.clientHeight;bar.style.width=(m?d.scrollTop/m*100:100)+'%'}
+document.addEventListener('scroll',prog,{passive:true});prog();
+
+function show(id,msg,ok=true){
+  const e=document.getElementById(id);
+  e.innerHTML=msg;
+  e.className='feedback show'+(ok?'':' bad');
+  e.focus();
+}
+function save(){
+  localStorage.setItem('gitStoryWork',JSON.stringify(work));
+}
+try{
+  const old=JSON.parse(localStorage.getItem('gitStoryWork')||'null');
+  if(old&&old.answers) work.answers=old.answers;
+}catch(e){}
+
 document.querySelectorAll('[data-flip]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.flip).classList.toggle('show'));
-document.querySelectorAll('.gitgh').forEach(b=>b.onclick=()=>show('gitghfb',b.dataset.a==='a'?'<strong>Correct.</strong> Git records the commits locally. GitHub does not receive them until you send them to the remote.':'<strong>Not quite.</strong> A local commit can exist entirely on your computer. GitHub only gets it when you push.',b.dataset.a==='a'));
-document.querySelectorAll('.order').forEach(b=>b.onclick=()=>show('orderfb',b.dataset.a==='good'?'<strong>Correct.</strong> First create the repository, then select changes, save a commit, and finally send commits to the remote.':'<strong>Not yet.</strong> You cannot sensibly push or commit a brand-new project before Git has been initialized and changes have been staged.',b.dataset.a==='good'));
-document.querySelectorAll('.stage').forEach(b=>b.onclick=()=>show('stagefb',b.dataset.a==='add'?'<strong>Correct.</strong> git add lets you choose what will be included in the next commit.':'<strong>Not quite.</strong> Staging is the step that selects changes for the next commit.',b.dataset.a==='add'));
-document.querySelectorAll('.msg').forEach(b=>b.onclick=()=>show('msgfb',b.dataset.a==='good'?'<strong>Correct.</strong> The message names the specific change.':'<strong>Try again.</strong> A future reader would not know what “update” or “stuff” changed.',b.dataset.a==='good'));
-document.querySelectorAll('.finalq').forEach(b=>b.onclick=()=>show('finalfb',b.dataset.a==='push'?'<strong>Correct.</strong> Commit saves locally; push sends commits to the remote.':'<strong>Not quite.</strong> Commit and push are separate actions.',b.dataset.a==='push'));
+
+function bind(sel,id,correct,key,good,bad){
+  document.querySelectorAll(sel).forEach(b=>b.onclick=()=>{
+    work.answers[key]=b.dataset.a; save();
+    show(id,b.dataset.a===correct?'<strong>Correct.</strong> '+good:'<strong>Not quite.</strong> '+bad,b.dataset.a===correct);
+  });
+}
+bind('.gitgh','gitghfb','a','git_vs_github',
+  'Git records the commits locally. GitHub does not receive them until you send them to the remote.',
+  'A local commit can exist entirely on your computer. GitHub only gets it when you push.');
+bind('.order','orderfb','good','workflow_order',
+  'First create the repository, then select changes, save a commit, and finally send commits to the remote.',
+  'You cannot sensibly push or commit a brand-new project before Git has been initialized and changes have been staged.');
+bind('.stage','stagefb','add','staging',
+  'git add lets you choose what will be included in the next commit.',
+  'Staging is the step that selects changes for the next commit.');
+bind('.msg','msgfb','good','commit_message',
+  'The message names the specific change.',
+  'A future reader would not know what “update” or “stuff” changed.');
+bind('.finalq','finalfb','push','local_vs_remote',
+  'Commit saves locally; push sends commits to the remote.',
+  'Commit and push are separate actions.');
+
+function snapshot(){
+  return {
+    activity:'Module 0 - Git Saves the Story',
+    answers:work.answers,
+    generated:new Date().toISOString()
+  };
+}
+function markdownText(s){
+  const labels={
+    git_vs_github:'Git vs. GitHub check',
+    workflow_order:'Git workflow order',
+    staging:'Staging check',
+    commit_message:'Commit-message check',
+    local_vs_remote:'Local vs. remote check'
+  };
+  let rows=Object.entries(s.answers).map(([k,v])=>'- **'+(labels[k]||k)+'**: '+v).join('\n');
+  if(!rows) rows='(No responses recorded.)';
+  return '# Module 0 — Git Saves the Story\n\nGenerated: '+s.generated+
+    '\n\n## Responses\n\n'+rows+'\n';
+}
+function plainText(s){
+  const labels={
+    git_vs_github:'Git vs. GitHub check',
+    workflow_order:'Git workflow order',
+    staging:'Staging check',
+    commit_message:'Commit-message check',
+    local_vs_remote:'Local vs. remote check'
+  };
+  let rows=Object.entries(s.answers).map(([k,v])=>(labels[k]||k)+': '+v).join('\n');
+  if(!rows) rows='(No responses recorded.)';
+  return 'Module 0 - Git Saves the Story\nGenerated: '+s.generated+
+    '\n\nResponses:\n'+rows+'\n';
+}
+function downloadBlob(name,content,mime){
+  try{
+    const blob=new Blob([content],{type:mime});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=name; a.style.display='none';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+    return true;
+  }catch(e){ return false; }
+}
+function exportMessage(ok,label){
+  show('submitfb',
+    ok?'<strong>'+label+' created.</strong> Keep a copy of the file.':
+       '<strong>Could not create the file in this browser.</strong> Use the plain-text option instead.',
+    ok);
+}
+document.getElementById('makeMD').onclick=()=>exportMessage(
+  downloadBlob('module0_git_saves_the_story_responses.md',markdownText(snapshot()),'text/plain;charset=utf-8'),
+  'Markdown file'
+);
+document.getElementById('makeJSON').onclick=()=>exportMessage(
+  downloadBlob('module0_git_saves_the_story_responses.json',JSON.stringify(snapshot(),null,2),'application/json;charset=utf-8'),
+  'JSON file'
+);
+document.getElementById('makeTXT').onclick=()=>exportMessage(
+  downloadBlob('module0_git_saves_the_story_responses.txt',plainText(snapshot()),'text/plain;charset=utf-8'),
+  'TXT file'
+);
+document.getElementById('showPlain').onclick=()=>{
+  const panel=document.getElementById('plainPanel'),box=document.getElementById('plainOutput');
+  box.value=plainText(snapshot());
+  panel.style.display='block';
+  box.focus(); box.select();
+  show('submitfb','<strong>Plain text is ready below.</strong> Use Ctrl+C or Command+C.',true);
+};
+document.getElementById('selectPlain').onclick=()=>{
+  const box=document.getElementById('plainOutput'); box.focus(); box.select();
+};
 </script></body></html>
