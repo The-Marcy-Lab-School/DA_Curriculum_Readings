@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build It Once, Use It Again | Functions, Parameters & Return Values</title>
+<style>
+:root{--ink:#19221c;--paper:#fbfaf6;--card:#fff;--forest:#21482f;--sage:#dce9df;--blue:#2b78b5;--gold:#e0ad2e;--line:#d6ddd8;--good:#e7f5eb;--bad:#fbe9ec;--focus:#ffbf47;--code:#151b17}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--paper);line-height:1.62}button,textarea,select{font:inherit}button:focus,textarea:focus,select:focus{outline:4px solid var(--focus);outline-offset:3px}
+header{background:var(--forest);color:#fff;padding:3rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.4rem,6vw,4.6rem);line-height:1.02;margin:.4rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{text-transform:uppercase;font-weight:800;letter-spacing:.08em;color:#dce9df}.lead{font-size:1.18rem;max-width:820px}.meta{display:flex;gap:.6rem;flex-wrap:wrap}.pill{border:1px solid #a9bcad;border-radius:999px;padding:.3rem .7rem}
+.sticky{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:5}.track{height:8px;background:#e8ece9}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.55rem 1rem;color:#56615a}
+main{padding:2rem 1.2rem 5rem}section{margin-bottom:3.2rem}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.25rem;box-shadow:0 3px 14px #1420190d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem}
+.callout{border-left:6px solid var(--blue);background:#edf6fb;padding:1rem 1.2rem;border-radius:10px}.warn{border-left:6px solid var(--gold);background:#fff5dc;padding:1rem 1.2rem;border-radius:10px}
+button{border:2px solid var(--forest);border-radius:11px;padding:.7rem 1rem;background:#fff;color:var(--forest);font-weight:750;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
+.term{min-height:145px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:.5rem}.flowbox{background:var(--sage);padding:1rem;border-radius:14px;text-align:center;font-weight:700}.arrow{font-size:1.7rem}
+.code{background:var(--code);color:#f5f7f5;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:120px;margin:0}.codeactions,.actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}.code button{background:#26342b;color:#fff;border-color:#cad8cd}
+textarea{width:100%;min-height:100px;padding:.75rem;border:2px solid #aeb8b1;border-radius:10px}.hint{display:none;background:#f3f0fb;border-radius:12px;padding:1rem}.hint.show{display:block}.bridge{border-top:8px solid var(--gold)}.export{background:#f0f4f1;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{color:#59635d;font-size:.92rem}
+@media(max-width:650px){.flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg);text-align:center}h2{font-size:1.65rem}}
+</style></head><body>
+<header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Build It Once. Use It Again.</h1>
+<p class="lead">A community center sends dozens of event reminders. Would you rather rewrite the same formatting steps for every event—or teach the computer one named job that can handle different event details and hand a finished result back?</p>
+<div class="meta"><span class="pill">~16–18 minutes</span><span class="pill">Interactive</span><span class="pill">No Python setup needed</span><span class="pill">Saves locally</span></div></div></header>
+<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Goal: trace a function call, distinguish parameters from arguments, and explain why <code>return</code> is different from <code>print</code>.</p></div>
+<main>
+<section><h2>1. Vocabulary: the function toolkit</h2><p>Flip each card. These words describe different parts of the same workflow.</p><div class="grid">
+<button type="button" class="card term"><span class="front"><strong>function</strong><br><span class="small">Flip card</span></span><span class="back"><strong>Function</strong><br>A named block of code for a reusable job.</span></button>
+<button type="button" class="card term"><span class="front"><strong>parameter</strong><br><span class="small">Flip card</span></span><span class="back"><strong>Parameter</strong><br>A name in the function definition that receives an input.</span></button>
+<button type="button" class="card term"><span class="front"><strong>argument</strong><br><span class="small">Flip card</span></span><span class="back"><strong>Argument</strong><br>The actual value supplied when the function is called.</span></button>
+<button type="button" class="card term"><span class="front"><strong>return value</strong><br><span class="small">Flip card</span></span><span class="back"><strong>Return value</strong><br>The value a function sends back to the code that called it.</span></button>
+</div></section>
+
+<section><h2>2. Recall: code can repeat work</h2><div class="card"><p>Suppose an outer loop runs 3 times and an inner loop runs 2 times for every outer pass. How many times does the inner action happen?</p>
+<button type="button" class="choice recall" data-a="5">5</button><button type="button" class="choice recall" data-a="6">6</button><button type="button" class="choice recall" data-a="9">9</button><div id="recfb" class="feedback" tabindex="-1"></div></div>
+<p class="callout"><strong>Why recall loops?</strong> You already know how to repeat an action. Functions add another useful idea: <em>name a job once, then call that job whenever you need it.</em></p></section>
+
+<section><h2>3. The shape of a function</h2><div class="flow"><div class="flowbox">Input<br><span class="small">arguments → parameters</span></div><div class="arrow">→</div><div class="flowbox">Process<br><span class="small">function body</span></div><div class="arrow">→</div><div class="flowbox">Output<br><span class="small">return value</span></div></div>
+<p>Not every function needs every part, but this input → process → output model is a strong way to read unfamiliar functions.</p></section>
+
+<section><h2>4. Defining is not calling</h2><p>Predict before revealing the simulated Python result.</p><div class="code"><div id="defineScreen" class="screen">def announce():
+    print("Doors open at 6")
+
+# No call appears below.</div><div class="codeactions"><button type="button" id="defrun">Reveal simulated output</button></div></div><div id="deffb" class="feedback" tabindex="-1"></div>
+<div class="card" style="margin-top:1rem"><p><strong>What would make the function body run?</strong></p><button type="button" class="choice defq" data-a="call"><code>announce()</code></button><button type="button" class="choice defq" data-a="def"><code>def announce():</code></button><button type="button" class="choice defq" data-a="string"><code>"Doors open at 6"</code></button><div id="defqfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>5. Parameters are placeholders; arguments are real values</h2><div class="code"><div class="screen">def make_tag(item):
+    return "ITEM: " + item
+
+label = make_tag("notebook")</div></div>
+<div class="card" style="margin-top:1rem"><p><strong>Which statement is correct?</strong></p>
+<button type="button" class="choice parq" data-a="right"><code>item</code> is the parameter; <code>"notebook"</code> is the argument.</button>
+<button type="button" class="choice parq" data-a="reverse"><code>"notebook"</code> is the parameter; <code>item</code> is the argument.</button>
+<button type="button" class="choice parq" data-a="both">Both are parameters.</button><div id="parfb" class="feedback" tabindex="-1"></div></div>
+<p class="warn">A parameter is written in the <code>def</code> line. An argument appears in a specific function call.</p></section>
+
+<section><h2>6. Trace a call</h2><div class="code"><div class="screen">def add_fee(amount):
+    total = amount + 4
+    return total
+
+receipt_total = add_fee(11)</div></div>
+<div class="card" style="margin-top:1rem"><p><strong>What happens in the correct order?</strong></p>
+<button type="button" class="choice traceq" data-a="right">Call with 11 → <code>amount</code> receives 11 → body runs → 15 is returned</button>
+<button type="button" class="choice traceq" data-a="body">Body runs → function is called → <code>amount</code> receives 11 → 15 is returned</button>
+<button type="button" class="choice traceq" data-a="return">15 is returned → <code>amount</code> receives 11 → body runs</button><div id="tracefb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>7. The big distinction: display vs. hand back</h2><p>These functions can look similar when you run them, but they behave differently when another line needs the result.</p>
+<div class="grid"><div class="code"><div class="screen">def show_discount(price):
+    print(price - 2)</div></div><div class="code"><div class="screen">def get_discount(price):
+    return price - 2</div></div></div>
+<div class="card" style="margin-top:1rem"><p><strong>You need to save the discounted number and multiply it later. Which function is designed for that?</strong></p>
+<button type="button" class="choice retq" data-a="return"><code>get_discount</code>, because it returns the value</button>
+<button type="button" class="choice retq" data-a="print"><code>show_discount</code>, because seeing a number means Python handed it back</button>
+<button type="button" class="choice retq" data-a="same">Either one; <code>print</code> and <code>return</code> do the same job</button><div id="retfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>8. Debug the invisible <code>None</code></h2><div class="code"><div id="noneScreen" class="screen">def square_display(x):
+    print(x * x)
+
+saved = square_display(3)
+print(saved)</div><div class="codeactions"><button type="button" id="nonerun">Reveal simulated output</button></div></div><div id="nonefb" class="feedback" tabindex="-1"></div>
+<p class="callout">The function displays <code>9</code>, but because it has no explicit <code>return</code>, the call's return value is <code>None</code>. Visible output and returned output are not the same thing.</p></section>
+
+<section><h2>9. Why split code into functions?</h2><div class="card"><p>A program cleans a username in four different places. The cleanup rules may change next week. Which design is easiest to reuse and test?</p>
+<button type="button" class="choice reuseq" data-a="function">Put the cleanup logic in one function and call it where needed.</button>
+<button type="button" class="choice reuseq" data-a="copy">Copy the cleanup lines into all four places.</button>
+<button type="button" class="choice reuseq" data-a="long">Put the entire program into one long block so nothing is separated.</button><div id="reusefb" class="feedback" tabindex="-1"></div></div>
+<label for="why"><strong>Explain in your own words:</strong> How can a small function make testing easier?</label><textarea id="why" data-save placeholder="Try thinking about how many pieces you would need to check at once."></textarea><p><button type="button" id="hintbtn">Generate a thinking hint</button></p><div id="hint" class="hint"></div></section>
+
+<section class="bridge"><h2>10. Required bridge to lecture + project</h2><p>You just practiced reading the shape of a function, tracing an argument into a parameter, recognizing that a definition does not run until it is called, and separating <code>print</code> from <code>return</code>. In lecture, you will write and call functions live, customize them with parameters, and use returned values in later expressions. Those habits matter for the larger project because its work is divided into standalone functions such as <code>read_batch_file</code>, <code>validate_line</code>, <code>process_transactions</code>, <code>print_summary</code>, and <code>export_to_json</code>.</p>
+<div class="card"><p><strong>Bridge challenge — new situation:</strong> A future function receives one record, checks it, and needs to give a cleaned record to another function. Which design habit should you be ready to use?</p>
+<button type="button" class="choice bridgeq" data-a="return">Receive the record through a parameter and <code>return</code> the cleaned result.</button>
+<button type="button" class="choice bridgeq" data-a="print">Only print the cleaned record and assume the next function can use the printed text.</button>
+<button type="button" class="choice bridgeq" data-a="copy">Copy the checking code into every place that needs it.</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
+<label for="bring"><strong>Bring to lecture:</strong> When you read a new function, what will you look for to identify its input, process, and output?</label><textarea id="bring" data-save></textarea></section>
+
+<section><h2>11. Keep a copy of your work</h2><div class="export"><div class="actions"><button type="button" id="md">Create Markdown file</button><button type="button" id="json">Create JSON file</button><button type="button" id="txt">Create TXT file</button><button type="button" id="show">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:260px"></textarea><p><button type="button" id="selectall">Select all text</button></p></div></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let history=[];const KEY="functions-params-return-reading-v1";
+function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
+$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
+function quiz(cls,fb,correct,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{const ok=b.dataset.a===correct,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
+quiz(".recall","#recfb","6",{5:"Nested loops multiply their passes: 3 outer passes × 2 inner passes = 6.",6:"3 outer passes × 2 inner passes each = 6 total inner actions.",9:"The inner loop runs 2 times per outer pass, so 3 × 2 = 6, not 3 × 3."});
+quiz(".defq","#defqfb","call",{call:"Calling announce() tells Python to run the function body.",def:"The def statement creates the function; it does not execute its body by itself.",string:"The string is data inside the function body. It does not call the function."});
+quiz(".parq","#parfb","right",{right:"item is the placeholder named in the definition. “notebook” is the real value supplied in this call.",reverse:"These are reversed: the parameter is named in def; the argument is passed at the call.",both:"Only item is the parameter. “notebook” is an argument for this particular call."});
+quiz(".traceq","#tracefb","right",{right:"The call starts the work, the argument 11 is assigned to amount, the body calculates 15, and return sends 15 back.",body:"The body cannot run for this call before the function is called and its parameter receives the argument.",return:"A result cannot be returned before the call supplies the input and the body computes it."});
+quiz(".retq","#retfb","return",{return:"return hands the computed value back, so another line can save or use it.",print:"print displays a value for a person to see; that does not make the displayed value the function's return value.",same:"They can both show up around output, but they serve different purposes: print displays; return sends a value to the caller."});
+quiz(".reuseq","#reusefb","function",{function:"One named function gives you one place to test the cleanup rules and one place to update them.",copy:"Copying creates multiple versions to test and update, which increases the chance they drift apart.",long:"A long block mixes jobs together, making one small behavior harder to isolate and test."});
+quiz(".bridgeq","#bridgefb","return",{return:"That exposes the input as a parameter and hands the cleaned result back so other code can use it.",print:"Printed text is display output; the next function needs a value it can receive and use.",copy:"Copying the logic defeats the reuse benefit of a function."});
+$("#defrun").addEventListener("click",()=>{const s=$("#defineScreen");s.textContent=`def announce():
+    print("Doors open at 6")
+
+# No call appears below.
+
+[Output]:
+(no output)`;const f=$("#deffb");f.className="feedback show good";f.innerHTML="<strong>Why:</strong> Python has learned the function definition, but the body does not execute until the function is called.";f.focus();history.push({activity:"define-vs-call-simulation",action:"revealed no output"});save()});
+$("#nonerun").addEventListener("click",()=>{const s=$("#noneScreen");s.textContent=`def square_display(x):
+    print(x * x)
+
+saved = square_display(3)
+print(saved)
+
+[Output]:
+9
+None`;const f=$("#nonefb");f.className="feedback show good";f.innerHTML="<strong>Notice both lines:</strong> 9 was printed inside the function. The call itself returned <code>None</code>, so that is what <code>saved</code> contains.";f.focus();history.push({activity:"print-vs-return-simulation",action:"revealed 9 then None"});save()});
+$("#hintbtn").addEventListener("click",()=>{const h=$("#hint");h.classList.add("show");h.textContent="Imagine a test that gives one small function a known input. Is it easier to check that one returned result, or to inspect an entire program at once?"});
+function snapshot(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
+function text(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
+function markdown(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
+function dl(name,type,content){try{const b=new Blob([content],{type:type+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
+function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” below."}
+$("#md").addEventListener("click",()=>stat(dl("functions-parameters-return-reading.md","text/markdown",markdown(snapshot()))));$("#json").addEventListener("click",()=>stat(dl("functions-parameters-return-reading.json","application/json",JSON.stringify(snapshot(),null,2))));$("#txt").addEventListener("click",()=>stat(dl("functions-parameters-return-reading.txt","text/plain",text(snapshot()))));
+$("#show").addEventListener("click",()=>{const w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=text(snapshot());t.focus();t.select()});$("#selectall").addEventListener("click",()=>{$("#plain").focus();$("#plain").select()});
+window.addEventListener("scroll",()=>{const d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
+</script></body></html>
