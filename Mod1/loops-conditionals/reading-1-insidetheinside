@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inside the Inside | Nested Loops & Conditionals</title>
+<style>
+:root{--ink:#19221c;--paper:#fbfaf6;--card:#fff;--forest:#21482f;--sage:#dce9df;--blue:#2b78b5;--gold:#e0ad2e;--line:#d6ddd8;--good:#e7f5eb;--bad:#fbe9ec;--focus:#ffbf47;--code:#151b17}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--paper);line-height:1.62}button,textarea{font:inherit}button:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}
+header{background:var(--forest);color:#fff;padding:3rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.4rem,6vw,4.6rem);line-height:1.02;margin:.4rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{text-transform:uppercase;font-weight:800;letter-spacing:.08em;color:#dce9df}.lead{font-size:1.18rem;max-width:820px}.meta{display:flex;gap:.6rem;flex-wrap:wrap}.pill{border:1px solid #a9bcad;border-radius:999px;padding:.3rem .7rem}
+.sticky{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:5}.track{height:8px;background:#e8ece9}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.55rem 1rem;color:#56615a}
+main{padding:2rem 1.2rem 5rem}section{margin-bottom:3.2rem}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.25rem;box-shadow:0 3px 14px #1420190d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem}
+.callout{border-left:6px solid var(--blue);background:#edf6fb;padding:1rem 1.2rem;border-radius:10px}.warn{border-left:6px solid var(--gold);background:#fff5dc;padding:1rem 1.2rem;border-radius:10px}
+button{border:2px solid var(--forest);border-radius:11px;padding:.7rem 1rem;background:#fff;color:var(--forest);font-weight:750;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
+.term{min-height:145px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}
+.code{background:var(--code);color:#f5f7f5;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:125px;margin:0}.codeactions,.actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}.code button{background:#26342b;color:#fff;border-color:#cad8cd}
+.trace{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}.step{padding:.8rem;border-radius:12px;background:var(--sage);text-align:center}.tree{border-left:4px solid var(--forest);padding-left:1rem}.tree .inner{margin-left:1.4rem;border-left:4px solid var(--blue);padding-left:1rem}
+textarea{width:100%;min-height:100px;padding:.75rem;border:2px solid #aeb8b1;border-radius:10px}.hint{display:none;background:#f3f0fb;border-radius:12px;padding:1rem}.hint.show{display:block}.bridge{border-top:8px solid var(--gold)}.export{background:#f0f4f1;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{color:#59635d;font-size:.92rem}
+@media(max-width:650px){.trace{grid-template-columns:1fr 1fr}h2{font-size:1.65rem}}
+</style></head><body>
+<header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Inside the Inside</h1>
+<p class="lead">A game has 3 worlds, and each world has 4 checkpoints. At every checkpoint, the game may make another decision: is the player carrying a key, and if so, is it the right color? Programs often need to repeat <em>inside</em> repetition and decide <em>inside</em> decisions.</p>
+<div class="meta"><span class="pill">~16–18 minutes</span><span class="pill">Interactive</span><span class="pill">No Python setup needed</span><span class="pill">Saves locally</span></div></div></header>
+<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Goal: trace how nested loops repeat and how nested conditionals decide which inner branch can run.</p></div>
+<main>
+<section><h2>1. Vocabulary: nesting language</h2><p>Flip each card before tracing code.</p><div class="grid">
+<button type="button" class="card term"><span class="front"><strong>nested</strong><br><span class="small">Flip</span></span><span class="back"><strong>Nested</strong><br>Placed inside another structure.</span></button>
+<button type="button" class="card term"><span class="front"><strong>outer loop</strong><br><span class="small">Flip</span></span><span class="back"><strong>Outer loop</strong><br>The surrounding loop. Each outer pass starts a complete run of its inner loop.</span></button>
+<button type="button" class="card term"><span class="front"><strong>inner loop</strong><br><span class="small">Flip</span></span><span class="back"><strong>Inner loop</strong><br>The loop inside another loop. It completes all of its passes for each outer pass.</span></button>
+<button type="button" class="card term"><span class="front"><strong>branch</strong><br><span class="small">Flip</span></span><span class="back"><strong>Branch</strong><br>A path selected by a conditional. An inner conditional is only reached if execution enters its outer branch.</span></button>
+</div></section>
+
+<section><h2>2. Recall before nesting</h2><div class="card"><p><strong>How many values does <code>range(5)</code> produce?</strong></p>
+<button type="button" class="choice recall" data-a="4">4</button><button type="button" class="choice recall" data-a="5">5</button><button type="button" class="choice recall" data-a="6">6</button><div id="recfb" class="feedback" tabindex="-1"></div></div>
+<p class="callout">A nested loop does not change how <code>range()</code> works. First find each loop's count correctly; then reason about how those counts combine.</p></section>
+
+<section><h2>3. One complete inner run per outer pass</h2><p>Think of a playlist app: for each playlist category, inspect every mood tag before moving to the next category.</p>
+<div class="trace"><div class="step">Outer A<br>Inner 1</div><div class="step">Outer A<br>Inner 2</div><div class="step">Outer B<br>Inner 1</div><div class="step">Outer B<br>Inner 2</div></div>
+<div class="card" style="margin-top:1rem"><p><strong>Which description matches nested-loop execution?</strong></p>
+<button type="button" class="choice orderq" data-a="complete">The inner loop finishes all its passes before the outer loop advances.</button>
+<button type="button" class="choice orderq" data-a="alternate">The outer and inner loops take turns advancing one pass each.</button>
+<button type="button" class="choice orderq" data-a="once">The inner loop runs only once total.</button><div id="orderfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>4. Predict the total</h2><div class="code"><div id="loopScreen" class="screen">for aisle in range(4):
+    for bin_num in range(2):
+        print(aisle, bin_num)</div><div class="codeactions"><button type="button" id="looprun">Reveal simulated output</button></div></div>
+<div class="card" style="margin-top:1rem"><p><strong>Before revealing: how many lines should print?</strong></p>
+<button type="button" class="choice countq" data-a="8">8</button><button type="button" class="choice countq" data-a="6">6</button><button type="button" class="choice countq" data-a="4">4</button><div id="countfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>5. Indentation shows what is inside</h2><div class="code"><div class="screen">for team in range(2):
+    for round_num in range(3):
+        print("play")
+    print("team done")</div></div>
+<div class="card" style="margin-top:1rem"><p><strong>How many times does <code>"team done"</code> print?</strong></p>
+<button type="button" class="choice indentq" data-a="2">2</button><button type="button" class="choice indentq" data-a="3">3</button><button type="button" class="choice indentq" data-a="6">6</button><div id="indentfb" class="feedback" tabindex="-1"></div></div>
+<p class="warn"><strong>Trace indentation before arithmetic.</strong> The second print is inside the outer loop but outside the inner loop, so it runs once per outer pass.</p></section>
+
+<section><h2>6. Nested conditionals are gated decisions</h2><div class="tree"><strong>Outer question:</strong> Is the account active?<div class="inner"><strong>Only if yes:</strong> Does it have premium access?</div></div>
+<p>The inner question is not automatically checked. Python must first enter the outer branch that contains it.</p>
+<div class="card"><p><strong>If the account is inactive, what happens to the premium check?</strong></p>
+<button type="button" class="choice gateq" data-a="skip">It is skipped because execution never enters that outer branch.</button><button type="button" class="choice gateq" data-a="check">It still runs because every <code>if</code> must be tested.</button><button type="button" class="choice gateq" data-a="error">Python raises an error because the inner check was not used.</button><div id="gatefb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>7. Trace the branch that actually runs</h2><div class="code"><div id="condScreen" class="screen">status = "ACTIVE"
+points = 7
+
+if status == "ACTIVE":
+    if points >= 10:
+        print("bonus")
+    else:
+        print("standard")
+else:
+    print("inactive")</div><div class="codeactions"><button type="button" id="condrun">Reveal simulated output</button></div></div>
+<div class="card" style="margin-top:1rem"><p><strong>What should print?</strong></p>
+<button type="button" class="choice condq" data-a="standard"><code>standard</code></button><button type="button" class="choice condq" data-a="bonus"><code>bonus</code></button><button type="button" class="choice condq" data-a="inactive"><code>inactive</code></button><div id="condfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>8. Combine repetition + decisions</h2><p>A loop can process each item while a nested conditional decides what should happen to that item. You do not need the project's data to practice the shape.</p>
+<div class="code"><div class="screen">alerts = [("EMAIL", True), ("SMS", False)]
+
+for channel, enabled in alerts:
+    if channel == "EMAIL":
+        if enabled:
+            print("send email")
+        else:
+            print("email paused")</div></div>
+<div class="card" style="margin-top:1rem"><p><strong>For the <code>("SMS", False)</code> item, is <code>if enabled</code> evaluated?</strong></p>
+<button type="button" class="choice comboq" data-a="no">No. The outer <code>channel == "EMAIL"</code> condition is false.</button><button type="button" class="choice comboq" data-a="yes">Yes. The loop guarantees every inner conditional runs.</button><div id="combofb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>9. Debugging habit: trace outside → inside</h2><div class="card"><p>An inner message never appears. What should you inspect <em>first</em>?</p>
+<button type="button" class="choice debugq" data-a="outer">Whether execution ever enters the outer branch containing the inner check.</button><button type="button" class="choice debugq" data-a="random">Whether Python randomly skipped the inner condition.</button><button type="button" class="choice debugq" data-a="import">Whether nested conditionals need an import.</button><div id="debugfb" class="feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your trace strategy:</strong> In 1–2 sentences, explain how you would trace unfamiliar nested code without guessing.</label><textarea id="strategy" data-save placeholder="Try starting with: “First I identify the outer structure…”"></textarea><p><button type="button" id="hintbtn">Generate a thinking hint</button></p><div id="hint" class="hint"></div></section>
+
+<section class="bridge"><h2>10. Required bridge to lecture + project</h2><p>You just practiced the two reasoning habits the upcoming lesson targets: count a nested loop by following complete inner runs, and trace a nested conditional from the outside inward to determine which branch is reachable. In lecture/lab, you will use those habits while stepping through live Python. Later, the project applies the same overall shape in <code>validate_line</code>: repeated records plus decisions inside that repeated work.</p>
+<div class="card"><p><strong>Bridge challenge — new situation:</strong> A program checks every support ticket. Only tickets labeled <code>"URGENT"</code> receive a second check for whether the customer is currently waiting. What should you trace first for one ticket?</p>
+<button type="button" class="choice bridgeq" data-a="label">First determine whether the ticket enters the <code>"URGENT"</code> outer branch.</button><button type="button" class="choice bridgeq" data-a="waiting">Always check whether the customer is waiting first.</button><button type="button" class="choice bridgeq" data-a="all">Assume both conditions run for every ticket.</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
+<label for="bring"><strong>Bring to lecture:</strong> What visual clue in Python code tells you whether a statement belongs to the outer structure, the inner structure, or neither?</label><textarea id="bring" data-save></textarea></section>
+
+<section><h2>11. Keep a copy of your work</h2><div class="export"><div class="actions"><button type="button" id="md">Create Markdown file</button><button type="button" id="json">Create JSON file</button><button type="button" id="txt">Create TXT file</button><button type="button" id="show">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:260px"></textarea><p><button type="button" id="selectall">Select all text</button></p></div></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let history=[];const KEY="nested-loops-conditionals-reading-v1";
+function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
+$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
+function quiz(cls,fb,correct,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{const ok=b.dataset.a===correct,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
+quiz(".recall","#recfb","5",{4:"range(5) starts at 0 and stops before 5, producing 0, 1, 2, 3, 4 — five values.",5:"range(5) produces five values: 0 through 4.",6:"The stop value 5 is not included, so there are five values, not six."});
+quiz(".orderq","#orderfb","complete",{complete:"For each outer pass, Python runs the entire inner loop before the outer loop advances.",alternate:"The loops do not take turns. The inner loop completes before the next outer pass.",once:"The inner loop restarts for every outer pass."});
+quiz(".countq","#countfb","8",{8:"4 outer passes × 2 inner passes each = 8 executions of the print.",6:"Adding 4 + 2 gives 6, but nested repetition means two inner executions happen for each of four outer passes.",4:"That counts only the outer passes. Each outer pass contains two inner passes."});
+quiz(".indentq","#indentfb","2",{2:"The line is indented inside the outer loop but not the inner loop, so it runs once for each of 2 teams.",3:"Three is the inner-loop count, but this print sits outside the inner loop.",6:"Six is how often the inner print runs. The less-indented line runs only once per outer pass."});
+quiz(".gateq","#gatefb","skip",{skip:"The inner check lives inside the true outer branch, so it is unreachable when the outer condition is false.",check:"Python only evaluates code in the branch execution enters.",error:"Skipping an unreachable inner branch is normal control flow, not an error."});
+quiz(".condq","#condfb","standard",{standard:"The outer condition is true. Then 7 >= 10 is false, so the inner else branch prints standard.",bonus:"The outer branch is entered, but 7 is not at least 10.",inactive:"The outer condition is true, so the outer else branch is skipped."});
+quiz(".comboq","#combofb","no",{no:"For the SMS item, channel == EMAIL is false, so execution never reaches the nested enabled check.",yes:"The loop visits every item, but conditionals still control which nested code is reached."});
+quiz(".debugq","#debugfb","outer",{outer:"Trace from outside inward. If the outer branch is never entered, its inner check cannot run.",random:"Python follows deterministic control flow; random skipping is not the explanation.",import:"Nested conditionals are normal Python syntax and require no special import."});
+quiz(".bridgeq","#bridgefb","label",{label:"The waiting check is nested inside the URGENT branch, so first determine whether that branch is entered.",waiting:"That inner question is only relevant after the outer label check succeeds.",all:"Nesting means the inner condition is reached only through its containing outer branch."});
+$("#looprun").addEventListener("click",()=>{const s=$("#loopScreen");s.textContent=`for aisle in range(4):
+    for bin_num in range(2):
+        print(aisle, bin_num)
+
+[Output]:
+0 0
+0 1
+1 0
+1 1
+2 0
+2 1
+3 0
+3 1`;history.push({activity:"nested-loop-simulation",action:"revealed 8-line trace"});save()});
+$("#condrun").addEventListener("click",()=>{const s=$("#condScreen");s.textContent=`status = "ACTIVE"
+points = 7
+
+if status == "ACTIVE":
+    if points >= 10:
+        print("bonus")
+    else:
+        print("standard")
+else:
+    print("inactive")
+
+[Output]:
+standard`;history.push({activity:"nested-conditional-simulation",action:"revealed standard branch"});save()});
+$("#hintbtn").addEventListener("click",()=>{const h=$("#hint");h.classList.add("show");h.textContent="For loops: count each range, then ask what completes inside each outer pass. For conditionals: evaluate the outer condition first, then follow only the reachable branch."});
+function snapshot(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
+function text(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
+function markdown(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
+function dl(name,type,content){try{const b=new Blob([content],{type:type+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
+function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” below."}
+$("#md").addEventListener("click",()=>stat(dl("nested-loops-conditionals-reading.md","text/markdown",markdown(snapshot()))));$("#json").addEventListener("click",()=>stat(dl("nested-loops-conditionals-reading.json","application/json",JSON.stringify(snapshot(),null,2))));$("#txt").addEventListener("click",()=>stat(dl("nested-loops-conditionals-reading.txt","text/plain",text(snapshot()))));
+$("#show").addEventListener("click",()=>{const w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=text(snapshot());t.focus();t.select()});$("#selectall").addEventListener("click",()=>{$("#plain").focus();$("#plain").select()});
+window.addEventListener("scroll",()=>{const d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
+</script></body></html>
