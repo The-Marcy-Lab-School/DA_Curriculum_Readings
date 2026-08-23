@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trust, But Verify the Line | Your First Validation Function</title>
+<style>
+:root{--ink:#19221c;--paper:#fbfaf6;--card:#fff;--forest:#21482f;--sage:#dce9df;--blue:#2b78b5;--gold:#e0ad2e;--line:#d6ddd8;--good:#e7f5eb;--bad:#fbe9ec;--focus:#ffbf47;--code:#151b17}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--paper);line-height:1.62}button,textarea{font:inherit}button:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}
+header{background:var(--forest);color:#fff;padding:3rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.4rem,6vw,4.6rem);line-height:1.02;margin:.4rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{text-transform:uppercase;font-weight:800;letter-spacing:.08em;color:#dce9df}.lead{font-size:1.2rem;max-width:820px}.meta{display:flex;gap:.6rem;flex-wrap:wrap}.pill{border:1px solid #a9bcad;border-radius:999px;padding:.3rem .7rem}
+.sticky{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:5}.track{height:8px;background:#e8ece9}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.55rem 1rem;color:#56615a}
+main{padding:2rem 1.2rem 5rem}section{margin-bottom:3.3rem}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.25rem;box-shadow:0 3px 14px #1420190d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.callout{border-left:6px solid var(--blue);background:#edf6fb;padding:1rem 1.2rem;border-radius:10px}.warn{border-left:6px solid var(--gold);background:#fff5dc;padding:1rem 1.2rem;border-radius:10px}
+button{border:2px solid var(--forest);border-radius:11px;padding:.72rem 1rem;background:#fff;color:var(--forest);font-weight:750;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
+.term{min-height:150px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}
+.pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem}.step{background:var(--sage);border-radius:14px;padding:1rem;text-align:center}.code{background:var(--code);color:#f5f7f5;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:125px;margin:0}.codeactions,.actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}.code button{background:#26342b;color:#fff;border-color:#cad8cd}
+textarea{width:100%;min-height:105px;padding:.75rem;border:2px solid #aeb8b1;border-radius:10px}.hint{display:none;background:#f3f0fb;border-radius:12px;padding:1rem}.hint.show{display:block}.bridge{border-top:8px solid var(--gold)}.export{background:#f0f4f1;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{color:#59635d;font-size:.92rem}
+@media(max-width:700px){.pipeline{grid-template-columns:1fr 1fr}h2{font-size:1.65rem}}
+</style></head><body>
+<header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Trust, But Verify the Line</h1>
+<p class="lead">A support system receives hundreds of text records overnight. Most are fine. A few are malformed. Your job is not to stare at the whole file and hope—you need a repeatable function that checks every line, explains what failed, and tells you exactly where to look.</p>
+<div class="meta"><span class="pill">~17–19 minutes</span><span class="pill">Interactive</span><span class="pill">No Python setup needed</span><span class="pill">Saves locally</span></div></div></header>
+<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Goal: combine loops, conditionals, functions, string splitting, and <code>enumerate()</code> into a validation workflow.</p></div>
+<main>
+<section><h2>1. Vocabulary: validation language</h2><p>Flip each card. These terms describe the job your function is about to do.</p><div class="grid">
+<button class="card term" type="button"><span class="front"><strong>validation</strong><br><span class="small">Flip</span></span><span class="back"><strong>Validation</strong><br>Checking data against rules before trusting or using it.</span></button>
+<button class="card term" type="button"><span class="front"><strong>record</strong><br><span class="small">Flip</span></span><span class="back"><strong>Record</strong><br>One unit of data. In a line-based text file, one line can represent one record.</span></button>
+<button class="card term" type="button"><span class="front"><strong>enumerate()</strong><br><span class="small">Flip</span></span><span class="back"><strong>enumerate()</strong><br>Lets a loop receive both a position counter and the item itself.</span></button>
+<button class="card term" type="button"><span class="front"><strong>field</strong><br><span class="small">Flip</span></span><span class="back"><strong>Field</strong><br>One piece inside a record after you split it into parts.</span></button>
+</div></section>
+
+<section><h2>2. Recall the pieces before combining them</h2><div class="card"><p><strong>Which pattern best describes what a reusable validator needs?</strong></p>
+<button class="choice recall" data-a="right" type="button">A function containing a loop, with conditionals inside the loop</button>
+<button class="choice recall" data-a="loop" type="button">Only a loop, because all records should receive the same result</button>
+<button class="choice recall" data-a="if" type="button">Only a conditional, because it can check the whole list at once</button><div id="recfb" class="feedback" tabindex="-1"></div></div>
+<p class="callout"><strong>Connection to prior skills:</strong> the function makes the logic reusable, the loop visits every record, and the conditional decides how to classify each one.</p></section>
+
+<section><h2>3. The validation pipeline</h2><div class="pipeline"><div class="step"><strong>1</strong><br>Visit one line</div><div class="step"><strong>2</strong><br>Split into fields</div><div class="step"><strong>3</strong><br>Check rules</div><div class="step"><strong>4</strong><br>Report result</div></div>
+<p>Good validators do not start by trying every possible rule at once. They work from simple structure checks toward more specific content checks.</p></section>
+
+<section><h2>4. Start with fresh data</h2><p>These support-ticket records use <code>|</code> as a separator. Each valid line should have exactly three fields: <code>action | ticket_id | priority</code>.</p>
+<div class="code"><div class="screen">records = [
+    "OPEN|T104|3",
+    "OPEN|T105|high",
+    "CLOSE|T106",
+    "OPEN|T107|2"
+]</div></div>
+<div class="card" style="margin-top:1rem"><p><strong>Which line clearly has the wrong number of fields?</strong></p>
+<button class="choice shapeq" data-a="third" type="button"><code>"CLOSE|T106"</code></button>
+<button class="choice shapeq" data-a="second" type="button"><code>"OPEN|T105|high"</code></button>
+<button class="choice shapeq" data-a="first" type="button"><code>"OPEN|T104|3"</code></button><div id="shapefb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>5. Shape check first</h2><div class="code"><div id="shapeScreen" class="screen">line = "CLOSE|T106"
+fields = line.split("|")
+
+if len(fields) == 3:
+    print("shape OK")
+else:
+    print("wrong field count")</div><div class="codeactions"><button id="shaperun" type="button">Reveal simulated output</button></div></div>
+<p class="warn"><strong>Why shape first?</strong> Later checks may assume a field exists at a specific position. If the shape is wrong, checking a missing field can cause an error.</p></section>
+
+<section><h2>6. Then check what a field contains</h2><div class="card"><p>Suppose the shape is correct. The third field should be a whole-number priority.</p><div class="code"><div class="screen">fields = ["OPEN", "T105", "high"]
+
+if not fields[2].isdigit():
+    print("priority must be numeric")</div></div>
+<p><strong>What happens?</strong></p><button class="choice digitq" data-a="message" type="button">It prints <code>priority must be numeric</code></button><button class="choice digitq" data-a="nothing" type="button">Nothing prints because the list has three fields</button><button class="choice digitq" data-a="crash" type="button">Python crashes because <code>isdigit()</code> only works on integers</button><div id="digitfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>7. Why check order matters</h2><div class="card"><p><strong>Which order is safer?</strong></p>
+<button class="choice orderq" data-a="safe" type="button">First check <code>len(fields)</code>; only then inspect <code>fields[2]</code></button>
+<button class="choice orderq" data-a="unsafe" type="button">Check <code>fields[2]</code> first; count the fields later</button><div id="orderfb" class="feedback" tabindex="-1"></div></div>
+<p class="callout">A validator should report bad data rather than crash while trying to inspect it. Structure checks protect later, more specific checks.</p></section>
+
+<section><h2>8. Make error reports actionable with <code>enumerate()</code></h2><p>Text editors show the first line as line 1. Python's <code>enumerate()</code> starts at 0 unless you tell it otherwise.</p>
+<div class="code"><div class="screen">for line_number, line in enumerate(records, start=1):
+    print(line_number, line)</div></div>
+<div class="card" style="margin-top:1rem"><p><strong>Why use <code>start=1</code> here?</strong></p>
+<button class="choice enumq" data-a="human" type="button">So reported line numbers match the way humans count lines in a file</button>
+<button class="choice enumq" data-a="change" type="button">So <code>enumerate()</code> changes the records themselves</button>
+<button class="choice enumq" data-a="needed" type="button">Because <code>enumerate()</code> does not work without it</button><div id="enumfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>9. Predict the complete validator</h2><div class="code"><div id="fullScreen" class="screen">def inspect_records(records):
+    for line_number, line in enumerate(records, start=1):
+        fields = line.split("|")
+
+        if len(fields) != 3:
+            print(f"Line {line_number}: bad shape")
+        elif not fields[2].isdigit():
+            print(f"Line {line_number}: bad priority")
+        else:
+            print(f"Line {line_number}: OK")</div><div class="codeactions"><button id="fullrun" type="button">Run conceptual test data</button></div></div>
+<div class="card" style="margin-top:1rem"><p><strong>For <code>"OPEN|T105|high"</code>, which branch runs?</strong></p>
+<button class="choice fullq" data-a="priority" type="button"><code>bad priority</code></button><button class="choice fullq" data-a="shape" type="button"><code>bad shape</code></button><button class="choice fullq" data-a="ok" type="button"><code>OK</code></button><div id="fullfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>10. Build the logic without staring at a blank screen</h2><p>If you get stuck writing a validator from scratch, use a planning frame first.</p>
+<div class="grid"><div class="card"><strong>Input</strong><p>What collection of lines enters the function?</p></div><div class="card"><strong>Repeat</strong><p>What must happen once per line?</p></div><div class="card"><strong>Rules</strong><p>Which simple check should happen before the more specific check?</p></div><div class="card"><strong>Report</strong><p>What should the message tell a human?</p></div></div>
+<label for="plan"><strong>Your mini-plan:</strong> In 2–4 sentences, describe the order you would follow to build a validator from scratch.</label><textarea id="plan" data-save placeholder="Try: “First I would… Then I would…”"></textarea><p><button id="hintbtn" type="button">Generate a planning hint</button></p><div id="hint" class="hint"></div></section>
+
+<section class="bridge"><h2>11. Required bridge to lecture + project</h2><p>You just practiced the architecture of a validation function without copying the lecture's worked dataset: a function receives lines, loops through them, splits each line, checks simple structure before specific content, and reports a human-usable line number with <code>enumerate()</code>. In lecture/lab, you will build that logic step by step in live Python and then combine multiple checks in one function.</p>
+<p>The project connection is direct: the larger project expects the same kind of thinking in its validation workflow—reusable logic, line-by-line checks, specific error reporting, and no crashing on malformed input.</p>
+<div class="card"><p><strong>Bridge challenge — new situation:</strong> A file has 500 records. Your validator reports “bad priority,” but gives no line number. Which change gives the most useful improvement?</p>
+<button class="choice bridgeq" data-a="enum" type="button">Use <code>enumerate(..., start=1)</code> and include the line number in the message</button>
+<button class="choice bridgeq" data-a="printall" type="button">Print the entire file before every error</button>
+<button class="choice bridgeq" data-a="stop" type="button">Stop after checking the first line</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
+<label for="bring"><strong>Bring to lecture:</strong> Why should a validator usually check the record's shape before checking a specific field inside it?</label><textarea id="bring" data-save></textarea></section>
+
+<section><h2>12. Keep a copy of your work</h2><div class="export"><div class="actions"><button id="md" type="button">Create Markdown file</button><button id="json" type="button">Create JSON file</button><button id="txt" type="button">Create TXT file</button><button id="show" type="button">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:260px"></textarea><p><button id="selectall" type="button">Select all text</button></p></div></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let history=[];const KEY="validation-function-reading-v1";
+function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
+$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
+function quiz(cls,fb,correct,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{const ok=b.dataset.a===correct,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
+quiz(".recall","#recfb","right",{right:"A validator needs reuse, repetition, and decisions: function + loop + conditionals.",loop:"A loop can visit every record, but it cannot classify different records without decision logic.",if:"A conditional checks one situation at a time; the loop is what visits the whole collection."});
+quiz(".shapeq","#shapefb","third",{third:"Splitting on | gives only two fields: CLOSE and T106.",second:"This line has three fields. Its problem is content, not shape: high is not numeric.",first:"This line has three fields and a numeric third field."});
+quiz(".digitq","#digitfb","message",{message:"fields[2] is the string high, so isdigit() is False and the not makes the condition True.",nothing:"The shape is correct, but the third field still fails the numeric-content check.",crash:"isdigit() is a string method, so calling it on the string high is valid."});
+quiz(".orderq","#orderfb","safe",{safe:"If the record is too short, fields[2] may not exist. Checking shape first prevents that later access from failing.",unsafe:"This can crash on a two-field record because fields[2] may not exist yet."});
+quiz(".enumq","#enumfb","human",{human:"Python counts from 0 by default, but file line numbers usually start at 1 for humans.",change:"enumerate() adds a counter; it does not modify the records.",needed:"enumerate() works without start=1; it simply starts counting at 0."});
+quiz(".fullq","#fullfb","priority",{priority:"The record has three fields, so it passes the shape check. The third field high is not digits, so bad priority runs.",shape:"The record has exactly three fields, so bad shape is skipped.",ok:"OK is only reached after both earlier checks are passed."});
+quiz(".bridgeq","#bridgefb","enum",{enum:"A specific human-readable line number makes the report actionable in a large file.",printall:"Printing the whole file adds noise without pinpointing the failing location.",stop:"Stopping after one line defeats the goal of validating the collection."});
+$("#shaperun").addEventListener("click",()=>{$("#shapeScreen").textContent=`line = "CLOSE|T106"
+fields = line.split("|")
+
+if len(fields) == 3:
+    print("shape OK")
+else:
+    print("wrong field count")
+
+[Output]:
+wrong field count`;history.push({activity:"shape-check-simulation",action:"revealed wrong field count"});save()});
+$("#fullrun").addEventListener("click",()=>{$("#fullScreen").textContent=`def inspect_records(records):
+    for line_number, line in enumerate(records, start=1):
+        fields = line.split("|")
+
+        if len(fields) != 3:
+            print(f"Line {line_number}: bad shape")
+        elif not fields[2].isdigit():
+            print(f"Line {line_number}: bad priority")
+        else:
+            print(f"Line {line_number}: OK")
+
+[Output]:
+Line 1: OK
+Line 2: bad priority
+Line 3: bad shape
+Line 4: OK`;history.push({activity:"full-validator-simulation",action:"revealed four-line report"});save()});
+$("#hintbtn").addEventListener("click",()=>{const h=$("#hint");h.classList.add("show");h.textContent="Use this sequence: define the function → loop with enumerate → split one line → check field count → check field content → report a specific message."});
+function snapshot(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
+function text(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
+function markdown(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
+function dl(name,type,content){try{const b=new Blob([content],{type:type+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
+function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” below."}
+$("#md").addEventListener("click",()=>stat(dl("validation-function-reading.md","text/markdown",markdown(snapshot()))));$("#json").addEventListener("click",()=>stat(dl("validation-function-reading.json","application/json",JSON.stringify(snapshot(),null,2))));$("#txt").addEventListener("click",()=>stat(dl("validation-function-reading.txt","text/plain",text(snapshot()))));
+$("#show").addEventListener("click",()=>{const w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=text(snapshot());t.focus();t.select()});$("#selectall").addEventListener("click",()=>{$("#plain").focus();$("#plain").select()});
+window.addEventListener("scroll",()=>{const d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
+</script></body></html>
