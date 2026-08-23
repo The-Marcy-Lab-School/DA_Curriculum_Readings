@@ -1,0 +1,126 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Make It Survive | Data Serialization</title>
+<style>
+:root{--ink:#1d241f;--paper:#fbfaf5;--green:#21482f;--sage:#dce9df;--blue:#dfeefa;--gold:#f1c24f;--line:#d5ddd7;--good:#e5f4e9;--bad:#fbe8eb;--code:#171c18;--focus:#ffbf47}*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--paper);color:var(--ink);line-height:1.62}button,textarea{font:inherit}button:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}
+header{background:var(--green);color:white;padding:3.4rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.5rem,7vw,4.8rem);line-height:1;margin:.5rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#d8e7db}.lead{font-size:1.2rem;max-width:800px}.pills{display:flex;gap:.5rem;flex-wrap:wrap}.pill{border:1px solid #a9c0af;border-radius:999px;padding:.3rem .7rem}
+.sticky{position:sticky;top:0;background:white;z-index:5;border-bottom:1px solid var(--line)}.track{height:8px;background:#e7ebe8}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.55rem 1rem;color:#566159}
+main{padding:2rem 1.2rem 5rem}section{margin-bottom:3.2rem}.card{background:white;border:1px solid var(--line);border-radius:18px;padding:1.2rem;box-shadow:0 3px 14px #1220170d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.term{min-height:145px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}button{border:2px solid var(--green);border-radius:11px;background:white;color:var(--green);padding:.7rem 1rem;font-weight:750;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}
+.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}.callout{background:var(--blue);border-left:6px solid #2d79b5;padding:1rem;border-radius:10px}.warn{background:#fff4d7;border-left:6px solid #d39d15;padding:1rem;border-radius:10px}
+.memory{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1rem}.bubble{padding:1.2rem;border-radius:18px;text-align:center;background:var(--sage)}.arrow{font-size:2rem}.formats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}.format{border-top:7px solid var(--green)}.code{background:var(--code);color:#f5f7f5;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:105px;margin:0}.code button{background:#27362c;color:white;border-color:#c7d7cb}.actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}
+textarea{width:100%;min-height:100px;padding:.75rem;border:2px solid #abb6ae;border-radius:10px}.hint{display:none;background:#f2eef9;padding:1rem;border-radius:12px}.hint.show{display:block}.bridge{border-top:8px solid var(--gold)}.export{background:#eef3ef;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{font-size:.92rem;color:#5b655e}
+@media(max-width:700px){.formats{grid-template-columns:1fr}.memory{grid-template-columns:1fr}.arrow{transform:rotate(90deg);text-align:center}h2{font-size:1.65rem}}</style></head>
+<body><header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Make It Survive</h1><p class="lead">You build a tiny Python program that tracks your favorite study spots. It works perfectly. Then the program closes. Tomorrow you reopen it—and the list is gone. How can data outlive the program that created it?</p><div class="pills"><span class="pill">~16–18 minutes</span><span class="pill">Interactive</span><span class="pill">No setup required</span><span class="pill">Saves locally</span></div></div></header>
+<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Mission: understand persistence, serialization, and when JSON, CSV, or TXT fits the data.</p></div><main>
+
+<section><h2>1. Vocabulary: words for data that travels</h2><p>Flip all four cards before moving on.</p><div class="grid">
+<button class="card term"><span class="front"><strong>serialization</strong><br><span class="small">Flip</span></span><span class="back"><strong>Serialization</strong><br>Converting program data into a representation that can be stored or transmitted.</span></button>
+<button class="card term"><span class="front"><strong>deserialization</strong><br><span class="small">Flip</span></span><span class="back"><strong>Deserialization</strong><br>Reading stored data and rebuilding a usable program value from it.</span></button>
+<button class="card term"><span class="front"><strong>persistence</strong><br><span class="small">Flip</span></span><span class="back"><strong>Persistence</strong><br>Data continuing to exist after the program that created it stops running.</span></button>
+<button class="card term"><span class="front"><strong>format</strong><br><span class="small">Flip</span></span><span class="back"><strong>Format</strong><br>An agreed structure for representing information, such as JSON, CSV, or a custom TXT layout.</span></button>
+</div></section>
+
+<section><h2>2. Recall: what do dicts and lists give us?</h2><div class="card"><p>A study-spot record needs a name, neighborhood, and list of features. Which Python structure best keeps labeled pieces together?</p>
+<button class="choice recall" data-a="dict">A dictionary</button><button class="choice recall" data-a="list">A list only</button><button class="choice recall" data-a="string">One long string with no structure</button><div id="recfb" class="feedback" tabindex="-1"></div></div>
+<p class="callout"><strong>Why this matters today:</strong> JSON is especially useful when your Python data already has dictionary/list-like structure.</p></section>
+
+<section><h2>3. Memory is temporary; files persist</h2><div class="memory"><div class="bubble"><strong>While Python runs</strong><br><code>spots = [...]</code><br>live value in memory</div><div class="arrow" aria-hidden="true">→</div><div class="bubble"><strong>After writing</strong><br><code>spots.json</code><br>stored representation on disk</div></div>
+<p>The file does not keep the original live Python object running. It stores a representation of the data. Later, Python can read that representation and build a fresh usable value.</p>
+<div class="card"><p><strong>You close Python after creating a list but never write it anywhere. What should you expect next time?</strong></p>
+<button class="choice memoryq" data-a="gone">That in-memory list is gone</button><button class="choice memoryq" data-a="automatic">Python automatically restores it</button><button class="choice memoryq" data-a="hidden">It becomes a hidden JSON file</button><div id="memfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>4. Three formats, three useful shapes</h2><div class="formats">
+<div class="card format"><h3>JSON</h3><p><strong>Shape:</strong> nested keys, values, arrays.</p><p><strong>Think:</strong> structured records, APIs, AI-tool data.</p></div>
+<div class="card format"><h3>CSV</h3><p><strong>Shape:</strong> flat rows and columns.</p><p><strong>Think:</strong> spreadsheet-style tables.</p></div>
+<div class="card format"><h3>TXT</h3><p><strong>Shape:</strong> whatever convention you define.</p><p><strong>Think:</strong> simple or custom line-based data.</p></div></div></section>
+
+<section><h2>5. Format detective</h2><div class="card"><p>A club tracks <strong>member name, meeting count, and cohort</strong>. Every row has the same three columns, and someone wants to open it naturally in spreadsheet software. Best fit?</p>
+<button class="choice formatq" data-a="csv">CSV</button><button class="choice formatq" data-a="json">JSON</button><button class="choice formatq" data-a="txt">Custom TXT</button><div id="formatfb" class="feedback" tabindex="-1"></div></div>
+<div class="card" style="margin-top:1rem"><p>A service stores user preferences with nested settings and lists. Best fit?</p><button class="choice nestedq" data-a="json">JSON</button><button class="choice nestedq" data-a="csv">CSV</button><button class="choice nestedq" data-a="txt">TXT because all files are technically text</button><div id="nestedfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>6. File modes change what happens</h2><p>You'll work with real files in lecture. For now, reason about the behavior without copying the lecture's file or values.</p>
+<div class="code"><div id="writeScreen" class="screen">with open("ideas.txt", "w") as f:
+    f.write("Practice SQL")
+
+[Output]:
+File now contains:
+Practice SQL</div><div class="actions"><button id="overwrite">Simulate writing again in "w"</button></div></div>
+<p class="warn"><strong>Important:</strong> <code>"w"</code> means write mode. If the file already exists, writing this way replaces its previous contents rather than adding to the end.</p></section>
+
+<section><h2>7. Reading is the other half of persistence</h2><div class="card"><p>Suppose <code>ideas.txt</code> exists on disk. What is the purpose of opening it for reading later?</p>
+<button class="choice readq" data-a="retrieve">Retrieve the stored text so the program can use it again</button><button class="choice readq" data-a="keepalive">Keep the old Python process alive forever</button><button class="choice readq" data-a="convert">Automatically convert any file into JSON</button><div id="readfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>8. JSON: structured data makes a round trip</h2><p>Consider a different record from lecture:</p><div class="code"><div id="jsonScreen" class="screen">import json
+
+place = {
+    "name": "North Library",
+    "quiet": True,
+    "features": ["outlets", "wifi"]
+}
+
+# Conceptual action:
+# json.dump(place, file)
+
+[Output]:
+A JSON representation is written to the file.</div><div class="actions"><button id="loadsim">Simulate loading it later</button></div></div>
+<p><code>json.dump()</code> converts the Python value and writes it. <code>json.load()</code> reads JSON from a file and creates a usable Python value.</p>
+<div class="card"><p><strong>After <code>json.load()</code> reads a JSON object, what Python structure should you expect?</strong></p><button class="choice loadq" data-a="dict">A dictionary</button><button class="choice loadq" data-a="file">The original live object preserved inside the file</button><button class="choice loadq" data-a="csv">A CSV table</button><div id="loadfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>9. The representation is not the live object</h2><div class="card"><p><strong>Choose the strongest explanation.</strong></p>
+<button class="choice objectq" data-a="fresh">Serialization stores a representation of data; deserialization builds a fresh usable value from that representation</button>
+<button class="choice objectq" data-a="freeze">Serialization freezes the exact Python object itself inside the file</button>
+<button class="choice objectq" data-a="memory">Serialization makes RAM permanent</button><div id="objectfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>10. Decision practice: choose for the need</h2><p>Use the generator if you need help brainstorming what to pay attention to when choosing a format.</p><p><button id="hintbtn">Generate decision hints</button></p><div id="hint" class="hint"></div>
+<label for="decision"><strong>Your reasoning:</strong> A community garden wants to store each plot's owner plus a nested list of plants and care preferences. Which format would you start with, and why?</label><textarea id="decision" data-save placeholder="I would choose... because the data is..."></textarea></section>
+
+<section class="bridge"><h2>11. Required bridge to lecture/lab</h2><p>You just learned why data must leave memory to persist, what serialization/deserialization mean, how file modes affect stored content, and how the shape of a problem helps you choose JSON, CSV, or TXT. In lecture/lab, you'll make real files appear on disk, read them back, and use Python's JSON tools with live dicts and lists. Be ready to recognize the habit <strong>choose the format based on the data's shape and intended use</strong>, not just the file extension you remember.</p>
+<div class="card"><p><strong>Bridge challenge — new situation:</strong> You need a simple line-by-line command file consumed by a custom script. Each line follows a convention your team controls. Which starting format is most reasonable?</p>
+<button class="choice bridgeq" data-a="txt">TXT</button><button class="choice bridgeq" data-a="json">JSON must always be used for programs</button><button class="choice bridgeq" data-a="csv">CSV, even though there are no rows-and-columns requirements</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
+<label for="bring"><strong>Bring to lecture:</strong> In your own words, what is the difference between a live Python value and its serialized representation?</label><textarea id="bring" data-save></textarea></section>
+
+<section><h2>12. Keep a copy</h2><div class="export"><div class="actions"><button id="md">Create Markdown file</button><button id="json">Create JSON file</button><button id="txt">Create TXT file</button><button id="show">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:250px"></textarea><p><button id="selectall">Select all text</button></p></div></div></section>
+
+</main><script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],KEY="serialization-reading-v1";let history=[];
+function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
+function load(){try{let d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
+$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
+function quiz(cls,fb,right,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{let ok=b.dataset.a===right,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
+quiz(".recall","#recfb","dict",{dict:"A dict associates labels (keys) with values, which fits a record with named properties.",list:"A list is useful for ordered items, but by itself it does not label name, neighborhood, and features.",string:"A single string can store text, but it throws away the useful labeled structure you already know how to model."});
+quiz(".memoryq","#memfb","gone",{gone:"Variables live in memory while the program runs. Persistence requires storing a representation somewhere outside that running process.",automatic:"Python does not automatically restore arbitrary variables from a previous run.",hidden:"A variable does not silently become a file. Your program must explicitly write data if you want it persisted."});
+quiz(".formatq","#formatfb","csv",{csv:"Flat, repeated columns are exactly the shape CSV is designed to represent.",json:"JSON could represent the data, but the flat spreadsheet-style requirement points more directly to CSV.",txt:"A custom TXT format could work, but it would require inventing conventions that CSV already provides for tabular rows."});
+quiz(".nestedq","#nestedfb","json",{json:"Nested keys and lists fit JSON's structured object/array shape.",csv:"CSV shines for flat rows and columns; nested settings are a less natural fit.",txt:"JSON is text too, but its defined structure is the important advantage here."});
+quiz(".readq","#readfb","retrieve",{retrieve:"Reading brings stored content back into the current program so you can work with it.",keepalive:"The old process does not need to remain alive; persistence is the point.",convert:"Opening a file for reading does not automatically change its format."});
+quiz(".loadq","#loadfb","dict",{dict:"A JSON object maps naturally back to a Python dict when loaded.",file:"The file stores a representation, not the original live object itself.",csv:"json.load() interprets JSON; it does not create a CSV table."});
+quiz(".objectq","#objectfb","fresh",{fresh:"That distinction is central: stored representation first, fresh usable value after loading.",freeze:"The file does not contain a still-running Python object.",memory:"Serialization writes a representation outside RAM; it does not make RAM permanent."});
+quiz(".bridgeq","#bridgefb","txt",{txt:"A simple custom line-based convention is a strong use case for TXT.",json:"Programs can use many formats; JSON is not automatically the best choice.",csv:"CSV is strongest when the data naturally behaves like rows and columns."});
+$("#overwrite").addEventListener("click",()=>{$("#writeScreen").textContent=`with open("ideas.txt", "w") as f:
+    f.write("Review dictionaries")
+
+[Output]:
+Previous contents are replaced.
+File now contains:
+Review dictionaries`;history.push({activity:"write-mode simulation",action:"simulated overwrite"});save()});
+$("#loadsim").addEventListener("click",()=>{$("#jsonScreen").textContent=`import json
+
+with open("place.json") as f:
+    place = json.load(f)
+
+print(type(place))
+print(place["features"])
+
+[Output]:
+<class 'dict'>
+['outlets', 'wifi']`;history.push({activity:"JSON load simulation",action:"revealed reconstructed Python value"});save()});
+$("#hintbtn").addEventListener("click",()=>{let h=$("#hint");h.classList.add("show");h.textContent="Ask: Is the data nested and structured? Is it a flat table? Or is it a simple/custom line format? Then ask who or what needs to read it later."});
+function snap(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
+function plain(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
+function mdtext(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
+function dl(n,t,c){try{let b=new Blob([c],{type:t+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
+function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” instead."}
+$("#md").onclick=()=>stat(dl("data-serialization-reading.md","text/markdown",mdtext(snap())));$("#json").onclick=()=>stat(dl("data-serialization-reading.json","application/json",JSON.stringify(snap(),null,2)));$("#txt").onclick=()=>stat(dl("data-serialization-reading.txt","text/plain",plain(snap())));
+$("#show").onclick=()=>{let w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=plain(snap());t.focus();t.select()};$("#selectall").onclick=()=>{$("#plain").focus();$("#plain").select()};
+window.addEventListener("scroll",()=>{let d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
+</script></body></html>
