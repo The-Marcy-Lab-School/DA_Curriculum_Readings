@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choose. Repeat. Trace. | Control Flow & Conditionals</title>
+<style>
+:root{--ink:#1d241f;--paper:#fbfaf6;--card:#fff;--forest:#21482f;--sage:#dce9df;--blue:#287bb7;--gold:#e1ae2d;--line:#d5ddd7;--good:#e5f4e9;--bad:#fbe8eb;--focus:#ffbf47;--code:#171c18}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}button,textarea{font:inherit}button:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}
+header{background:var(--forest);color:white;padding:3rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.5rem,7vw,4.8rem);line-height:1;margin:.4rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:#dbe9df}.lead{font-size:1.2rem;max-width:800px}.meta{display:flex;gap:.6rem;flex-wrap:wrap}.pill{border:1px solid #a9bdad;border-radius:999px;padding:.3rem .7rem}
+.sticky{position:sticky;top:0;background:white;border-bottom:1px solid var(--line);z-index:5}.track{height:8px;background:#e9edea}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.5rem 1rem;color:#59635d}
+main{padding:2rem 1.2rem 5rem}section{margin-bottom:3rem}.card{background:white;border:1px solid var(--line);border-radius:18px;padding:1.2rem;box-shadow:0 3px 14px #1420190d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem}
+.term{min-height:150px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}.small{font-size:.92rem;color:#5c665f}
+.callout{background:#edf6fb;border-left:6px solid var(--blue);padding:1rem 1.2rem;border-radius:10px}.warn{background:#fff4d9;border-left:6px solid var(--gold);padding:1rem 1.2rem;border-radius:10px}
+button{border:2px solid var(--forest);border-radius:11px;padding:.7rem 1rem;background:white;color:var(--forest);font-weight:750;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
+.flow{display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;margin:1rem 0}.node{padding:.8rem 1rem;background:var(--sage);border-radius:12px;text-align:center}.arrow{font-size:1.5rem}
+.code{background:var(--code);color:#f5f7f5;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:110px;margin:0}.codeactions,.actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}.code button{background:#29372e;color:white;border-color:#d2ddd5}
+textarea{width:100%;min-height:100px;padding:.75rem;border:2px solid #aeb8b1;border-radius:10px}.hint{display:none;background:#f2effa;border-radius:12px;padding:1rem}.hint.show{display:block}.bridge{border-top:8px solid var(--gold)}.export{background:#eff4f0;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}
+</style></head><body>
+<header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Choose. Repeat. Trace.</h1>
+<p class="lead">Imagine a music app processing a queue. For every track, it repeats the same inspection—but it may make a different decision for each one: play it, skip it, or flag it. That is the heart of control flow: <strong>decide what happens and control what repeats.</strong></p>
+<div class="meta"><span class="pill">~17–19 minutes</span><span class="pill">Interactive</span><span class="pill">No Python setup needed</span><span class="pill">Saves locally</span></div></div></header>
+<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Target: trace short conditionals and loops, then predict exact output before code runs.</p></div>
+<main>
+<section><h2>1. Vocabulary you can use</h2><p>Flip all four cards. Your goal is not just to recognize the words—you should be able to point to each idea in code.</p><div class="grid">
+<button class="card term" type="button"><span class="front"><strong>conditional</strong><br><span class="small">Flip</span></span><span class="back"><strong>Conditional</strong><br>Code that checks a condition and chooses a path based on whether it is true or false.</span></button>
+<button class="card term" type="button"><span class="front"><strong>loop</strong><br><span class="small">Flip</span></span><span class="back"><strong>Loop</strong><br>A structure that repeats code.</span></button>
+<button class="card term" type="button"><span class="front"><strong>iteration</strong><br><span class="small">Flip</span></span><span class="back"><strong>Iteration</strong><br>One pass through a loop.</span></button>
+<button class="card term" type="button"><span class="front"><strong>loop body</strong><br><span class="small">Flip</span></span><span class="back"><strong>Loop body</strong><br>The indented code that executes during each iteration.</span></button>
+</div></section>
+
+<section><h2>2. Recall: values can drive decisions</h2><div class="card"><p><strong>Which value is a string?</strong></p>
+<button class="choice recall" data-a="a" type="button"><code>42</code></button><button class="choice recall" data-a="b" type="button"><code>42.0</code></button><button class="choice recall" data-a="c" type="button"><code>"42"</code></button><div id="recfb" class="feedback" tabindex="-1"></div></div>
+<p class="callout">Variables and data types matter because conditions compare values. A program can make different choices depending on the value it sees.</p></section>
+
+<section><h2>3. Conditionals choose a path</h2><p>An <code>if</code> asks the first question. An <code>elif</code> asks another question only if an earlier branch did not run. An <code>else</code> handles the remaining case.</p>
+<div class="flow"><div class="node">Check <code>if</code></div><div class="arrow">→</div><div class="node">if needed, check <code>elif</code></div><div class="arrow">→</div><div class="node">otherwise <code>else</code></div></div>
+<div class="card"><p><strong>A delivery app sees <code>distance = 6</code>. What prints?</strong></p><div class="code"><div class="screen">if distance > 10:
+    print("far")
+elif distance > 3:
+    print("nearby")
+else:
+    print("close")</div></div>
+<button class="choice condq" data-a="nearby" type="button">nearby</button><button class="choice condq" data-a="far" type="button">far</button><button class="choice condq" data-a="close" type="button">close</button><div id="condfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>4. Trace first. Run second.</h2><p>A reliable habit is to predict the branch before revealing output.</p><div class="code"><div id="condScreen" class="screen">battery = 38
+
+if battery >= 70:
+    print("high")
+elif battery >= 25:
+    print("medium")
+else:
+    print("low")</div><div class="codeactions"><button id="condrun" type="button">Reveal simulated output</button></div></div>
+<p class="warn"><strong>Tracing habit:</strong> read from top to bottom. Once a branch runs, the rest of that <code>if/elif/else</code> chain is skipped.</p></section>
+
+<section><h2>5. A <code>for</code> loop repeats once per item</h2><div class="code"><div id="forScreen" class="screen">cities = ["Oslo", "Lima", "Accra"]
+
+for city in cities:
+    print(city)</div><div class="codeactions"><button id="forrun" type="button">Reveal simulated output</button></div></div>
+<div class="card" style="margin-top:1rem"><p><strong>How many iterations happen?</strong></p>
+<button class="choice forq" data-a="3" type="button">3</button><button class="choice forq" data-a="2" type="button">2</button><button class="choice forq" data-a="4" type="button">4</button><div id="forfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>6. <code>range()</code>: watch the stopping boundary</h2><p><code>range(n)</code> starts at 0 and stops <strong>before</strong> <code>n</code>. So the stop value itself is not produced.</p>
+<div class="card"><p><strong>What does this print?</strong></p><div class="code"><div class="screen">for step in range(4):
+    print(step)</div></div>
+<button class="choice rangeq" data-a="0123" type="button">0, 1, 2, 3</button><button class="choice rangeq" data-a="1234" type="button">1, 2, 3, 4</button><button class="choice rangeq" data-a="01234" type="button">0, 1, 2, 3, 4</button><div id="rangefb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>7. <code>while</code>: repetition controlled by a condition</h2><p>A <code>while</code> loop checks its condition before each pass. Something in the loop usually needs to change so that the condition eventually becomes false.</p>
+<div class="flow"><div class="node">Check condition</div><div class="arrow">→</div><div class="node">Run body if true</div><div class="arrow">→</div><div class="node">Change state</div><div class="arrow">↩</div></div>
+<div class="card"><p><strong>What prints?</strong></p><div class="code"><div class="screen">level = 1
+while level < 4:
+    print(level)
+    level = level + 1</div></div>
+<button class="choice whileq" data-a="123" type="button">1, 2, 3</button><button class="choice whileq" data-a="1234" type="button">1, 2, 3, 4</button><button class="choice whileq" data-a="0123" type="button">0, 1, 2, 3</button><div id="whilefb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>8. Put the execution order in your head</h2><div class="card"><p><strong>For a <code>while</code> loop that continues, which sequence is correct?</strong></p>
+<button class="choice orderq" data-a="right" type="button">Check condition → run body → check condition again</button><button class="choice orderq" data-a="body" type="button">Run body → check condition → run body</button><button class="choice orderq" data-a="once" type="button">Check condition once → run body forever</button><div id="orderfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>9. Two ideas, one powerful pattern</h2><p>A loop can visit each item while a conditional decides what to do with that item.</p><div class="code"><div id="comboScreen" class="screen">sizes = [2, 7, 4]
+
+for size in sizes:
+    if size >= 5:
+        print(size, "large")
+    else:
+        print(size, "small")</div><div class="codeactions"><button id="comborun" type="button">Reveal simulated output</button></div></div>
+<div class="card" style="margin-top:1rem"><p><strong>How many times is the conditional evaluated?</strong></p>
+<button class="choice comboq" data-a="3" type="button">3 times</button><button class="choice comboq" data-a="2" type="button">2 times</button><button class="choice comboq" data-a="1" type="button">1 time</button><div id="combofb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>10. Debug by tracing, not guessing</h2><div class="card"><p>You predicted the wrong output by one item. What is the best next move?</p>
+<button class="choice debugq" data-a="trace" type="button">Trace from the first iteration and check each boundary one at a time.</button><button class="choice debugq" data-a="random" type="button">Assume Python skipped an iteration.</button><button class="choice debugq" data-a="rewrite" type="button">Rewrite the whole program before checking the trace.</button><div id="debugfb" class="feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your tracing rule:</strong> In your own words, write one habit that will help you predict output accurately.</label><textarea id="strategy" data-save placeholder="Example starter: “Before I run code, I will…”"></textarea><p><button id="hintbtn" type="button">Generate a thinking hint</button></p><div id="hint" class="hint"></div></section>
+
+<section class="bridge"><h2>11. Required bridge to lecture</h2><p>You just practiced the concepts the upcoming lesson asks you to recognize: a <strong>conditional</strong> chooses a path, a <strong>loop</strong> repeats work, an <strong>iteration</strong> is one pass, and the <strong>loop body</strong> is the code repeated each pass. You also practiced the central lecture habit: <strong>predict exact output before running code</strong>.</p>
+<p>In lecture/lab, you will type and trace live examples of <code>if/elif/else</code>, <code>for</code>, <code>range()</code>, and <code>while</code>, then combine repetition with decision-making. Be ready to recognize stopping boundaries and to explain why a particular branch or iteration occurs.</p>
+<div class="card"><p><strong>Bridge challenge — new situation:</strong> A program visits every message in a queue and labels each as short or long. Which combination of tools best matches that job?</p>
+<button class="choice bridgeq" data-a="both" type="button">A loop to visit every message + a conditional to choose its label</button><button class="choice bridgeq" data-a="if" type="button">Only a conditional, because repetition happens automatically</button><button class="choice bridgeq" data-a="loop" type="button">Only a loop, because every message must get the same label</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
+<label for="bring"><strong>Bring to lecture:</strong> What is one boundary or stopping question you should ask yourself when tracing a loop?</label><textarea id="bring" data-save></textarea></section>
+
+<section><h2>12. Keep a copy of your work</h2><div class="export"><div class="actions"><button id="md" type="button">Create Markdown file</button><button id="json" type="button">Create JSON file</button><button id="txt" type="button">Create TXT file</button><button id="show" type="button">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:260px"></textarea><p><button id="selectall" type="button">Select all text</button></p></div></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let history=[];const KEY="control-flow-conditionals-reading-v1";
+function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
+$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
+function quiz(cls,fb,correct,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{const ok=b.dataset.a===correct,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
+quiz(".recall","#recfb","c",{a:"42 is an integer: a whole number with no quotes.",b:"42.0 is a float because it has a decimal point.",c:"Quotes make \"42\" text, so it is a string."});
+quiz(".condq","#condfb","nearby",{nearby:"6 is not greater than 10, so Python checks the elif. 6 is greater than 3, so nearby runs.",far:"The first condition is false because 6 is not greater than 10.",close:"The elif condition is true, so Python runs nearby and skips else."});
+quiz(".forq","#forfb","3",{3:"There are three items in the list, so the loop body runs once for each: three iterations.",2:"The list contains three items, not two.",4:"A for loop over this list runs once per item. There are three items."});
+quiz(".rangeq","#rangefb","0123",{0123:"range(4) starts at 0 and stops before 4: 0, 1, 2, 3.",1234:"range(4) starts at 0, not 1, and does not include 4.",01234:"The stop value 4 is excluded, so only four values print."});
+quiz(".whileq","#whilefb","123",{123:"The loop prints 1, 2, and 3. When level becomes 4, level < 4 is false.",1234:"4 does not print because the condition is checked before the body runs again.",0123:"level starts at 1, so 0 is never printed."});
+quiz(".orderq","#orderfb","right",{right:"A while loop checks first. If true, it runs the body, then returns to check again.",body:"The condition is checked before the first body execution.",once:"The condition is re-checked before every possible iteration."});
+quiz(".comboq","#combofb","3",{3:"The loop has three iterations, and the conditional is in the loop body, so it is evaluated once per iteration.",2:"Two output categories do not mean two evaluations. There are three items.",1:"The conditional is inside the loop, so it is evaluated for every item."});
+quiz(".debugq","#debugfb","trace",{trace:"Tracing one iteration at a time exposes off-by-one and threshold mistakes.",random:"Python does not randomly skip loop iterations.",rewrite:"First locate the mismatch by tracing. Rewriting before understanding it can hide the real error."});
+quiz(".bridgeq","#bridgefb","both",{both:"Exactly: repetition visits each message; decision-making chooses the label for that message.",if:"A conditional chooses a path, but it does not automatically visit every item.",loop:"A loop repeats work, but a conditional is needed when the label depends on each message."});
+$("#condrun").addEventListener("click",()=>{$("#condScreen").textContent=`battery = 38
+
+if battery >= 70:
+    print("high")
+elif battery >= 25:
+    print("medium")
+else:
+    print("low")
+
+[Output]:
+medium`;history.push({activity:"conditional-simulation",action:"revealed medium"});save()});
+$("#forrun").addEventListener("click",()=>{$("#forScreen").textContent=`cities = ["Oslo", "Lima", "Accra"]
+
+for city in cities:
+    print(city)
+
+[Output]:
+Oslo
+Lima
+Accra`;history.push({activity:"for-loop-simulation",action:"revealed three iterations"});save()});
+$("#comborun").addEventListener("click",()=>{$("#comboScreen").textContent=`sizes = [2, 7, 4]
+
+for size in sizes:
+    if size >= 5:
+        print(size, "large")
+    else:
+        print(size, "small")
+
+[Output]:
+2 small
+7 large
+4 small`;history.push({activity:"loop-conditional-simulation",action:"revealed item-by-item decisions"});save()});
+$("#hintbtn").addEventListener("click",()=>{const h=$("#hint");h.classList.add("show");h.textContent="Try one of these: identify the starting value; mark the exact stopping condition; write the value for each iteration; or evaluate conditions from top to bottom and stop when a branch runs."});
+function snapshot(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
+function text(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
+function markdown(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
+function dl(name,type,content){try{const b=new Blob([content],{type:type+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
+function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” below."}
+$("#md").addEventListener("click",()=>stat(dl("control-flow-conditionals-reading.md","text/markdown",markdown(snapshot()))));$("#json").addEventListener("click",()=>stat(dl("control-flow-conditionals-reading.json","application/json",JSON.stringify(snapshot(),null,2))));$("#txt").addEventListener("click",()=>stat(dl("control-flow-conditionals-reading.txt","text/plain",text(snapshot()))));
+$("#show").addEventListener("click",()=>{const w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=text(snapshot());t.focus();t.select()});$("#selectall").addEventListener("click",()=>{$("#plain").focus();$("#plain").select()});
+window.addEventListener("scroll",()=>{const d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
+</script></body></html>
