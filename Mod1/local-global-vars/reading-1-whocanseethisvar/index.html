@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Who Can See This Variable? | Local vs. Global Scope</title>
+<style>
+:root{--ink:#19221c;--paper:#fbfaf6;--card:#fff;--forest:#21482f;--sage:#dce9df;--blue:#2b78b5;--gold:#e0ad2e;--line:#d6ddd8;--good:#e7f5eb;--bad:#fbe9ec;--focus:#ffbf47;--code:#151b17}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--paper);line-height:1.62}button,textarea{font:inherit}button:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}
+header{background:var(--forest);color:#fff;padding:3rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.4rem,6vw,4.6rem);line-height:1.02;margin:.4rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{text-transform:uppercase;font-weight:800;letter-spacing:.08em;color:#dce9df}.lead{font-size:1.2rem;max-width:800px}.meta{display:flex;gap:.6rem;flex-wrap:wrap}.pill{border:1px solid #a9bcad;border-radius:999px;padding:.3rem .7rem}
+.sticky{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:5}.track{height:8px;background:#e8ece9}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.55rem 1rem;color:#56615a}
+main{padding:2rem 1.2rem 5rem}section{margin-bottom:3.4rem}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.25rem;box-shadow:0 3px 14px #1420190d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.callout{border-left:6px solid var(--blue);background:#edf6fb;padding:1rem 1.2rem;border-radius:10px}.warn{border-left:6px solid var(--gold);background:#fff5dc;padding:1rem 1.2rem;border-radius:10px}
+button{border:2px solid var(--forest);border-radius:11px;padding:.7rem 1rem;background:#fff;color:var(--forest);font-weight:750;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
+.term{min-height:145px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}
+.scopeviz{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.zone{border:3px dashed #84938a;border-radius:16px;padding:1rem;min-height:190px}.token{display:inline-block;background:var(--sage);padding:.35rem .6rem;border-radius:8px;margin:.25rem}
+.code{background:var(--code);color:#f5f7f5;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:160px;margin:0}.codeactions,.actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}.code button{background:#26342b;color:#fff;border-color:#cad8cd}
+textarea{width:100%;min-height:105px;padding:.75rem;border:2px solid #aeb8b1;border-radius:10px}.hint{display:none;background:#f3f0fb;border-radius:12px;padding:1rem}.hint.show{display:block}.bridge{border-top:8px solid var(--gold)}.export{background:#f0f4f1;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{color:#59635d;font-size:.92rem}
+@media(max-width:650px){.scopeviz{grid-template-columns:1fr}h2{font-size:1.65rem}}
+</style></head><body>
+<header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Who Can See This Variable?</h1>
+<p class="lead">Imagine two functions helping run a music festival. One function creates a temporary calculation for a single ticket. Another quietly reaches outside itself for a value someone else set earlier. Both may work today—but which one can you trust when the program moves?</p>
+<div class="meta"><span class="pill">~15–18 minutes</span><span class="pill">Interactive</span><span class="pill">No Python setup needed</span><span class="pill">Saves locally</span></div></div></header>
+<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Goal: explain local vs. global scope and why explicit parameters make functions easier to reuse and test.</p></div>
+<main>
+<section><h2>1. Vocabulary first</h2><p>Flip each card. You will use these words to reason about code—not just memorize definitions.</p><div class="grid">
+<button class="card term"><span class="front"><strong>scope</strong><br><span class="small">Flip card</span></span><span class="back"><strong>Scope</strong><br>The region of a program where a name can be accessed.</span></button>
+<button class="card term"><span class="front"><strong>local variable</strong><br><span class="small">Flip card</span></span><span class="back"><strong>Local variable</strong><br>A variable created inside a function and available there while that call runs.</span></button>
+<button class="card term"><span class="front"><strong>global variable</strong><br><span class="small">Flip card</span></span><span class="back"><strong>Global variable</strong><br>A variable created outside functions at module level; functions can read it.</span></button>
+<button class="card term"><span class="front"><strong>dependency</strong><br><span class="small">Flip card</span></span><span class="back"><strong>Dependency</strong><br>Something a function needs in order to do its job. Parameters make dependencies visible at the call.</span></button>
+</div></section>
+
+<section><h2>2. Recall: parameters and return</h2><div class="card"><p><code>def triple(value): return value * 3</code></p><p><strong>What does <code>triple(4)</code> return?</strong></p>
+<button class="choice recall" data-a="4">4</button><button class="choice recall" data-a="12">12</button><button class="choice recall" data-a="expr">value * 3</button><div id="recfb" class="feedback" tabindex="-1"></div></div>
+<p class="callout"><strong>Connection:</strong> parameters bring values into a function and <code>return</code> sends a result out. Scope answers a different question: where is a variable name available while the program runs?</p></section>
+
+<section><h2>3. Build a mental map of scope</h2><div class="scopeviz"><div class="zone"><strong>Outside functions</strong><p><span class="token">festival_name</span></p><p>This name is created at module level.</p></div><div class="zone"><strong>Inside <code>make_label()</code></strong><p><span class="token">guest</span> <span class="token">label</span></p><p>The parameter and variable belong to this function call.</p></div></div>
+<div class="card" style="margin-top:1rem"><p><strong>After <code>make_label()</code> finishes, which name below should code outside the function be able to use directly?</strong></p>
+<button class="choice mapq" data-a="festival">festival_name</button><button class="choice mapq" data-a="label">label</button><button class="choice mapq" data-a="guest">guest</button><div id="mapfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section><h2>4. Predict → reveal: local scope</h2><p>This is a browser simulation of the Python result so you can practice the reasoning before lecture.</p>
+<div class="code"><div id="localScreen" class="screen">def build_badge():
+    badge = "A17"
+    return badge
+
+print(build_badge())
+print(badge)</div><div class="codeactions"><button id="localrun">Reveal simulated output</button></div></div><div id="localfb" class="feedback" tabindex="-1"></div>
+<p class="warn"><strong>Watch the distinction:</strong> returning the <em>value</em> does not make the local variable name available outside the function.</p></section>
+
+<section><h2>5. A global can be read—but that creates a hidden need</h2><div class="code"><div class="screen">service_fee = 3
+
+def final_cost(base):
+    return base + service_fee</div></div>
+<div class="card" style="margin-top:1rem"><p><strong>What does <code>final_cost</code> need in order to work?</strong></p><button class="choice globalq" data-a="both">Both <code>base</code> and an existing <code>service_fee</code></button><button class="choice globalq" data-a="base">Only <code>base</code>, because that is the only parameter</button><button class="choice globalq" data-a="none">Nothing; functions supply their own values</button><div id="globalfb" class="feedback" tabindex="-1"></div></div>
+<p class="callout"><strong>Key design idea:</strong> the call <code>final_cost(20)</code> shows <code>base</code>, but it hides the function's dependence on <code>service_fee</code>.</p></section>
+
+<section><h2>6. Make the dependency visible</h2><div class="card"><p><strong>Which refactor makes this function easier to move and test?</strong></p>
+<button class="choice refq" data-a="param"><code>def final_cost(base, fee): return base + fee</code></button>
+<button class="choice refq" data-a="global"><code>def final_cost(base): return base + service_fee</code></button>
+<button class="choice refq" data-a="copy"><code>def final_cost(base): service_fee = 3; return base + service_fee</code></button><div id="reffb" class="feedback" tabindex="-1"></div></div>
+<label for="why"><strong>In your own words:</strong> Why does a parameter make a function's dependency easier to see?</label><textarea id="why" data-save placeholder="Try: “When I read the function call…”"></textarea><p><button id="hintbtn">Generate a thinking hint</button></p><div id="hint" class="hint"></div></section>
+
+<section><h2>7. Scope detective</h2><div class="code"><div id="detectScreen" class="screen">level = "standard"
+
+def choose_message(name):
+    message = "Welcome, " + name
+    return message
+
+# Which statements are true?</div></div>
+<div class="card" style="margin-top:1rem"><button class="choice detq" data-a="right"><code>level</code> is global; <code>name</code> and <code>message</code> are local to the function call.</button><button class="choice detq" data-a="wrong1">All three names are global because the function is part of the same program.</button><button class="choice detq" data-a="wrong2"><code>message</code> becomes global because it is returned.</button><div id="detfb" class="feedback" tabindex="-1"></div></div></section>
+
+<section class="bridge"><h2>8. Required bridge to lecture + project</h2><p>You just practiced three habits: identify where a name is created, distinguish a returned value from a local name, and notice when a function secretly depends on outside state. In lecture, you will use those habits to trace actual Python scope errors, read a global from a function, and refactor a hidden global dependency into a parameter. The project connection is the same design habit: functions such as <code>read_batch_file</code>, <code>validate_line</code>, and <code>process_transactions</code> need to work from their parameters rather than secretly reaching for outside variables.</p>
+<div class="card"><p><strong>Bridge challenge — new situation:</strong> You copy <code>format_score(points)</code> into a new file. It fails because it used an outside variable named <code>bonus</code>. What design change best prepares it for reuse?</p>
+<button class="choice bridgeq" data-a="parameter">Add the needed bonus as a parameter.</button><button class="choice bridgeq" data-a="newglobal">Create another global named bonus in every file.</button><button class="choice bridgeq" data-a="rename">Rename points.</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
+<label for="bring"><strong>Bring to lecture:</strong> When you see a name inside a function, what will you check to decide whether it is local, global, or a parameter?</label><textarea id="bring" data-save></textarea></section>
+
+<section><h2>9. Keep a copy of your work</h2><div class="export"><div class="actions"><button id="md">Create Markdown file</button><button id="json">Create JSON file</button><button id="txt">Create TXT file</button><button id="show">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:260px"></textarea><p><button id="selectall">Select all text</button></p></div></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let history=[];const KEY="scope-reading-v1";
+function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
+$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.onclick=()=>x.classList.toggle("flip"));
+function quiz(cls,fb,correct,msg){$$(cls).forEach(b=>b.onclick=()=>{const ok=b.dataset.a===correct,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()})}
+quiz(".recall","#recfb","12",{4:"The argument 4 becomes value, then the function multiplies it by 3.",12:"The parameter value receives 4, so value * 3 evaluates to 12 and that value is returned.",expr:"Python evaluates the expression before returning it; with value = 4, the result is 12."});
+quiz(".mapq","#mapfb","festival",{festival:"festival_name was created outside the function, so it is in global/module scope.",label:"label is created inside make_label(), so that local name is not available outside after the call.",guest:"guest is a parameter and is local to the function call."});
+quiz(".globalq","#globalfb","both",{both:"The parameter supplies base, but the function also reads the global service_fee. That second dependency is hidden from the call.",base:"The call only shows base, but the body also needs service_fee to exist outside the function.",none:"The function needs both its argument and the outside service_fee value."});
+quiz(".refq","#reffb","param",{param:"The parameter list now makes both required inputs explicit, so callers and tests can supply them directly.",global:"This keeps the hidden global dependency.",copy:"This removes the global, but hard-codes the fee inside the function, so callers still cannot easily supply different fees."});
+quiz(".detq","#detfb","right",{right:"level is created outside the function. name is a parameter, and message is created inside the function; both are local to each call.",wrong1:"Being in the same file does not make a function's parameters and locally created names global.",wrong2:"Returning message sends its value out; it does not move the local variable name into global scope."});
+quiz(".bridgeq","#bridgefb","parameter",{parameter:"Making bonus a parameter exposes the dependency and lets each caller supply the needed value.",newglobal:"That recreates the same hidden dependency in every new location.",rename:"Renaming the existing parameter does not supply the missing bonus dependency."});
+$("#localrun").onclick=()=>{const s=$("#localScreen");s.textContent='def build_badge():\n    badge = "A17"\n    return badge\n\nprint(build_badge())\nprint(badge)\n\n[Output]:\nA17\nNameError: name \\'badge\\' is not defined';const f=$("#localfb");f.className="feedback show good";f.innerHTML="<strong>Why:</strong> the first print receives the returned value. The second line tries to use the local name <code>badge</code> outside its scope, so Python cannot find that name.";f.focus();history.push({activity:"scope-simulation",action:"revealed local-scope output"});save()};
+$("#hintbtn").onclick=()=>{const h=$("#hint");h.classList.add("show");h.textContent="Compare what a reader can learn from final_cost(20) versus final_cost(20, 3). Which call reveals every value the function needs?"};
+function snapshot(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
+function text(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
+function markdown(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
+function dl(name,type,content){try{const b=new Blob([content],{type:type+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
+function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” below."}
+$("#md").onclick=()=>stat(dl("local-global-scope-reading.md","text/markdown",markdown(snapshot())));$("#json").onclick=()=>stat(dl("local-global-scope-reading.json","application/json",JSON.stringify(snapshot(),null,2)));$("#txt").onclick=()=>stat(dl("local-global-scope-reading.txt","text/plain",text(snapshot())));
+$("#show").onclick=()=>{const w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=text(snapshot());t.focus();t.select()};$("#selectall").onclick=()=>{$("#plain").focus();$("#plain").select()};
+window.addEventListener("scroll",()=>{const d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
+</script></body></html>
