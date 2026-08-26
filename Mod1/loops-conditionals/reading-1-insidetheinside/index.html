@@ -11,6 +11,7 @@
 .mlrk-gate-connector{font-size:.9rem;font-weight:600;color:var(--mlrk-text-on-light-muted);margin:.7rem 0 .7rem .3rem;padding-left:1rem;border-left:3px dashed var(--mlrk-callout-blue-border)}
 .mlrk-gate-inner{border:3px solid var(--mlrk-callout-blue-border);border-radius:12px;padding:.8rem 1rem;background:var(--mlrk-callout-blue-fill);margin-left:1rem;font-weight:700}
 .mlrk-gate-skip{margin-top:.8rem}
+.mlrk-illustration{width:100%;max-width:640px;height:auto;margin:1.1rem 0;display:block}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:8rem}
 @media(max-width:650px){.trace{grid-template-columns:1fr 1fr}}
@@ -49,13 +50,48 @@
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
 <p>Picture the game from the intro: 3 worlds, 4 checkpoints in each. To reach every checkpoint, you don't write one loop — you play checkpoints 1, 2, 3, 4 of World 1, <em>then</em> checkpoints 1, 2, 3, 4 of World 2, and so on. That's <strong>nesting</strong>: one repeating structure (checkpoints) living entirely inside another repeating structure (worlds), where the inner one runs to completion once for every single pass of the outer one.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 640 210" role="img" aria-labelledby="mapTitle mapDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="mapTitle">Game map: three worlds, each with four checkpoints</title>
+  <desc id="mapDesc">World 1 and World 2 are shown fully, each containing four numbered checkpoints in a 2 by 2 layout. World 3 is shown collapsed, indicating the same pattern continues.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="16" y="20" width="180" height="170" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="106" y="46" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">World 1</text>
+    <g fill="#FFFCF7" stroke="#264326" stroke-width="2.5">
+      <circle cx="66" cy="90" r="22"/><circle cx="146" cy="90" r="22"/>
+      <circle cx="66" cy="150" r="22"/><circle cx="146" cy="150" r="22"/>
+    </g>
+    <g font-size="16" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="66" y="96">1</text><text x="146" y="96">2</text>
+      <text x="66" y="156">3</text><text x="146" y="156">4</text>
+    </g>
+
+    <rect x="230" y="20" width="180" height="170" rx="16" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="320" y="46" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">World 2</text>
+    <g fill="#FFFCF7" stroke="#2274B5" stroke-width="2.5">
+      <circle cx="280" cy="90" r="22"/><circle cx="360" cy="90" r="22"/>
+      <circle cx="280" cy="150" r="22"/><circle cx="360" cy="150" r="22"/>
+    </g>
+    <g font-size="16" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="280" y="96">1</text><text x="360" y="96">2</text>
+      <text x="280" y="156">3</text><text x="360" y="156">4</text>
+    </g>
+
+    <rect x="444" y="55" width="120" height="100" rx="16" fill="#FECC5B" stroke="#83671C" stroke-width="3" stroke-dasharray="6 5"/>
+    <text x="504" y="95" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">World 3</text>
+    <text x="504" y="118" text-anchor="middle" font-size="14" fill="#261F1D">same pattern</text>
+
+    <polygon points="410,105 440,105 440,98 452,112 440,126 440,119 410,119" fill="#264326"/>
+  </g>
+</svg>
+
 <p>Now add the key. At each checkpoint, the game asks "is the player carrying a key?" — and only if the answer is yes does it ask a second question, "is it the right color?" That second question is a <strong>nested conditional</strong>: a decision living inside another decision, reachable only when the outer decision came out true.</p>
 <p>Nesting loops and nesting conditionals are the whole reading. Two rules do almost all of the work: an inner loop always finishes every one of its passes before the outer loop advances, and an inner conditional is only ever reached if execution actually enters the outer branch that contains it.</p>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before nesting</h2>
-<p class="mlrk-small">Understanding built-in functions like <code>range()</code> is a prerequisite skill for this reading — test your knowledge below before moving on.</p>
+<p class="mlrk-small">Four skills are prerequisites for this reading: the <code>range()</code> function, comparison operators, how a single (non-nested) conditional picks a branch, and tuple unpacking. Test your knowledge of each below before moving on.</p>
 <div class="mlrk-card" id="card-recall"><p><strong>How many values does <code>range(5)</code> produce?</strong></p>
 <button type="button" class="mlrk-choice" data-a="4">4</button>
 <button type="button" class="mlrk-choice" data-a="5">5</button>
@@ -143,10 +179,6 @@ else:
 <div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
 <div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
-<div class="mlrk-card" id="card-scope" style="margin-top:.8rem"><p><strong>Check: which statement is true of the snippet above?</strong></p>
-<button type="button" class="mlrk-choice" data-a="scope1">Printing happens once per inner pass; advancing to the next aisle happens once per outer pass.</button>
-<button type="button" class="mlrk-choice" data-a="scope2">Both happen the same number of times, since they're in the same block.</button>
-<div id="scopefb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
@@ -176,7 +208,7 @@ else:
   <p class="mlrk-gate-skip">If the outer answer is <strong>no</strong>, the inner question is never reached at all — it's skipped entirely, not evaluated and found false.</p>
 </div>
 <div class="mlrk-card" id="card-gate" style="margin-top:1rem"><p><strong>If the patient is not eligible, what happens to the wait-time check?</strong></p>
-<button type="button" class="mlrk-choice" data-a="skip">It's skipped — the outer condition is false, so execution never enters the block that contains the inner check.</button>
+<button type="button" class="mlrk-choice" data-a="skip">It's skipped. The outer condition is false, so execution never enters the block that contains the inner check.</button>
 <button type="button" class="mlrk-choice" data-a="check">It still runs, because every <code>if</code> must be evaluated somewhere.</button>
 <button type="button" class="mlrk-choice" data-a="error">Python raises an error, since the inner check was never reached.</button>
 <div id="gatefb" class="mlrk-feedback" tabindex="-1"></div></div>
@@ -221,7 +253,7 @@ else:
 <div class="mlrk-card"><p><strong>Select every statement below that is TRUE about nested loops and nested conditionals.</strong></p>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> Once the outer loop finishes its first pass, the inner loop's range is used up for the rest of the program.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> An inner conditional can only run if code execution has entered its outer branch.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Nesting is limited to loops — conditionals cannot be nested inside other conditionals.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Nesting is limited to loops. Conditionals cannot be nested inside other conditionals.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> The total number of inner-loop executions is outer count × inner count.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
@@ -240,8 +272,8 @@ for channel, enabled in alerts:
         else:
             print("email paused")</div></div>
 <div class="mlrk-card" id="card-combo" style="margin-top:1rem"><p><strong>For the <code>("SMS", False)</code> item, is <code>if enabled</code> ever evaluated?</strong></p>
-<button type="button" class="mlrk-choice" data-a="no">No — the outer <code>channel == "EMAIL"</code> condition is false for that item.</button>
-<button type="button" class="mlrk-choice" data-a="yes">Yes — the loop guarantees every inner conditional runs for every item.</button>
+<button type="button" class="mlrk-choice" data-a="no">No, the outer <code>channel == "EMAIL"</code> condition is false for that item.</button>
+<button type="button" class="mlrk-choice" data-a="yes">Yes, the loop guarantees every inner conditional runs for every item.</button>
 <div id="combofb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
@@ -375,24 +407,24 @@ git push</pre>
   K.Scoring.renderChip("#scorechip");
 
   K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"5",
-    feedback:{4:"range(5) starts at 0 and stops before 5, producing 0, 1, 2, 3, 4 — five values.",
+    feedback:{4:"range(5) starts at 0 and stops before 5. That produces 0, 1, 2, 3, 4: five values.",
               5:"range(5) produces five values: 0 through 4.",
               6:"The stop value 5 is not included, so there are five values, not six."}});
 
   K.quiz({id:"q-compare", buttonSelector:"#card-compare .mlrk-choice", feedbackSelector:"#comparefb", correct:"false",
     feedback:{false:"25 is not greater than or equal to 30, so this comparison evaluates to False.",
               true:"25 is less than 30, so this comparison is False, not True.",
-              error:"Comparing two numbers with >= is completely normal Python — no error here."}});
+              error:"Comparing two numbers with >= is completely normal Python. No error here."}});
 
   K.quiz({id:"q-single", buttonSelector:"#card-single .mlrk-choice", feedbackSelector:"#singlefb", correct:"mild",
-    feedback:{mild:"Python checks branches top to bottom and stops at the first true one. temp > 80 is false, so it moves to elif temp > 60, which is true — mild prints, and else never runs.",
+    feedback:{mild:"Python checks branches top to bottom and stops at the first true one. temp > 80 is false, so it moves to elif temp > 60, which is true. mild prints, and else never runs.",
               hot:"temp > 80 is false (72 is not greater than 80), so that branch never runs.",
               cool:"Python already found a true branch (temp > 60) before ever reaching else, so else is skipped."}});
 
   K.quiz({id:"q-tuple", buttonSelector:"#card-tuple .mlrk-choice", feedbackSelector:"#tuplefb", correct:"false",
     feedback:{false:"channel, enabled = pair unpacks the tuple positionally: channel gets \"SMS\", enabled gets False.",
               sms:"\"SMS\" is assigned to channel, the first name, not enabled.",
-              tuple:"Tuple unpacking splits the tuple across both names — enabled doesn't hold the whole tuple, just its second value."}});
+              tuple:"Tuple unpacking splits the tuple across both names, so enabled doesn't hold the whole tuple, just its second value."}});
 
   K.quiz({id:"q-order", buttonSelector:"#card-order .mlrk-choice", feedbackSelector:"#orderfb", correct:"complete",
     feedback:{complete:"For each outer pass, Python runs the entire inner loop before the outer loop advances.",
@@ -404,10 +436,6 @@ git push</pre>
               6:"Adding 4 + 2 gives 6, but nested repetition means two inner executions happen for each of four outer passes.",
               4:"That counts only the outer passes. Each outer pass contains two inner passes."},
     onDone(){revealLoop()}});
-
-  K.quiz({id:"q-scope", buttonSelector:"#card-scope .mlrk-choice", feedbackSelector:"#scopefb", correct:"scope1", maxAttempts:1,
-    feedback:{scope1:"Right — the print sits inside both loops (once per inner pass); advancing the aisle only happens on the outer loop.",
-              scope2:"They aren't the same count — one line is nested one level deeper than the other."}});
 
   K.quiz({id:"q-indent", buttonSelector:"#card-indent .mlrk-choice", feedbackSelector:"#indentfb", correct:"2",
     feedback:{2:"The line is indented inside the outer loop but not the inner loop, so it runs once for each of 2 teams.",
@@ -430,8 +458,8 @@ git push</pre>
               yes:"The loop visits every item, but conditionals still control which nested code is reached."}});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"9",
-    feedback:{9:"3 outer × 3 inner = 9 — the same multiplication rule from section 5, dressed up as an interview question.",
-              6:"That's 3 + 3, not 3 × 3 — nested repetition multiplies, it doesn't add.",
+    feedback:{9:"3 outer × 3 inner = 9, the same multiplication rule from section 5, just dressed up as an interview question.",
+              6:"That's 3 + 3, not 3 × 3. Nested repetition multiplies; it doesn't add.",
               3:"That only counts one full pass of the outer loop."}});
 
   K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"outer",
@@ -446,17 +474,17 @@ git push</pre>
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
     {value:"a", label:"Once the outer loop finishes its first pass, the inner loop's range is used up for the rest of the program.", correct:false,
-      hint:"Think about what happens to bin_num when aisle moves from 0 to 1 — does the inner loop's range get reused or exhausted?",
+      hint:"Think about what happens to bin_num when aisle moves from 0 to 1. Does the inner loop's range get reused, or exhausted?",
       explain:"The inner loop gets a completely fresh run, starting from its first pass again, every single time the outer loop advances."},
     {value:"b", label:"An inner conditional can only run if code execution has entered its outer branch.", correct:true,
-      hint:"This is the same gating rule practiced in section 8 — does it hold here too?",
+      hint:"This is the same gating rule practiced in section 8. Does it hold here too?",
       explain:"This is the same gating rule practiced with the clinic example in section 8."},
-    {value:"c", label:"Nesting is limited to loops — conditionals cannot be nested inside other conditionals.", correct:false,
-      hint:"Section 8's clinic example nested two conditionals inside each other — does that match this statement?",
+    {value:"c", label:"Nesting is limited to loops. Conditionals cannot be nested inside other conditionals.", correct:false,
+      hint:"Section 8's clinic example nested two conditionals inside each other. Does that match this statement?",
       explain:"Conditionals nest inside conditionals exactly the same way loops nest inside loops (see section 8)."},
     {value:"d", label:"The total number of inner-loop executions equals outer count × inner count.", correct:true,
       hint:"This is the same multiplication rule practiced in section 5's aisle/bin count.",
-      explain:"Outer count × inner count — the same rule practiced in section 5's aisle/bin example."}
+      explain:"Outer count times inner count: the same rule practiced in section 5's aisle/bin example."}
   ]});
 
   K.dragDrop("#dragarea", "act-drag-scope");
@@ -531,7 +559,7 @@ standard slot`;
     } else if(blankAttempts>=2){
       K.Scoring.award("q-blank",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer — you'll get it next time.</strong> Both blanks are <code>range</code>.";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> Both blanks are <code>range</code>.";
       blankDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
@@ -556,7 +584,7 @@ standard slot`;
 
   function stat(ok){
     $("#exportfb").textContent = ok
-      ? "File created. Keep a copy — your instructor will tell you where/how to store or submit it."
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
       : "File generation failed in this browser. Use \"Show plain text\" below instead.";
   }
   $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
@@ -577,7 +605,7 @@ standard slot`;
   K.wireImport("#importfile-top", ok => {
     $("#importfb-top").textContent = ok
       ? "Progress restored from your saved file."
-      : "That file couldn't be read — make sure it's the JSON you downloaded from this reading.";
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
   });
 })();
 </script>

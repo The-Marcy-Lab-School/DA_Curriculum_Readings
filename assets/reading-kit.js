@@ -9,8 +9,17 @@
   const SUBMISSIONS_REPO = "The-Marcy-Lab-School/DA-Reading_Submissions";
   const ALIAS_KEY = "mlrk:persona";
   const ADJECTIVES = ["Turbo","Quiet","Cosmic","Sunny","Rapid","Clever","Bold","Mellow","Electric","Curious","Steady","Bright","Nimble","Loyal","Vivid"];
-  const ANIMALS = ["Otter","Falcon","Panda","Fox","Heron","Cricket","Dolphin","Badger","Sparrow","Lynx","Gecko","Raven","Hare","Marmot","Kestrel"];
-  const EMOJI = ["🦦","🦅","🐼","🦊","🐦","🦗","🐬","🦡","🐦‍⬛","🐆","🦎","🐦‍⬛","🐇","🦫","🪶"];
+  // name+emoji are paired together on purpose — picking them from two
+  // independent lists is exactly what used to produce mismatches like a
+  // lizard emoji next to the name "Dolphin". Every entry here uses a real,
+  // single-codepoint emoji that unambiguously matches its own name.
+  const ANIMALS = [
+    {name:"Otter",emoji:"🦦"},{name:"Eagle",emoji:"🦅"},{name:"Panda",emoji:"🐼"},
+    {name:"Fox",emoji:"🦊"},{name:"Dolphin",emoji:"🐬"},{name:"Badger",emoji:"🦡"},
+    {name:"Owl",emoji:"🦉"},{name:"Turtle",emoji:"🐢"},{name:"Hedgehog",emoji:"🦔"},
+    {name:"Octopus",emoji:"🐙"},{name:"Penguin",emoji:"🐧"},{name:"Koala",emoji:"🐨"},
+    {name:"Kangaroo",emoji:"🦘"},{name:"Wolf",emoji:"🐺"},{name:"Tiger",emoji:"🐯"}
+  ];
 
   function $(sel,root){return (root||document).querySelector(sel)}
   function $$(sel,root){return [...(root||document).querySelectorAll(sel)]}
@@ -37,7 +46,22 @@
       return this.reroll();
     },
     reroll(){
-      const persona={name:rand(ADJECTIVES)+" "+rand(ANIMALS),emoji:rand(EMOJI)};
+      const animal=rand(ANIMALS);
+      const persona={name:rand(ADJECTIVES)+" "+animal.name,emoji:animal.emoji};
+      try{localStorage.setItem(ALIAS_KEY,JSON.stringify(persona))}catch(e){}
+      return persona;
+    },
+    /* Restore an exact persona typed in by hand — for a student switching
+       devices/browsers who already has a locked leaderboard alias from a
+       previous submission and wants this device to show the same one.
+       The emoji is looked up from the animal word so it can't mismatch. */
+    setFromText(text){
+      const trimmed=(text||"").trim();
+      if(!trimmed) return null;
+      const words=trimmed.split(/\s+/);
+      const animalWord=words[words.length-1].toLowerCase();
+      const match=ANIMALS.find(a=>a.name.toLowerCase()===animalWord);
+      const persona={name:trimmed,emoji:match?match.emoji:"🙂"};
       try{localStorage.setItem(ALIAS_KEY,JSON.stringify(persona))}catch(e){}
       return persona;
     },
@@ -52,8 +76,18 @@
           '<span class="mlrk-persona-name">'+p.name+'</span>'+
           '<button type="button" class="mlrk-btn" data-reroll>Shuffle my reading persona</button>'+
           '</div>'+
-          '<p class="mlrk-small">This name/emoji is just for fun and shows up on the public leaderboard instead of your real name. It resets if you switch devices — pick one you like and stick with it.</p>';
+          '<p class="mlrk-small">This name/emoji is just for fun and shows up on the leaderboard instead of your real name. It only locks in for real the first time you submit a reading for credit — after that it stays fixed no matter what you reroll to here.</p>'+
+          '<details class="mlrk-hint"><summary>Already have a persona from a previous submission?</summary>'+
+          '<div class="mlrk-fillblank"><label for="mlrk-persona-input">Type it in exactly</label>'+
+          '<input type="text" id="mlrk-persona-input" autocomplete="off" placeholder="e.g. Turbo Otter">'+
+          '<button type="button" class="mlrk-btn" data-usepersona>Use this persona</button></div>'+
+          '<p class="mlrk-small">This won\'t change your locked leaderboard record either way — it just makes this device show the same persona you\'ve been using.</p>'+
+          '</details>';
         $("[data-reroll]",el).addEventListener("click",()=>{Persona.reroll();draw()});
+        $("[data-usepersona]",el).addEventListener("click",()=>{
+          const val=$("#mlrk-persona-input",el).value;
+          if(val.trim()){Persona.setFromText(val);draw()}
+        });
       }
       draw();
     }
@@ -115,7 +149,7 @@
       } else if(attempts>=maxAttempts){
         Scoring.award(opts.id,0);
         fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-        fb.innerHTML="<strong>Here's the answer — you'll get it next time.</strong> The correct choice was: "+
+        fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The correct choice was: "+
           (opts.answerLabel||opts.correct)+". "+(opts.feedback[opts.correct]||"");
         done=true;
         buttons.forEach(b=>b.disabled=true);
@@ -157,7 +191,7 @@
       } else if(attempts>=maxAttempts){
         Scoring.award(opts.id,0);
         fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-        fb.innerHTML="<strong>Here's the breakdown — you'll get it next time.</strong><ul>"+
+        fb.innerHTML="<strong>Here's the breakdown. You'll get it next time.</strong><ul>"+
           opts.options.map(o=>`<li>${o.correct?"True":"False"} — ${o.label} ${o.explain?": "+o.explain:""}</li>`).join("")+
           "</ul>";
         done=true;boxes.forEach(b=>b.disabled=true);submitBtn.disabled=true;
@@ -219,6 +253,7 @@
       renumber();
       fb.className="mlrk-feedback";fb.innerHTML="";
     }));
+    let checkAttempts=0;
     if(checkBtn) checkBtn.addEventListener("click",()=>{
       if(picked.length<items.length){
         fb.className="mlrk-feedback mlrk-show mlrk-bad";
@@ -226,14 +261,22 @@
         fb.setAttribute("tabindex","-1");fb.focus();
         return;
       }
+      checkAttempts++;
       const ok=JSON.stringify(picked)===JSON.stringify(opts.correctOrder);
-      fb.className="mlrk-feedback mlrk-show "+(ok?"mlrk-good":"mlrk-reveal");
-      const labels=opts.correctOrder.map(step=>items.find(i=>i.dataset.step===step).textContent.trim());
-      fb.innerHTML=(ok?"<strong>That's the right order.</strong>":
-        "<strong>Here's the order it actually happens in:</strong>")+
-        "<ol>"+labels.map(l=>"<li>"+l+"</li>").join("")+"</ol>"+
-        '<button type="button" class="mlrk-btn" data-reset-order>Reset and try again</button>';
-      $("[data-reset-order]",fb).addEventListener("click",()=>{picked=[];renumber();fb.className="mlrk-feedback";fb.innerHTML="";});
+      if(ok){
+        fb.className="mlrk-feedback mlrk-show mlrk-good";
+        fb.innerHTML="<strong>That's the right order.</strong>";
+      } else if(checkAttempts>=2){
+        const labels=opts.correctOrder.map(step=>items.find(i=>i.dataset.step===step).textContent.trim());
+        fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+        fb.innerHTML="<strong>Here's the order it actually happens in.</strong>"+
+          "<ol>"+labels.map(l=>"<li>"+l+"</li>").join("")+"</ol>"+
+          '<button type="button" class="mlrk-btn" data-reset-order>Reset and try again</button>';
+        $("[data-reset-order]",fb).addEventListener("click",()=>{picked=[];checkAttempts=0;renumber();fb.className="mlrk-feedback";fb.innerHTML="";});
+      } else {
+        fb.className="mlrk-feedback mlrk-show mlrk-bad";
+        fb.innerHTML="Not quite the order things actually happen in. Adjust and check once more before the answer is shown.";
+      }
       fb.setAttribute("tabindex","-1");fb.focus();
       mark();
       persist();
@@ -248,16 +291,27 @@
     // opts:{buttonSelector, feedbackSelector, mapping:{elId:{expectedId,label,expectedLabel}}}
     const btn=$(opts.buttonSelector);
     const fb=$(opts.feedbackSelector);
+    let attempts=0;
     btn.addEventListener("click",()=>{
+      attempts++;
       const rows=Object.entries(opts.mapping).map(([elId,spec])=>{
         const el=document.getElementById(elId);
         const ok=el&&el.closest("#"+spec.expectedId);
         return {ok,label:spec.label,expectedLabel:spec.expectedLabel};
       });
       const allOk=rows.every(r=>r.ok);
-      fb.className="mlrk-feedback mlrk-show "+(allOk?"mlrk-good":"mlrk-reveal");
-      fb.innerHTML=allOk?"<strong>All correctly matched.</strong>":
-        "<strong>Correct matches:</strong><ul>"+rows.map(r=>"<li>"+r.label+" belongs in: "+r.expectedLabel+"</li>").join("")+"</ul>";
+      const numRight=rows.filter(r=>r.ok).length;
+      if(allOk){
+        fb.className="mlrk-feedback mlrk-show mlrk-good";
+        fb.innerHTML="<strong>All correctly matched.</strong>";
+      } else if(attempts>=2){
+        fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+        fb.innerHTML="<strong>Correct matches:</strong><ul>"+
+          rows.map(r=>"<li>"+r.label+" belongs in: "+r.expectedLabel+"</li>").join("")+"</ul>";
+      } else {
+        fb.className="mlrk-feedback mlrk-show mlrk-bad";
+        fb.innerHTML=numRight+" of "+rows.length+" matched so far. Adjust and check once more before the answer is shown.";
+      }
       fb.setAttribute("tabindex","-1");fb.focus();
     });
   }
