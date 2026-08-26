@@ -6,8 +6,11 @@
 <style>
 .trace{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
 .step{padding:.8rem;border-radius:12px;background:var(--mlrk-callout-green-fill);text-align:center;font-weight:600}
-.tree{border-left:4px solid var(--mlrk-bg-brand-deep);padding-left:1rem}
-.tree .inner{margin-left:1.4rem;border-left:4px solid var(--mlrk-callout-blue-border);padding-left:1rem;margin-top:.5rem}
+.mlrk-gate-diagram{margin:1rem 0}
+.mlrk-gate-outer{border:3px solid var(--mlrk-bg-brand-deep);border-radius:14px;padding:1rem;background:var(--mlrk-bg-light-alt);font-weight:700}
+.mlrk-gate-connector{font-size:.9rem;font-weight:600;color:var(--mlrk-text-on-light-muted);margin:.7rem 0 .7rem .3rem;padding-left:1rem;border-left:3px dashed var(--mlrk-callout-blue-border)}
+.mlrk-gate-inner{border:3px solid var(--mlrk-callout-blue-border);border-radius:12px;padding:.8rem 1rem;background:var(--mlrk-callout-blue-fill);margin-left:1rem;font-weight:700}
+.mlrk-gate-skip{margin-top:.8rem}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:8rem}
 @media(max-width:650px){.trace{grid-template-columns:1fr 1fr}}
@@ -19,7 +22,7 @@
 <h1>Inside the Inside</h1>
 <p class="mlrk-lead">A game has 3 worlds, and each world has 4 checkpoints. At every checkpoint, the game may make another decision: is the player carrying a key, and if so, is it the right color? Code often needs to repeat <em>inside</em> repetition, and decide <em>inside</em> a decision — this reading is about building a reliable way to trace both.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~18–20 minutes</span>
+  <span class="mlrk-pill">~20–22 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -36,14 +39,23 @@
 </section>
 
 <section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
 <h2>1. Concept overview</h2>
-<p>A single loop repeats one thing. A single conditional makes one decision. <strong>Nesting</strong> means putting one of those structures inside another one — a loop inside a loop, a decision inside a decision, or a decision inside a loop. Nesting doesn't change how the inner structure works on its own; it changes when and how often that inner structure gets to run.</p>
-<p>Two rules carry almost all of the reasoning in this reading: a nested loop's inner loop always finishes <em>every</em> one of its passes before the outer loop moves to its next pass, and a nested conditional's inner check is only ever reached if execution actually enters the outer branch that contains it. Everything below is practice tracing those two rules in different situations.</p>
+<p>Picture the game from the intro: 3 worlds, 4 checkpoints in each. To reach every checkpoint, you don't write one loop — you play checkpoints 1, 2, 3, 4 of World 1, <em>then</em> checkpoints 1, 2, 3, 4 of World 2, and so on. That's <strong>nesting</strong>: one repeating structure (checkpoints) living entirely inside another repeating structure (worlds), where the inner one runs to completion once for every single pass of the outer one.</p>
+<p>Now add the key. At each checkpoint, the game asks "is the player carrying a key?" — and only if the answer is yes does it ask a second question, "is it the right color?" That second question is a <strong>nested conditional</strong>: a decision living inside another decision, reachable only when the outer decision came out true.</p>
+<p>Nesting loops and nesting conditionals are the whole reading. Two rules do almost all of the work: an inner loop always finishes every one of its passes before the outer loop advances, and an inner conditional is only ever reached if execution actually enters the outer branch that contains it.</p>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before nesting</h2>
-<p class="mlrk-small">Prereq check — nesting builds directly on a skill from the last reading.</p>
+<p class="mlrk-small">Understanding built-in functions like <code>range()</code> is a prerequisite skill for this reading — test your knowledge below before moving on.</p>
 <div class="mlrk-card" id="card-recall"><p><strong>How many values does <code>range(5)</code> produce?</strong></p>
 <button type="button" class="mlrk-choice" data-a="4">4</button>
 <button type="button" class="mlrk-choice" data-a="5">5</button>
@@ -79,29 +91,32 @@
 <p>A warehouse worker restocks every bin in every aisle before moving to the next aisle.</p>
 <div class="mlrk-code"><div id="loopScreen" class="mlrk-screen">for aisle in range(4):
     for bin_num in range(2):
-        print(aisle, bin_num)</div>
+        print(f"Aisle {aisle}, Bin {bin_num}")</div>
 <div class="mlrk-actions"><button type="button" id="looprun" class="mlrk-btn">Reveal simulated output</button></div></div>
 <div class="mlrk-card" id="card-count" style="margin-top:1rem"><p><strong>Before revealing: how many lines should print?</strong></p>
 <button type="button" class="mlrk-choice" data-a="8">8</button>
 <button type="button" class="mlrk-choice" data-a="6">6</button>
 <button type="button" class="mlrk-choice" data-a="4">4</button>
 <div id="countfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1.2rem">This one is easier to hold in your head one line at a time. Click through it yourself below.</p>
+<div id="tracestep"></div>
 </section>
 
 <section class="mlrk-section">
 <h2>6. Sort by scope: outer pass vs. inner pass</h2>
-<p>Drag each action into the zone that describes how often it happens.</p>
+<p><strong>Referring to the code in section 5 above:</strong> drag each action into the zone that describes how often it happens, then use the self-check button to confirm your matches.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">printing <code>aisle, bin_num</code></span>
+  <span id="chip1" class="mlrk-draggable">printing <code>Aisle {aisle}, Bin {bin_num}</code></span>
   <span id="chip2" class="mlrk-draggable">moving to the next aisle</span>
 </div>
 <div class="mlrk-grid">
   <div><p class="mlrk-small"><strong>Runs once per OUTER pass</strong></p><div class="mlrk-dropzone" id="zoneOuter"></div></div>
   <div><p class="mlrk-small"><strong>Runs once per INNER pass</strong></p><div class="mlrk-dropzone" id="zoneInner"></div></div>
 </div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
-<p class="mlrk-small" id="dragfb"></p>
 <div class="mlrk-card" id="card-scope" style="margin-top:.8rem"><p><strong>Check: which statement is true of the snippet above?</strong></p>
 <button type="button" class="mlrk-choice" data-a="scope1">Printing happens once per inner pass; advancing to the next aisle happens once per outer pass.</button>
 <button type="button" class="mlrk-choice" data-a="scope2">Both happen the same number of times, since they're in the same block.</button>
@@ -114,20 +129,28 @@
     for round_num in range(3):
         print("play")
     print("team done")</div></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+<p>Trace indentation before arithmetic. Look at which print statement sits inside the outer loop but outside the inner loop — that's the one that runs once per outer pass, not once per inner pass.</p>
+</details>
 <div class="mlrk-card" id="card-indent" style="margin-top:1rem"><p><strong>How many times does <code>"team done"</code> print?</strong></p>
 <button type="button" class="mlrk-choice" data-a="2">2</button>
 <button type="button" class="mlrk-choice" data-a="3">3</button>
 <button type="button" class="mlrk-choice" data-a="6">6</button>
 <div id="indentfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<div class="mlrk-callout mlrk-callout-gold"><strong>Trace indentation before arithmetic.</strong> That second print is inside the outer loop but outside the inner loop, so it runs once per outer pass, not once per inner pass.</div>
 </section>
 
 <section class="mlrk-section">
 <h2>8. Nested conditionals are gated decisions</h2>
 <p>A public health clinic schedules appointments in two steps: first, is the patient eligible for this clinic at all? Only if yes does it check how long they've been waiting, to decide if they get a priority slot.</p>
-<div class="tree"><strong>Outer question:</strong> Is the patient eligible?<div class="inner"><strong>Only if yes:</strong> Has the patient been waiting 30+ days?</div></div>
+<div class="mlrk-gate-diagram">
+  <div class="mlrk-gate-outer">Outer question: is the patient eligible?
+    <div class="mlrk-gate-connector">only reached if the answer above is TRUE</div>
+    <div class="mlrk-gate-inner">Inner question: has the patient waited 30+ days?</div>
+  </div>
+  <p class="mlrk-gate-skip">If the outer answer is <strong>no</strong>, the inner question is never reached at all — it's skipped entirely, not evaluated and found false.</p>
+</div>
 <div class="mlrk-card" id="card-gate" style="margin-top:1rem"><p><strong>If the patient is not eligible, what happens to the wait-time check?</strong></p>
-<button type="button" class="mlrk-choice" data-a="skip">It is skipped, because execution never enters that outer branch.</button>
+<button type="button" class="mlrk-choice" data-a="skip">It's skipped — the outer condition is false, so execution never enters the block that contains the inner check.</button>
 <button type="button" class="mlrk-choice" data-a="check">It still runs, because every <code>if</code> must be evaluated somewhere.</button>
 <button type="button" class="mlrk-choice" data-a="error">Python raises an error, since the inner check was never reached.</button>
 <div id="gatefb" class="mlrk-feedback" tabindex="-1"></div></div>
@@ -170,7 +193,7 @@ else:
 <section class="mlrk-section">
 <h2>11. Select all that apply</h2>
 <div class="mlrk-card"><p><strong>Select every statement below that is TRUE about nested loops and nested conditionals.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> The inner loop restarts from its first pass every time the outer loop advances.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> Once the outer loop finishes its first pass, the inner loop's range is used up for the rest of the program.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> An inner conditional can only run if code execution has entered its outer branch.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Nesting is limited to loops — conditionals cannot be nested inside other conditionals.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> The total number of inner-loop executions is outer count × inner count.</label>
@@ -198,21 +221,22 @@ for channel, enabled in alerts:
 
 <section class="mlrk-section">
 <h2>13. Order the trace steps</h2>
-<p>Click these steps in the order you should follow them when an inner message never appears and you don't know why.</p>
+<p>Click steps, in order, to build the sequence you should follow when an inner message never appears and you don't know why. Click a step again to remove it if you change your mind, then press "Check my order" when you're ready — this is a self-check, not graded on correctness.</p>
 <ul class="mlrk-orderlist" id="ordersteps">
   <li class="mlrk-orderitem" data-step="outer"><span class="mlrk-order-num"></span> Find the outermost loop or conditional first.</li>
   <li class="mlrk-orderitem" data-step="enter"><span class="mlrk-order-num"></span> Check whether execution actually enters that outer branch or pass.</li>
   <li class="mlrk-orderitem" data-step="inside"><span class="mlrk-order-num"></span> Only then look at what is nested inside it.</li>
   <li class="mlrk-orderitem" data-step="repeat"><span class="mlrk-order-num"></span> Repeat the same check for any further nesting inside that.</li>
 </ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
 <div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
 </section>
 
 <section class="mlrk-section">
 <h2>14. Watch: nested loops, visually</h2>
-<p class="mlrk-small">Picked for a clear step-by-step visual explanation — I can't independently verify exact view/like counts from here, so if this isn't a great fit after you watch it, tell me and I'll swap it.</p>
+<p>As you watch, pay attention to: the moment the video shows the inner loop finishing a full run before the outer loop moves — that's the exact rule from section 1 — and how it visually represents "which pass are we on right now."</p>
 <div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=Lx_ariMlcQU" target="_blank" rel="noopener">Watch on YouTube: youtube.com/watch?v=Lx_ariMlcQU</a>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=Lx_ariMlcQU" target="_blank" rel="noopener">Watch on YouTube</a>
 <div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which part of the video matched (or didn't match) how you were already picturing the inner loop finishing before the outer one advances?</strong></p>
 <textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
 </div>
@@ -259,7 +283,7 @@ for channel, enabled in alerts:
 
 <section class="mlrk-section">
 <h2>18. Thinking ahead</h2>
-<p class="mlrk-small">This same shape — repetition with a decision nested inside it — reappears soon: processing a dictionary that maps each key to its own list, walking a grid/matrix cell by cell, and checking several fields on many records at once all lean on the exact same two rules practiced here.</p>
+<p>This same shape — repetition with a decision nested inside it — reappears soon: processing a dictionary that maps each key to its own list, walking a grid or matrix cell by cell, and checking several fields on many records at once all lean on the exact same two rules practiced here.</p>
 </section>
 
 <section class="mlrk-section">
@@ -292,12 +316,6 @@ git push</pre>
       <input type="text" id="ghuser" autocomplete="off">
     </div>
     <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
-  </div>
-
-  <div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem">
-    <p><strong>Picking back up later or on a different device?</strong> Load a JSON file you downloaded from this reading before to restore your answers.</p>
-    <input type="file" id="importfile" accept="application/json">
-    <p id="importfb" class="mlrk-small"></p>
   </div>
 </div>
 </section>
@@ -346,7 +364,7 @@ git push</pre>
               4:"That counts only the outer passes. Each outer pass contains two inner passes."},
     onDone(){revealLoop()}});
 
-  K.quiz({id:"q-scope", buttonSelector:"#card-scope .mlrk-choice", feedbackSelector:"#scopefb", correct:"scope1",
+  K.quiz({id:"q-scope", buttonSelector:"#card-scope .mlrk-choice", feedbackSelector:"#scopefb", correct:"scope1", maxAttempts:1,
     feedback:{scope1:"Right — the print sits inside both loops (once per inner pass); advancing the aisle only happens on the outer loop.",
               scope2:"They aren't the same count — one line is nested one level deeper than the other."}});
 
@@ -366,7 +384,7 @@ git push</pre>
               ineligible:"The outer condition is true, so the outer else branch is skipped."},
     onDone(){revealCond()}});
 
-  K.quiz({id:"q-combo", buttonSelector:"#card-combo .mlrk-choice", feedbackSelector:"#combofb", correct:"no",
+  K.quiz({id:"q-combo", buttonSelector:"#card-combo .mlrk-choice", feedbackSelector:"#combofb", correct:"no", maxAttempts:1,
     feedback:{no:"For the SMS item, channel == EMAIL is false, so execution never reaches the nested enabled check.",
               yes:"The loop visits every item, but conditionals still control which nested code is reached."}});
 
@@ -385,13 +403,38 @@ git push</pre>
               waiting:"That inner question is only relevant after the outer label check succeeds.",
               all:"Nesting means the inner condition is reached only through its containing outer branch."}});
 
-  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb",
-    correct:["b","d"],
-    explanation:"The inner loop restarts fresh each outer pass (not (a)); conditionals nest inside conditionals just fine (not (c))."});
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"Once the outer loop finishes its first pass, the inner loop's range is used up for the rest of the program.", correct:false,
+      hint:"Think about what happens to bin_num when aisle moves from 0 to 1 — does the inner loop's range get reused or exhausted?",
+      explain:"The inner loop gets a completely fresh run, starting from its first pass again, every single time the outer loop advances."},
+    {value:"b", label:"An inner conditional can only run if code execution has entered its outer branch.", correct:true,
+      hint:"This is the same gating rule practiced in section 8 — does it hold here too?",
+      explain:"This is the same gating rule practiced with the clinic example in section 8."},
+    {value:"c", label:"Nesting is limited to loops — conditionals cannot be nested inside other conditionals.", correct:false,
+      hint:"Section 8's clinic example nested two conditionals inside each other — does that match this statement?",
+      explain:"Conditionals nest inside conditionals exactly the same way loops nest inside loops (see section 8)."},
+    {value:"d", label:"The total number of inner-loop executions equals outer count × inner count.", correct:true,
+      hint:"This is the same multiplication rule practiced in section 5's aisle/bin count.",
+      explain:"Outer count × inner count — the same rule practiced in section 5's aisle/bin example."}
+  ]});
 
   K.dragDrop("#dragarea", "act-drag-scope");
-  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["outer","enter","inside","repeat"], feedbackSelector:"#orderstepsfb"});
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneInner", label:"printing Aisle {aisle}, Bin {bin_num}", expectedLabel:"Runs once per INNER pass"},
+    chip2:{expectedId:"zoneOuter", label:"moving to the next aisle", expectedLabel:"Runs once per OUTER pass"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["outer","enter","inside","repeat"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
   K.flipCards("#vocab", "act-flip-vocab");
+  K.traceStepper("#tracestep", {steps:[
+    {cell:"aisle 0, bin 0", line:"Aisle 0, Bin 0"},
+    {cell:"aisle 0, bin 1", line:"Aisle 0, Bin 1"},
+    {cell:"aisle 1, bin 0", line:"Aisle 1, Bin 0"},
+    {cell:"aisle 1, bin 1", line:"Aisle 1, Bin 1"},
+    {cell:"aisle 2, bin 0", line:"Aisle 2, Bin 0"},
+    {cell:"aisle 2, bin 1", line:"Aisle 2, Bin 1"},
+    {cell:"aisle 3, bin 0", line:"Aisle 3, Bin 0"},
+    {cell:"aisle 3, bin 1", line:"Aisle 3, Bin 1"}
+  ]});
 
   K.video({id:"act-video", elementId:"ytplayer", videoId:"Lx_ariMlcQU"});
   K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
@@ -401,17 +444,17 @@ git push</pre>
   function revealLoop(){
     $("#loopScreen").textContent = `for aisle in range(4):
     for bin_num in range(2):
-        print(aisle, bin_num)
+        print(f"Aisle {aisle}, Bin {bin_num}")
 
 [Output]
-0 0
-0 1
-1 0
-1 1
-2 0
-2 1
-3 0
-3 1`;
+Aisle 0, Bin 0
+Aisle 0, Bin 1
+Aisle 1, Bin 0
+Aisle 1, Bin 1
+Aisle 2, Bin 0
+Aisle 2, Bin 1
+Aisle 3, Bin 0
+Aisle 3, Bin 1`;
   }
   $("#looprun").addEventListener("click", revealLoop);
 
@@ -490,8 +533,8 @@ standard slot`;
     window.open(K.buildSubmitURL(READING_ID, TITLE), "_blank", "noopener");
   });
 
-  K.wireImport("#importfile", ok => {
-    $("#importfb").textContent = ok
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
       ? "Progress restored from your saved file."
       : "That file couldn't be read — make sure it's the JSON you downloaded from this reading.";
   });

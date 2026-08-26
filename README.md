@@ -7,7 +7,7 @@ Self-contained, standalone interactive readings, hosted on GitHub Pages, meant t
 |---|---|---|---|---|
 | Build It Once, Use It Again — Functions, Parameters & Return Values | Python Fundamentals | 17 min | data + software engineering | [Open](https://the-marcy-lab-school.github.io/DA_Curriculum_Readings/Mod1/functions-params/reading-1-builditonce/) |
 | Choose. Repeat. Trace. — Control Flow & Conditionals | Python Fundamentals | 18 min | data + software engineering | [Open](https://the-marcy-lab-school.github.io/DA_Curriculum_Readings/Mod1/control-flow-conditionals/reading-1-chooserepeattrace/) |
-| Inside the Inside — Nested Loops & Conditionals | Python Fundamentals | 19 min | data + software engineering | [Open](https://the-marcy-lab-school.github.io/DA_Curriculum_Readings/Mod1/loops-conditionals/reading-1-insidetheinside/) |
+| Inside the Inside — Nested Loops & Conditionals | Python Fundamentals | 21 min | data + software engineering | [Open](https://the-marcy-lab-school.github.io/DA_Curriculum_Readings/Mod1/loops-conditionals/reading-1-insidetheinside/) |
 | Looks Right. Is It? — Debugging Like a Pro | Debugging & Testing | 16 min | data + software engineering | [Open](https://the-marcy-lab-school.github.io/DA_Curriculum_Readings/Mod1/debugging/reading-1-looksrightisit/) |
 | Lookups Matter — Python Data Structures, Part 2 | Data Structures & Algorithms | 14 min | data + software engineering | [Open](https://the-marcy-lab-school.github.io/DA_Curriculum_Readings/Mod1/python-data-structures/reading-2-lookupsmatter/) |
 | Make It Survive — Data Serialization | Data Serialization & I/O | 17 min | data | [Open](https://the-marcy-lab-school.github.io/DA_Curriculum_Readings/Mod1/data-serialization/reading-1-makeitsurvive/) |
