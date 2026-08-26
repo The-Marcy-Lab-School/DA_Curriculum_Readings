@@ -1,77 +1,188 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Inside the Inside | Nested Loops & Conditionals</title>
+<title>Inside the Inside — Nested Loops &amp; Conditionals</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-:root{--ink:#19221c;--paper:#fbfaf6;--card:#fff;--forest:#21482f;--sage:#dce9df;--blue:#2b78b5;--gold:#e0ad2e;--line:#d6ddd8;--good:#e7f5eb;--bad:#fbe9ec;--focus:#ffbf47;--code:#151b17}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--paper);line-height:1.62}button,textarea{font:inherit}button:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}
-header{background:var(--forest);color:#fff;padding:3rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.4rem,6vw,4.6rem);line-height:1.02;margin:.4rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{text-transform:uppercase;font-weight:800;letter-spacing:.08em;color:#dce9df}.lead{font-size:1.18rem;max-width:820px}.meta{display:flex;gap:.6rem;flex-wrap:wrap}.pill{border:1px solid #a9bcad;border-radius:999px;padding:.3rem .7rem}
-.sticky{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:5}.track{height:8px;background:#e8ece9}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.55rem 1rem;color:#56615a}
-main{padding:2rem 1.2rem 5rem}section{margin-bottom:3.2rem}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.25rem;box-shadow:0 3px 14px #1420190d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem}
-.callout{border-left:6px solid var(--blue);background:#edf6fb;padding:1rem 1.2rem;border-radius:10px}.warn{border-left:6px solid var(--gold);background:#fff5dc;padding:1rem 1.2rem;border-radius:10px}
-button{border:2px solid var(--forest);border-radius:11px;padding:.7rem 1rem;background:#fff;color:var(--forest);font-weight:750;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
-.term{min-height:145px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}
-.code{background:var(--code);color:#f5f7f5;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:125px;margin:0}.codeactions,.actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}.code button{background:#26342b;color:#fff;border-color:#cad8cd}
-.trace{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}.step{padding:.8rem;border-radius:12px;background:var(--sage);text-align:center}.tree{border-left:4px solid var(--forest);padding-left:1rem}.tree .inner{margin-left:1.4rem;border-left:4px solid var(--blue);padding-left:1rem}
-textarea{width:100%;min-height:100px;padding:.75rem;border:2px solid #aeb8b1;border-radius:10px}.hint{display:none;background:#f3f0fb;border-radius:12px;padding:1rem}.hint.show{display:block}.bridge{border-top:8px solid var(--gold)}.export{background:#f0f4f1;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{color:#59635d;font-size:.92rem}
-@media(max-width:650px){.trace{grid-template-columns:1fr 1fr}h2{font-size:1.65rem}}
-</style></head><body>
-<header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Inside the Inside</h1>
-<p class="lead">A game has 3 worlds, and each world has 4 checkpoints. At every checkpoint, the game may make another decision: is the player carrying a key, and if so, is it the right color? Programs often need to repeat <em>inside</em> repetition and decide <em>inside</em> decisions.</p>
-<div class="meta"><span class="pill">~16–18 minutes</span><span class="pill">Interactive</span><span class="pill">No Python setup needed</span><span class="pill">Saves locally</span></div></div></header>
-<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Goal: trace how nested loops repeat and how nested conditionals decide which inner branch can run.</p></div>
-<main>
-<section><h2>1. Vocabulary: nesting language</h2><p>Flip each card before tracing code.</p><div class="grid">
-<button type="button" class="card term"><span class="front"><strong>nested</strong><br><span class="small">Flip</span></span><span class="back"><strong>Nested</strong><br>Placed inside another structure.</span></button>
-<button type="button" class="card term"><span class="front"><strong>outer loop</strong><br><span class="small">Flip</span></span><span class="back"><strong>Outer loop</strong><br>The surrounding loop. Each outer pass starts a complete run of its inner loop.</span></button>
-<button type="button" class="card term"><span class="front"><strong>inner loop</strong><br><span class="small">Flip</span></span><span class="back"><strong>Inner loop</strong><br>The loop inside another loop. It completes all of its passes for each outer pass.</span></button>
-<button type="button" class="card term"><span class="front"><strong>branch</strong><br><span class="small">Flip</span></span><span class="back"><strong>Branch</strong><br>A path selected by a conditional. An inner conditional is only reached if execution enters its outer branch.</span></button>
-</div></section>
+.trace{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.step{padding:.8rem;border-radius:12px;background:var(--mlrk-callout-green-fill);text-align:center;font-weight:600}
+.tree{border-left:4px solid var(--mlrk-bg-brand-deep);padding-left:1rem}
+.tree .inner{margin-left:1.4rem;border-left:4px solid var(--mlrk-callout-blue-border);padding-left:1rem;margin-top:.5rem}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:8rem}
+@media(max-width:650px){.trace{grid-template-columns:1fr 1fr}}
+</style>
+</head><body>
 
-<section><h2>2. Recall before nesting</h2><div class="card"><p><strong>How many values does <code>range(5)</code> produce?</strong></p>
-<button type="button" class="choice recall" data-a="4">4</button><button type="button" class="choice recall" data-a="5">5</button><button type="button" class="choice recall" data-a="6">6</button><div id="recfb" class="feedback" tabindex="-1"></div></div>
-<p class="callout">A nested loop does not change how <code>range()</code> works. First find each loop's count correctly; then reason about how those counts combine.</p></section>
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Inside the Inside</h1>
+<p class="mlrk-lead">A game has 3 worlds, and each world has 4 checkpoints. At every checkpoint, the game may make another decision: is the player carrying a key, and if so, is it the right color? Code often needs to repeat <em>inside</em> repetition, and decide <em>inside</em> a decision — this reading is about building a reliable way to trace both.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~18–20 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
 
-<section><h2>3. One complete inner run per outer pass</h2><p>Think of a playlist app: for each playlist category, inspect every mood tag before moving to the next category.</p>
-<div class="trace"><div class="step">Outer A<br>Inner 1</div><div class="step">Outer A<br>Inner 2</div><div class="step">Outer B<br>Inner 1</div><div class="step">Outer B<br>Inner 2</div></div>
-<div class="card" style="margin-top:1rem"><p><strong>Which description matches nested-loop execution?</strong></p>
-<button type="button" class="choice orderq" data-a="complete">The inner loop finishes all its passes before the outer loop advances.</button>
-<button type="button" class="choice orderq" data-a="alternate">The outer and inner loops take turns advancing one pass each.</button>
-<button type="button" class="choice orderq" data-a="once">The inner loop runs only once total.</button><div id="orderfb" class="feedback" tabindex="-1"></div></div></section>
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
 
-<section><h2>4. Predict the total</h2><div class="code"><div id="loopScreen" class="screen">for aisle in range(4):
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>A single loop repeats one thing. A single conditional makes one decision. <strong>Nesting</strong> means putting one of those structures inside another one — a loop inside a loop, a decision inside a decision, or a decision inside a loop. Nesting doesn't change how the inner structure works on its own; it changes when and how often that inner structure gets to run.</p>
+<p>Two rules carry almost all of the reasoning in this reading: a nested loop's inner loop always finishes <em>every</em> one of its passes before the outer loop moves to its next pass, and a nested conditional's inner check is only ever reached if execution actually enters the outer branch that contains it. Everything below is practice tracing those two rules in different situations.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before nesting</h2>
+<p class="mlrk-small">Prereq check — nesting builds directly on a skill from the last reading.</p>
+<div class="mlrk-card" id="card-recall"><p><strong>How many values does <code>range(5)</code> produce?</strong></p>
+<button type="button" class="mlrk-choice" data-a="4">4</button>
+<button type="button" class="mlrk-choice" data-a="5">5</button>
+<button type="button" class="mlrk-choice" data-a="6">6</button>
+<div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-callout mlrk-callout-blue">A nested loop does not change how <code>range()</code> works. Get each loop's count right on its own first, then reason about how those counts combine.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the tracing practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>nested</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Nested</strong><br>Placed inside another structure.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>outer loop</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Outer loop</strong><br>The surrounding loop. Each outer pass starts a full run of its inner loop.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>inner loop</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Inner loop</strong><br>The loop inside another loop. It completes all of its passes for each single outer pass.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>branch</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Branch</strong><br>A path chosen by a conditional. An inner conditional is only reached if execution enters its outer branch.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. One complete inner run per outer pass</h2>
+<p>A music app groups songs by playlist category, and inside each category it lists mood tags. For each category, the app checks every mood tag before it moves to the next category.</p>
+<div class="trace"><div class="step">Category A<br>Mood 1</div><div class="step">Category A<br>Mood 2</div><div class="step">Category B<br>Mood 1</div><div class="step">Category B<br>Mood 2</div></div>
+<div class="mlrk-card" id="card-order" style="margin-top:1rem"><p><strong>Which description matches how a nested loop actually executes?</strong></p>
+<button type="button" class="mlrk-choice" data-a="complete">The inner loop finishes all of its passes before the outer loop advances.</button>
+<button type="button" class="mlrk-choice" data-a="alternate">The outer and inner loops take turns, advancing one pass each.</button>
+<button type="button" class="mlrk-choice" data-a="once">The inner loop runs only once, in total.</button>
+<div id="orderfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Predict the total, then check</h2>
+<p>A warehouse worker restocks every bin in every aisle before moving to the next aisle.</p>
+<div class="mlrk-code"><div id="loopScreen" class="mlrk-screen">for aisle in range(4):
     for bin_num in range(2):
-        print(aisle, bin_num)</div><div class="codeactions"><button type="button" id="looprun">Reveal simulated output</button></div></div>
-<div class="card" style="margin-top:1rem"><p><strong>Before revealing: how many lines should print?</strong></p>
-<button type="button" class="choice countq" data-a="8">8</button><button type="button" class="choice countq" data-a="6">6</button><button type="button" class="choice countq" data-a="4">4</button><div id="countfb" class="feedback" tabindex="-1"></div></div></section>
+        print(aisle, bin_num)</div>
+<div class="mlrk-actions"><button type="button" id="looprun" class="mlrk-btn">Reveal simulated output</button></div></div>
+<div class="mlrk-card" id="card-count" style="margin-top:1rem"><p><strong>Before revealing: how many lines should print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="8">8</button>
+<button type="button" class="mlrk-choice" data-a="6">6</button>
+<button type="button" class="mlrk-choice" data-a="4">4</button>
+<div id="countfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>5. Indentation shows what is inside</h2><div class="code"><div class="screen">for team in range(2):
+<section class="mlrk-section">
+<h2>6. Sort by scope: outer pass vs. inner pass</h2>
+<p>Drag each action into the zone that describes how often it happens.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">printing <code>aisle, bin_num</code></span>
+  <span id="chip2" class="mlrk-draggable">moving to the next aisle</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Runs once per OUTER pass</strong></p><div class="mlrk-dropzone" id="zoneOuter"></div></div>
+  <div><p class="mlrk-small"><strong>Runs once per INNER pass</strong></p><div class="mlrk-dropzone" id="zoneInner"></div></div>
+</div>
+</div>
+<p class="mlrk-small" id="dragfb"></p>
+<div class="mlrk-card" id="card-scope" style="margin-top:.8rem"><p><strong>Check: which statement is true of the snippet above?</strong></p>
+<button type="button" class="mlrk-choice" data-a="scope1">Printing happens once per inner pass; advancing to the next aisle happens once per outer pass.</button>
+<button type="button" class="mlrk-choice" data-a="scope2">Both happen the same number of times, since they're in the same block.</button>
+<div id="scopefb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Indentation shows what is inside</h2>
+<div class="mlrk-code"><div class="mlrk-screen">for team in range(2):
     for round_num in range(3):
         print("play")
     print("team done")</div></div>
-<div class="card" style="margin-top:1rem"><p><strong>How many times does <code>"team done"</code> print?</strong></p>
-<button type="button" class="choice indentq" data-a="2">2</button><button type="button" class="choice indentq" data-a="3">3</button><button type="button" class="choice indentq" data-a="6">6</button><div id="indentfb" class="feedback" tabindex="-1"></div></div>
-<p class="warn"><strong>Trace indentation before arithmetic.</strong> The second print is inside the outer loop but outside the inner loop, so it runs once per outer pass.</p></section>
+<div class="mlrk-card" id="card-indent" style="margin-top:1rem"><p><strong>How many times does <code>"team done"</code> print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="2">2</button>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="6">6</button>
+<div id="indentfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-callout mlrk-callout-gold"><strong>Trace indentation before arithmetic.</strong> That second print is inside the outer loop but outside the inner loop, so it runs once per outer pass, not once per inner pass.</div>
+</section>
 
-<section><h2>6. Nested conditionals are gated decisions</h2><div class="tree"><strong>Outer question:</strong> Is the account active?<div class="inner"><strong>Only if yes:</strong> Does it have premium access?</div></div>
-<p>The inner question is not automatically checked. Python must first enter the outer branch that contains it.</p>
-<div class="card"><p><strong>If the account is inactive, what happens to the premium check?</strong></p>
-<button type="button" class="choice gateq" data-a="skip">It is skipped because execution never enters that outer branch.</button><button type="button" class="choice gateq" data-a="check">It still runs because every <code>if</code> must be tested.</button><button type="button" class="choice gateq" data-a="error">Python raises an error because the inner check was not used.</button><div id="gatefb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+<h2>8. Nested conditionals are gated decisions</h2>
+<p>A public health clinic schedules appointments in two steps: first, is the patient eligible for this clinic at all? Only if yes does it check how long they've been waiting, to decide if they get a priority slot.</p>
+<div class="tree"><strong>Outer question:</strong> Is the patient eligible?<div class="inner"><strong>Only if yes:</strong> Has the patient been waiting 30+ days?</div></div>
+<div class="mlrk-card" id="card-gate" style="margin-top:1rem"><p><strong>If the patient is not eligible, what happens to the wait-time check?</strong></p>
+<button type="button" class="mlrk-choice" data-a="skip">It is skipped, because execution never enters that outer branch.</button>
+<button type="button" class="mlrk-choice" data-a="check">It still runs, because every <code>if</code> must be evaluated somewhere.</button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error, since the inner check was never reached.</button>
+<div id="gatefb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>7. Trace the branch that actually runs</h2><div class="code"><div id="condScreen" class="screen">status = "ACTIVE"
-points = 7
+<section class="mlrk-section">
+<h2>9. Trace the branch that actually runs</h2>
+<div class="mlrk-code"><div id="condScreen" class="mlrk-screen">patient_status = "ELIGIBLE"
+wait_days = 12
 
-if status == "ACTIVE":
-    if points >= 10:
-        print("bonus")
+if patient_status == "ELIGIBLE":
+    if wait_days >= 30:
+        print("priority slot")
     else:
-        print("standard")
+        print("standard slot")
 else:
-    print("inactive")</div><div class="codeactions"><button type="button" id="condrun">Reveal simulated output</button></div></div>
-<div class="card" style="margin-top:1rem"><p><strong>What should print?</strong></p>
-<button type="button" class="choice condq" data-a="standard"><code>standard</code></button><button type="button" class="choice condq" data-a="bonus"><code>bonus</code></button><button type="button" class="choice condq" data-a="inactive"><code>inactive</code></button><div id="condfb" class="feedback" tabindex="-1"></div></div></section>
+    print("not eligible yet")</div>
+<div class="mlrk-actions"><button type="button" id="condrun" class="mlrk-btn">Reveal simulated output</button></div></div>
+<div class="mlrk-card" id="card-cond" style="margin-top:1rem"><p><strong>What should print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="standard"><code>standard slot</code></button>
+<button type="button" class="mlrk-choice" data-a="priority"><code>priority slot</code></button>
+<button type="button" class="mlrk-choice" data-a="ineligible"><code>not eligible yet</code></button>
+<div id="condfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>8. Combine repetition + decisions</h2><p>A loop can process each item while a nested conditional decides what should happen to that item. You do not need the project's data to practice the shape.</p>
-<div class="code"><div class="screen">alerts = [("EMAIL", True), ("SMS", False)]
+<section class="mlrk-section">
+<h2>10. Fill in the blank</h2>
+<p>Both loops below need the same function to generate the numbers to loop over.</p>
+<div class="mlrk-code"><div class="mlrk-screen">for aisle in ____(4):
+    for bin_num in ____(2):
+        print(aisle, bin_num)</div></div>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Type the missing function name:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about nested loops and nested conditionals.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> The inner loop restarts from its first pass every time the outer loop advances.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> An inner conditional can only run if code execution has entered its outer branch.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Nesting is limited to loops — conditionals cannot be nested inside other conditionals.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> The total number of inner-loop executions is outer count × inner count.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Combine repetition + decisions</h2>
+<p>A loop can visit every item while a nested conditional decides what happens to that specific item.</p>
+<div class="mlrk-code"><div class="mlrk-screen">alerts = [("EMAIL", True), ("SMS", False)]
 
 for channel, enabled in alerts:
     if channel == "EMAIL":
@@ -79,40 +190,220 @@ for channel, enabled in alerts:
             print("send email")
         else:
             print("email paused")</div></div>
-<div class="card" style="margin-top:1rem"><p><strong>For the <code>("SMS", False)</code> item, is <code>if enabled</code> evaluated?</strong></p>
-<button type="button" class="choice comboq" data-a="no">No. The outer <code>channel == "EMAIL"</code> condition is false.</button><button type="button" class="choice comboq" data-a="yes">Yes. The loop guarantees every inner conditional runs.</button><div id="combofb" class="feedback" tabindex="-1"></div></div></section>
+<div class="mlrk-card" id="card-combo" style="margin-top:1rem"><p><strong>For the <code>("SMS", False)</code> item, is <code>if enabled</code> ever evaluated?</strong></p>
+<button type="button" class="mlrk-choice" data-a="no">No — the outer <code>channel == "EMAIL"</code> condition is false for that item.</button>
+<button type="button" class="mlrk-choice" data-a="yes">Yes — the loop guarantees every inner conditional runs for every item.</button>
+<div id="combofb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>9. Debugging habit: trace outside → inside</h2><div class="card"><p>An inner message never appears. What should you inspect <em>first</em>?</p>
-<button type="button" class="choice debugq" data-a="outer">Whether execution ever enters the outer branch containing the inner check.</button><button type="button" class="choice debugq" data-a="random">Whether Python randomly skipped the inner condition.</button><button type="button" class="choice debugq" data-a="import">Whether nested conditionals need an import.</button><div id="debugfb" class="feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>Your trace strategy:</strong> In 1–2 sentences, explain how you would trace unfamiliar nested code without guessing.</label><textarea id="strategy" data-save placeholder="Try starting with: “First I identify the outer structure…”"></textarea><p><button type="button" id="hintbtn">Generate a thinking hint</button></p><div id="hint" class="hint"></div></section>
+<section class="mlrk-section">
+<h2>13. Order the trace steps</h2>
+<p>Click these steps in the order you should follow them when an inner message never appears and you don't know why.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="outer"><span class="mlrk-order-num"></span> Find the outermost loop or conditional first.</li>
+  <li class="mlrk-orderitem" data-step="enter"><span class="mlrk-order-num"></span> Check whether execution actually enters that outer branch or pass.</li>
+  <li class="mlrk-orderitem" data-step="inside"><span class="mlrk-order-num"></span> Only then look at what is nested inside it.</li>
+  <li class="mlrk-orderitem" data-step="repeat"><span class="mlrk-order-num"></span> Repeat the same check for any further nesting inside that.</li>
+</ul>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
 
-<section class="bridge"><h2>10. Required bridge to lecture + project</h2><p>You just practiced the two reasoning habits the upcoming lesson targets: count a nested loop by following complete inner runs, and trace a nested conditional from the outside inward to determine which branch is reachable. In lecture/lab, you will use those habits while stepping through live Python. Later, the project applies the same overall shape in <code>validate_line</code>: repeated records plus decisions inside that repeated work.</p>
-<div class="card"><p><strong>Bridge challenge — new situation:</strong> A program checks every support ticket. Only tickets labeled <code>"URGENT"</code> receive a second check for whether the customer is currently waiting. What should you trace first for one ticket?</p>
-<button type="button" class="choice bridgeq" data-a="label">First determine whether the ticket enters the <code>"URGENT"</code> outer branch.</button><button type="button" class="choice bridgeq" data-a="waiting">Always check whether the customer is waiting first.</button><button type="button" class="choice bridgeq" data-a="all">Assume both conditions run for every ticket.</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
-<label for="bring"><strong>Bring to lecture:</strong> What visual clue in Python code tells you whether a statement belongs to the outer structure, the inner structure, or neither?</label><textarea id="bring" data-save></textarea></section>
+<section class="mlrk-section">
+<h2>14. Watch: nested loops, visually</h2>
+<p class="mlrk-small">Picked for a clear step-by-step visual explanation — I can't independently verify exact view/like counts from here, so if this isn't a great fit after you watch it, tell me and I'll swap it.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=Lx_ariMlcQU" target="_blank" rel="noopener">Watch on YouTube: youtube.com/watch?v=Lx_ariMlcQU</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which part of the video matched (or didn't match) how you were already picturing the inner loop finishing before the outer one advances?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
 
-<section><h2>11. Keep a copy of your work</h2><div class="export"><div class="actions"><button type="button" id="md">Create Markdown file</button><button type="button" id="json">Create JSON file</button><button type="button" id="txt">Create TXT file</button><button type="button" id="show">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:260px"></textarea><p><button type="button" id="selectall">Select all text</button></p></div></div></section>
-</main>
+<section class="mlrk-section">
+<h2>15. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"What does this nested loop print?" is one of the most common warm-up questions in technical screens, for data roles and software engineering roles alike. Interviewers are listening for <em>how</em> you trace it, not just the final number — narrating "the inner loop finishes before the outer one advances" out loud is exactly what they want to hear.</p>
+<p>Nested conditionals show up as "spot the bug" questions: you're handed a snippet where an inner message never fires, and asked to find why, live. Tracing from the outside in — the same habit practiced in section 13 — is the expected method, not guessing.</p>
+<p>This is also the first building block of a later concept: nested loops over the same-size input are the classic reason a piece of code is "order n-squared" — an interviewer will often follow up a nested-loop trace question by asking exactly that.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: three outer passes, three inner passes each, one print per inner pass. How many total lines print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="9">9</button>
+<button type="button" class="mlrk-choice" data-a="6">6</button>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>An inner message never appears. What should you check first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="outer">Whether execution ever enters the outer branch that contains the inner check.</button>
+<button type="button" class="mlrk-choice" data-a="random">Whether Python randomly skipped the inner condition.</button>
+<button type="button" class="mlrk-choice" data-a="import">Whether nested conditionals require a special import.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your trace strategy:</strong> in 1-2 sentences, describe how you'd trace unfamiliar nested code without guessing.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I identify the outer structure..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>17. Summary &amp; critical thinking</h2>
+<p>Two reasoning habits carried this whole reading: counting a nested loop by following complete inner runs, and tracing a nested conditional from the outside in to find which branch is actually reachable.</p>
+<div class="mlrk-card" id="card-bridge"><p><strong>New situation:</strong> a support system checks every ticket. Only tickets labeled <code>"URGENT"</code> get a second check for whether the customer is currently on a live chat. For one ticket, what should you trace first?</p>
+<button type="button" class="mlrk-choice" data-a="label">First determine whether the ticket enters the <code>"URGENT"</code> outer branch.</button>
+<button type="button" class="mlrk-choice" data-a="waiting">Always check whether the customer is on live chat first.</button>
+<button type="button" class="mlrk-choice" data-a="all">Assume both conditions run for every ticket.</button>
+<div id="bridgefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what visual clue in Python code tells you whether a statement belongs to the outer structure, the inner structure, or neither?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>18. Thinking ahead</h2>
+<p class="mlrk-small">This same shape — repetition with a decision nested inside it — reappears soon: processing a dictionary that maps each key to its own list, walking a grid/matrix cell by cell, and checking several fields on many records at once all lean on the exact same two rules practiced here.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>19. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add nested-loops-conditionals-reading.json
+git commit -m "Complete nested loops and conditionals reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> enter your GitHub username once, then submit — this opens a pre-filled GitHub Issue, no token needed, and it counts on your real contribution graph.</p>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem">
+    <p><strong>Picking back up later or on a different device?</strong> Load a JSON file you downloaded from this reading before to restore your answers.</p>
+    <input type="file" id="importfile" accept="application/json">
+    <p id="importfb" class="mlrk-small"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — step through a nested loop line by line, visually.</li>
+<li><a href="https://www.w3schools.com/python/gloss_python_for_nested.asp" target="_blank" rel="noopener">W3Schools: Python Nested Loops</a> — more worked examples.</li>
+<li><a href="https://www.w3schools.com/python/python_if_nested_if.asp" target="_blank" rel="noopener">W3Schools: Python Nested If Statements</a> — the conditional side, with more examples.</li>
+<li><a href="https://docs.python.org/3/tutorial/controlflow.html" target="_blank" rel="noopener">Python docs: Control Flow</a> — the official reference.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of The Marcy Lab School and Angelica Spratley. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
 <script>
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let history=[];const KEY="nested-loops-conditionals-reading-v1";
-function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
-function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
-$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
-function quiz(cls,fb,correct,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{const ok=b.dataset.a===correct,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
-quiz(".recall","#recfb","5",{4:"range(5) starts at 0 and stops before 5, producing 0, 1, 2, 3, 4 — five values.",5:"range(5) produces five values: 0 through 4.",6:"The stop value 5 is not included, so there are five values, not six."});
-quiz(".orderq","#orderfb","complete",{complete:"For each outer pass, Python runs the entire inner loop before the outer loop advances.",alternate:"The loops do not take turns. The inner loop completes before the next outer pass.",once:"The inner loop restarts for every outer pass."});
-quiz(".countq","#countfb","8",{8:"4 outer passes × 2 inner passes each = 8 executions of the print.",6:"Adding 4 + 2 gives 6, but nested repetition means two inner executions happen for each of four outer passes.",4:"That counts only the outer passes. Each outer pass contains two inner passes."});
-quiz(".indentq","#indentfb","2",{2:"The line is indented inside the outer loop but not the inner loop, so it runs once for each of 2 teams.",3:"Three is the inner-loop count, but this print sits outside the inner loop.",6:"Six is how often the inner print runs. The less-indented line runs only once per outer pass."});
-quiz(".gateq","#gatefb","skip",{skip:"The inner check lives inside the true outer branch, so it is unreachable when the outer condition is false.",check:"Python only evaluates code in the branch execution enters.",error:"Skipping an unreachable inner branch is normal control flow, not an error."});
-quiz(".condq","#condfb","standard",{standard:"The outer condition is true. Then 7 >= 10 is false, so the inner else branch prints standard.",bonus:"The outer branch is entered, but 7 is not at least 10.",inactive:"The outer condition is true, so the outer else branch is skipped."});
-quiz(".comboq","#combofb","no",{no:"For the SMS item, channel == EMAIL is false, so execution never reaches the nested enabled check.",yes:"The loop visits every item, but conditionals still control which nested code is reached."});
-quiz(".debugq","#debugfb","outer",{outer:"Trace from outside inward. If the outer branch is never entered, its inner check cannot run.",random:"Python follows deterministic control flow; random skipping is not the explanation.",import:"Nested conditionals are normal Python syntax and require no special import."});
-quiz(".bridgeq","#bridgefb","label",{label:"The waiting check is nested inside the URGENT branch, so first determine whether that branch is entered.",waiting:"That inner question is only relevant after the outer label check succeeds.",all:"Nesting means the inner condition is reached only through its containing outer branch."});
-$("#looprun").addEventListener("click",()=>{const s=$("#loopScreen");s.textContent=`for aisle in range(4):
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "nested-loops-conditionals-reading";
+  const TITLE = "Inside the Inside — Nested Loops & Conditionals";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"5",
+    feedback:{4:"range(5) starts at 0 and stops before 5, producing 0, 1, 2, 3, 4 — five values.",
+              5:"range(5) produces five values: 0 through 4.",
+              6:"The stop value 5 is not included, so there are five values, not six."}});
+
+  K.quiz({id:"q-order", buttonSelector:"#card-order .mlrk-choice", feedbackSelector:"#orderfb", correct:"complete",
+    feedback:{complete:"For each outer pass, Python runs the entire inner loop before the outer loop advances.",
+              alternate:"The loops do not take turns. The inner loop completes before the next outer pass.",
+              once:"The inner loop restarts for every outer pass, not just once total."}});
+
+  K.quiz({id:"q-count", buttonSelector:"#card-count .mlrk-choice", feedbackSelector:"#countfb", correct:"8",
+    feedback:{8:"4 outer passes × 2 inner passes each = 8 executions of the print.",
+              6:"Adding 4 + 2 gives 6, but nested repetition means two inner executions happen for each of four outer passes.",
+              4:"That counts only the outer passes. Each outer pass contains two inner passes."},
+    onDone(){revealLoop()}});
+
+  K.quiz({id:"q-scope", buttonSelector:"#card-scope .mlrk-choice", feedbackSelector:"#scopefb", correct:"scope1",
+    feedback:{scope1:"Right — the print sits inside both loops (once per inner pass); advancing the aisle only happens on the outer loop.",
+              scope2:"They aren't the same count — one line is nested one level deeper than the other."}});
+
+  K.quiz({id:"q-indent", buttonSelector:"#card-indent .mlrk-choice", feedbackSelector:"#indentfb", correct:"2",
+    feedback:{2:"The line is indented inside the outer loop but not the inner loop, so it runs once for each of 2 teams.",
+              3:"Three is the inner-loop count, but this print sits outside the inner loop.",
+              6:"Six is how often the inner print runs. The less-indented line runs only once per outer pass."}});
+
+  K.quiz({id:"q-gate", buttonSelector:"#card-gate .mlrk-choice", feedbackSelector:"#gatefb", correct:"skip",
+    feedback:{skip:"The inner check lives inside the true outer branch, so it's unreachable when the outer condition is false.",
+              check:"Python only evaluates code inside the branch execution actually enters.",
+              error:"Skipping an unreachable inner branch is normal control flow, not an error."}});
+
+  K.quiz({id:"q-cond", buttonSelector:"#card-cond .mlrk-choice", feedbackSelector:"#condfb", correct:"standard",
+    feedback:{standard:"The outer condition is true. Then 12 >= 30 is false, so the inner else branch prints standard slot.",
+              priority:"The outer branch is entered, but 12 is not at least 30.",
+              ineligible:"The outer condition is true, so the outer else branch is skipped."},
+    onDone(){revealCond()}});
+
+  K.quiz({id:"q-combo", buttonSelector:"#card-combo .mlrk-choice", feedbackSelector:"#combofb", correct:"no",
+    feedback:{no:"For the SMS item, channel == EMAIL is false, so execution never reaches the nested enabled check.",
+              yes:"The loop visits every item, but conditionals still control which nested code is reached."}});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"9",
+    feedback:{9:"3 outer × 3 inner = 9 — the same multiplication rule from section 5, dressed up as an interview question.",
+              6:"That's 3 + 3, not 3 × 3 — nested repetition multiplies, it doesn't add.",
+              3:"That only counts one full pass of the outer loop."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"outer",
+    feedback:{outer:"Trace from outside inward. If the outer branch is never entered, its inner check can't run.",
+              random:"Python follows deterministic control flow; random skipping isn't the explanation.",
+              import:"Nested conditionals are normal Python syntax and need no special import."}});
+
+  K.quiz({id:"q-bridge", buttonSelector:"#card-bridge .mlrk-choice", feedbackSelector:"#bridgefb", correct:"label",
+    feedback:{label:"The live-chat check is nested inside the URGENT branch, so first determine whether that branch is entered.",
+              waiting:"That inner question is only relevant after the outer label check succeeds.",
+              all:"Nesting means the inner condition is reached only through its containing outer branch."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb",
+    correct:["b","d"],
+    explanation:"The inner loop restarts fresh each outer pass (not (a)); conditionals nest inside conditionals just fine (not (c))."});
+
+  K.dragDrop("#dragarea", "act-drag-scope");
+  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["outer","enter","inside","repeat"], feedbackSelector:"#orderstepsfb"});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"Lx_ariMlcQU"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  function revealLoop(){
+    $("#loopScreen").textContent = `for aisle in range(4):
     for bin_num in range(2):
         print(aisle, bin_num)
 
-[Output]:
+[Output]
 0 0
 0 1
 1 0
@@ -120,27 +411,90 @@ $("#looprun").addEventListener("click",()=>{const s=$("#loopScreen");s.textConte
 2 0
 2 1
 3 0
-3 1`;history.push({activity:"nested-loop-simulation",action:"revealed 8-line trace"});save()});
-$("#condrun").addEventListener("click",()=>{const s=$("#condScreen");s.textContent=`status = "ACTIVE"
-points = 7
+3 1`;
+  }
+  $("#looprun").addEventListener("click", revealLoop);
 
-if status == "ACTIVE":
-    if points >= 10:
-        print("bonus")
+  function revealCond(){
+    $("#condScreen").textContent = `patient_status = "ELIGIBLE"
+wait_days = 12
+
+if patient_status == "ELIGIBLE":
+    if wait_days >= 30:
+        print("priority slot")
     else:
-        print("standard")
+        print("standard slot")
 else:
-    print("inactive")
+    print("not eligible yet")
 
-[Output]:
-standard`;history.push({activity:"nested-conditional-simulation",action:"revealed standard branch"});save()});
-$("#hintbtn").addEventListener("click",()=>{const h=$("#hint");h.classList.add("show");h.textContent="For loops: count each range, then ask what completes inside each outer pass. For conditionals: evaluate the outer condition first, then follow only the reachable branch."});
-function snapshot(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
-function text(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
-function markdown(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
-function dl(name,type,content){try{const b=new Blob([content],{type:type+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
-function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” below."}
-$("#md").addEventListener("click",()=>stat(dl("nested-loops-conditionals-reading.md","text/markdown",markdown(snapshot()))));$("#json").addEventListener("click",()=>stat(dl("nested-loops-conditionals-reading.json","application/json",JSON.stringify(snapshot(),null,2))));$("#txt").addEventListener("click",()=>stat(dl("nested-loops-conditionals-reading.txt","text/plain",text(snapshot()))));
-$("#show").addEventListener("click",()=>{const w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=text(snapshot());t.focus();t.select()});$("#selectall").addEventListener("click",()=>{$("#plain").focus();$("#plain").select()});
-window.addEventListener("scroll",()=>{const d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
-</script></body></html>
+[Output]
+standard slot`;
+  }
+  $("#condrun").addEventListener("click", revealCond);
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const ok = $("#blankinput").value.trim().toLowerCase()==="range";
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> range(4) and range(2) generate the numbers each loop counts through.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer — you'll get it next time.</strong> Both blanks are <code>range</code>.";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think about a daily routine that only makes sense in a certain order, like checking whether a store is open before checking whether an item is in stock. Where's the outer condition in that routine?",
+    "If you had to explain \"the inner loop finishes before the outer one advances\" to a friend using something from your own daily life, what would you compare it to?",
+    "Where have you seen nested decision-making in real life, like a form that only asks a follow-up question if you answer yes to the first one?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy — your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    window.open(K.buildSubmitURL(READING_ID, TITLE), "_blank", "noopener");
+  });
+
+  K.wireImport("#importfile", ok => {
+    $("#importfb").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read — make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>
