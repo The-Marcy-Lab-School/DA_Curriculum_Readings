@@ -22,7 +22,7 @@
 <h1>Inside the Inside</h1>
 <p class="mlrk-lead">A game has 3 worlds, and each world has 4 checkpoints. At every checkpoint, the game may make another decision: is the player carrying a key, and if so, is it the right color? Code often needs to repeat <em>inside</em> repetition, and decide <em>inside</em> a decision — this reading is about building a reliable way to trace both.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~20–22 minutes</span>
+  <span class="mlrk-pill">~22–24 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -61,7 +61,33 @@
 <button type="button" class="mlrk-choice" data-a="5">5</button>
 <button type="button" class="mlrk-choice" data-a="6">6</button>
 <div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<div class="mlrk-callout mlrk-callout-blue">A nested loop does not change how <code>range()</code> works. Get each loop's count right on its own first, then reason about how those counts combine.</div>
+
+<div class="mlrk-card" id="card-compare" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>wait_days = 25</code>. What does <code>wait_days >= 30</code> evaluate to?</p>
+<button type="button" class="mlrk-choice" data-a="false">False</button>
+<button type="button" class="mlrk-choice" data-a="true">True</button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error comparing an int to a number like this</button>
+<div id="comparefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-single" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a single (not nested) conditional — <code>temp = 72</code>:</p>
+<div class="mlrk-code"><div class="mlrk-screen">if temp > 80:
+    print("hot")
+elif temp > 60:
+    print("mild")
+else:
+    print("cool")</div></div>
+<p><strong>What prints?</strong> (72 is also greater than 60, not just failing the first check — think about how many branches actually run.)</p>
+<button type="button" class="mlrk-choice" data-a="mild">mild</button>
+<button type="button" class="mlrk-choice" data-a="hot">hot</button>
+<button type="button" class="mlrk-choice" data-a="cool">cool</button>
+<div id="singlefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-tuple" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>pair = ("SMS", False)</code>, then <code>channel, enabled = pair</code>. What is <code>enabled</code>?</p>
+<button type="button" class="mlrk-choice" data-a="false">False</button>
+<button type="button" class="mlrk-choice" data-a="sms">"SMS"</button>
+<button type="button" class="mlrk-choice" data-a="tuple">The whole tuple, ("SMS", False)</button>
+<div id="tuplefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">Nesting doesn't change how any of these work on their own — <code>range()</code>, comparisons, single conditionals, and tuple unpacking all show up again later in this reading exactly as they work here. Get each one right in isolation first.</div>
 </section>
 
 <section class="mlrk-section">
@@ -333,7 +359,7 @@ git push</pre>
 
 </div></main>
 
-<footer class="mlrk-footer">This reading is the property of The Marcy Lab School and Angelica Spratley. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
 
 <script src="../../../assets/reading-kit.js"></script>
 <script>
@@ -352,6 +378,21 @@ git push</pre>
     feedback:{4:"range(5) starts at 0 and stops before 5, producing 0, 1, 2, 3, 4 — five values.",
               5:"range(5) produces five values: 0 through 4.",
               6:"The stop value 5 is not included, so there are five values, not six."}});
+
+  K.quiz({id:"q-compare", buttonSelector:"#card-compare .mlrk-choice", feedbackSelector:"#comparefb", correct:"false",
+    feedback:{false:"25 is not greater than or equal to 30, so this comparison evaluates to False.",
+              true:"25 is less than 30, so this comparison is False, not True.",
+              error:"Comparing two numbers with >= is completely normal Python — no error here."}});
+
+  K.quiz({id:"q-single", buttonSelector:"#card-single .mlrk-choice", feedbackSelector:"#singlefb", correct:"mild",
+    feedback:{mild:"Python checks branches top to bottom and stops at the first true one. temp > 80 is false, so it moves to elif temp > 60, which is true — mild prints, and else never runs.",
+              hot:"temp > 80 is false (72 is not greater than 80), so that branch never runs.",
+              cool:"Python already found a true branch (temp > 60) before ever reaching else, so else is skipped."}});
+
+  K.quiz({id:"q-tuple", buttonSelector:"#card-tuple .mlrk-choice", feedbackSelector:"#tuplefb", correct:"false",
+    feedback:{false:"channel, enabled = pair unpacks the tuple positionally: channel gets \"SMS\", enabled gets False.",
+              sms:"\"SMS\" is assigned to channel, the first name, not enabled.",
+              tuple:"Tuple unpacking splits the tuple across both names — enabled doesn't hold the whole tuple, just its second value."}});
 
   K.quiz({id:"q-order", buttonSelector:"#card-order .mlrk-choice", feedbackSelector:"#orderfb", correct:"complete",
     feedback:{complete:"For each outer pass, Python runs the entire inner loop before the outer loop advances.",
