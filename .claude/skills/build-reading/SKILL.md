@@ -47,12 +47,12 @@ of work, not a rigid script.
 
 Embed the chosen video directly (`youtube.com/embed/<id>` via `ReadingKit.video(...)`), and always show a "Watch on YouTube: `<link>`" line underneath regardless of embed status. Prefer <10 min, reputable channel (freeCodeCamp, Corey Schafer, Programming with Mosh, Tech With Tim, official docs orgs, etc.), Python-flavored unless the reading is SQL/data-viz-specific. Record the pick + one-line reasoning in the reading's content brief (`content-briefs/`) so it's fast to review and swap later — do not gate on approval before publishing, just make the pick reviewable.
 
-## Submission / "send to GitHub"
+## Submission / grading
 
-Two tiers, both from `assets/reading-kit.js`:
-- **Always**: download the response file (md/json/txt) + an on-page git cheat-sheet (`git add`/`commit`/`push`) for the student's own personal portfolio repo — no token, real commit, real streak credit.
-- **Submit for credit**: `ReadingKit.buildSubmitURL(readingId, title)` opens a pre-filled GitHub Issue in `The-Marcy-Lab-School/DA-Reading_Submissions` — no token needed, and opening the issue counts on the student's real public contribution graph. A GitHub Action there parses/scores/comments/closes it and updates the pseudonymous public `leaderboard.json` (see that repo's own README once scaffolded).
-- Alias/avatar for the leaderboard is `ReadingKit.Persona` — reroll-only generator (adjective + animal + emoji), never freeform text, decoupled from the real GitHub username used for actual grading.
+Two separate, unrelated tiers, both from `assets/reading-kit.js`:
+- **Always**: download the response file (md/json/txt) + an on-page git cheat-sheet (`git add`/`commit`/`push`) for the student's own personal portfolio repo — no token, real commit, real streak credit. This has nothing to do with grading; it's purely the student's own copy.
+- **Submit for credit**: `ReadingKit.submitForCredit({readingId, title, onDone})` sends the score to a private Google Sheet only the instructor can see, via a Google Apps Script Web App (`assets/SubmissionsAppsScript.gs` — read that file's setup comment before deploying). **Not GitHub Issues** — a shared GitHub repo was tried first, but any repo collaborator can see every issue in it, which defeats per-student privacy; a private repo alone only hides submissions from the public internet, not from classmates. `SUBMISSIONS_WEBHOOK_URL` and `SUBMISSIONS_SECRET` near the top of `reading-kit.js` must be set to the deployed Web App's real URL/secret before this works — every reading shares the same two constants. 2 submission attempts per reading (enforced client-side via `localStorage` and again server-side in the Apps Script); best score kept. The `DA-Reading_Submissions` GitHub repo is retired for grading — leave it alone, don't route new readings through it.
+- Alias/avatar for the leaderboard is `ReadingKit.Persona` — reroll generator (adjective + animal + emoji, paired list only, never independently-randomized name/emoji) plus a "type in your exact existing persona" option, never freeform-typed from scratch. Decoupled from the GitHub username used only as a gradebook label.
 
 ## Draft persistence
 

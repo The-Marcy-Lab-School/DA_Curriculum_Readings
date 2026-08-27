@@ -6,7 +6,11 @@
 (function(global){
   "use strict";
 
-  const SUBMISSIONS_REPO = "The-Marcy-Lab-School/DA-Reading_Submissions";
+  // Set these once, after deploying assets/SubmissionsAppsScript.gs as a
+  // Google Apps Script Web App (see that file's setup comment) — every
+  // reading shares this same endpoint, so it only needs setting in one place.
+  const SUBMISSIONS_WEBHOOK_URL = "REPLACE_WITH_YOUR_DEPLOYED_WEB_APP_URL";
+  const SUBMISSIONS_SECRET = "REPLACE_WITH_YOUR_SHARED_SECRET";
   const ALIAS_KEY = "mlrk:persona";
   const ADJECTIVES = ["Turbo","Quiet","Cosmic","Sunny","Rapid","Clever","Bold","Mellow","Electric","Curious","Steady","Bright","Nimble","Loyal","Vivid"];
   // name+emoji are paired together on purpose — picking them from two
@@ -545,25 +549,37 @@
     });
   }
 
-  /* ---------- submit-for-credit (GitHub Issue, no token) ---------- */
-  function buildSubmitURL(readingId,title){
-    const s=snapshot(readingId,title);
-    const ghUser=(localStorage.getItem("mlrk:ghuser")||"").trim();
-    const body=[
-      "Reading: "+title,
-      "Reading ID: "+readingId,
-      "GitHub username: "+(ghUser||"(fill in your GitHub username here)"),
-      "Score: "+s.score.earned+" / "+s.score.possible+" ("+s.score.pct+"%)",
-      "",
-      "```json",
-      JSON.stringify(s,null,2),
-      "```"
-    ].join("\n");
-    const params=new URLSearchParams({
-      title:"Reading submission: "+title,
-      body
-    });
-    return "https://github.com/"+SUBMISSIONS_REPO+"/issues/new?"+params.toString();
+  /* ---------- submit-for-credit (private Google Sheet webhook) ----------
+     Grades go to a Google Sheet only the instructor can see — not a public
+     or shared-collaborator GitHub repo, since any repo collaborator can see
+     every other collaborator's issues, which defeats per-student privacy.
+     A student's own git-push-to-your-portfolio streak (see the export
+     section) is separate and doesn't touch this at all. */
+  function submitForCredit(opts){
+    // opts: {readingId, title, onDone(status)} — status is "sent" (best-effort,
+    // no-cors can't confirm the server actually accepted it), "attempt-limit"
+    // (client already used both local attempts for this reading), or
+    // "network-error" (request never left the browser).
+    const attemptsKey="mlrk:attempts:"+opts.readingId;
+    const attempts=parseInt(localStorage.getItem(attemptsKey)||"0",10);
+    if(attempts>=2){
+      if(opts.onDone) opts.onDone("attempt-limit");
+      return;
+    }
+    const s=snapshot(opts.readingId,opts.title);
+    const payload={
+      secret:SUBMISSIONS_SECRET,
+      readingId:opts.readingId, title:opts.title,
+      githubUsername:(localStorage.getItem("mlrk:ghuser")||"").trim(),
+      persona:s.persona, score:s.score, responses:s.responses, timestamp:s.timestamp
+    };
+    localStorage.setItem(attemptsKey,String(attempts+1));
+    fetch(SUBMISSIONS_WEBHOOK_URL,{
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"text/plain"},
+      body:JSON.stringify(payload)
+    }).then(()=>{if(opts.onDone) opts.onDone("sent")})
+      .catch(()=>{if(opts.onDone) opts.onDone("network-error")});
   }
 
   /* ---------- persistence tick ---------- */
@@ -596,6 +612,6 @@
   global.ReadingKit={
     init, quiz, selectAll, flipCards, orderSteps, dragDrop, video, freeResponse,
     activity, terminal, selfCheck, traceStepper, Scoring, Persona, Storage,
-    snapshot, toMarkdown, toText, download, restore, wireImport, buildSubmitURL
+    snapshot, toMarkdown, toText, download, restore, wireImport, submitForCredit
   };
 })(window);

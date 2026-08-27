@@ -368,12 +368,13 @@ git push</pre>
   </div>
 
   <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
-    <p><strong>Submit for credit:</strong> enter your GitHub username once, then submit — this opens a pre-filled GitHub Issue, no token needed, and it counts on your real contribution graph.</p>
+    <p><strong>Submit for credit:</strong> enter your GitHub username once, then submit. Your score goes straight to your instructor, privately. You get 2 submission attempts per reading; your best score counts.</p>
     <div class="mlrk-fillblank">
       <label for="ghuser">GitHub username</label>
       <input type="text" id="ghuser" autocomplete="off">
     </div>
     <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
   </div>
 </div>
 </section>
@@ -599,7 +600,13 @@ standard slot`;
 
   $("#submitcredit").addEventListener("click", () => {
     if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
-    window.open(K.buildSubmitURL(READING_ID, TITLE), "_blank", "noopener");
+    const fb=$("#submitfb");
+    fb.textContent="Sending...";
+    K.submitForCredit({readingId:READING_ID, title:TITLE, onDone(status){
+      if(status==="sent") fb.textContent="Submitted. Your instructor will see this score privately.";
+      else if(status==="attempt-limit") fb.textContent="You've already used both submission attempts for this reading.";
+      else fb.textContent="Couldn't reach the submission server. Check your connection and try again.";
+    }});
   });
 
   K.wireImport("#importfile-top", ok => {
