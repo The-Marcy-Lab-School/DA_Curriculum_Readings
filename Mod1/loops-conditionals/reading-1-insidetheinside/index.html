@@ -368,10 +368,14 @@ git push</pre>
   </div>
 
   <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
-    <p><strong>Submit for credit:</strong> enter your GitHub username once, then submit. Your score goes straight to your instructor, privately. You get 2 submission attempts per reading; your best score counts.</p>
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo (made from the class template — ask your instructor if you haven't set yours up yet). Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
     <div class="mlrk-fillblank">
       <label for="ghuser">GitHub username</label>
       <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
     </div>
     <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
     <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
@@ -582,6 +586,8 @@ standard slot`;
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
   $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
 
   function stat(ok){
     $("#exportfb").textContent = ok
@@ -601,11 +607,9 @@ standard slot`;
   $("#submitcredit").addEventListener("click", () => {
     if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
     const fb=$("#submitfb");
-    fb.textContent="Sending...";
     K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["python-fundamentals"], onDone(status){
-      if(status==="sent") fb.textContent="Submitted. Your instructor will see this score privately.";
+      if(status==="opened") fb.textContent="Opened a new tab with your pre-filled issue — click \"Submit new issue\" there to finish.";
       else if(status==="attempt-limit") fb.textContent="You've already used both submission attempts for this reading.";
-      else fb.textContent="Couldn't reach the submission server. Check your connection and try again.";
     }});
   });
 

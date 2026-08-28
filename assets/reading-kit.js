@@ -544,62 +544,56 @@
     });
   }
 
-  /* ---------- submit-for-credit (Google Form -> private Sheet) ----------
-     Grades go to a Google Sheet only the instructor can see. Tried a custom
-     Apps Script Web App first (a real backend, real per-field validation,
-     a shared secret) — that hit a Google Workspace admin policy on the
-     school domain blocking anonymous access to Apps Script web apps
-     specifically, with no workaround available to an individual account.
-     A public Google Form's response endpoint is a different Google feature
-     with different (more permissive) access rules, since accepting outside
-     responses is what a form is for — so this sidesteps that wall entirely,
-     at the cost of losing server-side validation (no shared-secret gate, no
-     server-enforced attempt cap — both are client-side-only now). Accepted
-     trade-off for an internal, low-stakes formative-practice tool.
+  /* ---------- submit-for-credit (GitHub Issue in the student's OWN repo) ----------
+     Two Google-hosted approaches were tried first and both hit the same wall:
+     the marcylabschool.org Google Workspace domain has an admin policy
+     blocking anonymous/external access, which broke both a custom Apps
+     Script Web App AND a public Google Form's response endpoint, in each
+     case regardless of the individual account's own settings. Neither is
+     fixable without a Workspace admin/IT change.
+     This version goes back to GitHub Issues (which never had that problem),
+     but fixes the actual privacy flaw from the FIRST GitHub attempt: instead
+     of one shared repo where every collaborator could see every other
+     collaborator's issues, each student creates their own private repo from
+     a template and adds the instructor as the only other collaborator — so
+     an issue here is visible to exactly that one student and the instructor,
+     nobody else. No server, no deployment, no Workspace policy to fight.
      A student's own git-push-to-your-portfolio streak (see the export
-     section) is separate and doesn't touch this at all. */
-  const SUBMISSIONS_FORM_ID = "REPLACE_WITH_YOUR_FORM_ID"; // the id in .../forms/d/e/<THIS>/viewform
-  const SUBMISSIONS_FORM_ENTRIES = {
-    readingId: "entry.REPLACE1",
-    title: "entry.REPLACE2",
-    githubUsername: "entry.REPLACE3",
-    personaName: "entry.REPLACE4",
-    personaEmoji: "entry.REPLACE5",
-    skillTags: "entry.REPLACE6",
-    earned: "entry.REPLACE7",
-    possible: "entry.REPLACE8",
-    pct: "entry.REPLACE9"
-  };
+     section) is a separate, unrelated thing and isn't affected by any of this. */
+  const DEFAULT_SUBMISSIONS_REPO_NAME = "reading-submissions";
+  function buildSubmitURL(opts){
+    // opts: {readingId, title, tags:[taxonomy.json ids]}
+    const s=snapshot(opts.readingId,opts.title);
+    const ghUser=(localStorage.getItem("mlrk:ghuser")||"").trim();
+    const ghRepo=(localStorage.getItem("mlrk:ghrepo")||"").trim()||DEFAULT_SUBMISSIONS_REPO_NAME;
+    const body=[
+      "Reading: "+opts.title,
+      "Reading ID: "+opts.readingId,
+      "Skill tags: "+(opts.tags||[]).join(", "),
+      "Score: "+s.score.earned+" / "+s.score.possible+" ("+s.score.pct+"%)",
+      "",
+      "```json",
+      JSON.stringify(s,null,2),
+      "```"
+    ].join("\n");
+    const params=new URLSearchParams({title:"Reading submission: "+opts.title, body});
+    return "https://github.com/"+encodeURIComponent(ghUser)+"/"+encodeURIComponent(ghRepo)+"/issues/new?"+params.toString();
+  }
   function submitForCredit(opts){
-    // opts: {readingId, title, tags:[taxonomy.json ids], onDone(status)} —
-    // status is "sent" (best-effort, no-cors can't confirm the Form actually
-    // accepted it), "attempt-limit" (client already used both local attempts
-    // for this reading), or "network-error" (request never left the browser).
+    // opts: {readingId, title, tags, onDone(status)} — status is "opened"
+    // (a new tab was launched to GitHub's pre-filled issue form; the student
+    // still has to click "Submit new issue" themselves there — that's
+    // GitHub's own UI, not something this function can see the result of)
+    // or "attempt-limit" (client already used both local attempts).
     const attemptsKey="mlrk:attempts:"+opts.readingId;
     const attempts=parseInt(localStorage.getItem(attemptsKey)||"0",10);
     if(attempts>=2){
       if(opts.onDone) opts.onDone("attempt-limit");
       return;
     }
-    const s=snapshot(opts.readingId,opts.title);
-    const E=SUBMISSIONS_FORM_ENTRIES;
-    const form=new URLSearchParams();
-    form.set(E.readingId,opts.readingId);
-    form.set(E.title,opts.title);
-    form.set(E.githubUsername,(localStorage.getItem("mlrk:ghuser")||"").trim());
-    form.set(E.personaName,s.persona.name);
-    form.set(E.personaEmoji,s.persona.emoji);
-    form.set(E.skillTags,(opts.tags||[]).join(", "));
-    form.set(E.earned,s.score.earned);
-    form.set(E.possible,s.score.possible);
-    form.set(E.pct,s.score.pct);
     localStorage.setItem(attemptsKey,String(attempts+1));
-    fetch("https://docs.google.com/forms/d/e/"+SUBMISSIONS_FORM_ID+"/formResponse",{
-      method:"POST", mode:"no-cors",
-      headers:{"Content-Type":"application/x-www-form-urlencoded"},
-      body:form.toString()
-    }).then(()=>{if(opts.onDone) opts.onDone("sent")})
-      .catch(()=>{if(opts.onDone) opts.onDone("network-error")});
+    window.open(buildSubmitURL(opts),"_blank","noopener");
+    if(opts.onDone) opts.onDone("opened");
   }
 
   /* ---------- persistence tick ---------- */
@@ -632,6 +626,6 @@
   global.ReadingKit={
     init, quiz, selectAll, flipCards, orderSteps, dragDrop, video, freeResponse,
     activity, terminal, selfCheck, traceStepper, Scoring, Persona, Storage,
-    snapshot, toMarkdown, toText, download, restore, wireImport, submitForCredit
+    snapshot, toMarkdown, toText, download, restore, wireImport, submitForCredit, buildSubmitURL
   };
 })(window);
