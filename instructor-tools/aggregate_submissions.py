@@ -34,6 +34,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 import urllib.request
 import urllib.error
 
@@ -96,7 +97,7 @@ def main():
 
     # (username, readingId) -> list of {earned, possible, pct, created_at}
     per_reading_attempts = {}
-    student_readings = {}  # username -> {readingId: tags}
+    student_readings = {}  # username -> {readingId: {"tags":[...], "skills":[...]}}
 
     for student in roster:
         username = student["username"]
@@ -114,10 +115,25 @@ def main():
                 "pct": payload["score"]["pct"],
                 "created_at": issue.get("created_at", ""),
             })
-            student_readings.setdefault(username, {})[payload["readingId"]] = payload.get("tags") or []
+            student_readings.setdefault(username, {})[payload["readingId"]] = {
+                "tags": payload.get("tags") or [],
+                "skills": payload.get("skills") or [],
+            }
+
+    # skills.json is optional — objective-level reporting just gets skipped
+    # (with a warning) for older submissions/readings that predate it.
+    skills_path = Path(__file__).parent.parent / "skills.json"
+    objective_labels = {}
+    if skills_path.exists():
+        for lesson in json.loads(skills_path.read_text(encoding="utf-8")).get("lessons", []):
+            for obj in lesson.get("objectives", []):
+                objective_labels[obj["id"]] = obj["text"]
+    else:
+        print(f"[warn] {skills_path} not found — objective_summary.csv will use raw ids as labels", file=sys.stderr)
 
     gradebook_rows = []
-    tag_scores = {}  # tag -> list of pct
+    tag_scores = {}   # tag -> list of pct
+    obj_scores = {}   # objective id -> list of pct
 
     for (username, reading_id), attempts in per_reading_attempts.items():
         attempts.sort(key=lambda a: a["created_at"])
@@ -134,8 +150,11 @@ def main():
             "best_possible": best["possible"],
             "best_pct": best["pct"],
         })
-        for tag in student_readings.get(username, {}).get(reading_id, []):
+        meta = student_readings.get(username, {}).get(reading_id, {})
+        for tag in meta.get("tags", []):
             tag_scores.setdefault(tag, []).append(best["pct"])
+        for obj_id in meta.get("skills", []):
+            obj_scores.setdefault(obj_id, []).append(best["pct"])
 
     gradebook_rows.sort(key=lambda r: (r["username"], r["reading_id"]))
     gradebook_path = os.path.join(out_dir, "gradebook.csv")
@@ -157,6 +176,22 @@ def main():
         w.writeheader()
         w.writerows(skill_rows)
     print(f"Wrote {skill_path} ({len(skill_rows)} rows)")
+
+    objective_rows = [
+        {
+            "objective_id": obj_id,
+            "objective_text": objective_labels.get(obj_id, "(unknown — not in skills.json)"),
+            "students_counted": len(pcts),
+            "avg_pct": round(sum(pcts) / len(pcts), 1),
+        }
+        for obj_id, pcts in sorted(obj_scores.items())
+    ]
+    objective_path = os.path.join(out_dir, "objective_summary.csv")
+    with open(objective_path, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=["objective_id", "objective_text", "students_counted", "avg_pct"])
+        w.writeheader()
+        w.writerows(objective_rows)
+    print(f"Wrote {objective_path} ({len(objective_rows)} rows)")
 
 
 if __name__ == "__main__":

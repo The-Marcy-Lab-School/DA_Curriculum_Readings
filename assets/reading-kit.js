@@ -562,10 +562,14 @@
      section) is a separate, unrelated thing and isn't affected by any of this. */
   const DEFAULT_SUBMISSIONS_REPO_NAME = "reading-submissions";
   function buildSubmitURL(opts){
-    // opts: {readingId, title, tags:[taxonomy.json ids]}
+    // opts: {readingId, title, tags:[taxonomy.json ids], skills:[skills.json objective ids]}
     const s=snapshot(opts.readingId,opts.title);
     const ghUser=(localStorage.getItem("mlrk:ghuser")||"").trim();
     const ghRepo=(localStorage.getItem("mlrk:ghrepo")||"").trim()||DEFAULT_SUBMISSIONS_REPO_NAME;
+    // tags/skills go INSIDE the JSON payload (not just the human-readable
+    // lines above it) since that's the only part the aggregator script
+    // actually parses back out.
+    const payload=Object.assign({},s,{tags:opts.tags||[],skills:opts.skills||[]});
     const body=[
       "Reading: "+opts.title,
       "Reading ID: "+opts.readingId,
@@ -573,7 +577,7 @@
       "Score: "+s.score.earned+" / "+s.score.possible+" ("+s.score.pct+"%)",
       "",
       "```json",
-      JSON.stringify(s,null,2),
+      JSON.stringify(payload,null,2),
       "```"
     ].join("\n");
     const params=new URLSearchParams({title:"Reading submission: "+opts.title, body});
