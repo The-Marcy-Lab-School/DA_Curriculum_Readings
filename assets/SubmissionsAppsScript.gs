@@ -1,4 +1,21 @@
 /**
+ * NOT CURRENTLY USED — kept for reference only.
+ *
+ * This approach was tried first and hit a hard wall: the marcylabschool.org
+ * Google Workspace domain has an admin-level policy blocking anonymous
+ * access to Apps Script Web Apps, even with "Who has access: Anyone"
+ * explicitly selected and the deployment freshly authorized. This wasn't
+ * something fixable from an individual account — confirmed by testing
+ * multiple fresh deployments, all blocked the same way for anonymous
+ * requests while an authenticated request from the owner's own account
+ * reached the script fine. Submissions were moved to a Google Form instead
+ * (see reading-kit.js's submitForCredit, which POSTs to a Form's public
+ * formResponse endpoint) since Forms are a different Google feature with
+ * different, more permissive access rules for outside responses. If a
+ * future admin/IT change lifts the Apps Script restriction, this file is a
+ * ready-to-deploy alternative with real server-side validation (a shared
+ * secret, a server-enforced attempt cap) that the Forms approach can't do.
+ *
  * Marcy Lab reading submissions — Google Apps Script Web App.
  *
  * What this does: receives one POST per "Submit for credit" click from a
