@@ -1,154 +1,583 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Choose. Repeat. Trace. | Control Flow & Conditionals</title>
+<title>Choose, Repeat, Trace — Control Flow &amp; Conditionals</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-:root{--ink:#1d241f;--paper:#fbfaf6;--card:#fff;--forest:#21482f;--sage:#dce9df;--blue:#287bb7;--gold:#e1ae2d;--line:#d5ddd7;--good:#e5f4e9;--bad:#fbe8eb;--focus:#ffbf47;--code:#171c18}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}button,textarea{font:inherit}button:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}
-header{background:var(--forest);color:white;padding:3rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.5rem,7vw,4.8rem);line-height:1;margin:.4rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:#dbe9df}.lead{font-size:1.2rem;max-width:800px}.meta{display:flex;gap:.6rem;flex-wrap:wrap}.pill{border:1px solid #a9bdad;border-radius:999px;padding:.3rem .7rem}
-.sticky{position:sticky;top:0;background:white;border-bottom:1px solid var(--line);z-index:5}.track{height:8px;background:#e9edea}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.5rem 1rem;color:#59635d}
-main{padding:2rem 1.2rem 5rem}section{margin-bottom:3rem}.card{background:white;border:1px solid var(--line);border-radius:18px;padding:1.2rem;box-shadow:0 3px 14px #1420190d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem}
-.term{min-height:150px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}.small{font-size:.92rem;color:#5c665f}
-.callout{background:#edf6fb;border-left:6px solid var(--blue);padding:1rem 1.2rem;border-radius:10px}.warn{background:#fff4d9;border-left:6px solid var(--gold);padding:1rem 1.2rem;border-radius:10px}
-button{border:2px solid var(--forest);border-radius:11px;padding:.7rem 1rem;background:white;color:var(--forest);font-weight:750;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
-.flow{display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;margin:1rem 0}.node{padding:.8rem 1rem;background:var(--sage);border-radius:12px;text-align:center}.arrow{font-size:1.5rem}
-.code{background:var(--code);color:#f5f7f5;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:110px;margin:0}.codeactions,.actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}.code button{background:#29372e;color:white;border-color:#d2ddd5}
-textarea{width:100%;min-height:100px;padding:.75rem;border:2px solid #aeb8b1;border-radius:10px}.hint{display:none;background:#f2effa;border-radius:12px;padding:1rem}.hint.show{display:block}.bridge{border-top:8px solid var(--gold)}.export{background:#eff4f0;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}
-</style></head><body>
-<header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Choose. Repeat. Trace.</h1>
-<p class="lead">Imagine a music app processing a queue. For every track, it repeats the same inspection—but it may make a different decision for each one: play it, skip it, or flag it. That is the heart of control flow: <strong>decide what happens and control what repeats.</strong></p>
-<div class="meta"><span class="pill">~17–19 minutes</span><span class="pill">Interactive</span><span class="pill">No Python setup needed</span><span class="pill">Saves locally</span></div></div></header>
-<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Target: trace short conditionals and loops, then predict exact output before code runs.</p></div>
-<main>
-<section><h2>1. Vocabulary you can use</h2><p>Flip all four cards. Your goal is not just to recognize the words—you should be able to point to each idea in code.</p><div class="grid">
-<button class="card term" type="button"><span class="front"><strong>conditional</strong><br><span class="small">Flip</span></span><span class="back"><strong>Conditional</strong><br>Code that checks a condition and chooses a path based on whether it is true or false.</span></button>
-<button class="card term" type="button"><span class="front"><strong>loop</strong><br><span class="small">Flip</span></span><span class="back"><strong>Loop</strong><br>A structure that repeats code.</span></button>
-<button class="card term" type="button"><span class="front"><strong>iteration</strong><br><span class="small">Flip</span></span><span class="back"><strong>Iteration</strong><br>One pass through a loop.</span></button>
-<button class="card term" type="button"><span class="front"><strong>loop body</strong><br><span class="small">Flip</span></span><span class="back"><strong>Loop body</strong><br>The indented code that executes during each iteration.</span></button>
-</div></section>
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:8rem}
+.cf-flow{display:flex;flex-direction:column;gap:.5rem;margin:1rem 0}
+.cf-flow-step{border:2px solid var(--mlrk-callout-blue-border);background:var(--mlrk-callout-blue-fill);border-radius:12px;padding:.7rem 1rem;font-weight:700}
+.cf-flow-note{font-size:.92rem;font-weight:600;color:var(--mlrk-text-on-light-muted);padding-left:.3rem}
+@media(max-width:650px){.cf-flow{gap:.4rem}}
+</style>
+</head><body>
 
-<section><h2>2. Recall: values can drive decisions</h2><div class="card"><p><strong>Which value is a string?</strong></p>
-<button class="choice recall" data-a="a" type="button"><code>42</code></button><button class="choice recall" data-a="b" type="button"><code>42.0</code></button><button class="choice recall" data-a="c" type="button"><code>"42"</code></button><div id="recfb" class="feedback" tabindex="-1"></div></div>
-<p class="callout">Variables and data types matter because conditions compare values. A program can make different choices depending on the value it sees.</p></section>
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Choose, Repeat, Trace</h1>
+<p class="mlrk-lead">A personal budgeting app reviews yesterday's transactions, one at a time. For each one it asks the same question: is this over $75? The answer changes what happens next: flag it for review, label it routine, or something else entirely. The app doesn't treat every transaction the same way, and it doesn't check just once. It repeats the same question for every transaction on the list until the list runs out. That combination, <strong>a conditional that chooses a path, and a loop that controls what repeats</strong>, is what this reading is about.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~19–21 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
 
-<section><h2>3. Conditionals choose a path</h2><p>An <code>if</code> asks the first question. An <code>elif</code> asks another question only if an earlier branch did not run. An <code>else</code> handles the remaining case.</p>
-<div class="flow"><div class="node">Check <code>if</code></div><div class="arrow">→</div><div class="node">if needed, check <code>elif</code></div><div class="arrow">→</div><div class="node">otherwise <code>else</code></div></div>
-<div class="card"><p><strong>A delivery app sees <code>distance = 6</code>. What prints?</strong></p><div class="code"><div class="screen">if distance > 10:
-    print("far")
-elif distance > 3:
-    print("nearby")
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <ul>
+      <li>Trace short, already-written loop/conditional snippets and state their exact output without running them</li>
+      <li>Define iteration, conditional, and loop body in your own words</li>
+    </ul>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Picture the budgeting app from the intro. It has a list of transactions from yesterday, and it walks through them one after another. For each single transaction, it asks: is the amount over $75? If yes, it flags the transaction for review. If not, but the transaction repeats every month, it labels it "recurring." Otherwise, it just files it as "routine." That's a <strong>conditional</strong> — code that checks a condition and runs exactly one matching branch, never more than one.</p>
+<p>Now notice what happens across the whole list: the app doesn't ask that question once. It asks it once for every single transaction, in order, until there are no transactions left. That repeating behavior is a <strong>loop</strong>. Each single pass through the list — one transaction, one question, one answer — is an <strong>iteration</strong>. And the actual instructions that run during each pass, the part that checks the amount and decides what to print or store, is the <strong>loop body</strong>.</p>
+<p>Put those two ideas together and you have the shape behind almost every real program that processes a list of things: a loop that visits every item, and a conditional that decides what to do with the one it's currently looking at. The rest of this reading is about getting fast and accurate at predicting exactly what a short snippet like that will do, before you ever run it.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before choosing</h2>
+<p class="mlrk-small">Understanding basic data types and comparisons is a prerequisite skill for this reading. Test each one below before moving on.</p>
+<div class="mlrk-card" id="card-recall"><p><strong>Which value below is a string?</strong></p>
+<button type="button" class="mlrk-choice" data-a="b">75</button>
+<button type="button" class="mlrk-choice" data-a="c">75.0</button>
+<button type="button" class="mlrk-choice" data-a="a">"75"</button>
+<div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-compare" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>amount = 42</code>. Does <code>amount &gt; 75</code> evaluate to <code>True</code>?</p>
+<button type="button" class="mlrk-choice" data-a="no">No</button>
+<button type="button" class="mlrk-choice" data-a="yes">Yes</button>
+<div id="comparefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-list" style="margin-top:.8rem"><p><strong>Scenario check:</strong> the app stores yesterday's amounts as <code>amounts = [30, 120, 60]</code>. What is true about this list?</p>
+<button type="button" class="mlrk-choice" data-a="three">It holds three separate values, and each one can be checked with a comparison on its own.</button>
+<button type="button" class="mlrk-choice" data-a="one">It is a single value that cannot be broken into individual parts.</button>
+<button type="button" class="mlrk-choice" data-a="string">It must be converted to a string before Python can read it.</button>
+<div id="listfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-why" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> why does a conditional need a comparison like <code>amount &gt; 75</code> instead of just the plain number <code>75</code> by itself?</p>
+<button type="button" class="mlrk-choice" data-a="bool">A comparison produces <code>True</code> or <code>False</code>, and a conditional needs exactly that kind of answer to pick a branch.</button>
+<button type="button" class="mlrk-choice" data-a="cantread">Python cannot read a plain number inside an <code>if</code> statement at all.</button>
+<button type="button" class="mlrk-choice" data-a="speed">Comparisons only exist to make the code run faster.</button>
+<div id="whyfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">None of this changes once loops and conditionals are introduced — comparisons, data types, and lists all work exactly the same way inside a loop or an <code>if</code> as they do on their own. Get each one right in isolation first.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before moving into the tracing practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>conditional</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Conditional</strong><br>Code that checks a condition and runs exactly one branch, depending on whether the condition is True or False.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>branch</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Branch</strong><br>One possible path in a conditional — the code under an <code>if</code>, an <code>elif</code>, or an <code>else</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>loop</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Loop</strong><br>A structure that repeats a block of code, once per item or for as long as a condition holds.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>iteration</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Iteration</strong><br>One single pass through a loop's body.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>loop body</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Loop body</strong><br>The indented code inside a loop that actually runs, once per iteration.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. <code>if</code> / <code>elif</code> / <code>else</code>: exactly one path runs</h2>
+<p>Python checks branches from top to bottom and stops at the first one that's True. An <code>elif</code> only gets checked if every branch above it was False, and <code>else</code> only runs if nothing above it matched.</p>
+<div class="mlrk-card" id="card-cond"><p><strong>A budgeting app sees <code>amount = 42</code>. What prints?</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">if amount > 100:
+    print("flag")
+elif amount > 50:
+    print("review")
 else:
-    print("close")</div></div>
-<button class="choice condq" data-a="nearby" type="button">nearby</button><button class="choice condq" data-a="far" type="button">far</button><button class="choice condq" data-a="close" type="button">close</button><div id="condfb" class="feedback" tabindex="-1"></div></div></section>
+    print("routine")</div></div>
+<button type="button" class="mlrk-choice" data-a="routine">routine</button>
+<button type="button" class="mlrk-choice" data-a="flag">flag</button>
+<button type="button" class="mlrk-choice" data-a="review">review</button>
+<div id="condfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>4. Trace first. Run second.</h2><p>A reliable habit is to predict the branch before revealing output.</p><div class="code"><div id="condScreen" class="screen">battery = 38
+<section class="mlrk-section">
+<h2>5. Predict first. Reveal second.</h2>
+<p>A reliable habit is to write down your prediction before you ever reveal or run the output.</p>
+<div class="mlrk-code"><div id="predictScreen" class="mlrk-screen">saved = 620
 
-if battery >= 70:
-    print("high")
-elif battery >= 25:
-    print("medium")
+if saved >= 1000:
+    print("goal reached")
+elif saved >= 500:
+    print("halfway there")
 else:
-    print("low")</div><div class="codeactions"><button id="condrun" type="button">Reveal simulated output</button></div></div>
-<p class="warn"><strong>Tracing habit:</strong> read from top to bottom. Once a branch runs, the rest of that <code>if/elif/else</code> chain is skipped.</p></section>
+    print("just starting")</div>
+<div class="mlrk-actions"><button type="button" id="predictrun" class="mlrk-btn">Reveal simulated output</button></div></div>
+<div class="mlrk-card" id="card-predict" style="margin-top:1rem"><p><strong>Before revealing: what prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="halfway">halfway there</button>
+<button type="button" class="mlrk-choice" data-a="goal">goal reached</button>
+<button type="button" class="mlrk-choice" data-a="starting">just starting</button>
+<div id="predictfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>5. A <code>for</code> loop repeats once per item</h2><div class="code"><div id="forScreen" class="screen">cities = ["Oslo", "Lima", "Accra"]
+<section class="mlrk-section">
+<h2>6. A <code>for</code> loop repeats once per item</h2>
+<div class="mlrk-code"><div class="mlrk-screen">categories = ["Groceries", "Rent", "Streaming"]
 
-for city in cities:
-    print(city)</div><div class="codeactions"><button id="forrun" type="button">Reveal simulated output</button></div></div>
-<div class="card" style="margin-top:1rem"><p><strong>How many iterations happen?</strong></p>
-<button class="choice forq" data-a="3" type="button">3</button><button class="choice forq" data-a="2" type="button">2</button><button class="choice forq" data-a="4" type="button">4</button><div id="forfb" class="feedback" tabindex="-1"></div></div></section>
+for category in categories:
+    print(category)</div></div>
+<div class="mlrk-card" id="card-foriter" style="margin-top:1rem"><p><strong>How many iterations happen?</strong></p>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="2">2</button>
+<button type="button" class="mlrk-choice" data-a="4">4</button>
+<div id="foriterfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>6. <code>range()</code>: watch the stopping boundary</h2><p><code>range(n)</code> starts at 0 and stops <strong>before</strong> <code>n</code>. So the stop value itself is not produced.</p>
-<div class="card"><p><strong>What does this print?</strong></p><div class="code"><div class="screen">for step in range(4):
-    print(step)</div></div>
-<button class="choice rangeq" data-a="0123" type="button">0, 1, 2, 3</button><button class="choice rangeq" data-a="1234" type="button">1, 2, 3, 4</button><button class="choice rangeq" data-a="01234" type="button">0, 1, 2, 3, 4</button><div id="rangefb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+<h2>7. <code>range()</code>: watch the stopping boundary</h2>
+<p><code>range(n)</code> starts at 0 and stops <strong>before</strong> <code>n</code>. The stop value itself is never produced.</p>
+<div class="mlrk-card" id="card-rangebound"><p><strong>What does <code>range(4)</code> produce?</strong></p>
+<button type="button" class="mlrk-choice" data-a="0123">0, 1, 2, 3</button>
+<button type="button" class="mlrk-choice" data-a="1234">1, 2, 3, 4</button>
+<button type="button" class="mlrk-choice" data-a="01234">0, 1, 2, 3, 4</button>
+<div id="rangeboundfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-code" style="margin-top:1rem"><div class="mlrk-screen">for day in ____(7):
+    print(day)</div></div>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Type the missing function name:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
 
-<section><h2>7. <code>while</code>: repetition controlled by a condition</h2><p>A <code>while</code> loop checks its condition before each pass. Something in the loop usually needs to change so that the condition eventually becomes false.</p>
-<div class="flow"><div class="node">Check condition</div><div class="arrow">→</div><div class="node">Run body if true</div><div class="arrow">→</div><div class="node">Change state</div><div class="arrow">↩</div></div>
-<div class="card"><p><strong>What prints?</strong></p><div class="code"><div class="screen">level = 1
-while level < 4:
-    print(level)
-    level = level + 1</div></div>
-<button class="choice whileq" data-a="123" type="button">1, 2, 3</button><button class="choice whileq" data-a="1234" type="button">1, 2, 3, 4</button><button class="choice whileq" data-a="0123" type="button">0, 1, 2, 3</button><div id="whilefb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+<h2>8. Sort by trigger: fixed count vs. a condition</h2>
+<p>Drag each description into the loop type it matches, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">Repeat a fixed number of times, once per item in a known list</span>
+  <span id="chip2" class="mlrk-draggable">Repeat for as long as a condition stays True, until something changes it</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>for loop</strong></p><div class="mlrk-dropzone" id="zoneFor"></div></div>
+  <div><p class="mlrk-small"><strong>while loop</strong></p><div class="mlrk-dropzone" id="zoneWhile"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
 
-<section><h2>8. Put the execution order in your head</h2><div class="card"><p><strong>For a <code>while</code> loop that continues, which sequence is correct?</strong></p>
-<button class="choice orderq" data-a="right" type="button">Check condition → run body → check condition again</button><button class="choice orderq" data-a="body" type="button">Run body → check condition → run body</button><button class="choice orderq" data-a="once" type="button">Check condition once → run body forever</button><div id="orderfb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+<h2>9. <code>while</code>: the condition is checked before every pass</h2>
+<div class="cf-flow">
+  <div class="cf-flow-step">Check the condition</div>
+  <div class="cf-flow-note">only if it's True does the next step happen</div>
+  <div class="cf-flow-step">Run the loop body</div>
+  <div class="cf-flow-note">something in the body usually changes a value the condition depends on</div>
+  <div class="cf-flow-step">Check the condition again, using the updated value</div>
+</div>
+<div class="mlrk-code"><div id="whileScreen" class="mlrk-screen">saved = 200
 
-<section><h2>9. Two ideas, one powerful pattern</h2><p>A loop can visit each item while a conditional decides what to do with that item.</p><div class="code"><div id="comboScreen" class="screen">sizes = [2, 7, 4]
+while saved < 500:
+    print(saved)
+    saved = saved + 100</div>
+<div class="mlrk-actions"><button type="button" id="whilerun" class="mlrk-btn">Reveal simulated output</button></div></div>
+<div class="mlrk-card" id="card-whiletrace" style="margin-top:1rem"><p><strong>Before revealing: what prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="200300400">200, 300, 400</button>
+<button type="button" class="mlrk-choice" data-a="200300400500">200, 300, 400, 500</button>
+<button type="button" class="mlrk-choice" data-a="300400500">300, 400, 500</button>
+<div id="whiletracefb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-for size in sizes:
-    if size >= 5:
-        print(size, "large")
+<section class="mlrk-section">
+<h2>10. Order the trace steps</h2>
+<p>Click steps, in order, to build the sequence a <code>while</code> loop actually follows. Click a step again to remove it if you change your mind, then press "Check my order" when ready — this is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="check-first"><span class="mlrk-order-num"></span> Check the condition, before anything in the loop runs.</li>
+  <li class="mlrk-orderitem" data-step="run-body"><span class="mlrk-order-num"></span> If the condition is True, run everything in the loop body.</li>
+  <li class="mlrk-orderitem" data-step="update-state"><span class="mlrk-order-num"></span> Update whatever value the condition depends on.</li>
+  <li class="mlrk-orderitem" data-step="check-again"><span class="mlrk-order-num"></span> Check the condition again, using the updated value.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about conditionals and loops.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> <code>elif</code> is only checked when the <code>if</code> condition above it was False.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A <code>while</code> loop's condition is checked once, before the very first pass, and never checked again after that.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> <code>range(6)</code> produces seven values: 0 through 6.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Once one branch in an <code>if</code>/<code>elif</code>/<code>else</code> chain runs, Python skips every remaining branch in that chain.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Two ideas, one move: loop + conditional together</h2>
+<p>A loop can visit every item in a list while a conditional decides what happens to the one it's currently looking at.</p>
+<div class="mlrk-code"><div id="comboScreen" class="mlrk-screen">amounts = [30, 120, 60]
+
+for amount in amounts:
+    if amount > 75:
+        print(amount, "flagged")
     else:
-        print(size, "small")</div><div class="codeactions"><button id="comborun" type="button">Reveal simulated output</button></div></div>
-<div class="card" style="margin-top:1rem"><p><strong>How many times is the conditional evaluated?</strong></p>
-<button class="choice comboq" data-a="3" type="button">3 times</button><button class="choice comboq" data-a="2" type="button">2 times</button><button class="choice comboq" data-a="1" type="button">1 time</button><div id="combofb" class="feedback" tabindex="-1"></div></div></section>
+        print(amount, "routine")</div>
+<div class="mlrk-actions"><button type="button" id="comborun" class="mlrk-btn">Reveal simulated output</button></div></div>
+<div class="mlrk-card" id="card-combo" style="margin-top:1rem"><p><strong>How many times is the condition <code>amount &gt; 75</code> evaluated?</strong></p>
+<button type="button" class="mlrk-choice" data-a="3">3 times</button>
+<button type="button" class="mlrk-choice" data-a="2">2 times</button>
+<button type="button" class="mlrk-choice" data-a="1">1 time</button>
+<div id="combofb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>10. Debug by tracing, not guessing</h2><div class="card"><p>You predicted the wrong output by one item. What is the best next move?</p>
-<button class="choice debugq" data-a="trace" type="button">Trace from the first iteration and check each boundary one at a time.</button><button class="choice debugq" data-a="random" type="button">Assume Python skipped an iteration.</button><button class="choice debugq" data-a="rewrite" type="button">Rewrite the whole program before checking the trace.</button><div id="debugfb" class="feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>Your tracing rule:</strong> In your own words, write one habit that will help you predict output accurately.</label><textarea id="strategy" data-save placeholder="Example starter: “Before I run code, I will…”"></textarea><p><button id="hintbtn" type="button">Generate a thinking hint</button></p><div id="hint" class="hint"></div></section>
+<section class="mlrk-section">
+<h2>13. Debug by tracing, not guessing</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>You predicted the wrong output by one item. What's the best next move?</strong></p>
+<button type="button" class="mlrk-choice" data-a="trace">Trace from the first iteration and check each boundary one at a time.</button>
+<button type="button" class="mlrk-choice" data-a="random">Assume Python randomly skipped an iteration.</button>
+<button type="button" class="mlrk-choice" data-a="rewrite">Rewrite the whole snippet before checking the trace.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your tracing rule:</strong> in your own words, write one habit that will help you predict output accurately.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: Before I run code, I will..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
 
-<section class="bridge"><h2>11. Required bridge to lecture</h2><p>You just practiced the concepts the upcoming lesson asks you to recognize: a <strong>conditional</strong> chooses a path, a <strong>loop</strong> repeats work, an <strong>iteration</strong> is one pass, and the <strong>loop body</strong> is the code repeated each pass. You also practiced the central lecture habit: <strong>predict exact output before running code</strong>.</p>
-<p>In lecture/lab, you will type and trace live examples of <code>if/elif/else</code>, <code>for</code>, <code>range()</code>, and <code>while</code>, then combine repetition with decision-making. Be ready to recognize stopping boundaries and to explain why a particular branch or iteration occurs.</p>
-<div class="card"><p><strong>Bridge challenge — new situation:</strong> A program visits every message in a queue and labels each as short or long. Which combination of tools best matches that job?</p>
-<button class="choice bridgeq" data-a="both" type="button">A loop to visit every message + a conditional to choose its label</button><button class="choice bridgeq" data-a="if" type="button">Only a conditional, because repetition happens automatically</button><button class="choice bridgeq" data-a="loop" type="button">Only a loop, because every message must get the same label</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
-<label for="bring"><strong>Bring to lecture:</strong> What is one boundary or stopping question you should ask yourself when tracing a loop?</label><textarea id="bring" data-save></textarea></section>
+<section class="mlrk-section">
+<h2>14. Watch: for and while loops, live</h2>
+<p>As you watch, notice the exact moment a variable gets updated inside the <code>while</code> loop and the condition gets checked again right after — that's the same check, run, update, recheck cycle from the order-the-steps activity above.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=6iF8Xb7Z3wQ" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one moment where the video's explanation matched, or didn't match, how you were already picturing a loop repeating?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
 
-<section><h2>12. Keep a copy of your work</h2><div class="export"><div class="actions"><button id="md" type="button">Create Markdown file</button><button id="json" type="button">Create JSON file</button><button id="txt" type="button">Create TXT file</button><button id="show" type="button">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:260px"></textarea><p><button id="selectall" type="button">Select all text</button></p></div></div></section>
-</main>
+<section class="mlrk-section">
+<h2>15. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"Trace this code and tell me what prints" is one of the most common opening questions in both data and software engineering interviews. Interviewers are listening for how you reason through it — reading top to bottom, catching the exact branch that runs — not just whether you land on the right final answer.</p>
+<p>Off-by-one mistakes with <code>range()</code> and <code>while</code>-loop boundaries are a classic follow-up: you're handed a snippet that's one iteration too short or too long and asked to find exactly where, live.</p>
+<p>For data roles specifically, this shape — a loop visiting every row, a conditional deciding what to do with each one — is the mental model behind almost every "clean this messy column" or "filter these records" prompt, long before you ever touch a library built for it.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style: a loop iterates over 6 items. Inside, a conditional only prints when an item is over 50. Exactly 2 of the 6 items are over 50. How many lines print in total?</strong></p>
+<button type="button" class="mlrk-choice" data-a="2">2</button>
+<button type="button" class="mlrk-choice" data-a="6">6</button>
+<button type="button" class="mlrk-choice" data-a="0">0</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Summary &amp; critical thinking</h2>
+<p>Two habits carried this whole reading: reading an <code>if</code>/<code>elif</code>/<code>else</code> chain top to bottom to find the one branch that actually runs, and tracking a loop's iterations one pass at a time instead of guessing the total.</p>
+<div class="mlrk-card" id="card-bridge"><p><strong>New situation:</strong> a system reviews every login attempt in a list. For each attempt, it checks whether it happened after business hours. If so, it flags the login for review; otherwise, it logs it normally. Which combination of tools does this job need?</p>
+<button type="button" class="mlrk-choice" data-a="both">A loop to visit every attempt + a conditional to decide what happens to that attempt</button>
+<button type="button" class="mlrk-choice" data-a="if">Only a conditional, because repetition happens automatically</button>
+<button type="button" class="mlrk-choice" data-a="loop">Only a loop, because every attempt gets treated the same way</button>
+<div id="bridgefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what tells you, just by reading the code, whether a line belongs to a loop's body or not?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>17. Thinking ahead</h2>
+<p>This same pair — a loop that visits every item, a conditional that decides what happens to each one — is the exact shape reused very soon: a loop nested inside another loop, a conditional nested inside another conditional, and eventually a function built specifically to wrap this whole pattern so it can run on any list handed to it.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>18. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add control-flow-conditionals-reading.json
+git commit -m "Complete control flow and conditionals reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo (made from the class template — ask your instructor if you haven't set yours up yet). Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — step through your own if/elif/else and loop code, one line at a time.</li>
+<li><a href="https://www.w3schools.com/python/python_conditions.asp" target="_blank" rel="noopener">W3Schools: Python If...Else</a> — more worked conditional examples.</li>
+<li><a href="https://www.w3schools.com/python/python_for_loops.asp" target="_blank" rel="noopener">W3Schools: Python For Loops</a> — the for-loop side, with more examples.</li>
+<li><a href="https://www.w3schools.com/python/python_while_loops.asp" target="_blank" rel="noopener">W3Schools: Python While Loops</a> — the while-loop side, with more examples.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
 <script>
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let history=[];const KEY="control-flow-conditionals-reading-v1";
-function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
-function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
-$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
-function quiz(cls,fb,correct,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{const ok=b.dataset.a===correct,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
-quiz(".recall","#recfb","c",{a:"42 is an integer: a whole number with no quotes.",b:"42.0 is a float because it has a decimal point.",c:"Quotes make \"42\" text, so it is a string."});
-quiz(".condq","#condfb","nearby",{nearby:"6 is not greater than 10, so Python checks the elif. 6 is greater than 3, so nearby runs.",far:"The first condition is false because 6 is not greater than 10.",close:"The elif condition is true, so Python runs nearby and skips else."});
-quiz(".forq","#forfb","3",{3:"There are three items in the list, so the loop body runs once for each: three iterations.",2:"The list contains three items, not two.",4:"A for loop over this list runs once per item. There are three items."});
-quiz(".rangeq","#rangefb","0123",{0123:"range(4) starts at 0 and stops before 4: 0, 1, 2, 3.",1234:"range(4) starts at 0, not 1, and does not include 4.",01234:"The stop value 4 is excluded, so only four values print."});
-quiz(".whileq","#whilefb","123",{123:"The loop prints 1, 2, and 3. When level becomes 4, level < 4 is false.",1234:"4 does not print because the condition is checked before the body runs again.",0123:"level starts at 1, so 0 is never printed."});
-quiz(".orderq","#orderfb","right",{right:"A while loop checks first. If true, it runs the body, then returns to check again.",body:"The condition is checked before the first body execution.",once:"The condition is re-checked before every possible iteration."});
-quiz(".comboq","#combofb","3",{3:"The loop has three iterations, and the conditional is in the loop body, so it is evaluated once per iteration.",2:"Two output categories do not mean two evaluations. There are three items.",1:"The conditional is inside the loop, so it is evaluated for every item."});
-quiz(".debugq","#debugfb","trace",{trace:"Tracing one iteration at a time exposes off-by-one and threshold mistakes.",random:"Python does not randomly skip loop iterations.",rewrite:"First locate the mismatch by tracing. Rewriting before understanding it can hide the real error."});
-quiz(".bridgeq","#bridgefb","both",{both:"Exactly: repetition visits each message; decision-making chooses the label for that message.",if:"A conditional chooses a path, but it does not automatically visit every item.",loop:"A loop repeats work, but a conditional is needed when the label depends on each message."});
-$("#condrun").addEventListener("click",()=>{$("#condScreen").textContent=`battery = 38
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "control-flow-conditionals-reading";
+  const TITLE = "Choose, Repeat, Trace — Control Flow & Conditionals";
 
-if battery >= 70:
-    print("high")
-elif battery >= 25:
-    print("medium")
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"a",
+    feedback:{b:"75 is an integer: a whole number with no quotes.",
+              c:"75.0 is a float because it has a decimal point.",
+              a:"Quotes make \"75\" text, so it is a string."}});
+
+  K.quiz({id:"q-compare", buttonSelector:"#card-compare .mlrk-choice", feedbackSelector:"#comparefb", correct:"no", maxAttempts:1,
+    feedback:{no:"42 is not greater than 75, so this comparison evaluates to False, not True.",
+              yes:"42 is less than 75, so the comparison is False. It does not evaluate to True."}});
+
+  K.quiz({id:"q-list", buttonSelector:"#card-list .mlrk-choice", feedbackSelector:"#listfb", correct:"three",
+    feedback:{three:"A list holds each value separately, so amounts[0], amounts[1], and amounts[2] can each be compared on their own.",
+              one:"A list is a collection of individual values, not a single unbreakable value.",
+              string:"Python reads a list of numbers directly. No conversion to a string is needed."}});
+
+  K.quiz({id:"q-why", buttonSelector:"#card-why .mlrk-choice", feedbackSelector:"#whyfb", correct:"bool",
+    feedback:{bool:"A conditional needs a True/False answer to know which branch to run, and a comparison is exactly what produces one.",
+              cantread:"Python can read a plain number just fine. The issue is that a number alone isn't True or False.",
+              speed:"Comparisons exist to produce a True/False answer, not to make code run faster."}});
+
+  K.quiz({id:"q-cond", buttonSelector:"#card-cond .mlrk-choice", feedbackSelector:"#condfb", correct:"routine",
+    feedback:{routine:"42 is not greater than 100, and it's not greater than 50 either, so Python falls through to else and prints routine.",
+              flag:"amount > 100 is false because 42 is not greater than 100.",
+              review:"amount > 50 is also false, since 42 is not greater than 50 either. Only else matches."}});
+
+  K.quiz({id:"q-predict", buttonSelector:"#card-predict .mlrk-choice", feedbackSelector:"#predictfb", correct:"halfway",
+    feedback:{halfway:"620 is not at least 1000, but it is at least 500, so the elif branch runs and prints halfway there.",
+              goal:"saved >= 1000 is false because 620 is less than 1000.",
+              starting:"Python already found a true branch (saved >= 500) before ever reaching else, so else is skipped."},
+    onDone(){revealPredict()}});
+
+  K.quiz({id:"q-foriter", buttonSelector:"#card-foriter .mlrk-choice", feedbackSelector:"#foriterfb", correct:"3",
+    feedback:{3:"There are three items in the list, so the loop body runs once for each: three iterations.",
+              2:"The list contains three items, not two.",
+              4:"A for loop over this list runs once per item, and there are three items."}});
+
+  K.quiz({id:"q-rangebound", buttonSelector:"#card-rangebound .mlrk-choice", feedbackSelector:"#rangeboundfb", correct:"0123",
+    feedback:{"0123":"range(4) starts at 0 and stops before 4: 0, 1, 2, 3.",
+              "1234":"range(4) starts at 0, not 1, and never reaches 4.",
+              "01234":"The stop value 4 is excluded, so only four values are produced, not five."}});
+
+  K.quiz({id:"q-whiletrace", buttonSelector:"#card-whiletrace .mlrk-choice", feedbackSelector:"#whiletracefb", correct:"200300400",
+    feedback:{"200300400":"The loop prints 200, 300, and 400. Once saved becomes 500, saved < 500 is false and the loop stops before printing it.",
+              "200300400500":"500 never prints, because the condition is checked before that pass runs, and saved < 500 is already false by then.",
+              "300400500":"saved starts at 200, so 200 is the first value printed, not 300."},
+    onDone(){revealWhile()}});
+
+  K.quiz({id:"q-combo", buttonSelector:"#card-combo .mlrk-choice", feedbackSelector:"#combofb", correct:"3",
+    feedback:{3:"The loop has three iterations, and the conditional sits inside the loop body, so it's evaluated once per item: three times.",
+              2:"Two output labels (flagged/routine) do not mean two evaluations. There are three items to check.",
+              1:"The conditional is inside the loop, so it runs for every item, not just once."},
+    onDone(){revealCombo()}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"trace",
+    feedback:{trace:"Tracing one iteration at a time exposes exactly where an off-by-one or boundary mistake happens.",
+              random:"Python's control flow is deterministic. It never randomly skips an iteration.",
+              rewrite:"Find the mismatch by tracing first. Rewriting before understanding it can hide the real error."}});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"2",
+    feedback:{2:"The loop visits all 6 items, but the print only happens inside the True branch, which fires for the 2 items over 50.",
+              6:"That would be true only if the conditional printed for every item regardless of the condition. It doesn't.",
+              0:"The loop does reach the conditional for every item. It's just that only 2 of those checks come out True."}});
+
+  K.quiz({id:"q-bridge", buttonSelector:"#card-bridge .mlrk-choice", feedbackSelector:"#bridgefb", correct:"both",
+    feedback:{both:"Exactly: the loop visits every login attempt, and the conditional decides whether that specific attempt gets flagged.",
+              if:"A conditional chooses a path, but it doesn't automatically visit every attempt in the list on its own.",
+              loop:"A loop repeats work, but a conditional is still needed since not every attempt gets the same outcome."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"elif is only checked when the if condition above it was False.", correct:true,
+      hint:"Think back to section 4: does Python check elif regardless, or only under a certain condition?",
+      explain:"This is the top-to-bottom rule from section 4: elif is only reached once the branch above it fails."},
+    {value:"b", label:"A while loop's condition is checked once, before the very first pass, and never checked again after that.", correct:false,
+      hint:"Look again at the check-run-update-recheck cycle from section 9. Does the condition get checked only once, or every time?",
+      explain:"A while loop rechecks its condition before every single pass, not just the first one."},
+    {value:"c", label:"range(6) produces seven values: 0 through 6.", correct:false,
+      hint:"Revisit section 7's stopping-boundary rule. Is the stop value itself ever produced?",
+      explain:"range(6) stops before 6, producing six values: 0 through 5, not seven."},
+    {value:"d", label:"Once one branch in an if/elif/else chain runs, Python skips every remaining branch in that chain.", correct:true,
+      hint:"This is the same rule practiced in section 4 and section 5. Does it hold here too?",
+      explain:"Exactly one branch runs per if/elif/else chain, exactly as practiced in sections 4 and 5."}
+  ]});
+
+  K.dragDrop("#dragarea", "act-drag-triggers");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneFor", label:"Repeat a fixed number of times, once per item in a known list", expectedLabel:"for loop"},
+    chip2:{expectedId:"zoneWhile", label:"Repeat for as long as a condition stays True, until something changes it", expectedLabel:"while loop"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-while", correctOrder:["check-first","run-body","update-state","check-again"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"6iF8Xb7Z3wQ"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  function revealPredict(){
+    $("#predictScreen").textContent = `saved = 620
+
+if saved >= 1000:
+    print("goal reached")
+elif saved >= 500:
+    print("halfway there")
 else:
-    print("low")
+    print("just starting")
 
-[Output]:
-medium`;history.push({activity:"conditional-simulation",action:"revealed medium"});save()});
-$("#forrun").addEventListener("click",()=>{$("#forScreen").textContent=`cities = ["Oslo", "Lima", "Accra"]
+[Output]
+halfway there`;
+  }
+  $("#predictrun").addEventListener("click", revealPredict);
 
-for city in cities:
-    print(city)
+  function revealWhile(){
+    $("#whileScreen").textContent = `saved = 200
 
-[Output]:
-Oslo
-Lima
-Accra`;history.push({activity:"for-loop-simulation",action:"revealed three iterations"});save()});
-$("#comborun").addEventListener("click",()=>{$("#comboScreen").textContent=`sizes = [2, 7, 4]
+while saved < 500:
+    print(saved)
+    saved = saved + 100
 
-for size in sizes:
-    if size >= 5:
-        print(size, "large")
+[Output]
+200
+300
+400`;
+  }
+  $("#whilerun").addEventListener("click", revealWhile);
+
+  function revealCombo(){
+    $("#comboScreen").textContent = `amounts = [30, 120, 60]
+
+for amount in amounts:
+    if amount > 75:
+        print(amount, "flagged")
     else:
-        print(size, "small")
+        print(amount, "routine")
 
-[Output]:
-2 small
-7 large
-4 small`;history.push({activity:"loop-conditional-simulation",action:"revealed item-by-item decisions"});save()});
-$("#hintbtn").addEventListener("click",()=>{const h=$("#hint");h.classList.add("show");h.textContent="Try one of these: identify the starting value; mark the exact stopping condition; write the value for each iteration; or evaluate conditions from top to bottom and stop when a branch runs."});
-function snapshot(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
-function text(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
-function markdown(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
-function dl(name,type,content){try{const b=new Blob([content],{type:type+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
-function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” below."}
-$("#md").addEventListener("click",()=>stat(dl("control-flow-conditionals-reading.md","text/markdown",markdown(snapshot()))));$("#json").addEventListener("click",()=>stat(dl("control-flow-conditionals-reading.json","application/json",JSON.stringify(snapshot(),null,2))));$("#txt").addEventListener("click",()=>stat(dl("control-flow-conditionals-reading.txt","text/plain",text(snapshot()))));
-$("#show").addEventListener("click",()=>{const w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=text(snapshot());t.focus();t.select()});$("#selectall").addEventListener("click",()=>{$("#plain").focus();$("#plain").select()});
-window.addEventListener("scroll",()=>{const d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
-</script></body></html>
+[Output]
+30 routine
+120 flagged
+60 routine`;
+  }
+  $("#comborun").addEventListener("click", revealCombo);
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const ok = $("#blankinput").value.trim().toLowerCase()==="range";
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> range(7) generates the numbers this loop counts through: 0 up to (not including) 7.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing function is <code>range</code>.";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think about a daily routine that only makes sense in a certain order, like checking whether you have clean clothes before deciding what to wear. Where's the conditional in that routine?",
+    "If you had to explain \"the loop checks every item, but the conditional decides what happens to each one\" to a friend using something from your own daily life, what would you compare it to?",
+    "Where have you seen a repeated check with a changing answer in real life, like scanning a stack of mail and sorting each piece differently?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["python-fundamentals"],
+      skills:["control-flow-conditionals__obj1","control-flow-conditionals__obj2"], onDone(status){
+      if(status==="opened") fb.textContent="Opened a new tab with your pre-filled issue — click \"Submit new issue\" there to finish.";
+      else if(status==="attempt-limit") fb.textContent="You've already used both submission attempts for this reading.";
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

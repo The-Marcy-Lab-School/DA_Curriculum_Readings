@@ -107,26 +107,53 @@ def check_links(text):
     for url in urls:
         if "youtube.com/embed" in url or "youtube.com/iframe_api" in url:
             continue  # known-good, skip network call for speed
-        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "Mozilla/5.0 (reading-qa)"})
-        try:
-            urllib.request.urlopen(req, timeout=8)
-        except urllib.error.HTTPError as e:
-            if e.code >= 400 and e.code != 405:  # some sites reject HEAD; 405 isn't a dead link
-                findings.append(("ERROR", f"link returned {e.code}: {url}"))
-        except urllib.error.URLError as e:
-            if not isinstance(getattr(e, "reason", None), ssl.SSLError):
-                findings.append(("WARN", f"link could not be verified ({e}): {url}"))
-                continue
-            try:
-                urllib.request.urlopen(req, timeout=8, context=_INSECURE_CTX)
-            except urllib.error.HTTPError as e:
-                if e.code >= 400 and e.code != 405:
-                    findings.append(("ERROR", f"link returned {e.code}: {url}"))
-            except Exception as e:
-                findings.append(("WARN", f"link could not be verified even with relaxed SSL ({e}): {url}"))
-        except Exception as e:
-            findings.append(("WARN", f"link could not be verified ({e}): {url}"))
+        findings.extend(check_one_url(url))
     return findings
+
+
+def _http_error_finding(code, url):
+    if code == 999:
+        # LinkedIn's (and a few other sites') non-standard anti-bot status for
+        # automated requests — observed to be intermittent and inconsistent
+        # (sometimes a plain 999, sometimes an SSL-level rejection instead),
+        # not a real broken link. Always a WARN, never a hard failure.
+        return ("WARN", f"link returned 999 (likely anti-bot rate-limiting, not a dead link): {url}")
+    if code >= 400 and code != 405:  # some sites reject HEAD; 405 isn't a dead link
+        return ("ERROR", f"link returned {code}: {url}")
+    return None
+
+
+def check_one_url(url, _retried=False):
+    req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "Mozilla/5.0 (reading-qa)"})
+    try:
+        urllib.request.urlopen(req, timeout=8)
+        return []
+    except urllib.error.HTTPError as e:
+        if e.code == 999 and not _retried:
+            return check_one_url(url, _retried=True)
+        finding = _http_error_finding(e.code, url)
+        return [finding] if finding else []
+    except urllib.error.URLError as e:
+        if not isinstance(getattr(e, "reason", None), ssl.SSLError):
+            if not _retried:
+                return check_one_url(url, _retried=True)
+            return [("WARN", f"link could not be verified ({e}): {url}")]
+        try:
+            urllib.request.urlopen(req, timeout=8, context=_INSECURE_CTX)
+            return []
+        except urllib.error.HTTPError as e2:
+            if e2.code == 999 and not _retried:
+                return check_one_url(url, _retried=True)
+            finding = _http_error_finding(e2.code, url)
+            return [finding] if finding else []
+        except Exception as e2:
+            if not _retried:
+                return check_one_url(url, _retried=True)
+            return [("WARN", f"link could not be verified even with relaxed SSL ({e2}): {url}")]
+    except Exception as e:
+        if not _retried:
+            return check_one_url(url, _retried=True)
+        return [("WARN", f"link could not be verified ({e}): {url}")]
 
 
 def check_export_wiring(text):
