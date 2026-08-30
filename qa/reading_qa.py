@@ -32,11 +32,13 @@ BANNED_PHRASES = [
     r"\bmodule\s*\d+\b", r"\bmod\s*\d+\b",
     r"before\s+the\s+lecture", r"before\s+lecture",
     r"upcoming\s+reading", r"upcoming\s+lecture",
+    r"required\s+bridge", r"bridge\s+to\s+(the\s+)?lecture", r"bridge\s+to\s+(the\s+)?project",
     r"let'?s\s+dive\s+in", r"delve\s+into", r"unleash\s+the\s+power\s+of",
     r"game-?changer", r"at\s+the\s+end\s+of\s+the\s+day", r"when\s+it\s+comes\s+to",
     r"it'?s\s+important\s+to\s+note\s+that",
 ]
 BANNED_UNICODE = ["→","✅","❌","✓","✨","🔥","💡","🚀"]
+BANNED_ARROW_ENTITIES = ["&rarr;", "&#8594;", "&#x2192;", "&larr;", "&rArr;"]
 
 EXPORT_BUTTON_HINTS = ("md","json","txt","copy","submit","export","selectall","show","import","resume")
 
@@ -53,6 +55,9 @@ def check_banned_phrases(text):
     for ch in BANNED_UNICODE:
         if ch in text:
             findings.append(("ERROR", f"banned literal character used instead of a real icon: {ch}"))
+    for entity in BANNED_ARROW_ENTITIES:
+        if entity in text:
+            findings.append(("ERROR", f"banned typed-arrow HTML entity (renders the same as a literal arrow): {entity}"))
     # 3+ em-dashes in a single line is the density tell, not a single stray one
     for line in text.splitlines():
         if line.count("—") >= 3:
@@ -118,6 +123,13 @@ def _http_error_finding(code, url):
         # (sometimes a plain 999, sometimes an SSL-level rejection instead),
         # not a real broken link. Always a WARN, never a hard failure.
         return ("WARN", f"link returned 999 (likely anti-bot rate-limiting, not a dead link): {url}")
+    if code == 404 and re.match(r"https?://github\.com/[^/]+/[^/]+/?$", url):
+        # GitHub returns 404 (not 403) for a private repo an unauthenticated
+        # request can't see — indistinguishable from a genuinely nonexistent
+        # repo without credentials this script doesn't have. Every student
+        # submission repo is deliberately private, so this fires constantly
+        # and correctly for real links. WARN, not a hard failure.
+        return ("WARN", f"github.com repo link returned 404 — likely just private (unauthenticated check can't tell), not necessarily broken: {url}")
     if code >= 400 and code != 405:  # some sites reject HEAD; 405 isn't a dead link
         return ("ERROR", f"link returned {code}: {url}")
     return None
@@ -197,6 +209,32 @@ def check_copyright(text):
     return []
 
 
+def check_skills_callout(path, text):
+    meta_path = Path(path).parent / "reading.meta.json"
+    if not meta_path.exists():
+        return [("WARN", "no sibling reading.meta.json found — can't verify skills are tagged")]
+    try:
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        return [("ERROR", f"reading.meta.json is not valid JSON: {e}")]
+    skills = meta.get("skills") or []
+    if not skills:
+        return [("ERROR", "reading.meta.json has no 'skills' array — every reading must be tagged to specific skills.json objectives")]
+    if "skills you'll practice" not in text.lower() and "skills you will practice" not in text.lower():
+        return [("ERROR", "reading.meta.json lists skills, but no visible \"Skills you'll practice\" callout found in the page — metadata and the visible callout must always be written together")]
+    return []
+
+
+def check_submission_setup_directions(text_lower):
+    if "submit for credit" not in text_lower:
+        return []  # not every reading is required to have this yet during a transition; only check if present
+    if "first time submitting" not in text_lower and "use this template" not in text_lower:
+        return [("ERROR", "a 'Submit for credit' block exists but no first-time-setup directions (template link, "
+                           "add instructor as collaborator, etc.) were found — students need self-service setup steps, "
+                           "not just an assumption their repo already exists")]
+    return []
+
+
 def run(path, skip_links=False):
     html = Path(path).read_text(encoding="utf-8")
     text = visible_text(html)
@@ -211,6 +249,8 @@ def run(path, skip_links=False):
     findings += check_export_wiring(html)
     findings += check_time_estimate(html, word_count)
     findings += check_copyright(text)
+    findings += check_skills_callout(path, text)
+    findings += check_submission_setup_directions(text.lower())
     if not skip_links:
         findings += check_links(html)
     return findings
