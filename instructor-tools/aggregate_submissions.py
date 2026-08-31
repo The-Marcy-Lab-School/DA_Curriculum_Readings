@@ -120,16 +120,15 @@ def main():
                 "skills": payload.get("skills") or [],
             }
 
-    # skills.json is optional — objective-level reporting just gets skipped
+    # skills.json is optional — skill-level reporting just gets skipped
     # (with a warning) for older submissions/readings that predate it.
     skills_path = Path(__file__).parent.parent / "skills.json"
-    objective_labels = {}
+    skill_labels = {}
     if skills_path.exists():
-        for lesson in json.loads(skills_path.read_text(encoding="utf-8")).get("lessons", []):
-            for obj in lesson.get("objectives", []):
-                objective_labels[obj["id"]] = obj["text"]
+        for slug, info in json.loads(skills_path.read_text(encoding="utf-8")).get("skills", {}).items():
+            skill_labels[slug] = info.get("name", slug)
     else:
-        print(f"[warn] {skills_path} not found — objective_summary.csv will use raw ids as labels", file=sys.stderr)
+        print(f"[warn] {skills_path} not found — competency_summary.csv will use raw ids as labels", file=sys.stderr)
 
     gradebook_rows = []
     tag_scores = {}   # tag -> list of pct
@@ -177,21 +176,21 @@ def main():
         w.writerows(skill_rows)
     print(f"Wrote {skill_path} ({len(skill_rows)} rows)")
 
-    objective_rows = [
+    competency_rows = [
         {
-            "objective_id": obj_id,
-            "objective_text": objective_labels.get(obj_id, "(unknown — not in skills.json)"),
+            "competency_id": slug,
+            "competency_name": skill_labels.get(slug, "(unknown — not in skills.json)"),
             "students_counted": len(pcts),
             "avg_pct": round(sum(pcts) / len(pcts), 1),
         }
-        for obj_id, pcts in sorted(obj_scores.items())
+        for slug, pcts in sorted(obj_scores.items())
     ]
-    objective_path = os.path.join(out_dir, "objective_summary.csv")
-    with open(objective_path, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["objective_id", "objective_text", "students_counted", "avg_pct"])
+    competency_path = os.path.join(out_dir, "competency_summary.csv")
+    with open(competency_path, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=["competency_id", "competency_name", "students_counted", "avg_pct"])
         w.writeheader()
-        w.writerows(objective_rows)
-    print(f"Wrote {objective_path} ({len(objective_rows)} rows)")
+        w.writerows(competency_rows)
+    print(f"Wrote {competency_path} ({len(competency_rows)} rows)")
 
 
 if __name__ == "__main__":

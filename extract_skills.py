@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
-"""Extracts per-lesson Learning Objectives from every
-module_decks/*/INSTRUCTOR_LECTURE_NOTES.md into skills.json — the source of
-truth for what specific skill a reading is actually preparing a Fellow for,
-one level more granular than taxonomy.json's broad category tags.
+"""Extracts each module's graded competencies from module_decks/*/PROJECT.md
+(the `competency_assessments` list) cross-referenced with the matching
+"Skill | Rubric ceiling | Assessment method" table in that module's
+INSTRUCTOR_MODULE_SUMMARY.md (PROJECT.md itself points there for detail).
 
-Deliberately NOT derived by guessing at what a reading "should" cover —
-every objective here is the deck author's own stated learning objective for
-that lesson, so a reading claiming to prep for one is a checkable claim,
-not a vibe.
+This writes skills_raw.json — a REFERENCE file, not what readings actually
+use. The raw "assessment method" column is instructor-rubric shorthand
+("guided coding exercise + trace review"), not something to paste in front
+of students. skills.json (hand-curated, one clean name + a genuinely
+readable definition per skill) is what reading.meta.json/the visible
+"Skills you'll practice" callout/submission payloads actually reference.
 
-Re-run this any time a new deck lands in module_decks/ — it always
-regenerates skills.json from scratch, so it's safe to run repeatedly.
-
-    python3 extract_skills.py
+Workflow when a new deck lands:
+    1. Run this script — it regenerates skills_raw.json from the new deck.
+    2. Diff it against the previous skills_raw.json to see what's new.
+    3. Hand-write (or have an agent draft, then review) a name + a plain-
+       language definition for each new slug directly into skills.json.
+    Never skip step 3 — a mechanically-generated definition reads like
+    pasted rubric jargon, not something a student should see.
 """
 import json
 import re
@@ -20,73 +25,58 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 DECKS_DIR = ROOT / "module_decks"
-LESSON_HEADER = re.compile(r"^# Instructor Prep: (.+)$", re.M)
-MODULE_LINE = re.compile(r"^\*Module \d+: (.+)\*$", re.M)
 
 
-def slugify(text):
-    s = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-    return re.sub(r"-{2,}", "-", s)
-
-
-def extract_bullets(block, heading):
-    m = re.search(rf"^## {re.escape(heading)}\s*\n((?:- .+\n?)+)", block, re.M)
+def extract_competency_slugs(project_md_text):
+    m = re.search(r"```yaml\s*\ncompetency_assessments:\s*\n((?:\s*-\s*\S+\s*\n?)+)```", project_md_text)
     if not m:
         return []
-    return [line[2:].strip() for line in m.group(1).splitlines() if line.startswith("- ")]
+    return re.findall(r"-\s*(\S+)", m.group(1))
 
 
-def parse_deck(path):
-    text = path.read_text(encoding="utf-8")
-    headers = list(LESSON_HEADER.finditer(text))
-    lessons = []
-    for i, h in enumerate(headers):
-        start = h.end()
-        end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
-        block = text[start:end]
-        title = h.group(1).strip()
-        mod_match = MODULE_LINE.search(block)
-        module_name = mod_match.group(1).strip() if mod_match else path.parent.name
-        objectives_text = extract_bullets(block, "Learning Objectives")
-        prereqs_text = extract_bullets(block, "Prerequisites")
-        lesson_id = slugify(title)
-        lessons.append({
-            "lesson_id": lesson_id,
-            "title": title,
-            "module_source": path.parent.name,
-            "module_name": module_name,
-            "prerequisites_text": prereqs_text,
-            "objectives": [
-                {"id": f"{lesson_id}__obj{n}", "text": obj}
-                for n, obj in enumerate(objectives_text, start=1)
-            ],
-        })
-    return lessons
+def extract_rubric_table(summary_md_text):
+    """Returns {slug: {ceiling, method}} from the 'Skill | ... | Assessment
+    method' table. Handles the module-3 variant header
+    ('Rubric ceiling this module (Meets)') too."""
+    m = re.search(r"\|\s*Skill\s*\|.*?\n\|[-|\s]+\n((?:\|.+\n?)+)", summary_md_text)
+    if not m:
+        return {}
+    rows = {}
+    for line in m.group(1).splitlines():
+        if not line.strip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 3:
+            continue
+        slug = cells[0].strip("`")
+        rows[slug] = {"ceiling": cells[1], "method": cells[2]}
+    return rows
 
 
 def main():
-    all_lessons = []
-    for deck_path in sorted(DECKS_DIR.glob("*/INSTRUCTOR_LECTURE_NOTES.md")):
-        all_lessons.extend(parse_deck(deck_path))
+    out = {}
+    for module_dir in sorted(DECKS_DIR.glob("module-*")):
+        project_path = module_dir / "PROJECT.md"
+        summary_path = module_dir / "INSTRUCTOR_MODULE_SUMMARY.md"
+        if not project_path.exists() or not summary_path.exists():
+            continue
+        slugs = extract_competency_slugs(project_path.read_text(encoding="utf-8"))
+        rubric = extract_rubric_table(summary_path.read_text(encoding="utf-8"))
+        for slug in slugs:
+            entry = out.setdefault(slug, {"modules": [], "ceiling_by_module": {}, "method_by_module": {}})
+            if module_dir.name not in entry["modules"]:
+                entry["modules"].append(module_dir.name)
+            if slug in rubric:
+                entry["ceiling_by_module"][module_dir.name] = rubric[slug]["ceiling"]
+                entry["method_by_module"][module_dir.name] = rubric[slug]["method"]
 
-    seen_ids = {}
-    for lesson in all_lessons:
-        if lesson["lesson_id"] in seen_ids:
-            print(f"[warn] duplicate lesson_id '{lesson['lesson_id']}' "
-                  f"({lesson['module_source']} vs {seen_ids[lesson['lesson_id']]}) — "
-                  "check for a repeated lesson title across decks")
-        seen_ids[lesson["lesson_id"]] = lesson["module_source"]
-
-    out = {
-        "_comment": "Generated by extract_skills.py from module_decks/*/INSTRUCTOR_LECTURE_NOTES.md "
-                    "Learning Objectives. Do not hand-edit — re-run the script instead. "
-                    "module_source/module_name are for traceability only; never surface them "
-                    "in a reading's visible text (no module numbers/names in reading content).",
-        "lessons": all_lessons,
-    }
-    (ROOT / "skills.json").write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n")
-    total_objectives = sum(len(l["objectives"]) for l in all_lessons)
-    print(f"Wrote skills.json — {len(all_lessons)} lessons, {total_objectives} objectives")
+    (ROOT / "skills_raw.json").write_text(json.dumps({
+        "_comment": "Reference only — see this file's own script header. "
+                    "skills.json is the hand-curated file readings actually use.",
+        "skills": out,
+    }, indent=2, ensure_ascii=False) + "\n")
+    print(f"Wrote skills_raw.json — {len(out)} distinct competency slugs across "
+          f"{len(list(DECKS_DIR.glob('module-*')))} decks")
 
 
 if __name__ == "__main__":
