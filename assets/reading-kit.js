@@ -118,7 +118,8 @@
       const el=typeof container==="string"?$(container):container;
       if(!el) return;
       const t=this.total();
-      el.textContent=t.earned+" / "+t.possible+" points ("+t.pct+"%)";
+      const p=Persona.get();
+      el.textContent=p.emoji+" "+p.name+" — "+t.earned+" / "+t.possible+" points ("+t.pct+"%)";
     }
   };
 
@@ -584,20 +585,24 @@
     return "https://github.com/"+encodeURIComponent(ghUser)+"/"+encodeURIComponent(ghRepo)+"/issues/new?"+params.toString();
   }
   function submitForCredit(opts){
-    // opts: {readingId, title, tags, onDone(status)} — status is "opened"
-    // (a new tab was launched to GitHub's pre-filled issue form; the student
-    // still has to click "Submit new issue" themselves there — that's
-    // GitHub's own UI, not something this function can see the result of)
-    // or "attempt-limit" (client already used both local attempts).
+    // opts: {readingId, title, tags, onDone(status, message)} — status is
+    // "opened" (a new tab was launched to GitHub's pre-filled issue form;
+    // the student still has to click "Submit new issue" themselves there —
+    // that's GitHub's own UI, not something this function can see the
+    // result of) or "attempt-limit" (client already used both local
+    // attempts). `message` is a ready-to-display, persona-included string —
+    // readings should show it as-is rather than writing their own, so the
+    // persona touch stays consistent everywhere without per-reading upkeep.
+    const p=Persona.get();
     const attemptsKey="mlrk:attempts:"+opts.readingId;
     const attempts=parseInt(localStorage.getItem(attemptsKey)||"0",10);
     if(attempts>=2){
-      if(opts.onDone) opts.onDone("attempt-limit");
+      if(opts.onDone) opts.onDone("attempt-limit",p.emoji+" "+p.name+", you've already used both submission attempts for this reading.");
       return;
     }
     localStorage.setItem(attemptsKey,String(attempts+1));
     window.open(buildSubmitURL(opts),"_blank","noopener");
-    if(opts.onDone) opts.onDone("opened");
+    if(opts.onDone) opts.onDone("opened","Nice work, "+p.emoji+" "+p.name+"! Opened a new tab with your pre-filled issue — click \"Submit new issue\" there to finish.");
   }
 
   /* ---------- persistence tick ---------- */
@@ -615,7 +620,7 @@
     if(saved){
       restore(saved);
       const banner=opts.bannerSelector&&$(opts.bannerSelector);
-      if(banner){banner.hidden=false;banner.textContent="We restored your previous progress on this reading."}
+      if(banner){const p=Persona.get();banner.hidden=false;banner.textContent="Welcome back, "+p.emoji+" "+p.name+"! We restored your previous progress on this reading."}
     }
     $$("[data-save]").forEach(x=>x.addEventListener("input",persist));
     if(opts.progressBarSelector){
