@@ -31,7 +31,7 @@ of work, not a rigid script.
    - **A visual** (an illustration or a simple diagram) to break up the intro's text — this is about engagement and giving visual learners something to anchor to, a looser bar than the "diagrams only when genuinely hard to hold in your head" rule that governs explanatory diagrams elsewhere in the reading. An intro visual illustrating the scenario itself (not a random decoration) satisfies this; build an inline SVG when no image-gen tool is available (see the Concept Overview illustration in `loops-conditionals` for the pattern).
 
 3b. **Never call any section a "bridge to lecture," "required bridge," or anything that positions the reading relative to a lecture/project artifact.** The closing section is always a **Summary, Review, or Critical Thinking** section that has the reader *expand on the reading's own concepts* in a new but still-standalone scenario — never phrased as preparation for, or a handoff to, something else. This has been raised before; `qa/reading_qa.py` now checks for it automatically, but don't rely on that alone — don't write the phrase in the first place.
-4. **Activity variety** — rotate at least 4-6 types across a reading (flip cards, quiz with feedback, select-all, drag-drop, order-the-steps, fill-in-the-blank code, terminal/code simulator, pseudocode-from-scenario, video reflection). Every answer choice, right or wrong, gets specific feedback text. Hints are allowed; solutions are not handed over outright.
+4. **Activity variety** — rotate at least 4-6 types across a reading (flip cards, quiz with feedback, select-all, drag-drop, order-the-steps, fill-in-the-blank code, terminal/code simulator, pseudocode-from-scenario, video reflection). Every answer choice, right or wrong, gets specific feedback text. Hints are allowed; solutions are not handed over outright. **Prefer an activity where the student types something themselves (fill-in-the-blank, a typed prediction, a simulator command) over one that's purely click-a-button-and-watch a reveal** — Angelica has specifically praised this pattern (e.g. the "type the missing function name" fill-blank) over an all-simulated-output reading. Don't drop the reveal-button code traces entirely (they're still a real, useful activity type and count toward variety), just don't let a reading be *only* that.
 5. **Diagrams only when the relationship between parts is genuinely hard** to hold in your head otherwise — per the "seductive details" research in `pedagogy/pedagogy/PEDAGOGY_SUMMARY.md` §2, a decorative diagram can actively hurt retention.
 6. **AI integration required wherever it fits** — even something lightweight (an AI-generated brainstorm/reflection prompt).
 7. **Brand**: load `assets/brand-tokens.css` + `assets/reading-kit.css` — do not hand-roll colors. Only Tabler-icon-equivalent simplicity, no emoji/typed-arrow standing in for a real icon or connector.
@@ -54,7 +54,28 @@ of work, not a rigid script.
 
 ## Video handling
 
-Embed the chosen video directly (`youtube.com/embed/<id>` via `ReadingKit.video(...)`), and always show a "Watch on YouTube: `<link>`" line underneath regardless of embed status. Prefer <10 min, reputable channel (freeCodeCamp, Corey Schafer, Programming with Mosh, Tech With Tim, official docs orgs, etc.), Python-flavored unless the reading is SQL/data-viz-specific. Record the pick + one-line reasoning in the reading's content brief (`content-briefs/`) so it's fast to review and swap later — do not gate on approval before publishing, just make the pick reviewable.
+Embed the chosen video directly (`youtube.com/embed/<id>` via `ReadingKit.video(...)`), and show a clean "Watch on YouTube" anchor (not the raw URL as visible text) underneath regardless of embed status. Reputable channel (freeCodeCamp, Corey Schafer, Programming with Mosh, Tech With Tim, Bro Code, Data with Baraa, official docs orgs, etc.), Python-flavored unless the reading is SQL/data-viz-specific.
+
+**Verify the actual duration before picking — do not guess, and do not trust `WebFetch` on a YouTube URL (it can't see duration; the page is JS-rendered and WebFetch's markdown conversion strips the embedded data).** Use this instead, which reads the real value straight out of the raw watch-page HTML with no API key:
+```bash
+curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" "https://www.youtube.com/watch?v=<id>" | grep -o '"lengthSeconds":"[0-9]*"' | head -1
+```
+This was skipped for the first few readings and shipped two videos at 29 and 36 minutes — both several times longer than the reading itself — before it was caught in review. **Always run this before finalizing a video pick.**
+
+- **Target under ~10-12 minutes** for a supplementary/reinforcement embed. A video can run longer if it's genuinely the best match and reputable — a long video is fine, but it must be a deliberate choice made with the real duration in hand, not an accident.
+- **Don't let every reading end up with a long video** — vary it. A reading with an already-substantial activity set should lean toward a shorter video precisely because it doesn't need the video to carry the teaching load.
+- **The video's real duration must be folded into the displayed time estimate at the top of the reading** (see "Time estimate methodology" below) — this is the actual point of verifying it.
+- Record the pick + verified duration + one-line reasoning in the reading's content brief (`content-briefs/`) so it's fast to review and swap later — do not gate on approval before publishing, just make the pick reviewable.
+
+## Time estimate methodology
+
+Angelica's calibration: students are encountering this material for the first time, and first-pass digestion takes meaningfully longer than a fluent read-through — don't estimate at *your* reading speed. Build the top-of-page time pill from real counts, not a vibe:
+- ~50 seconds per quiz/question-style item (read the prompt, look at any code, think, click, read the feedback).
+- ~2 minutes per hands-on activity (flip-card set, drag-drop, order-the-steps, trace-stepper, container-matcher, code simulator run) — each counted once regardless of how many sub-items it has.
+- ~2 minutes per free-response box.
+- The video's actual verified duration (see above), plus a little for the reflection question after it.
+- Plus roughly 5-8 minutes of baseline for reading the prose/scenario/code snippets themselves, more if the reading has a lot of setup text or an SVG diagram to read.
+Add it up, round to a comfortable range (e.g. "~33-36 minutes"). This will usually land noticeably higher than a quick mental estimate — that's the point, and Angelica has confirmed a well-developed, non-complex-topic reading landing around 33-36 minutes this way is genuinely fine. The 25-minute figure from earlier is a rough aspiration, not a hard ceiling to force the real number under — never under-report the time to make a reading look like it fits a target it doesn't actually meet. If a reading is landing well past 40 minutes even on a non-complex topic, that's worth a second look at whether it has more activities than it needs, but the fix is trimming content, never shrinking the displayed number.
 
 ## Submission / grading
 
