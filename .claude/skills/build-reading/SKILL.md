@@ -16,7 +16,7 @@ of work, not a rigid script.
 - Topic/concept for the reading.
 - The lecture it precedes (used ONLY to check for duplicate analogies/examples — never named in the reading itself).
 - Audience: data-only, or data + software engineering (Python/OOP/SQL topics usually serve both).
-- Complexity flag: standard (aim under ~20 min total) vs. genuinely complex — data structures, OOP, functions, recursion, statistical tests/distributions, linear algebra, ACID, design patterns, gradient descent (no strict time cap for these).
+- Complexity flag: standard (up to ~45 min total is fine — see "Time estimate methodology" below) vs. genuinely complex — data structures, OOP, functions, recursion, statistical tests/distributions, linear algebra, ACID, design patterns, gradient descent (no strict time cap for these).
 
 ## Hard constraints (do not skip any of these)
 
@@ -75,7 +75,9 @@ Angelica's calibration: students are encountering this material for the first ti
 - ~2 minutes per free-response box.
 - The video's actual verified duration (see above), plus a little for the reflection question after it.
 - Plus roughly 5-8 minutes of baseline for reading the prose/scenario/code snippets themselves, more if the reading has a lot of setup text or an SVG diagram to read.
-Add it up, round to a comfortable range (e.g. "~33-36 minutes"). This will usually land noticeably higher than a quick mental estimate — that's the point, and Angelica has confirmed a well-developed, non-complex-topic reading landing around 33-36 minutes this way is genuinely fine. The 25-minute figure from earlier is a rough aspiration, not a hard ceiling to force the real number under — never under-report the time to make a reading look like it fits a target it doesn't actually meet. If a reading is landing well past 40 minutes even on a non-complex topic, that's worth a second look at whether it has more activities than it needs, but the fix is trimming content, never shrinking the displayed number.
+Add it up, round to a comfortable range (e.g. "~33-36 minutes"). This will usually land noticeably higher than a quick mental estimate — that's the point.
+
+**Ceiling (confirmed 2026-09-01, supersedes the earlier 25-minute figure): a non-complex-topic reading with videos and activities can run up to ~45 minutes and that's completely fine.** Complex topics (the list in "Inputs to gather" above — data structures, OOP, functions, recursion, stats/distributions, linear algebra, ACID, design patterns, gradient descent) can run longer than 45 minutes when the content genuinely calls for it. Either way: never under-report the time to make a reading look shorter than it actually is — if the honest count lands at 44 minutes, say 44 minutes. If a non-complex reading's honest count comes out well past 45, that's a real signal to trim activities or split the reading, not to shrink the displayed number.
 
 ## Submission / grading
 
@@ -105,7 +107,7 @@ Two separate, unrelated tiers, both from `assets/reading-kit.js`:
 - **Watch em-dash density, especially in feedback/hint/reveal text** — occasional em-dashes are fine in narrative prose, but every quiz-feedback sentence leaning on one reads as choppy/AI-generated. Prefer a period, comma, or colon; reserve the dash for when it's genuinely clearest.
 - **The JSON resume/import control belongs near the TOP of the reading** ("Already started this reading? Upload your saved file..."), not buried in the bottom export section — the export/download controls (which produce new saves) stay at the bottom.
 - **Persona name+emoji must come from one paired list**, never two independently-randomized lists (that's exactly how a lizard emoji ends up next to "Dolphin"). Pick animals with an exact, unambiguous, single-codepoint emoji match — rename the animal if needed rather than accepting a near-miss.
-- **Length ceiling is 25 minutes for every reading**, not just complex-topic ones — the earlier "under 20 unless complex" guidance was too tight once real content (prereqs, diagrams, interview section) is added properly.
+- **Length ceiling is ~45 minutes for a non-complex-topic reading with videos and activities** (complex topics can run longer — see "Time estimate methodology"). This number has moved twice as real, honestly-counted readings kept landing higher than earlier guidance assumed — trust the current figure in that section, not an older one remembered from a previous pass.
 - **A copyright/QA/em-dash/heading-hierarchy pass is not optional** — always finish with `python3 qa/reading_qa.py <path>` clean, and where possible a real headless-Chrome render check (`google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=3000 --dump-dom`) to catch runtime bugs a static code read won't — e.g. a script mis-registering points or a duplicate DOM id.
 
 ## Draft persistence
