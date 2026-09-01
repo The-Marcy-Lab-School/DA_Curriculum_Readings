@@ -1,163 +1,585 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Git Saves the Story | Module 0 Prep</title><style>
-:root{--ink:#18212d;--paper:#fbfcfe;--card:#fff;--muted:#596575;--purple:#674cb4;--teal:#137f88;--gold:#b77e12;--red:#9d3e46;--green:#287a5b;--line:#dce3ea;--soft:#f4f6fa;--good:#eaf7f2;--bad:#fbecef;--warn:#fff5dc;--focus:#ffbf47}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
-a{color:#3e2c8d}button,input,textarea,select{font:inherit}button:focus,input:focus,textarea:focus,select:focus,a:focus,summary:focus{outline:4px solid var(--focus);outline-offset:3px}
-header{background:var(--ink);color:#fff;padding:2.8rem 1.25rem}.wrap,section{max-width:980px;margin:auto}.eyebrow{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#d8d0f4}
-h1{font-size:clamp(2.35rem,6vw,4.7rem);line-height:1.02;margin:.35rem 0 1rem}h2{font-size:1.95rem;line-height:1.15;margin-top:0}h3{margin-top:0}.lead{font-size:1.18rem;max-width:820px}.meta{display:flex;gap:.7rem;flex-wrap:wrap}.pill{border:1px solid #758192;border-radius:999px;padding:.3rem .75rem}
-.progress-shell{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:10}.progress{height:8px;background:#e8edf2}.bar{height:100%;width:0;background:var(--purple)}nav{max-width:980px;margin:auto;padding:.55rem 1rem;color:var(--muted);font-size:.92rem}
-main{padding:2rem 1.25rem 5rem}section{margin-bottom:3.4rem}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.35rem;box-shadow:0 3px 14px rgba(20,30,50,.04)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem}
-.callout{border-left:6px solid var(--teal);padding:1rem 1.2rem;background:#eef8f8;border-radius:10px}.warning{border-left:6px solid var(--gold);padding:1rem 1.2rem;background:var(--warn);border-radius:10px}.danger{border-left:6px solid var(--red);padding:1rem 1.2rem;background:var(--bad);border-radius:10px}
-button{font-weight:700;border:2px solid var(--purple);background:#fff;color:#3e2c8d;border-radius:12px;padding:.72rem 1rem;cursor:pointer}.choice{width:100%;text-align:left;margin:.34rem 0}.choice:hover{background:#f4f1fb}.feedback{display:none;margin-top:.8rem;padding:.9rem;border-radius:10px;background:var(--good)}.feedback.show{display:block}.feedback.bad{background:var(--bad)}
-.tag{display:inline-block;padding:.15rem .55rem;border-radius:999px;background:#edf1f6;font-size:.84rem;font-weight:700}.code{font-family:Consolas,Monaco,monospace;background:#f0f1f4;border-radius:6px;padding:.08rem .35rem}.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem}.step{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:1rem}.step strong{display:block;color:var(--purple);font-size:1.05rem}
-.term .definition{display:none}.term .definition.show{display:block}.terminal{background:#10151d;color:#f4f6fa;border-radius:14px;padding:1rem}.terminal-output{background:#05080c;padding:.9rem;border-radius:8px;min-height:190px;white-space:pre-wrap;font-family:Consolas,Monaco,monospace;overflow:auto}.terminal-line{display:flex;gap:.5rem;align-items:center;margin-top:.75rem}.terminal-line input{flex:1;border:2px solid #8e99a9;border-radius:10px;padding:.72rem;background:white;color:#111}
-textarea{width:100%;min-height:100px;border:2px solid #b8c0ca;border-radius:10px;padding:.75rem}.sequence{display:flex;gap:.55rem;flex-wrap:wrap}.token{border:2px dashed #8a96a6;background:#fff;padding:.6rem .8rem;border-radius:10px}.history{border-left:4px solid var(--purple);padding-left:1rem}.history-item{margin:.6rem 0}
-details{background:#fff;border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem;margin:.7rem 0}summary{font-weight:700;cursor:pointer}footer{background:var(--ink);color:#fff;padding:2rem 1.25rem}
-@media(max-width:720px){.flow{grid-template-columns:1fr 1fr}.terminal-line{flex-direction:column;align-items:stretch}}@media(max-width:520px){.flow{grid-template-columns:1fr}h2{font-size:1.6rem}}
-</style></head><body>
-<header><div class="wrap"><div class="eyebrow">Module 0 • Prep Reading 1</div><h1>Git Saves the Story</h1><p class="lead">Before you type Git commands in class, learn what Git is tracking, what GitHub adds, and why commits are more useful than a folder full of “final-final-v2” files.</p><div class="meta"><span class="pill">Self-paced</span><span class="pill">8–10 minutes</span><span class="pill">Concept first</span></div></div></header>
-<div class="progress-shell"><div class="progress"><div class="bar" id="bar"></div></div><nav>Read the explanation, then use the checks to test the mental model.</nav></div>
-<main>
-<section><h2>1. Imagine your project changes every day</h2><p>You are helping a neighborhood group analyze tree-survey data. On Monday you clean column names. On Tuesday you fix a mistake. On Wednesday you add a chart. By Friday, someone asks: <strong>“What changed since Tuesday?”</strong></p><div class="grid"><div class="card"><h3>Without version control</h3><p>You might create files such as <span class="code">analysis_final.py</span>, <span class="code">analysis_final2.py</span>, and <span class="code">analysis_REALLY_final.py</span>.</p></div><div class="card"><h3>With Git</h3><p>You keep one project and save meaningful snapshots of its history. Each snapshot can say what changed.</p></div></div><div class="callout" style="margin-top:1rem"><strong>Git is version control.</strong> It records the history of a project so you can inspect what changed over time.</div></section>
-<section><h2>2. Git and GitHub are related—but not the same</h2><div class="grid"><div class="card"><h3>Git</h3><p>Runs on your computer. It tracks the history of files inside a repository.</p><p><strong>Think:</strong> the history system.</p></div><div class="card"><h3>GitHub</h3><p>A website/service that can host a copy of a Git repository so you can share, collaborate, and keep a remote copy.</p><p><strong>Think:</strong> a place the repository can live online.</p></div></div><div class="card" style="margin-top:1rem"><p><strong>You committed three changes locally but never pushed. Which statement is true?</strong></p><button class="choice gitgh" data-a="a">The commits exist in Git on your computer, but not yet on GitHub.</button><button class="choice gitgh" data-a="b">GitHub automatically receives every local commit.</button><button class="choice gitgh" data-a="c">A commit only exists after you open github.com.</button><div id="gitghfb" class="feedback" tabindex="-1"></div></div></section>
-<section><h2>3. Vocabulary you will hear in class</h2><div class="grid"><div class="card term"><h3>Repository</h3><p>A project folder whose history Git is tracking.</p><button data-flip="repoDef">Why it matters</button><div id="repoDef" class="definition"><p>Once a folder is a repository, Git can track snapshots and changes inside it.</p></div></div><div class="card term"><h3>Commit</h3><p>A saved snapshot of the project at one point in time.</p><button data-flip="commitDef">Why it matters</button><div id="commitDef" class="definition"><p>Commits create a readable history. A useful commit message explains the change.</p></div></div><div class="card term"><h3>Remote</h3><p>A copy of the repository hosted somewhere else, such as GitHub.</p><button data-flip="remoteDef">Why it matters</button><div id="remoteDef" class="definition"><p>A remote gives your local repository somewhere else to send commits.</p></div></div></div></section>
-<section><h2>4. The basic Git story</h2><p>Git becomes easier when you see it as a sequence rather than a pile of commands.</p><div class="flow"><div class="step"><strong>1. INIT</strong>Turn a folder into a Git repository.</div><div class="step"><strong>2. ADD</strong>Choose changes for the next snapshot.</div><div class="step"><strong>3. COMMIT</strong>Save that snapshot with a useful message.</div><div class="step"><strong>4. PUSH</strong>Send local commits to a remote such as GitHub.</div></div><div class="card" style="margin-top:1rem"><p><strong>Which order makes sense for a brand-new local project?</strong></p><button class="choice order" data-a="good">git init → git add → git commit → git push</button><button class="choice order" data-a="bad1">git push → git init → git add → git commit</button><button class="choice order" data-a="bad2">git commit → git push → git init → git add</button><div id="orderfb" class="feedback" tabindex="-1"></div></div></section>
-<section><h2>5. Staging is the “what goes in the next snapshot?” step</h2><p>Editing a file does not automatically make that change part of your next commit. <span class="code">git add</span> places selected changes into the <strong>staging area</strong>.</p><div class="grid"><div class="card"><h3>Working files</h3><p>What currently exists in your project folder.</p></div><div class="card"><h3>Staging area</h3><p>The changes you have selected for the next commit.</p></div><div class="card"><h3>Commit history</h3><p>Snapshots you have already saved.</p></div></div><div class="card" style="margin-top:1rem"><p><strong>You edited two files but only want one in the next commit. What should you do?</strong></p><button class="choice stage" data-a="add">Use git add on the file you want to include.</button><button class="choice stage" data-a="push">Push first and decide later.</button><button class="choice stage" data-a="init">Run git init again to choose the file.</button><div id="stagefb" class="feedback" tabindex="-1"></div></div></section>
-<section><h2>6. Commit messages are for future humans</h2><p>A commit message should tell someone what changed without forcing them to open every file.</p><div class="card"><p><strong>Which message would be most useful six weeks from now?</strong></p><button class="choice msg" data-a="bad">update</button><button class="choice msg" data-a="bad2">stuff</button><button class="choice msg" data-a="good">Add tree-count summary to project notes</button><div id="msgfb" class="feedback" tabindex="-1"></div></div><div class="callout" style="margin-top:1rem"><strong>Good habit:</strong> make the message specific enough that the history tells a story.</div></section>
-<section><h2>7. Local vs. remote: one last check</h2><div class="card"><p>A classmate says, “I committed my work, so my instructor can already see it on GitHub.” What is missing from that reasoning?</p><button class="choice finalq" data-a="push">They may still need to push the local commit to the GitHub remote.</button><button class="choice finalq" data-a="status">They need to delete the local repository first.</button><button class="choice finalq" data-a="none">Nothing—commit and push are the same action.</button><div id="finalfb" class="feedback" tabindex="-1"></div></div></section>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Git Saves the Story</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:14rem}
+.mlrk-terminal-row{margin-top:.4rem}
+.mlrk-terminal-hint{font-size:.9rem;color:var(--mlrk-text-on-light-muted);margin-top:.6rem}
+</style>
+</head><body>
 
-<section><h2>8. Save a copy of your work</h2>
-<p>Your responses are stored only in this browser while you work. There is no database. Keep a copy when you finish.</p>
-<div class="grid">
-  <div class="card"><h3>Markdown</h3><p>Best for GitHub because it is readable directly in the repository.</p><button id="makeMD" type="button">Create Markdown file</button></div>
-  <div class="card"><h3>JSON</h3><p>Useful as a machine-readable record of your responses.</p><button id="makeJSON" type="button">Create JSON file</button></div>
-  <div class="card"><h3>Plain text</h3><p>Show your responses as plain text or create a TXT file.</p><button id="showPlain" type="button">Show plain text</button><button id="makeTXT" type="button" style="margin-top:.5rem">Create TXT file</button></div>
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Git Saves the Story</h1>
+<p class="mlrk-lead">A community environmental group is writing up a neighborhood tree survey together. Three different volunteers touch the same notes file over three weeks: one fixes a miscount, one adds a new column, one rewords a confusing sentence. Nobody wants to be the person who overwrites somebody else's fix by accident, and everybody wants to know what changed and why. That's the actual problem Git solves, and it's what this reading is about: what a repository, a commit, and a remote actually are, underneath the commands.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~30-33 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">Uses a simulated terminal, no installs needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
 </div>
-<div id="submitfb" class="feedback" tabindex="-1"></div>
-<div id="plainPanel" class="card" style="display:none;margin-top:1rem">
-  <label for="plainOutput"><strong>Your plain-text submission</strong></label>
-  <p>Select the text below and copy it with <strong>Ctrl+C</strong> on Windows/ChromeOS or <strong>Command+C</strong> on macOS.</p>
-  <textarea id="plainOutput" style="min-height:280px"></textarea>
-  <button id="selectPlain" type="button" style="margin-top:.6rem">Select all text</button>
-</div>
-<details><summary>What do I do with the file?</summary><p>Keep a copy. If your instructor asks you to store it in GitHub, they will tell you which repository and folder to use. This reading never asks for your GitHub password or token.</p></details>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
 </section>
 
-<div class="card"><h3>GitHub Hello World</h3><p>A hands-on GitHub walkthrough for repositories, commits, branches, and pull requests. It goes beyond today's lesson, so treat it as optional exploration.</p><p><a href="https://docs.github.com/en/get-started/using-github/hello-world" target="_blank" rel="noopener">Open GitHub Hello World</a></p></div></section>
-</main><footer><div class="wrap"><strong>Next:</strong> practice the workflow in a simulated terminal before doing it for real in class.</div></footer>
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Git &amp; Version Control</strong> — Using Git and GitHub to track, commit, and share your own work in a real repository, following expected conventions.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Picture the tree-survey write-up. Without any tool watching it, three volunteers editing the same file over three weeks tends to end in files named <code>notes_final.md</code>, <code>notes_final_v2.md</code>, and <code>notes_ACTUALLY_final.md</code> — and nobody can say for sure which one has the corrected tree count and which one still has the mistake. Git exists to make that mess unnecessary. Instead of piling up renamed copies, you keep <strong>one</strong> project and save a sequence of meaningful checkpoints of its history, each one able to say exactly what changed.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 640 260" role="img" aria-labelledby="storyTitle storyDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="storyTitle">A linear commit history, shown as a story with four checkpoints</title>
+  <desc id="storyDesc">Four commits connected in a line, each labeled with a short message. The first three are connected with a solid line to a box labeled GitHub, remote copy, meaning they have been pushed. The fourth and most recent commit, marked HEAD, is connected to the same box with a dashed line labeled not pushed yet, meaning it exists only on the local computer so far.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <line x1="40" y1="90" x2="580" y2="90" stroke="#261F1D" stroke-width="3"/>
+
+    <circle cx="80" cy="90" r="26" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="80" y="96" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">1</text>
+    <text x="80" y="140" text-anchor="middle" font-size="13" fill="#261F1D">Start survey notes</text>
+
+    <circle cx="240" cy="90" r="26" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="240" y="96" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">2</text>
+    <text x="240" y="140" text-anchor="middle" font-size="13" fill="#261F1D">Add tree counts</text>
+
+    <circle cx="400" cy="90" r="26" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="400" y="96" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">3</text>
+    <text x="400" y="140" text-anchor="middle" font-size="13" fill="#261F1D">Fix miscounted block</text>
+
+    <circle cx="560" cy="90" r="26" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+    <text x="560" y="96" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">4</text>
+    <text x="560" y="140" text-anchor="middle" font-size="13" fill="#261F1D">Add species column</text>
+    <rect x="524" y="20" width="72" height="24" rx="6" fill="#FECC5B" stroke="#83671C" stroke-width="2"/>
+    <text x="560" y="36" text-anchor="middle" font-weight="700" font-size="12" fill="#261F1D">HEAD</text>
+
+    <rect x="330" y="185" width="200" height="56" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="430" y="209" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">GitHub</text>
+    <text x="430" y="227" text-anchor="middle" font-size="12" fill="#261F1D">(remote copy)</text>
+
+    <line x1="400" y1="116" x2="430" y2="185" stroke="#2274B5" stroke-width="3"/>
+    <text x="470" y="170" text-anchor="middle" font-size="12" fill="#2274B5" font-weight="700">pushed</text>
+
+    <line x1="560" y1="116" x2="540" y2="180" stroke="#83671C" stroke-width="3" stroke-dasharray="6 5"/>
+    <text x="600" y="170" text-anchor="middle" font-size="12" fill="#83671C" font-weight="700">not pushed yet</text>
+  </g>
+</svg>
+
+<p>Each circle is a <strong>commit</strong>: a saved snapshot of the project at one moment, with a message describing what changed. Read left to right, the four commits are the story of this file. The first three have already been sent to GitHub, so anyone with access to that remote copy can see them. The fourth one, marked <strong>HEAD</strong> because it's the most recent snapshot, only exists on the volunteer's own computer so far. It's a real, saved commit, but GitHub doesn't know about it yet.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> that gap between the fourth commit and the GitHub box is one of the most common early mistakes in a real project. Someone commits their work, assumes it's automatically backed up and visible to their team, and finds out days later that it never left their own laptop. Understanding that a commit and a push are two separate actions, done at different times, is the single idea that prevents that mistake. It's also one of the first things a manager or teammate checks when they look at a shared project: does the commit history actually explain what happened, or is it one vague dump at the end?</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know something like this from ordinary software. A word processor's version history and an "undo" button both save you from losing earlier work. Git formalizes that same idea, on purpose, for an entire folder of files, and adds one extra piece: a remote copy that other people can see and add to. Once this mental model is solid, every specific command you type later is really just "operate on one of these three things: my files, my saved history, or the remote copy."</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before you start</h2>
+<p class="mlrk-small">Comfortable terminal navigation is a prerequisite skill for this reading, since every command below is typed, not clicked. Test it before moving on.</p>
+<div class="mlrk-card" id="card-cd"><p><strong>In a terminal, what does the command <code>cd tree-survey-notes</code> do?</strong></p>
+<button type="button" class="mlrk-choice" data-a="move">Changes your current directory into the <code>tree-survey-notes</code> folder.</button>
+<button type="button" class="mlrk-choice" data-a="list">Lists every file inside the <code>tree-survey-notes</code> folder.</button>
+<button type="button" class="mlrk-choice" data-a="create">Creates a new folder named <code>tree-survey-notes</code>.</button>
+<div id="cdfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-ls" style="margin-top:.8rem"><p><strong>Scenario:</strong> you just ran <code>cd tree-survey-notes</code>, and now you want to see what's actually inside that folder before you touch anything. Which command should you run next?</p>
+<button type="button" class="mlrk-choice" data-a="ls">ls</button>
+<button type="button" class="mlrk-choice" data-a="pwd">pwd</button>
+<button type="button" class="mlrk-choice" data-a="cd2">cd tree-survey-notes again</button>
+<div id="lsfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the activities below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>repository</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Repository</strong><br>A project folder whose history Git is actually tracking. Often shortened to "repo."</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>commit</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Commit</strong><br>A saved snapshot of the project at one point in time, with a message describing the change.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>staging area</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Staging area</strong><br>Where you place the specific changes you want in the <em>next</em> commit, separate from files you've edited but aren't ready to save yet.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>remote</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Remote</strong><br>A copy of the repository hosted somewhere else, such as on GitHub, that your local repository can send commits to.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>push</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Push</strong><br>Sending commits that exist locally up to a remote, so they show up there too.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>clone</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Clone</strong><br>Making your own local copy of a repository that already exists on a remote, including its full commit history.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Git and GitHub are related, but not the same</h2>
+<div class="mlrk-grid">
+<div class="mlrk-card"><p><strong>Git</strong></p><p>A program that runs on your own computer. It tracks the history of files inside a repository. Nothing about it requires the internet.</p></div>
+<div class="mlrk-card"><p><strong>GitHub</strong></p><p>A website that can host a copy of a Git repository, so a project can be shared, backed up, and worked on by more than one person.</p></div>
+</div>
+<div class="mlrk-card" id="card-gitgh" style="margin-top:1rem"><p><strong>A volunteer made three commits on their own laptop but never ran a push. Which statement is true?</strong></p>
+<button type="button" class="mlrk-choice" data-a="local">The commits exist in that person's local Git history, but not yet on GitHub.</button>
+<button type="button" class="mlrk-choice" data-a="auto">GitHub automatically receives every local commit as soon as it's made.</button>
+<button type="button" class="mlrk-choice" data-a="none">A commit doesn't really exist until someone opens github.com.</button>
+<div id="gitghfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Match each concept to its role</h2>
+<p>Drag each concept into the zone that describes what it actually is, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">Staging area</span>
+  <span id="chip2" class="mlrk-draggable">Commit history</span>
+  <span id="chip3" class="mlrk-draggable">Remote</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Changes selected for the next snapshot</strong></p><div class="mlrk-dropzone" id="zoneStage"></div></div>
+  <div><p class="mlrk-small"><strong>Snapshots already saved, in order</strong></p><div class="mlrk-dropzone" id="zoneHistory"></div></div>
+  <div><p class="mlrk-small"><strong>A copy of the repo hosted elsewhere</strong></p><div class="mlrk-dropzone" id="zoneRemote"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Order the basic git workflow</h2>
+<p>Click steps, in order, to build the sequence a brand-new project actually follows. Click a step again to remove it if you change your mind, then press "Check my order" when you're ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="init"><span class="mlrk-order-num"></span> Turn the folder into a Git repository.</li>
+  <li class="mlrk-orderitem" data-step="add"><span class="mlrk-order-num"></span> Select which changed files belong in the next snapshot.</li>
+  <li class="mlrk-orderitem" data-step="commit"><span class="mlrk-order-num"></span> Save that snapshot with a message describing the change.</li>
+  <li class="mlrk-orderitem" data-step="push"><span class="mlrk-order-num"></span> Send the saved snapshot to a remote such as GitHub.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Staging: choosing what goes in the next snapshot</h2>
+<p>Editing a file does not automatically make that change part of your next commit. Placing a change into the staging area is a separate, deliberate step.</p>
+<div class="mlrk-card" id="card-stage"><p><strong>A volunteer edited both <code>survey_notes.md</code> and <code>todo_list.md</code>, but only wants <code>survey_notes.md</code> in the next commit. What should they do?</strong></p>
+<button type="button" class="mlrk-choice" data-a="add">Add only <code>survey_notes.md</code> to the staging area, leaving <code>todo_list.md</code> out of it.</button>
+<button type="button" class="mlrk-choice" data-a="push">Push first, then decide which file to keep.</button>
+<button type="button" class="mlrk-choice" data-a="init">Turn the folder into a repository again to reset which files are tracked.</button>
+<div id="stagefb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Commit messages are for future humans</h2>
+<p>A commit message should tell a future reader, including a future version of the person who wrote it, what changed and roughly why, without forcing them to open every file to find out.</p>
+<div class="mlrk-card" id="card-msg"><p><strong>Which commit message would actually be useful to a teammate reading this project's history six weeks from now?</strong></p>
+<button type="button" class="mlrk-choice" data-a="good">Fix miscounted tree total in block 4</button>
+<button type="button" class="mlrk-choice" data-a="bad1">update</button>
+<button type="button" class="mlrk-choice" data-a="bad2">stuff</button>
+<div id="msgfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Try it yourself: a simulated terminal</h2>
+<p>This is a small simulator, not a real shell, but the commands and their output are modeled on real Git. Work through the survey notes project below. Try each of these, in order: <code>git init</code>, then <code>git status</code>, then <code>git add survey_notes.md</code>, then <code>git commit -m "Start survey notes"</code>, then <code>git log</code>. Once you've made a commit, try <code>git remote add origin https://github.com/you/tree-survey-notes.git</code> and then <code>git push</code>.</p>
+<div class="mlrk-terminal" id="gitterminal">
+  <pre class="mlrk-terminal-log" id="termlog"></pre>
+  <div class="mlrk-terminal-row"><span class="mlrk-terminal-prompt" id="termprompt"></span><input type="text" class="mlrk-terminal-input" id="terminput" autocomplete="off" spellcheck="false" aria-label="Terminal command input"></div>
+</div>
+<p class="mlrk-terminal-hint">Type a command and press Enter. Commands not listed above (like <code>ls</code>, <code>pwd</code>, <code>cd</code>) also work in this simulator.</p>
+<div class="mlrk-card" id="card-termcheck" style="margin-top:1rem"><p><strong>If you run <code>git commit -m "..."</code> before ever running <code>git add</code>, what happens?</strong></p>
+<button type="button" class="mlrk-choice" data-a="nothing">Nothing gets committed. There's nothing staged yet for the commit to save.</button>
+<button type="button" class="mlrk-choice" data-a="allfiles">Every file in the project gets committed automatically.</button>
+<button type="button" class="mlrk-choice" data-a="error2">Git deletes the untracked files.</button>
+<div id="termcheckfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Fill in the blank</h2>
+<p>One command sends commits that already exist on your own computer up to a remote like GitHub.</p>
+<div class="mlrk-code"><div class="mlrk-screen">git remote add origin https://github.com/you/tree-survey-notes.git
+git ____</div></div>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Type the missing command:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about repositories, commits, and remotes.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A commit is a saved snapshot, not a live, constantly-updating view of the files.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Editing a file automatically stages it for the next commit.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A repository can exist entirely on one computer, with no remote at all.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Cloning a repository copies its full commit history, not just its current files.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Local vs. remote: one more check</h2>
+<div class="mlrk-card" id="card-final"><p><strong>A volunteer says, "I committed my fix, so everyone on the team can already see it on GitHub." What's missing from that reasoning?</strong></p>
+<button type="button" class="mlrk-choice" data-a="push">They may still need to push that local commit to the GitHub remote before anyone else can see it.</button>
+<button type="button" class="mlrk-choice" data-a="delete">They need to delete their local copy of the repository first.</button>
+<button type="button" class="mlrk-choice" data-a="same">Nothing. Committing and pushing are the same action.</button>
+<div id="finalfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Watch: Git, quickly</h2>
+<p>As you watch, notice how it draws the difference between your own local repository and a separate remote copy, and how it represents a commit as a distinct, saved snapshot rather than just "the current files."</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=hwP7WQkmECE" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one detail the video showed that matches (or doesn't quite match) the story-with-checkpoints picture from section 1?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"Walk me through what happens when you run git add, commit, and push" is a genuinely common early-interview and take-home-review question, for data roles and software roles alike. Interviewers use it to check that a candidate understands the local-versus-remote split, not just that they can recite the three command names in order.</p>
+<p>A second common angle is reading someone else's commit history and being asked "what would you have done differently here?" A history of five commits all named <code>update</code> or <code>fix</code> is an honest red flag, and being able to say why, specifically, is exactly the judgment this reading has been building.</p>
+<p>One thing this reading has not covered yet, in the interest of staying honest: merge conflicts, which come up once two people's changes to the same file collide. That's a real, common follow-up question once someone confirms they understand commits and remotes, but it depends on ideas, like branches, that this reading deliberately left out to stay focused.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: an interviewer shows you a project with one giant commit message that says "final version" and asks what's wrong with it. What's the best answer?</strong></p>
+<button type="button" class="mlrk-choice" data-a="history">It throws away the value of commit history. Nobody can tell what actually changed, or when, or why.</button>
+<button type="button" class="mlrk-choice" data-a="fine">Nothing. As long as the code runs, the commit message doesn't matter.</button>
+<button type="button" class="mlrk-choice" data-a="length">The message is too short. It should be several paragraphs long.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Reflection</h2>
+<label for="strategy"><strong>In your own words:</strong> explain to a teammate who has never used Git why a commit and a push are two different things, using the tree-survey example or one of your own.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: A commit is..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Summary &amp; critical thinking</h2>
+<p>Two ideas carried this whole reading: a commit is a saved snapshot with a message, not a live view of your files, and a repository's local history and its remote copy are two separate things that only stay in sync when you actually push.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a small nonprofit's volunteer coordinator keeps a shared spreadsheet of upcoming events, emailed back and forth as attachments, and two people just edited it at the same time without knowing. What would change if that spreadsheet lived in a Git repository instead?</p>
+<button type="button" class="mlrk-choice" data-a="history">There would be a real history of who changed what and when, instead of whichever emailed copy someone opens last.</button>
+<button type="button" class="mlrk-choice" data-a="nothing">Nothing. Git only works for code, not spreadsheets or documents.</button>
+<button type="button" class="mlrk-choice" data-a="auto2">Git would automatically merge both people's edits with no need to look at them.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what would you tell someone who says, "I don't need version control, I just save my file often"?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>17. Thinking ahead</h2>
+<p>The mental model from this reading, a local repository, a saved sequence of commits, and a remote copy, is the exact foundation that branches, pull requests, and merge conflicts all get built on top of later. Every one of those ideas is really just a more advanced way of asking the same question this reading kept coming back to: what does the current commit history actually say happened, and where does the remote copy stand relative to it?</p>
+</section>
+
+<section class="mlrk-section">
+<h2>18. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add git-saves-the-story-reading.json
+git commit -m "Complete Git Saves the Story reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong> — this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control" target="_blank" rel="noopener">Pro Git book: About Version Control</a> — the free, official reference, from Git's own team.</li>
+<li><a href="https://docs.github.com/en/get-started/using-git/about-git" target="_blank" rel="noopener">GitHub Docs: About Git</a> — GitHub's own explanation of how Git and GitHub relate.</li>
+<li><a href="https://learngitbranching.js.org/" target="_blank" rel="noopener">Learn Git Branching</a> — a free, visual, interactive way to keep exploring commit history once this clicks.</li>
+<li><a href="https://git-scm.com/docs" target="_blank" rel="noopener">Git reference documentation</a> — the official command-by-command reference.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
 <script>
-const work={answers:{}};
-const bar=document.getElementById('bar');
-function prog(){const d=document.documentElement,m=d.scrollHeight-d.clientHeight;bar.style.width=(m?d.scrollTop/m*100:100)+'%'}
-document.addEventListener('scroll',prog,{passive:true});prog();
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "git-saves-the-story-reading";
+  const TITLE = "Git Saves the Story";
 
-function show(id,msg,ok=true){
-  const e=document.getElementById(id);
-  e.innerHTML=msg;
-  e.className='feedback show'+(ok?'':' bad');
-  e.focus();
-}
-function save(){
-  localStorage.setItem('gitStoryWork',JSON.stringify(work));
-}
-try{
-  const old=JSON.parse(localStorage.getItem('gitStoryWork')||'null');
-  if(old&&old.answers) work.answers=old.answers;
-}catch(e){}
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
 
-document.querySelectorAll('[data-flip]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.flip).classList.toggle('show'));
+  K.quiz({id:"q-cd", buttonSelector:"#card-cd .mlrk-choice", feedbackSelector:"#cdfb", correct:"move", maxAttempts:1,
+    feedback:{move:"cd changes your current directory, so you end up inside tree-survey-notes.",
+              list:"Listing files is what ls does. cd only changes where you are.",
+              create:"cd expects a folder that already exists. It doesn't create one."}});
 
-function bind(sel,id,correct,key,good,bad){
-  document.querySelectorAll(sel).forEach(b=>b.onclick=()=>{
-    work.answers[key]=b.dataset.a; save();
-    show(id,b.dataset.a===correct?'<strong>Correct.</strong> '+good:'<strong>Not quite.</strong> '+bad,b.dataset.a===correct);
+  K.quiz({id:"q-ls", buttonSelector:"#card-ls .mlrk-choice", feedbackSelector:"#lsfb", correct:"ls",
+    feedback:{ls:"ls lists the contents of your current directory, which is exactly what you'd want to check first.",
+              pwd:"pwd only prints which directory you're in. It won't show you what's inside it.",
+              cd2:"Running cd again on the same folder doesn't show you its contents either."}});
+
+  K.quiz({id:"q-gitgh", buttonSelector:"#card-gitgh .mlrk-choice", feedbackSelector:"#gitghfb", correct:"local", maxAttempts:1,
+    feedback:{local:"Git records commits locally. GitHub doesn't receive them until they're pushed to it.",
+              auto:"There's no automatic syncing. A commit stays local until someone deliberately pushes it.",
+              none:"A commit is a real, saved snapshot the moment it's made, whether or not anyone ever opens GitHub."}});
+
+  K.quiz({id:"q-stage", buttonSelector:"#card-stage .mlrk-choice", feedbackSelector:"#stagefb", correct:"add",
+    feedback:{add:"Staging only the file you want keeps the other edited file out of this particular commit.",
+              push:"There's nothing to push yet. Nothing has even been committed.",
+              init:"Re-initializing doesn't change which files are staged for the next commit."}});
+
+  K.quiz({id:"q-msg", buttonSelector:"#card-msg .mlrk-choice", feedbackSelector:"#msgfb", correct:"good",
+    feedback:{good:"This message names the specific change, so a future reader knows what happened without opening the file.",
+              bad1:"\"update\" could describe almost any change ever made to any file.",
+              bad2:"\"stuff\" tells a future reader nothing about what actually changed."}});
+
+  K.quiz({id:"q-termcheck", buttonSelector:"#card-termcheck .mlrk-choice", feedbackSelector:"#termcheckfb", correct:"nothing",
+    feedback:{nothing:"A commit only saves whatever is currently staged. With nothing staged, there's nothing for it to save.",
+              allfiles:"Committing never automatically grabs every file. Only staged changes are included.",
+              error2:"Git doesn't delete untracked files just because a commit ran."}});
+
+  K.quiz({id:"q-final", buttonSelector:"#card-final .mlrk-choice", feedbackSelector:"#finalfb", correct:"push",
+    feedback:{push:"Commit saves locally. Push is the separate step that sends it to the remote.",
+              delete:"Deleting the local repository would lose the work, not share it.",
+              same:"Commit and push are two separate actions, done at different times."}});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"history",
+    feedback:{history:"A vague, one-time message throws away exactly what commit history is for: knowing what changed, when, and why.",
+              fine:"Working code and a useful history are different things. Interviewers are checking for both.",
+              length:"Length isn't the problem. A short, specific message beats a long, vague one."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"history",
+    feedback:{history:"A real, ordered history of who changed what and when replaces guessing which emailed attachment is newest.",
+              nothing:"Git tracks changes to any file it's told to track, not only code.",
+              auto2:"Git can flag that two people changed the same lines. It doesn't silently decide which edit wins for you."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"A commit is a saved snapshot, not a live, constantly-updating view of the files.", correct:true,
+      hint:"Think back to section 1's diagram. Does a commit change on its own after it's made?",
+      explain:"A commit is fixed the moment it's made. Later edits become new commits, not changes to the old one."},
+    {value:"b", label:"Editing a file automatically stages it for the next commit.", correct:false,
+      hint:"Section 7 covered this directly. Does editing alone put a change into the staging area?",
+      explain:"Editing a file changes it on disk, but it takes a deliberate staging step before it's part of the next commit."},
+    {value:"c", label:"A repository can exist entirely on one computer, with no remote at all.", correct:true,
+      hint:"Think about the order of the workflow in section 6. Which step, if any, requires a remote to exist first?",
+      explain:"Init, add, and commit never touch a remote. A remote is only needed once you want to push or share."},
+    {value:"d", label:"Cloning a repository copies its full commit history, not just its current files.", correct:true,
+      hint:"Check the clone definition from section 3's vocabulary cards again.",
+      explain:"Cloning brings the entire saved history along, which is what lets you run git log immediately after cloning."}
+  ]});
+
+  K.dragDrop("#dragarea", "act-drag-concepts");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneStage", label:"Staging area", expectedLabel:"Changes selected for the next snapshot"},
+    chip2:{expectedId:"zoneHistory", label:"Commit history", expectedLabel:"Snapshots already saved, in order"},
+    chip3:{expectedId:"zoneRemote", label:"Remote", expectedLabel:"A copy of the repo hosted elsewhere"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["init","add","commit","push"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"hwP7WQkmECE"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:10});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  K.terminal("#gitterminal", {
+    id: "act-terminal",
+    minCommands: 4,
+    startPath: "/tree-survey-notes",
+    filesystem: {
+      "/tree-survey-notes": {type:"dir", children:["survey_notes.md"]}
+    },
+    commands: {
+      git(args, state){
+        if(!state.git) state.git = {initialized:false, staged:[], commits:[], remote:null, pushed:0};
+        const g = state.git;
+        const sub = args[0];
+        if(sub === "init"){
+          g.initialized = true;
+          return "Initialized empty Git repository in ~/tree-survey-notes/.git/";
+        }
+        if(!g.initialized && sub !== undefined){
+          return "fatal: not a git repository (or any of the parent directories): .git";
+        }
+        if(sub === "status"){
+          const lines = ["On branch main"];
+          if(g.staged.length){
+            lines.push("Changes to be committed:");
+            g.staged.forEach(f => lines.push("  new file:   " + f));
+          } else if(g.commits.length){
+            lines.push("nothing to commit, working tree clean");
+          } else {
+            lines.push("No commits yet");
+            lines.push("Untracked files:");
+            lines.push("  survey_notes.md");
+          }
+          return lines.join("\n");
+        }
+        if(sub === "add"){
+          const file = args[1] || "survey_notes.md";
+          if(!g.staged.includes(file)) g.staged.push(file);
+          return "(staged: " + file + ")";
+        }
+        if(sub === "commit"){
+          if(g.staged.length === 0) return "nothing to commit, working tree clean";
+          const mIdx = args.indexOf("-m");
+          let msg = "(no message given)";
+          if(mIdx !== -1 && args.length > mIdx + 1){
+            msg = args.slice(mIdx + 1).join(" ").replace(/^"+|"+$/g, "");
+          }
+          const filesCommitted = g.staged.length;
+          g.commits.push(msg);
+          g.staged = [];
+          return "[main " + (g.commits.length === 1 ? "(root-commit) " : "") + "a1b2c3d] " + msg + "\n " + filesCommitted + " file changed";
+        }
+        if(sub === "log"){
+          if(g.commits.length === 0) return "fatal: your current branch 'main' does not have any commits yet";
+          return g.commits.slice().reverse().map((m, i) => "commit " + (g.commits.length - i) + "\n    " + m).join("\n\n");
+        }
+        if(sub === "remote"){
+          if(args[1] === "add"){
+            g.remote = args[3] || "https://github.com/you/tree-survey-notes.git";
+            return "";
+          }
+          return g.remote ? "origin\t" + g.remote : "";
+        }
+        if(sub === "push"){
+          if(!g.remote) return "fatal: No configured push destination.\nUse git remote add origin <url> first.";
+          const unpushed = g.commits.length - g.pushed;
+          if(unpushed <= 0) return "Everything up-to-date";
+          g.pushed = g.commits.length;
+          return "Enumerating objects... done.\nTo " + g.remote + "\n   main -> main";
+        }
+        return "git: '" + sub + "' isn't part of this simulator. Try init, status, add, commit, log, remote, push.";
+      }
+    }
   });
-}
-bind('.gitgh','gitghfb','a','git_vs_github',
-  'Git records the commits locally. GitHub does not receive them until you send them to the remote.',
-  'A local commit can exist entirely on your computer. GitHub only gets it when you push.');
-bind('.order','orderfb','good','workflow_order',
-  'First create the repository, then select changes, save a commit, and finally send commits to the remote.',
-  'You cannot sensibly push or commit a brand-new project before Git has been initialized and changes have been staged.');
-bind('.stage','stagefb','add','staging',
-  'git add lets you choose what will be included in the next commit.',
-  'Staging is the step that selects changes for the next commit.');
-bind('.msg','msgfb','good','commit_message',
-  'The message names the specific change.',
-  'A future reader would not know what “update” or “stuff” changed.');
-bind('.finalq','finalfb','push','local_vs_remote',
-  'Commit saves locally; push sends commits to the remote.',
-  'Commit and push are separate actions.');
 
-function snapshot(){
-  return {
-    activity:'Module 0 - Git Saves the Story',
-    answers:work.answers,
-    generated:new Date().toISOString()
-  };
-}
-function markdownText(s){
-  const labels={
-    git_vs_github:'Git vs. GitHub check',
-    workflow_order:'Git workflow order',
-    staging:'Staging check',
-    commit_message:'Commit-message check',
-    local_vs_remote:'Local vs. remote check'
-  };
-  let rows=Object.entries(s.answers).map(([k,v])=>'- **'+(labels[k]||k)+'**: '+v).join('\n');
-  if(!rows) rows='(No responses recorded.)';
-  return '# Module 0 — Git Saves the Story\n\nGenerated: '+s.generated+
-    '\n\n## Responses\n\n'+rows+'\n';
-}
-function plainText(s){
-  const labels={
-    git_vs_github:'Git vs. GitHub check',
-    workflow_order:'Git workflow order',
-    staging:'Staging check',
-    commit_message:'Commit-message check',
-    local_vs_remote:'Local vs. remote check'
-  };
-  let rows=Object.entries(s.answers).map(([k,v])=>(labels[k]||k)+': '+v).join('\n');
-  if(!rows) rows='(No responses recorded.)';
-  return 'Module 0 - Git Saves the Story\nGenerated: '+s.generated+
-    '\n\nResponses:\n'+rows+'\n';
-}
-function downloadBlob(name,content,mime){
-  try{
-    const blob=new Blob([content],{type:mime});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url; a.download=name; a.style.display='none';
-    document.body.appendChild(a); a.click();
-    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
-    return true;
-  }catch(e){ return false; }
-}
-function exportMessage(ok,label){
-  show('submitfb',
-    ok?'<strong>'+label+' created.</strong> Keep a copy of the file.':
-       '<strong>Could not create the file in this browser.</strong> Use the plain-text option instead.',
-    ok);
-}
-document.getElementById('makeMD').onclick=()=>exportMessage(
-  downloadBlob('module0_git_saves_the_story_responses.md',markdownText(snapshot()),'text/plain;charset=utf-8'),
-  'Markdown file'
-);
-document.getElementById('makeJSON').onclick=()=>exportMessage(
-  downloadBlob('module0_git_saves_the_story_responses.json',JSON.stringify(snapshot(),null,2),'application/json;charset=utf-8'),
-  'JSON file'
-);
-document.getElementById('makeTXT').onclick=()=>exportMessage(
-  downloadBlob('module0_git_saves_the_story_responses.txt',plainText(snapshot()),'text/plain;charset=utf-8'),
-  'TXT file'
-);
-document.getElementById('showPlain').onclick=()=>{
-  const panel=document.getElementById('plainPanel'),box=document.getElementById('plainOutput');
-  box.value=plainText(snapshot());
-  panel.style.display='block';
-  box.focus(); box.select();
-  show('submitfb','<strong>Plain text is ready below.</strong> Use Ctrl+C or Command+C.',true);
-};
-document.getElementById('selectPlain').onclick=()=>{
-  const box=document.getElementById('plainOutput'); box.focus(); box.select();
-};
-</script></body></html>
+  const AI_PROMPTS = [
+    "Think of something in your own life with a real version history, like a shared document with 'version history' turned on, or a video game's save slots. What would a 'commit message' for one of those saves actually say?",
+    "If you had to explain the difference between committing and pushing using a metaphor from outside computers entirely, like mailing a letter, what would you compare each step to?",
+    "Where have you seen a messy 'final_v2_REAL' file-naming situation in your own life, school, or work? What would have been the first commit if that project had used Git from day one?"
+  ];
+  $("#aiprompt").addEventListener("click", () => {
+    const box = $("#aipromptbox");
+    box.style.display = "block";
+    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random() * AI_PROMPTS.length)];
+  });
+
+  K.Scoring.register("q-blank", 1, "quiz");
+  let blankAttempts = 0, blankDone = false;
+  $("#blankcheck").addEventListener("click", () => {
+    if(blankDone) return;
+    blankAttempts++;
+    const ok = $("#blankinput").value.trim().toLowerCase() === "push";
+    const fb = $("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts === 1 ? 1 : 0.5);
+      fb.className = "mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML = "<strong>Correct.</strong> git push sends the commits that already exist locally up to the remote you just added.";
+      blankDone = true;
+    } else if(blankAttempts >= 2){
+      K.Scoring.award("q-blank", 0);
+      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML = "<strong>Here's the answer. You'll get it next time.</strong> The missing command is <code>push</code>.";
+      blankDone = true;
+    } else {
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex", "-1"); fb.focus();
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb = $("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["software-practice"],
+      skills:["git-version-control"], onDone(status,message){
+      fb.textContent = message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

@@ -1,77 +1,498 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meet Your Terminal</title><style>
-:root{--ink:#20201e;--paper:#fbf8f1;--green:#214c2c;--mint:#dce9df;--gold:#f1c75b;--blue:#dbeaf4;--red:#f6dddd;--line:#c9c5bb;--term:#211b1a}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.55 Arial,Helvetica,sans-serif}
-.wrap,main{max-width:980px;margin:auto;padding:0 24px}header{background:var(--green);color:white;padding:52px 0 38px}header p{max-width:760px}.eyebrow{color:var(--gold);font-weight:800;letter-spacing:.06em}
-h1{font-size:clamp(2.2rem,6vw,4.4rem);line-height:1.02;margin:.2rem 0 1rem}h2{font-size:2rem;margin-top:0}h3{margin-bottom:.35rem}
-.progress-shell{position:sticky;top:0;background:#fffdf8;z-index:5;border-bottom:1px solid var(--line)}.progress{height:7px;background:#ddd}.bar{height:100%;background:var(--green);width:0}.progress-shell nav{max-width:980px;margin:auto;padding:9px 24px;font-size:.9rem}
-section{padding:48px 0;border-bottom:1px solid var(--line)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.card,.callout{background:white;border:1px solid var(--line);border-radius:14px;padding:20px}.callout{border-left:7px solid var(--gold)}
-button{font:inherit;font-weight:700;border:2px solid var(--green);background:white;color:var(--green);border-radius:9px;padding:10px 14px;margin:5px 5px 5px 0;cursor:pointer}button:hover,button:focus{background:var(--mint);outline:3px solid transparent}
-.choice{display:block;width:100%;text-align:left}.feedback{display:none;margin-top:12px;padding:14px;border-radius:10px;background:var(--mint)}.feedback.bad{background:var(--red)}.feedback.show{display:block}
-.term{background:var(--term);color:#f8f3ec;border-radius:14px;padding:18px;font:16px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}.history{white-space:pre-wrap;min-height:150px;max-height:390px;overflow:auto}.termrow{display:flex;gap:8px;margin-top:12px}.termrow input{flex:1;background:#fff;color:#111;border-radius:7px;border:0;padding:11px;font:inherit}.termrow button{background:var(--gold);color:#111;border:0}
-code,.code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#eee8dd;padding:.1em .3em;border-radius:4px}
-.flash{min-height:145px}.flash .back{display:none}.flash.open .front{display:none}.flash.open .back{display:block}
-label{font-weight:700}textarea{width:100%;min-height:115px;padding:12px;font:inherit;border:1px solid #888;border-radius:8px}select{font:inherit;padding:8px}
-footer{background:var(--green);color:white;padding:28px 0}.small{font-size:.9rem;color:#555}a{color:#125aa3}
-@media(max-width:600px){body{font-size:17px}.termrow{flex-direction:column}}
-</style></head><body>
-<header><div class="wrap"><div class="eyebrow">MODULE 0 • PRE-LECTURE READING 1 • ~12 MIN</div><h1>Meet Your Terminal</h1><p>Learn what the terminal is, how paths work, and what a few commands actually mean before you use them live in class.</p></div></header>
-<div class="progress-shell"><div class="progress"><div class="bar" id="bar"></div></div><nav>Read → try → get feedback → save your work.</nav></div><main>
-<section><h2>1. The terminal is a text conversation with your computer</h2><p>A <strong>terminal</strong> is a window where you type text commands directly to your computer. Instead of clicking a folder, you can type a command that asks the computer to show or move to it.</p><div class="callout"><strong>Why analysts use it:</strong> commands are precise, repeatable, and leave a useful record of what you did.</div>
-<div class="grid" style="margin-top:16px"><div class="card"><strong>Prompt</strong><p>The text before your cursor often includes your machine, current folder, and a <code>$</code> or <code>%</code> waiting for input.</p></div><div class="card"><strong>Command</strong><p>The instruction you type, such as <code>pwd</code>.</p></div><div class="card"><strong>Output</strong><p>What the computer prints back after the command runs.</p></div></div></section>
-<section><h2>2. Vocabulary flip cards</h2><div class="grid">
-<div class="card flash" id="f1"><div class="front"><h3>Terminal</h3><p>What is it?</p></div><div class="back"><p>A window where you type text commands directly to your computer.</p></div><button data-flip="f1">Flip card</button></div>
-<div class="card flash" id="f2"><div class="front"><h3>Relative path</h3><p>What is it?</p></div><div class="back"><p>A location described starting from where you are now.</p></div><button data-flip="f2">Flip card</button></div>
-<div class="card flash" id="f3"><div class="front"><h3>Absolute path</h3><p>What is it?</p></div><div class="back"><p>The full location from the top/root of the filesystem.</p></div><button data-flip="f3">Flip card</button></div></div></section>
-<section><h2>3. Three navigation commands</h2><div class="grid"><div class="card"><h3><code>pwd</code></h3><p><strong>Print working directory.</strong> Ask “Where am I?” Use it before navigating when you are unsure of your location.</p></div><div class="card"><h3><code>ls</code></h3><p><strong>List.</strong> Ask “What is here?” Use it before guessing a folder or filename.</p></div><div class="card"><h3><code>cd NAME</code></h3><p><strong>Change directory.</strong> Move into a folder. It changes your location; it does not print a file.</p></div></div>
-<div class="card" style="margin-top:16px"><p><strong>You are lost in a project. What should you run first?</strong></p><button class="choice navq" data-a="pwd">pwd</button><button class="choice navq" data-a="cd">cd reports</button><button class="choice navq" data-a="head">head report.csv</button><div id="navfb" class="feedback" tabindex="-1"></div></div></section>
-<section><h2>4. Practice in a safe simulator</h2><p>This is a simulated filesystem, not your real computer. A small project is already loaded so every command has something meaningful to act on.</p>
-<div class="term"><div id="history" class="history">You are in /home/student/market-check
-A practice project is ready.
-Type pwd or ls to begin.</div><div class="termrow"><input id="cmd" aria-label="Terminal command" placeholder="Type a command"><button id="run">Run</button><button id="reset">Reset</button></div></div><div id="termfb" class="feedback" tabindex="-1"></div>
-<details><summary>Need a nudge?</summary><p>Try <code>pwd</code>, then <code>ls</code>. Next try <code>head -n 3 data/ridership.csv</code>. You can also use <code>cd notes</code>, <code>cd ..</code>, <code>echo $SHELL</code>, <code>git --version</code>, <code>code --version</code>, <code>git config --global user.name</code>, and the intentional typo <code>gti status</code>.</p></details></section>
-<section><h2>5. Read errors instead of guessing</h2><p>If a command is not found, the first move is to <strong>read the actual error</strong>. A typo and a missing tool can both produce useful clues.</p><div class="card"><p><strong>Scenario:</strong> You type <code>gti status</code> and see <code>command not found: gti</code>. What is the best next move?</p><button class="choice errq" data-a="read">Read the command, notice the typo, and correct it.</button><button class="choice errq" data-a="spam">Keep running random commands until one works.</button><button class="choice errq" data-a="delete">Delete the project.</button><div id="errfb" class="feedback" tabindex="-1"></div></div></section>
-<section><h2>6. Explain the habit</h2><label for="habit">In 1–2 sentences, why might <code>pwd</code> and <code>ls</code> be useful before <code>cd</code>?</label><textarea id="habit" data-note="navigation_habit" placeholder="Explain in your own words..."></textarea></section>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meet Your Terminal</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+.mlrk-illustration{width:100%;max-width:640px;height:auto;margin:1.1rem 0;display:block}
+.term-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.8rem}
+@media(max-width:650px){.term-cards{grid-template-columns:1fr}}
+</style>
+</head><body>
 
-<section><h2>Save a copy of your work</h2><p>This page has no database or backend. Your work stays in this browser unless you save a copy.</p>
-<div class="grid"><div class="card"><h3>Markdown</h3><p>Easy to keep in GitHub.</p><button id="md">Create Markdown file</button></div>
-<div class="card"><h3>JSON</h3><p>A structured record of your responses.</p><button id="json">Create JSON file</button></div>
-<div class="card"><h3>Plain text</h3><button id="plain">Show plain text</button><button id="txt">Create TXT file</button></div></div>
-<div id="exportfb" class="feedback" tabindex="-1"></div>
-<div id="plainPanel" class="card" style="display:none;margin-top:16px"><label for="plainOut">Your complete submission</label><textarea id="plainOut" style="min-height:280px"></textarea><button id="selectAll">Select all text</button><p class="small">Copy with Ctrl+C (Windows/ChromeOS) or Command+C (macOS). Keep a copy; your instructor will tell you where to store or submit it.</p></div></section>
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Meet Your Terminal</h1>
+<p class="mlrk-lead">You've just joined a regional food bank as a data analyst. Your manager hands you a laptop, points you to a project folder called <code>foodbank-intake</code>, and says: "Before you open anything, get comfortable finding your way around from the terminal. You'll use it here every single day." You've clicked through folders with a mouse a thousand times. Typing instead, at first, feels like navigating in the dark.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~37–41 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">Simulated terminal included</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
 
-<section><h2>Optional: keep practicing</h2><p><a href="https://swcarpentry.github.io/shell-novice/" target="_blank" rel="noopener">Software Carpentry: The Unix Shell</a> — hands-on shell practice. This is optional and longer than the reading.</p></section>
-</main><footer><div class="wrap"><strong>Module 0 • Meet Your Terminal</strong></div></footer>
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Terminal &amp; Command Line</strong> — Navigating a computer's file system and running real commands from the terminal, not just clicking through a graphical interface.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>A <strong>terminal</strong> is a window where you type instructions to your computer instead of clicking icons. Every single thing you'd normally do with a mouse, open a folder, look inside a file, check whether a program is installed, has a typed equivalent. Type an instruction, called a <strong>command</strong>, press enter, and the computer prints back whatever the command produced. That printed result is the <strong>output</strong>. There's no dragging, no double-clicking, no visual folder tree staring back at you, just text going in and text coming back out.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 640 270" role="img" aria-labelledby="introTitle introDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="introTitle">Two ways to reach the same file: clicking through folders, or typing terminal commands</title>
+  <desc id="introDesc">On the left, a mouse-click path moves from a Desktop folder into foodbank-intake, then into donations, arriving at the file donations_march.csv. On the right, the identical destination is reached by typing cd Desktop, cd foodbank-intake, cd donations, then ls, which lists donations_march.csv as the terminal's output. Both paths land on the exact same file.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="115" y="15" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Clicking through folders</text>
+    <rect x="20" y="25" width="190" height="36" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="115" y="48" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Desktop</text>
+    <polygon points="111,61 119,61 119,69 126,69 115,77 104,69 111,69" fill="#264326"/>
+    <rect x="20" y="77" width="190" height="36" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="115" y="100" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">foodbank-intake</text>
+    <polygon points="111,113 119,113 119,121 126,121 115,129 104,121 111,121" fill="#264326"/>
+    <rect x="20" y="129" width="190" height="36" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="115" y="152" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">donations</text>
+    <polygon points="111,165 119,165 119,173 126,173 115,181 104,173 111,173" fill="#264326"/>
+    <rect x="20" y="181" width="190" height="36" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+    <text x="115" y="203" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">donations_march.csv</text>
+
+    <text x="495" y="15" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Typing in the terminal</text>
+    <rect x="370" y="28" width="250" height="192" rx="14" fill="#261F1D"/>
+    <text x="385" y="60" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="14"><tspan fill="#EEBC32">$ </tspan><tspan fill="#FFFCF7">cd Desktop</tspan></text>
+    <text x="385" y="88" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="14"><tspan fill="#EEBC32">$ </tspan><tspan fill="#FFFCF7">cd foodbank-intake</tspan></text>
+    <text x="385" y="116" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="14"><tspan fill="#EEBC32">$ </tspan><tspan fill="#FFFCF7">cd donations</tspan></text>
+    <text x="385" y="144" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="14"><tspan fill="#EEBC32">$ </tspan><tspan fill="#FFFCF7">ls</tspan></text>
+    <text x="385" y="175" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="14" fill="#FECC5B">donations_march.csv</text>
+
+    <text x="320" y="255" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Both paths land on the exact same file.</text>
+  </g>
+</svg>
+
+<p>The <strong>working directory</strong> is whichever folder the terminal currently considers "here." Every command that doesn't spell out a full location acts on the working directory by default, which is why the very first habit worth building is checking where "here" actually is before doing anything else. A location can be written two ways: a <strong>relative path</strong> describes where to go starting from the working directory (<code>donations</code> means "the donations folder, right where I already am"), while an <strong>absolute path</strong> spells out the entire route from the very top of the filesystem (<code>/home/robin/foodbank-intake/donations</code>), and works no matter where you currently are.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> almost every real data or software job hands you a project folder on day one and expects you to find your way around it without anyone walking you through a mouse tour. Commands are also exact and repeatable in a way clicking isn't: the same typed command does the identical thing every time, which is exactly what lets you automate a task later instead of clicking through it by hand forever.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to find a file by clicking through folders, that's the same idea, just a different interface. Once typing a location instead of clicking it feels normal, you're ready for the next layer built entirely on top of it: version control tools track changes to files inside a project folder, and data tools open, read, and combine files that you first have to be able to find.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Technical vocabulary</h2>
+<p>Flip each card before moving into the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>terminal</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Terminal</strong><br>A window where you type text commands directly to your computer instead of clicking.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>command</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Command</strong><br>A single typed instruction, like <code>pwd</code> or <code>ls</code>, that the terminal runs when you press enter.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>working directory</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Working directory</strong><br>The folder the terminal currently treats as "here." Most commands act on it by default.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>relative path</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Relative path</strong><br>A location described starting from the working directory, like <code>donations</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>absolute path</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Absolute path</strong><br>The full route from the very top of the filesystem. Works no matter where you currently are.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Three commands, three questions</h2>
+<p>Almost all terminal navigation comes down to answering three questions, over and over, in whatever order the moment calls for.</p>
+<div class="term-cards">
+<div class="mlrk-card"><h3><code>pwd</code></h3><p><strong>"Where am I?"</strong> Prints the working directory. Changes nothing.</p></div>
+<div class="mlrk-card"><h3><code>ls</code></h3><p><strong>"What's here?"</strong> Lists what's inside the working directory. Changes nothing.</p></div>
+<div class="mlrk-card"><h3><code>cd NAME</code></h3><p><strong>"Take me there."</strong> Moves the working directory into <code>NAME</code>. Prints nothing on its own.</p></div>
+</div>
+<div class="mlrk-card" id="card-firstcmd" style="margin-top:1rem"><p><strong>You've just opened a brand-new project folder you've never seen before. What should you run first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="pwd">pwd</button>
+<button type="button" class="mlrk-choice" data-a="cd">cd donations</button>
+<button type="button" class="mlrk-choice" data-a="cat">cat README.md</button>
+<div id="firstcmdfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Type the command name</h2>
+<p>Robin wants to see what's actually sitting inside the current folder before she trusts any of it.</p>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Type the single command that lists everything in the working directory:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Practice in a simulated terminal</h2>
+<p>This is a simulated filesystem, not your real computer, standing in for Robin's actual project folder at the food bank. It already has a small project loaded so every command has something real to act on.</p>
+<div class="mlrk-terminal" id="terminal1">
+  <div class="mlrk-terminal-log" aria-live="polite">Welcome, Robin. This project folder is already open in your terminal.
+Type pwd or ls to get your bearings.</div>
+  <div class="mlrk-terminal-row">
+    <span class="mlrk-terminal-prompt" aria-hidden="true">$</span>
+    <input type="text" class="mlrk-terminal-input" id="terminalinput" aria-label="Terminal command input" autocomplete="off" spellcheck="false">
+  </div>
+</div>
+<details class="mlrk-hint" style="margin-top:.8rem"><summary>Need a nudge?</summary>
+<p>Try <code>pwd</code>, then <code>ls</code>. Move into a folder with <code>cd donations</code>, run <code>ls</code> again, then <code>cd ..</code> to come back up. Look inside a file with <code>cat README.md</code> or <code>cat notes/intake_notes.txt</code>. Confirm your tools are actually installed with <code>git --version</code>, <code>code --version</code>, or <code>python3 --version</code>. If you want to see exactly what an unrecognized command looks like, try a deliberate typo like <code>pdw</code> or <code>gti --version</code>.</p>
+</details>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Checking your tools</h2>
+<p>A command doesn't have to move you anywhere or list a folder to be useful. <code>git --version</code> and <code>code --version</code> ask a completely different question: "is this tool actually installed and reachable from here?" A real version number answers that question with confidence; an error answers it too, just not the one you wanted.</p>
+<div class="mlrk-card" id="card-checktools"><p><strong>Robin runs <code>git --version</code> and <code>code --version</code> in her terminal, and both print back a version number instead of an error. What does that actually confirm?</strong></p>
+<button type="button" class="mlrk-choice" data-a="installed">Both tools are installed and her terminal can find and run them right now.</button>
+<button type="button" class="mlrk-choice" data-a="restart">The commands ran, but nothing is confirmed until she restarts her computer.</button>
+<button type="button" class="mlrk-choice" data-a="latest">The version numbers mean git and VS Code are running the newest possible release.</button>
+<div id="checktoolsfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Reading errors instead of guessing</h2>
+<p>Typos happen to everyone, every day, forever. The useful skill isn't avoiding them, it's reading exactly what the terminal tells you instead of panicking or guessing.</p>
+<div class="mlrk-card" id="card-errread"><p><strong>Scenario:</strong> Robin types <code>gti status</code> and sees <code>gti: command not found</code>. What's the best next move?</p>
+<button type="button" class="mlrk-choice" data-a="read">Read the error, notice it names <code>gti</code> specifically, and check her own typing for a typo.</button>
+<button type="button" class="mlrk-choice" data-a="spam">Keep retyping random variations until one of them happens to work.</button>
+<button type="button" class="mlrk-choice" data-a="reinstall">Assume git itself is broken and reinstall it before trying anything else.</button>
+<div id="errreadfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Sort by question: which command answers what</h2>
+<p>Drag each command into the question it actually answers, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable"><code>pwd</code></span>
+  <span id="chip2" class="mlrk-draggable"><code>ls</code></span>
+  <span id="chip3" class="mlrk-draggable"><code>cd NAME</code></span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>"Where am I right now?"</strong></p><div class="mlrk-dropzone" id="zoneWhere"></div></div>
+  <div><p class="mlrk-small"><strong>"What's inside this folder?"</strong></p><div class="mlrk-dropzone" id="zoneWhat"></div></div>
+  <div><p class="mlrk-small"><strong>"Move me somewhere else."</strong></p><div class="mlrk-dropzone" id="zoneMove"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Order the steps: getting oriented in an unfamiliar folder</h2>
+<p>Click steps, in order, to build the sequence you'd follow the moment you open a project folder you've never seen before. Click a step again to remove it if you change your mind, then press "Check my order" when you're ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="pwd"><span class="mlrk-order-num"></span> Run <code>pwd</code> to confirm exactly where you are.</li>
+  <li class="mlrk-orderitem" data-step="ls1"><span class="mlrk-order-num"></span> Run <code>ls</code> to see what's actually in this folder, without assuming.</li>
+  <li class="mlrk-orderitem" data-step="cd"><span class="mlrk-order-num"></span> Run <code>cd</code> into the specific subfolder you need next.</li>
+  <li class="mlrk-orderitem" data-step="ls2"><span class="mlrk-order-num"></span> Run <code>ls</code> again to confirm you're now looking at what you expected.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about terminal commands.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> <code>ls</code> only shows a folder's contents the very first time you enter it. After that, you have to remember what's there.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> <code>cd</code> changes which folder is the working directory. On its own, it doesn't print anything about that folder's contents.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A misspelled or missing command produces an error message naming the exact word the terminal didn't recognize.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Every terminal command must include a filename as an argument, or it won't run.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Watch: navigating a real terminal</h2>
+<p>As you watch, notice how often the presenter runs <code>pwd</code> or <code>ls</code> right after moving somewhere new, before doing anything else, that's the exact habit practiced in section 9 above.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=P0KeDt-GuEI" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one moment where seeing a real terminal matched, or didn't match, how you pictured these commands working?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>Technical interviews and take-home exercises routinely assume you can open a shared repository and move around it from the terminal, without asking anyone to screen-share their file explorer for you. It's often the very first thing an interviewer or a new manager notices: whether your first move after opening an unfamiliar project is to run <code>ls</code>, or whether you sit there waiting for someone to click through it for you.</p>
+<p>Onboarding at almost any data or software role starts the same way: clone a project, open a terminal, and run a handful of commands before you ever touch an actual editor. Being visibly comfortable at that stage, including staying calm and reading an error message instead of freezing, is a small thing that reads as real hands-on experience rather than only ever having used a graphical interface.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: you're asked to open a shared project and locate one specific file, without touching the mouse. What's the fastest way to build real confidence you're in the right place before you open anything?</strong></p>
+<button type="button" class="mlrk-choice" data-a="pwdls">Run <code>pwd</code>, then <code>ls</code>, to confirm your location and what's actually there before moving further.</button>
+<button type="button" class="mlrk-choice" data-a="guess">Guess the full path from memory and try opening the file directly.</button>
+<button type="button" class="mlrk-choice" data-a="ask">Ask the interviewer to open a file explorer window for you instead.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Debug by reading, not guessing</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>You're confident you typed a command correctly, but the terminal returns an error naming a slightly different word than what you meant to type. What's actually happening?</strong></p>
+<button type="button" class="mlrk-choice" data-a="typo">It's almost certainly a typo, and the error is naming the exact characters the terminal saw.</button>
+<button type="button" class="mlrk-choice" data-a="broken">The terminal itself is broken and needs to be reinstalled.</button>
+<button type="button" class="mlrk-choice" data-a="random">The computer randomly rejected a perfectly correct command.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your habit:</strong> in 1-2 sentences, describe what you'll actually do the next time a command you typed doesn't work.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I'll read..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Summary &amp; critical thinking</h2>
+<p>Three moves carried this whole reading: check where you are before doing anything else, look at what's actually there instead of assuming, and read an error message for exactly what it says instead of guessing.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a logistics coordinator opens a new laptop for their first day and is handed a folder of shipping manifests over a shared network drive. Before opening a single file, which two commands would give them the most reliable read on where they are and what's actually in front of them?</p>
+<button type="button" class="mlrk-choice" data-a="pwdls"><code>pwd</code>, then <code>ls</code></button>
+<button type="button" class="mlrk-choice" data-a="cdcat"><code>cd</code>, then <code>cat</code>, on a file they haven't confirmed exists yet</button>
+<button type="button" class="mlrk-choice" data-a="clear"><code>clear</code>, then <code>echo</code></button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what's the actual difference between a command that changes something (like <code>cd</code>) and one that only reports information (like <code>pwd</code> or <code>ls</code>)?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Thinking ahead</h2>
+<p>Typing a command instead of clicking an icon is the exact shape reused constantly from here forward: tracking changes to a project's files, running a script instead of double-clicking it, and connecting to a database from a command-line client all start with the same working-directory awareness practiced here.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add meet-your-terminal-reading.json
+git commit -m "Complete meet your terminal reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue, you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://ubuntu.com/tutorials/command-line-for-beginners" target="_blank" rel="noopener">Ubuntu: The Linux command line for beginners</a> — a short official walkthrough of the exact commands practiced here.</li>
+<li><a href="https://www.codecademy.com/learn/learn-the-command-line" target="_blank" rel="noopener">Codecademy: Learn the Command Line</a> — a free, hands-on course for more practice at your own pace.</li>
+<li><a href="https://www.learnenough.com/command-line-tutorial" target="_blank" rel="noopener">Learn Enough Command Line to Be Dangerous</a> — a free, readable introduction that goes a bit deeper.</li>
+<li><a href="https://explainshell.com/" target="_blank" rel="noopener">explainshell.com</a> — paste in any command you find online and see a plain-English breakdown of every part of it.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
 <script>
-const PAGEKEY='m0_terminal_prep_v1',TITLE='Module 0 — Meet Your Terminal',FILE='module0_terminal_prep';
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "meet-your-terminal-reading";
+  const TITLE = "Meet Your Terminal";
 
-const STORE=PAGEKEY;
-let work={answers:{},notes:{},terminal:[]};
-try{const old=JSON.parse(localStorage.getItem(STORE)||'null');if(old)work=Object.assign(work,old)}catch(e){}
-function save(){localStorage.setItem(STORE,JSON.stringify(work))}
-function snapshot(){return{activity:TITLE,answers:work.answers,notes:work.notes,terminal:work.terminal,generated:new Date().toISOString()}}
-function md(s){let x='# '+s.activity+'\n\nGenerated: '+s.generated+'\n\n## Answers\n';for(const[k,v]of Object.entries(s.answers))x+='- **'+k+'**: '+v+'\n';x+='\n## Written responses\n';for(const[k,v]of Object.entries(s.notes))x+='### '+k+'\n'+v+'\n\n';if(s.terminal.length){x+='## Terminal practice\n';for(const r of s.terminal)x+='`$ '+r.command+'`\n\n[Output]:\n```\n'+r.output+'\n```\n\n'}return x}
-function txt(s){let x=s.activity+'\nGenerated: '+s.generated+'\n\nANSWERS\n';for(const[k,v]of Object.entries(s.answers))x+=k+': '+v+'\n';x+='\nWRITTEN RESPONSES\n';for(const[k,v]of Object.entries(s.notes))x+=k+':\n'+v+'\n\n';if(s.terminal.length){x+='TERMINAL PRACTICE\n';for(const r of s.terminal)x+='$ '+r.command+'\n[Output]:\n'+r.output+'\n\n'}return x}
-function dl(name,content,type){try{const b=new Blob([content],{type});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},800);return true}catch(e){return false}}
-function exportFB(ok,label){show('exportfb',ok?'<strong>'+label+' created.</strong> Keep a copy.':'<strong>File creation was blocked.</strong> Use Show plain text below.',ok)}
-document.getElementById('md').onclick=()=>exportFB(dl(FILE+'.md',md(snapshot()),'text/plain;charset=utf-8'),'Markdown file');
-document.getElementById('json').onclick=()=>exportFB(dl(FILE+'.json',JSON.stringify(snapshot(),null,2),'application/json;charset=utf-8'),'JSON file');
-document.getElementById('txt').onclick=()=>exportFB(dl(FILE+'.txt',txt(snapshot()),'text/plain;charset=utf-8'),'TXT file');
-document.getElementById('plain').onclick=()=>{const p=document.getElementById('plainPanel'),t=document.getElementById('plainOut');t.value=txt(snapshot());p.style.display='block';t.focus();t.select();show('exportfb','<strong>Plain text is ready.</strong> Use Ctrl+C or Command+C.',true)};
-document.getElementById('selectAll').onclick=()=>{const t=document.getElementById('plainOut');t.focus();t.select()};
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
 
-const bar=document.getElementById('bar');function prog(){const d=document.documentElement,m=d.scrollHeight-d.clientHeight;bar.style.width=(m?d.scrollTop/m*100:100)+'%'}document.addEventListener('scroll',prog,{passive:true});prog();
-function show(id,msg,ok=true){const e=document.getElementById(id);e.innerHTML=msg;e.className='feedback show'+(ok?'':' bad');e.focus()}
-document.querySelectorAll('[data-flip]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.flip).classList.toggle('open'));
-document.querySelectorAll('textarea[data-note]').forEach(t=>{t.value=work.notes[t.dataset.note]||'';t.addEventListener('input',()=>{work.notes[t.dataset.note]=t.value;save()})});
+  K.quiz({id:"q-firstcmd", buttonSelector:"#card-firstcmd .mlrk-choice", feedbackSelector:"#firstcmdfb", correct:"pwd",
+    feedback:{pwd:"Confirming where you are first means every command you run after this one lands where you actually expect.",
+              cd:"Moving before you know where you started makes it harder to tell what actually happened.",
+              cat:"Opening a file before confirming your location risks opening the wrong one entirely."}});
 
-document.querySelectorAll('.navq').forEach(b=>b.onclick=()=>{work.answers.navigation_first=b.dataset.a;save();show('navfb',b.dataset.a==='pwd'?'<strong>Correct.</strong> pwd tells you your current location before you decide where to move.':'<strong>Not quite.</strong> Start by finding out where you are; then inspect what is there.',b.dataset.a==='pwd')});
-document.querySelectorAll('.errq').forEach(b=>b.onclick=()=>{work.answers.error_response=b.dataset.a;save();show('errfb',b.dataset.a==='read'?'<strong>Correct.</strong> The error names the unrecognized command, so inspect what you typed before trying something else.':'<strong>Not quite.</strong> Random retries hide the useful clue. Read the error and inspect the command first.',b.dataset.a==='read')});
-function fresh(){return{cwd:'/home/student/market-check',dirs:new Set(['/home/student/market-check','/home/student/market-check/data','/home/student/market-check/notes']),files:{'/home/student/market-check/data/ridership.csv':'station,weekday_riders,accessible\nHarbor,1842,true\nPine,963,false','/home/student/market-check/notes/questions.txt':'Which station changed most this month?'},shell:'/bin/zsh'}}
-let sim=fresh();
-function children(){const pre=sim.cwd+'/';let s=new Set();for(const d of sim.dirs)if(d.startsWith(pre)){let r=d.slice(pre.length);if(r&&!r.includes('/'))s.add(r)}for(const p in sim.files)if(p.startsWith(pre)){let r=p.slice(pre.length);if(r&&!r.includes('/'))s.add(r)}return [...s].sort()}
-function path(x){return x.startsWith('/')?x:sim.cwd+'/'+x}
-function exec(raw){const c=raw.trim().replace(/\s+/g,' ');let m;if(c==='pwd')return[true,sim.cwd,'pwd printed your current location.'];if(c==='ls')return[true,children().join('\n')||'(empty directory)','ls listed what is in this folder.'];if(c==='echo $SHELL')return[true,sim.shell,'This shows the shell used by this simulated terminal.'];if(c==='git --version')return[true,'git version 2.45.2','A version number means Git is available in this simulation.'];if(c==='code --version')return[true,'1.92.1','A version number means the VS Code command-line tool is available in this simulation.'];if(c==='git config --global user.name')return[true,'Jordan Analyst','Git can use this identity when creating commits.'];if(c==='git config --global user.email')return[true,'jordan@example.test','Git can use this email when creating commits.'];if(c==='gti status')return[false,'zsh: command not found: gti','This failure is intentional: gti is a typo. Read the error and inspect the command.'];m=c.match(/^cd (.+)$/);if(m){if(m[1]==='..'){sim.cwd=sim.cwd.substring(0,sim.cwd.lastIndexOf('/'))||'/';return[true,'','Moved up one folder.']}let p=path(m[1]);if(!sim.dirs.has(p))return[false,'cd: no such file or directory: '+m[1],'Use ls before guessing a folder name.'];sim.cwd=p;return[true,'','Changed directory to '+sim.cwd+'.']}m=c.match(/^head -n ([1-9]\d*) (.+)$/);if(m){let p=path(m[2]);if(!(p in sim.files))return[false,'head: '+m[2]+': No such file','Check the path with pwd and ls.'];return[true,sim.files[p].split('\n').slice(0,+m[1]).join('\n'),'head showed the first '+m[1]+' lines so you can inspect the file before making assumptions.']}return[false,'command not recognized in this simulator','Use a command taught in this reading. Open “Need a nudge?” if needed.']}
-function append(c,o){const h=document.getElementById('history'),d=document.createElement('div');d.style.marginTop='14px';const a=document.createElement('div');a.textContent='$ '+c;const b=document.createElement('div');b.textContent='[Output]:';const e=document.createElement('div');e.textContent=o||'(no output)';d.append(a,b,e);h.appendChild(d);h.scrollTop=h.scrollHeight}
-function run(){const i=document.getElementById('cmd'),c=i.value.trim();if(!c)return;const r=exec(c);append(c,r[1]);work.terminal.push({command:c,output:r[1]});save();show('termfb','<strong>'+(r[0]?'Command ran.':'Read the output.')+'</strong> '+r[2],r[0]);i.value='';i.focus()}
-document.getElementById('run').onclick=run;document.getElementById('cmd').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();run()}});document.getElementById('reset').onclick=()=>{sim=fresh();work.terminal=[];save();document.getElementById('history').textContent='You are in /home/student/market-check\nA practice project is ready.\nType pwd or ls to begin.';show('termfb','<strong>Practice reset.</strong>',true)};
-</script></body></html>
+  K.quiz({id:"q-checktools", buttonSelector:"#card-checktools .mlrk-choice", feedbackSelector:"#checktoolsfb", correct:"installed",
+    feedback:{installed:"A real version number is the terminal confirming it found the program and successfully ran it, right now, from right here.",
+              restart:"Nothing about running a command depends on restarting the computer afterward.",
+              latest:"A version number only confirms the tool is installed and reachable. It says nothing about whether it's the newest release."}});
+
+  K.quiz({id:"q-errread", buttonSelector:"#card-errread .mlrk-choice", feedbackSelector:"#errreadfb", correct:"read",
+    feedback:{read:"The error names the exact word it didn't recognize, gti, which is the clue that points straight at a typo.",
+              spam:"Random retries can accidentally work while hiding the actual clue the error already gave you.",
+              reinstall:"An unrecognized single letter swap is almost always a typo, not evidence the whole tool is broken."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"ls only shows a folder's contents the very first time you enter it. After that, you have to remember what's there.", correct:false,
+      hint:"Think about whether ls reads the folder fresh every time, or only once.",
+      explain:"ls reads the folder's actual current contents every single time you run it, not just the first time."},
+    {value:"b", label:"cd changes which folder is the working directory. On its own, it doesn't print anything about that folder's contents.", correct:true,
+      hint:"Compare cd against pwd and ls from section 3. Does cd's job overlap with either of theirs?",
+      explain:"This matches section 3: cd moves you, it doesn't report anything back on its own."},
+    {value:"c", label:"A misspelled or missing command produces an error message naming the exact word the terminal didn't recognize.", correct:true,
+      hint:"Revisit the gti example from section 7. What exactly did that error name?",
+      explain:"This is the same reading-the-error habit from section 7: the error names the exact unrecognized word."},
+    {value:"d", label:"Every terminal command must include a filename as an argument, or it won't run.", correct:false,
+      hint:"Think back to pwd and clear from earlier sections. Did either of them need a filename to run?",
+      explain:"pwd and clear both run with no filename at all. Plenty of commands need no argument."}
+  ]});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"pwdls",
+    feedback:{pwdls:"pwd then ls is the fastest, lowest-risk way to confirm your location and what's actually there before touching anything.",
+              guess:"Guessing a path from memory risks opening the wrong file, or no file at all, and looks worse in an interview than pausing to check.",
+              ask:"Part of the whole point is proving you can do this yourself, without someone else driving."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"typo",
+    feedback:{typo:"An error naming a specific, slightly-off word is exactly what a one-character typo looks like.",
+              broken:"A single unrecognized command is not evidence the whole terminal is broken.",
+              random:"Terminals don't reject correct commands at random. The error is naming something specific for a reason."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"pwdls",
+    feedback:{pwdls:"pwd confirms location, then ls confirms what's actually there, before any file gets opened or trusted.",
+              cdcat:"Opening a file you haven't confirmed exists risks an error, or worse, opening the wrong file entirely.",
+              clear:"clear only wipes the screen, and echo just repeats text back. Neither one reports anything real about the folder."}});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.terminal("#terminal1", {
+    id:"act-terminal",
+    minCommands:4,
+    startPath:"/home/robin/foodbank-intake",
+    filesystem:{
+      "/home/robin": {type:"dir", children:["foodbank-intake"]},
+      "/home/robin/foodbank-intake": {type:"dir", children:["donations","notes","README.md"]},
+      "/home/robin/foodbank-intake/donations": {type:"dir", children:["march_totals.csv"]},
+      "/home/robin/foodbank-intake/donations/march_totals.csv": {type:"file", contents:"date,donor,pounds\n2026-03-02,Riverside Market,410\n2026-03-05,Corner Bakery,85\n2026-03-09,Union Grocers,260"},
+      "/home/robin/foodbank-intake/notes": {type:"dir", children:["intake_notes.txt"]},
+      "/home/robin/foodbank-intake/notes/intake_notes.txt": {type:"file", contents:"Ask the warehouse lead why March 9 has no pickup confirmation."},
+      "/home/robin/foodbank-intake/README.md": {type:"file", contents:"Project folder for tracking monthly donation totals."}
+    },
+    commands:{
+      git(args){
+        if(args[0]==="--version") return "git version 2.43.0";
+        return "git: this simulator only recognizes 'git --version' here";
+      },
+      code(args){
+        if(args[0]==="--version") return "1.93.1";
+        return "code: this simulator only recognizes 'code --version' here";
+      },
+      python3(args){
+        if(args[0]==="--version") return "Python 3.11.9";
+        return "python3: this simulator only recognizes 'python3 --version' here";
+      }
+    }
+  });
+
+  K.dragDrop("#dragarea", "act-drag-commands");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneWhere", label:"pwd", expectedLabel:"Where am I right now?"},
+    chip2:{expectedId:"zoneWhat", label:"ls", expectedLabel:"What's inside this folder?"},
+    chip3:{expectedId:"zoneMove", label:"cd NAME", expectedLabel:"Move me somewhere else."}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-orient", correctOrder:["pwd","ls1","cd","ls2"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"P0KeDt-GuEI"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const ok = $("#blankinput").value.trim().toLowerCase()==="ls";
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> ls lists everything sitting in the working directory.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing command is <code>ls</code>.";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think about a physical space you navigate on autopilot, like your own kitchen. What's the equivalent of pwd and ls when you walk into someone else's kitchen for the first time instead?",
+    "If you had to explain 'read the error before you guess' to a friend using something from your own daily life, like a warning light in a car, what would you compare it to?",
+    "Where have you already relied on checking your current status before acting, like checking a GPS location before choosing a turn? How is that the same habit as pwd before cd?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["software-practice"],
+      skills:["terminal-command-line"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>
