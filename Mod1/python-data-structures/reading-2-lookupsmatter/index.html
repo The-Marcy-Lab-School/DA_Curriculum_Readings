@@ -1,82 +1,596 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Lookups Matter | Python Data Structures Reading 2</title><style>
-:root{--ink:#18221c;--muted:#59645d;--paper:#fbfaf6;--card:#fff;--forest:#244b32;--sage:#dce8df;--blue:#2879b8;--gold:#d9a72d;--red:#b43b45;--purple:#674cb4;--line:#d8dfda;--good:#e9f6ee;--bad:#fbecef;--focus:#ffbf47;--code:#151c18}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--paper);color:var(--ink);line-height:1.62}
-button,textarea,select,input{font:inherit}button:focus,textarea:focus,select:focus,input:focus,summary:focus{outline:4px solid var(--focus);outline-offset:3px}
-header{background:var(--forest);color:#fff;padding:3rem 1.25rem}.wrap,section{max-width:980px;margin:auto}.eyebrow{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#dce8df}
-h1{font-size:clamp(2.45rem,6vw,4.7rem);line-height:1.02;margin:.4rem 0 1rem}h2{font-size:2rem;line-height:1.15;margin-top:0}h3{margin-top:0}.lead{font-size:1.18rem;max-width:820px}
-.meta{display:flex;gap:.65rem;flex-wrap:wrap}.pill{border:1px solid #a8b9ab;border-radius:999px;padding:.3rem .75rem}
-.progress-shell{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:20}.progress{height:8px;background:#e7ece8}.bar{height:100%;width:0;background:var(--gold)}nav{max-width:980px;margin:auto;padding:.55rem 1rem;color:var(--muted);font-size:.92rem}
-main{padding:2rem 1.25rem 5rem}section{margin-bottom:3.4rem}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.3rem;box-shadow:0 3px 14px rgba(20,30,25,.05)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}.callout{border-left:6px solid var(--blue);padding:1rem 1.2rem;background:#eef6fb;border-radius:10px}.warning{border-left:6px solid var(--gold);padding:1rem 1.2rem;background:#fff6df;border-radius:10px}
-button{font-weight:750;border:2px solid var(--forest);background:white;color:var(--forest);border-radius:12px;padding:.72rem 1rem;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.4rem 0}.choice:hover{background:#f0f5f1}
-.feedback{display:none;margin-top:.8rem;padding:.9rem;border-radius:10px}.feedback.show{display:block}.feedback.good{background:var(--good)}.feedback.bad{background:var(--bad)}
-.term{min-height:150px;text-align:left}.term strong{font-size:1.1rem}.term .back{display:none}.term.flipped .front{display:none}.term.flipped .back{display:block}
-textarea{width:100%;min-height:105px;border:2px solid #aeb8b1;border-radius:10px;padding:.75rem;background:#fff}.small{font-size:.92rem;color:var(--muted)}
-.codebox{background:var(--code);color:#f4f6f4;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:130px;margin:0}.code-actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}.code-actions button{border-color:#c8d7cb;color:#fff;background:#243128;font-family:inherit}
-.result{margin-top:1rem;padding:1rem;background:#f3f0fb;border-radius:12px;display:none}.result.show{display:block}.bridge{border-top:8px solid var(--gold)}
-.export{background:#f1f5f2;border:1px solid var(--line);border-radius:18px;padding:1.3rem}.actions{display:flex;gap:.6rem;flex-wrap:wrap}.plain{display:none;margin-top:1rem}.plain.show{display:block}
-footer{background:var(--forest);color:#fff;padding:2rem 1.25rem}@media(max-width:700px){h2{font-size:1.65rem}}
-</style></head><body>
-<header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading 2</div><h1>Lookups Matter</h1>
-<p class="lead">Two programs can give the same answer and still behave very differently as the data grows. This reading asks the question working data teams care about: how much work does Python have to do to find what you want?</p>
-<div class="meta"><span class="pill">About 12–15 min</span><span class="pill">Big-O intuition</span><span class="pill">Project prep</span><span class="pill">Saves locally</span></div></div></header>
-<div class="progress-shell"><div class="progress"><div class="bar" id="bar"></div></div><nav>Goal: connect hashing, membership checks, and O(1) vs. O(n) to structure choice.</nav></div>
-<main>
-<section><h2>1. The wristband problem</h2><p>A festival gate needs to answer one question thousands of times: <strong>“Has this wristband code already entered?”</strong></p>
-<div class="card"><p>Which design sounds better if the collection may become huge?</p><button class="choice q1" data-a="scan">Keep every code in a list and scan from the beginning each time.</button><button class="choice q1" data-a="membership">Keep unique codes in a structure designed for fast membership checks.</button><div id="q1f" class="feedback" tabindex="-1"></div></div>
-<div class="callout" style="margin-top:1rem"><strong>Same answer, different work.</strong> Big-O describes how the amount of work grows as the input grows.</div></section>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lookups Matter — Python Data Structures</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:740px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+.lookup-compare{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.lookup-stat{background:var(--mlrk-white);border:1px solid var(--mlrk-divider-on-light);border-radius:14px;padding:1rem}
+.lookup-big{font-size:1.9rem;font-weight:800;color:var(--mlrk-bg-brand-deep)}
+.lookup-meter{height:20px;background:var(--mlrk-gray-200);border-radius:999px;overflow:hidden;margin-top:.5rem}
+.lookup-fill{height:100%;background:var(--mlrk-bg-brand-deep);width:8%;transition:width .3s}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}.lookup-compare{grid-template-columns:1fr}}
+</style>
+</head><body>
 
-<section><h2>2. Vocabulary: speed without the hype</h2><div class="grid">
-<button class="card term"><span class="front"><strong>hashing</strong><br><span class="small">Flip</span></span><span class="back"><strong>hashing</strong><br>Python uses a hash to help place and find hashable keys/elements efficiently in dicts and sets.</span></button>
-<button class="card term"><span class="front"><strong>O(1)</strong><br><span class="small">Flip</span></span><span class="back"><strong>O(1) — constant time</strong><br>The work does not grow in proportion to the number of stored items. It does <em>not</em> literally mean zero time.</span></button>
-<button class="card term"><span class="front"><strong>O(n)</strong><br><span class="small">Flip</span></span><span class="back"><strong>O(n) — linear time</strong><br>The work can grow roughly with the number of items because the program may need to scan them.</span></button>
-<button class="card term"><span class="front"><strong>membership check</strong><br><span class="small">Flip</span></span><span class="back"><strong>membership check</strong><br>A question like <code>x in collection</code>: is this value present?</span></button>
-</div></section>
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Lookups Matter</h1>
+<p class="mlrk-lead">A payments company's fraud team keeps a growing list of account numbers already confirmed fraudulent, and every incoming transaction has to be checked against it before it's allowed to complete: <code>if account_number in flagged_accounts:</code>. That single line worked fine in testing against a handful of sample accounts. In production, with hundreds of thousands of flagged accounts, the exact same line starts making transactions time out, and nobody touched the logic. This reading is about why that one line can behave so differently depending on what <code>flagged_accounts</code> actually is underneath.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~40–42 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
 
-<section><h2>3. Read the growth, not the stopwatch</h2><div class="card"><p><strong>If a list membership check may require checking more items as the list grows, which description fits?</strong></p>
-<button class="choice q2" data-a="o1">O(1)</button><button class="choice q2" data-a="on">O(n)</button><div id="q2f" class="feedback" tabindex="-1"></div></div>
-<div class="warning" style="margin-top:1rem"><strong>Misconception guard:</strong> O(n) does not automatically mean “slow,” and O(1) does not mean “instant.” These describe growth behavior, which becomes more important at scale.</div></section>
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
 
-<section><h2>4. Simulated lookup race</h2><p>This is a conceptual simulator, not a benchmark. Increase the collection size and compare how the number of checks can scale.</p>
-<div class="card"><label for="size"><strong>Collection size</strong></label><select id="size"><option value="10">10</option><option value="1000">1,000</option><option value="100000">100,000</option><option value="10000000">10,000,000</option></select><div class="actions" style="margin-top:1rem"><button id="race">Compare lookup work</button></div><div id="raceout" class="result"></div></div></section>
+<main class="mlrk-main"><div class="mlrk-wrap">
 
-<section><h2>5. Structure decision: deduplicate + check</h2><div class="card"><p><strong>You receive millions of survey response IDs. You only need unique IDs and repeated “have I seen this ID?” checks. Strongest structure?</strong></p>
-<button class="choice q3" data-a="list">list</button><button class="choice q3" data-a="tuple">tuple</button><button class="choice q3" data-a="dict">dict</button><button class="choice q3" data-a="set">set</button><div id="q3f" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
 
-<section><h2>6. Mini-pipeline reasoning</h2><div class="grid">
-<div class="card"><strong>Incoming rows</strong><p>A sequence of records that may be processed in order.</p></div><div class="card"><strong>Unique IDs</strong><p>Deduplicate and check membership.</p></div><div class="card"><strong>Totals by category</strong><p>Map each category name to an accumulated total.</p></div><div class="card"><strong>Frozen settings</strong><p>A small ordered configuration that should not be reassigned.</p></div></div>
-<div class="card" style="margin-top:1rem"><p><strong>Which sequence best matches those needs?</strong></p><button class="choice q4" data-a="right">list → set → dict → tuple</button><button class="choice q4" data-a="wrong1">set → list → tuple → dict</button><button class="choice q4" data-a="wrong2">dict → tuple → list → set</button><div id="q4f" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Algorithmic Complexity (Big-O)</strong> — comparing two approaches to the same problem by how their cost grows as the amount of data grows, backed by your own code or example, not just naming the pattern from memory.</p>
+  </div>
+</section>
 
-<section><h2>7. Explain the tradeoff</h2><label for="explain"><strong>Why might a set be a stronger choice than a list for repeated membership checks on a very large collection of unique IDs?</strong></label><textarea id="explain" data-save placeholder="Use the words membership, O(1), and O(n) if you can."></textarea><p><button id="hint">Generate a sentence frame</button></p><div id="hintout" class="result"></div></section>
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
 
-<section class="bridge"><h2>8. Required bridge to lecture + project</h2><p>You just connected structure choice to <strong>how work scales</strong>. In lecture, you will see real Python examples of set/dict hashing and compare membership behavior with a list. In the project, your inventory tracker will need a dictionary-keyed lookup by name rather than repeatedly scanning a list; recognizing that lookup pattern is part of the Big-O decision habit this lesson builds.</p>
-<div class="card"><p><strong>New situation:</strong> A command-line tool repeatedly needs to find a device record by its unique label. Which design habit should you recognize?</p><button class="choice qb" data-a="keyed">Prefer a keyed lookup structure when the label can be a valid key.</button><button class="choice qb" data-a="scan">Always scan a list because lists are simpler.</button><button class="choice qb" data-a="tuple">Store all device records in one tuple because tuples are immutable.</button><div id="qbf" class="feedback" tabindex="-1"></div></div>
-<label for="bring"><strong>Bring to lecture/lab:</strong> What question will you ask yourself before choosing a list, dict, or set for a lookup-heavy task?</label><textarea id="bring" data-save></textarea></section>
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>The fraud team's check-in code is short. Every transaction runs through one line: <code>if account_number in flagged_accounts:</code>. If it matches, the transaction gets blocked. That line doesn't care whether <code>flagged_accounts</code> holds ten entries or ten million; the syntax is identical either way. What changes, quietly, is how much work Python has to do to answer it.</p>
+<p>If <code>flagged_accounts</code> is a plain list, answering "is this account in here?" means comparing <code>account_number</code> against the first entry, then the second, and so on, until a match turns up or there's nothing left to check. A list with 10 entries might only need a handful of comparisons. A list with 500,000 entries might need up to 500,000, in the worst case, before it can say "no, this one isn't flagged." The check itself never got rewritten. The blocklist just grew.</p>
+<p>If <code>flagged_accounts</code> is a set instead (or the account number is being checked as a key against a dict), the exact same line of code, <code>account_number in flagged_accounts</code>, doesn't need to compare against every existing entry first. It reaches an answer in a way that stays close to the same amount of work, whether the blocklist holds ten accounts or ten million. Same three words, <code>in flagged_accounts</code>, wildly different amount of work underneath, depending entirely on which container is sitting behind that name.</p>
 
-<section><h2>9. Keep a copy</h2><div class="export"><div class="actions"><button id="md">Create Markdown file</button><button id="json">Create JSON file</button><button id="txt">Create TXT file</button><button id="show">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:260px"></textarea><p><button id="selectall">Select all text</button></p></div></div></section>
-</main><footer><div class="wrap"><strong>Lecture-ready question:</strong> When does the convenience of one structure become a scaling problem?</div></footer>
+<svg class="mlrk-illustration" viewBox="0 0 760 280" role="img" aria-labelledby="lookupsTitle lookupsDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="lookupsTitle">Comparing a list scan and a set check answering the same membership question</title>
+  <desc id="lookupsDesc">On the left, six flagged-account cards sit in a row, with a magnifying glass currently checking the fourth one, and a caption noting the worst case checks all six before an answer. On the right, one incoming account number points with a single direct arrow to a flagged result, while a loose cluster of many other stored accounts sits nearby but is never individually checked, with a caption noting this stays the same no matter how many accounts are in that cluster.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="175" y="20" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Checking a list</text>
+    <g font-size="12" font-weight="700" text-anchor="middle">
+      <rect x="10" y="40" width="54" height="40" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+      <text x="37" y="64" fill="#261F1D">6614</text>
+      <rect x="74" y="40" width="54" height="40" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+      <text x="101" y="64" fill="#261F1D">2203</text>
+      <rect x="138" y="40" width="54" height="40" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+      <text x="165" y="64" fill="#261F1D">8890</text>
+      <rect x="202" y="40" width="54" height="40" rx="8" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+      <text x="229" y="64" fill="#261F1D">4471</text>
+      <rect x="266" y="40" width="54" height="40" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+      <text x="293" y="64" fill="#261F1D">1058</text>
+      <rect x="330" y="40" width="54" height="40" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+      <text x="357" y="64" fill="#261F1D">7732</text>
+    </g>
+    <circle cx="229" cy="10" r="10" fill="none" stroke="#2274B5" stroke-width="3.5"/>
+    <line x1="236" y1="17" x2="246" y2="27" stroke="#2274B5" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="229" y1="20" x2="229" y2="38" stroke="#2274B5" stroke-width="2.5"/>
+    <polygon points="60,90 68,90 64,98" fill="#264326"/>
+    <polygon points="188,90 196,90 192,98" fill="#264326"/>
+    <text x="197" y="122" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">checked one at a time, in order</text>
+    <text x="197" y="142" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">worst case: all 6 compared before an answer</text>
+
+    <text x="600" y="20" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Checking a set</text>
+    <rect x="505" y="40" width="130" height="42" rx="8" fill="#FFFCF7" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="570" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">8890 ?</text>
+
+    <line x1="635" y1="61" x2="683" y2="61" stroke="#264326" stroke-width="4"/>
+    <polygon points="683,53 683,69 697,61" fill="#264326"/>
+
+    <rect x="640" y="90" width="105" height="44" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="692" y="117" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">Flagged</text>
+    <polyline points="656,113 663,120 675,105" fill="none" stroke="#264326" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <g fill="#FECC5B" stroke="#83671C" stroke-width="2">
+      <circle cx="460" cy="170" r="15"/><circle cx="505" cy="200" r="15"/><circle cx="550" cy="160" r="15"/>
+      <circle cx="600" cy="205" r="15"/><circle cx="645" cy="165" r="15"/><circle cx="690" cy="200" r="15"/>
+    </g>
+    <text x="575" y="245" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">goes straight to the answer</text>
+    <text x="575" y="265" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">same either way, no matter how many accounts are stored here</text>
+  </g>
+</svg>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> a membership check that quietly gets slower as data grows is one of the most common real-world performance bugs there is, precisely because it looks completely fine in a small test and only shows up once real traffic hits it. It's also a question interviewers ask directly: "why did you use a dict or set here instead of a list?" is a normal, expected follow-up the moment a candidate's code includes an <code>in</code> check inside a loop that runs a lot.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know what a list, tuple, dict, and set are each built to hold. This is about a habit worth building on top of that: reading a piece of code and asking what container sits behind an <code>in</code> check before assuming it's fast, since the exact same three characters can mean very different amounts of work depending on the answer.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before lookups matter</h2>
+<p class="mlrk-small">A few skills get reused directly below: what Python's <code>in</code> operator actually returns, comparing values for equality, and looping through a collection in order. Test each one before moving on.</p>
+
+<div class="mlrk-card" id="card-recall-returns"><p><strong>What does the expression below evaluate to?</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">"H-204" in ["H-100", "H-204", "H-310"]</div></div>
+<button type="button" class="mlrk-choice" data-a="true"><code>True</code></button>
+<button type="button" class="mlrk-choice" data-a="false"><code>False</code></button>
+<button type="button" class="mlrk-choice" data-a="index">The index <code>1</code></button>
+<div id="recallreturnsfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-trace" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">found = False
+for entry in ["A", "B", "C"]:
+    if entry == "B":
+        found = True
+print(found)</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="true"><code>True</code></button>
+<button type="button" class="mlrk-choice" data-a="false"><code>False</code></button>
+<button type="button" class="mlrk-choice" data-a="b"><code>B</code></button>
+<div id="recalltracefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-scan" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a teammate rewrites <code>if x in checked_list:</code> as their own <code>for</code> loop, comparing <code>x</code> against each entry in order and stopping as soon as one matches. Compared to the original <code>in</code> check on that same list, how much work does the rewritten loop do?</p>
+<button type="button" class="mlrk-choice" data-a="same">About the same. <code>in</code> on a list already compares entries one at a time, in order, until it finds a match.</button>
+<button type="button" class="mlrk-choice" data-a="less">Far less, since writing it as a loop skips most of the comparisons.</button>
+<button type="button" class="mlrk-choice" data-a="more">Far more, since a manual loop always has to check every single entry no matter what.</button>
+<div id="recallscanfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-worst" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> a list holds 12,000 entries, and the value being searched for isn't in it at all. In the worst case, how many entries does a plain <code>in</code> check compare against before it can answer?</p>
+<button type="button" class="mlrk-choice" data-a="12000">12,000</button>
+<button type="button" class="mlrk-choice" data-a="0">0</button>
+<button type="button" class="mlrk-choice" data-a="half">About 6,000, half the list</button>
+<div id="recallworstfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">The <code>in</code> operator, comparing two values for equality, and looping through a collection in order all reappear below exactly as they work here.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>membership test</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Membership test</strong><br>Asking whether a value already exists in a collection. What that question costs to answer depends entirely on the collection underneath it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>in operator</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>The <code>in</code> operator</strong><br>Python's built-in way to run a membership test: <code>value in collection</code> returns <code>True</code> or <code>False</code>. The same syntax works on a list, tuple, dict, or set, but not the same amount of work underneath.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>O(1)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>O(1)</strong><br>The number of comparisons a membership test needs stays about flat as the collection grows. Doubling the collection doesn't double the work.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>O(n)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>O(n)</strong><br>The number of comparisons a membership test may need grows right along with the size of the collection: check one, check two, and keep going until a match turns up or nothing is left.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>average case</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Average case</strong><br>What a membership test typically costs across many realistic lookups, not just the single worst possible one. A set or dict's average-case membership test stays close to O(1); a list's average case for membership is still O(n).</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>dict key membership</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Dict key membership</strong><br><code>x in some_dict</code> tests whether x is one of the dict's keys, not one of its values. Checking against values instead needs <code>x in some_dict.values()</code>, which scans like a list.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. The mystery slowdown</h2>
+<div class="mlrk-card" id="card-slowdown"><p><strong>A fraud-check service passed every test against a small sample blocklist. In production, with hundreds of thousands of flagged accounts, the exact same line, <code>if account_number in flagged_accounts:</code>, starts timing out under load. Nobody touched the logic. What's the most likely explanation?</strong></p>
+<button type="button" class="mlrk-choice" data-a="container"><code>flagged_accounts</code> is a list (or tuple), so each check may need to compare against more and more entries as the blocklist grows.</button>
+<button type="button" class="mlrk-choice" data-a="operator">Python's <code>in</code> operator gets slower over time no matter what it's checking.</button>
+<button type="button" class="mlrk-choice" data-a="servers">The production servers must simply be weaker than the test servers.</button>
+<div id="slowdownfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem"><strong>Careful:</strong> O(1) doesn't mean an operation is literally instant, and O(n) doesn't automatically mean an operation is slow. Both describe how the cost changes as the data grows, not a single stopwatch reading on one run.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. As the blocklist grows</h2>
+<p>Try a few different blocklist sizes below and compare what a list scan's worst case looks like against a set's.</p>
+<div class="mlrk-card">
+<label for="blocklist-size"><strong>Blocklist size:</strong></label>
+<select id="blocklist-size">
+  <option value="10">10 accounts</option>
+  <option value="1000">1,000 accounts</option>
+  <option value="100000">100,000 accounts</option>
+  <option value="5000000">5,000,000 accounts</option>
+</select>
+<div class="lookup-compare" style="margin-top:1rem">
+  <div class="lookup-stat">
+    <div class="lookup-big">O(n)</div>
+    <p>List scan, worst-case comparisons: <strong id="listCount">10</strong></p>
+    <div class="lookup-meter"><div id="listBar" class="lookup-fill"></div></div>
+  </div>
+  <div class="lookup-stat">
+    <div class="lookup-big">O(1)</div>
+    <p>Set check cost: <strong>stays about flat</strong></p>
+    <div class="lookup-meter"><div class="lookup-fill" style="width:10%"></div></div>
+  </div>
+</div>
+<p class="mlrk-small" style="margin-top:.8rem">Try at least a few different sizes above before moving on.</p>
+</div>
+
+<div class="mlrk-card" id="card-double" style="margin-top:1.2rem"><p><strong>Predict:</strong> a blocklist stored as a plain list might need up to 3,000 comparisons in the worst case. If the blocklist doubles to 6,000 entries, what should you expect?</p>
+<button type="button" class="mlrk-choice" data-a="double">Up to about 6,000 comparisons in the worst case.</button>
+<button type="button" class="mlrk-choice" data-a="same">Still up to about 3,000 comparisons.</button>
+<button type="button" class="mlrk-choice" data-a="square">Up to about 9,000,000 comparisons.</button>
+<div id="doublefb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Read the code: fast or slow?</h2>
+<p>Each snippet below runs a membership check on the same account number. Drag each one into the zone matching how its cost behaves as the collection grows, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable"><code>account_number in flagged_accounts</code> — a <strong>set</strong></span>
+  <span id="chip2" class="mlrk-draggable"><code>account_number in flagged_accounts</code> — a <strong>list</strong></span>
+  <span id="chip3" class="mlrk-draggable"><code>account_number in flagged_accounts</code> — a <strong>tuple</strong></span>
+  <span id="chip4" class="mlrk-draggable"><code>account_number in flagged_lookup</code> — a <strong>dict</strong>, checking its keys</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Fast: stays about the same as the collection grows</strong></p><div class="mlrk-dropzone" id="zoneFast"></div></div>
+  <div><p class="mlrk-small"><strong>Slow: grows with the size of the collection</strong></p><div class="mlrk-dropzone" id="zoneSlow"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+
+<div class="mlrk-card" id="card-dictvalues" style="margin-top:1.2rem"><p><strong>Tricky case:</strong> <code>flagged_lookup</code> is a dict mapping each account number to the date it was flagged. A teammate writes <code>if account_number in flagged_lookup.values():</code> instead of <code>if account_number in flagged_lookup:</code>. What changes?</p>
+<button type="button" class="mlrk-choice" data-a="scan">The check now scans every value one at a time instead of checking keys directly, so it's back to a slow, size-dependent check.</button>
+<button type="button" class="mlrk-choice" data-a="same">Nothing changes. <code>.values()</code> is just as fast as checking the dict directly.</button>
+<button type="button" class="mlrk-choice" data-a="faster">It becomes faster, since <code>.values()</code> keeps the dates pre-sorted.</button>
+<div id="dictvaluesfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Trace a scan that finds nothing</h2>
+<p>A 6-entry list of recently reviewed account numbers gets checked for <code>"9004"</code>, which was never actually flagged. Click through the scan below.</p>
+<div id="tracestep"></div>
+<div class="mlrk-card" id="card-worstcase-tf" style="margin-top:1rem"><p><strong>True or false:</strong> even when a value is never found in a list, a plain <code>in</code> check still has to walk past every single entry before it can return <code>False</code>.</p>
+<button type="button" class="mlrk-choice" data-a="true">True</button>
+<button type="button" class="mlrk-choice" data-a="false">False</button>
+<div id="worstcasetffb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Order the steps</h2>
+<p>Click steps, in order, to build the sequence a plain <code>in</code> check follows on a list. Click a step again to remove it if you change your mind, then press "Check my order." This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="start"><span class="mlrk-order-num"></span> Start at the first item in the list.</li>
+  <li class="mlrk-orderitem" data-step="compare"><span class="mlrk-order-num"></span> Compare that item to the value being searched for.</li>
+  <li class="mlrk-orderitem" data-step="match"><span class="mlrk-order-num"></span> If it matches, stop immediately and return True.</li>
+  <li class="mlrk-orderitem" data-step="advance"><span class="mlrk-order-num"></span> If it doesn't match, move to the next item and repeat.</li>
+  <li class="mlrk-orderitem" data-step="exhausted"><span class="mlrk-order-num"></span> If there are no items left to check, return False.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Typed check: make it fast</h2>
+<div class="mlrk-code"><div class="mlrk-screen">flagged_accounts = load_from_database()  # returns a list
+
+# this check runs thousands of times a minute:
+if account_number in flagged_accounts:
+    block_transaction()</div></div>
+<p>Before running that check thousands of times a minute, what's the simplest change that keeps it fast no matter how large <code>flagged_accounts</code> grows?</p>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Convert flagged_accounts into a ____ before the checks start:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about membership checks.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> The same <code>in</code> syntax works on a list, tuple, dict, and set, but the amount of work it does underneath can be very different.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Checking membership in a tuple is just as fast, on average, as checking membership in a set.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> By default, <code>x in some_dict</code> checks whether x is one of the dict's keys, not one of its values.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Once a match is found early in a list, Python still has to keep checking the remaining entries just to be sure.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Watch: lists vs. sets for lookup efficiency</h2>
+<p>As you watch, notice how the video demonstrates the same <code>in</code>-operator syntax on a list versus a set, and pay attention to any real numbers it shows once the collection gets large.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=xzDEEzH8XWk" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching:</strong> what's one number or comparison from the video that made the list-versus-set difference feel concrete, rather than just theoretical?</p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"Why did you use a dict or set here instead of a list?" is one of the most common questions a piece of working code invites in a technical interview or a real code review, especially the moment an <code>in</code> check shows up inside a loop. Interviewers are listening for the reasoning: naming that the check's cost depends on the container, not just producing the right container by habit.</p>
+<p>For data roles, the same question often shows up as deduplication: "how would you check whether you've already seen this ID, across a dataset that keeps growing, without it getting slower and slower?" The expected answer is a set or dict, named with the reasoning, not just the word.</p>
+<p>For software-engineering-leaning roles, expect a direct follow-up on code you've already written: "this line checks membership inside a loop that runs a lot; walk me through why that's fast or slow." Being able to point at the container behind the check, not just the check itself, is what the interviewer is actually listening for.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> you're asked why switching <code>flagged_accounts</code> from a list to a set fixed the fraud-check service's slowdown. What's the strongest answer?</p>
+<button type="button" class="mlrk-choice" data-a="cost">A list's membership check may compare against every existing entry in the worst case, while a set's stays close to the same cost no matter how large it gets, so the fix removes a cost that was quietly growing with the blocklist.</button>
+<button type="button" class="mlrk-choice" data-a="syntax">Sets use different, faster syntax than lists for the <code>in</code> operator.</button>
+<button type="button" class="mlrk-choice" data-a="memory">Sets simply use less memory, which is why the check sped up.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>A code reviewer flags a pull request: <code>if user_id in active_users:</code> sits inside a loop that runs thousands of times per second, and <code>active_users</code> is a list with tens of thousands of entries. What should you check or fix first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="convert">Whether <code>active_users</code> could become a set or dict, since a large list's repeated membership check is exactly the growing cost this pattern describes.</button>
+<button type="button" class="mlrk-choice" data-a="rename">Whether the variable should be renamed to something clearer.</button>
+<button type="button" class="mlrk-choice" data-a="print">Whether adding a print statement before the check will speed it up.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your decision rule:</strong> in 1-2 sentences, describe the question you'd ask yourself before trusting a repeated <code>in</code> check inside a loop that runs a lot.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I check what container..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Summary &amp; critical thinking</h2>
+<p>One line of code, <code>value in collection</code>, can hide two very different realities: a cost that grows with the data, or a cost that stays about flat. The syntax never tells you which one you're getting. Checking what container sits behind that line, before it runs thousands of times, is the habit this whole reading builds.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> an online store checks whether a coupon code has already been redeemed, thousands of times a day, against a table of redeemed codes that keeps growing. Which design keeps that check fast as the table grows?</p>
+<button type="button" class="mlrk-choice" data-a="set">Store redeemed codes in a set (or as dict keys), so checking membership stays close to the same cost no matter how many codes have been redeemed.</button>
+<button type="button" class="mlrk-choice" data-a="list">Store redeemed codes in a list, since a list preserves the order codes were redeemed in.</button>
+<button type="button" class="mlrk-choice" data-a="same">It doesn't matter. Every container checks membership in about the same amount of time.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what's the one question you'd ask about a container before trusting a repeated membership check inside a hot loop?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Thinking ahead</h2>
+<p>This same habit, asking whether a cost grows with the data or stays flat, comes back the moment two entire working solutions to the same problem get compared side by side, not just a single operator like <code>in</code>. The container behind a lookup is one of the first places that growth question shows up in real code, and it's rarely the last.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add python-data-structures-reading2.json
+git commit -m "Complete lookups matter reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://docs.python.org/3/reference/expressions.html#membership-test-operations" target="_blank" rel="noopener">Python docs: Membership test operations</a> — the official reference for how <code>in</code> and <code>not in</code> work.</li>
+<li><a href="https://wiki.python.org/moin/TimeComplexity" target="_blank" rel="noopener">Python Wiki: Time Complexity</a> — the real worst-case cost of list, dict, and set operations, including membership checks.</li>
+<li><a href="https://www.geeksforgeeks.org/python/python-what-makes-sets-faster-than-lists/" target="_blank" rel="noopener">GeeksforGeeks: What Makes Sets Faster Than Lists?</a> — a fuller written explanation of the difference practiced above.</li>
+<li><a href="https://www.pythonmorsels.com/time-complexities/" target="_blank" rel="noopener">Python Morsels: Time complexities of Python's data structures</a> — a readable walkthrough with more operations than just membership checks.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
 <script>
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];let history=[];const storage="pyStructuresR2";
-function save(){localStorage.setItem(storage,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
-function load(){try{const d=JSON.parse(localStorage.getItem(storage)||"{}");for(const [k,v] of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
-$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.onclick=()=>x.classList.toggle("flipped"));
-function quiz(cls,fb,correct,msgs){$$(cls).forEach(b=>b.onclick=()=>{const ok=b.dataset.a===correct,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msgs[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()})}
-quiz(".q1","#q1f","membership",{scan:"A list scan can require more checks as the collection grows.",membership:"That points toward a set (or keyed dict design) whose average membership lookup uses hashing."});
-quiz(".q2","#q2f","on",{o1:"O(1) means the work does not scale with n in the same linear way.",on:"A list membership scan is O(n): the possible work grows with the collection."});
-quiz(".q3","#q3f","set",{list:"A list allows duplicates and membership is O(n).",tuple:"A tuple is immutable but does not solve fast membership/deduplication.",dict:"A dict also has fast key lookup, but if you need only unique IDs and no associated values, a set is the leaner fit.",set:"A set gives uniqueness plus average-case O(1) membership checks."});
-quiz(".q4","#q4f","right",{right:"Each stage uses a structure whose rules match the task: sequence, uniqueness, mapping, then fixed configuration.",wrong1:"This sequence mismatches several needs: incoming rows need not start as a set, and totals by category want key/value pairs.",wrong2:"A tuple does not naturally serve deduplication, and a set is not a fixed ordered configuration."});
-quiz(".qb","#qbf","keyed",{keyed:"A valid unique label can become a dict key, supporting direct keyed lookup instead of repeated linear scanning.",scan:"A scan can work, but repeated O(n) lookups scale poorly as the collection grows.",tuple:"Immutability does not provide keyed lookup."});
-$("#race").onclick=()=>{const n=Number($("#size").value),o=$("#raceout");o.classList.add("show");o.innerHTML=`<strong>Conceptual comparison for ${n.toLocaleString()} items:</strong><br>List scan: worst case up to about <strong>${n.toLocaleString()} item checks</strong> → O(n).<br>Set/dict membership: average-case lookup work is treated as <strong>roughly constant with respect to n</strong> → O(1).<br><span class="small">This is not a timing benchmark; actual runtimes depend on implementation and hardware.</span>`;history.push({activity:"lookup-growth-simulator",action:String(n)});save()};
-$("#hint").onclick=()=>{const o=$("#hintout");o.classList.add("show");o.textContent="Sentence frame: A set is stronger here because membership is ___ on average, while list membership is ___ and may require ___ as the collection grows."};
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "python-data-structures-reading2";
+  const TITLE = "Lookups Matter — Python Data Structures";
 
-function makeSnapshot(){return {title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries([...document.querySelectorAll("[data-save]")].map(x=>[x.id,x.value])),activityHistory:history}}
-function toText(s){let r=`${s.title}\nTimestamp: ${s.timestamp}\n\nRESPONSES\n`;for(const [k,v] of Object.entries(s.responses))r+=`\n${k}\n${v||"(not answered)"}\n`;r+=`\nACTIVITY HISTORY\n${s.activityHistory.map((x,i)=>`${i+1}. ${x.activity}: ${x.answer||x.action||""}${typeof x.correct==="boolean"?` — ${x.correct?"correct":"incorrect"}`:""}`).join("\n")||"(none)"}\n`;return r}
-function toMd(s){let r=`# ${s.title}\n\n**Timestamp:** ${s.timestamp}\n\n## Responses\n`;for(const [k,v] of Object.entries(s.responses))r+=`\n### ${k}\n${v||"_Not answered_"}\n`;r+=`\n## Activity History\n${s.activityHistory.map((x,i)=>`${i+1}. **${x.activity}** — ${x.answer||x.action||""}${typeof x.correct==="boolean"?` — ${x.correct?"correct":"incorrect"}`:""}`).join("\n")||"_None_"}\n`;return r}
-function dl(name,type,content){try{const blob=new Blob([content],{type:type+";charset=utf-8"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
-function status(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” as the fallback."}
-function wireExports(prefix){$("#md").onclick=()=>status(dl(prefix+".md","text/markdown",toMd(makeSnapshot())));$("#json").onclick=()=>status(dl(prefix+".json","application/json",JSON.stringify(makeSnapshot(),null,2)));$("#txt").onclick=()=>status(dl(prefix+".txt","text/plain",toText(makeSnapshot())));$("#show").onclick=()=>{const w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=toText(makeSnapshot());t.focus();t.select()};$("#selectall").onclick=()=>{$("#plain").focus();$("#plain").select()}}
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
 
-wireExports("python-data-structures-reading2");
-window.addEventListener("scroll",()=>{const h=document.documentElement,max=h.scrollHeight-h.clientHeight;$("#bar").style.width=(max?Math.min(100,h.scrollTop/max*100):0)+"%"});load();
-</script></body></html>
+  K.quiz({id:"q-recall-returns", buttonSelector:"#card-recall-returns .mlrk-choice", feedbackSelector:"#recallreturnsfb", correct:"true",
+    feedback:{"true":"\"H-204\" is present in the list, so the membership test evaluates to True.",
+              "false":"The value is present in the list, so the check does not come back False.",
+              index:"in returns True or False, a boolean. It doesn't hand back a position, that's what .index() does."}});
+
+  K.quiz({id:"q-recall-trace", buttonSelector:"#card-recall-trace .mlrk-choice", feedbackSelector:"#recalltracefb", correct:"true",
+    feedback:{"true":"The loop compares each entry to \"B\" in order. When it reaches \"B\", found gets set to True and stays that way.",
+              "false":"found only starts as False. It gets reassigned once the loop reaches the matching entry.",
+              b:"The loop prints found, a boolean, not the matching entry itself."}});
+
+  K.quiz({id:"q-recall-scan", buttonSelector:"#card-recall-scan .mlrk-choice", feedbackSelector:"#recallscanfb", correct:"same",
+    feedback:{same:"Exactly. in on a list is already doing a one-at-a-time, in-order comparison internally, so rewriting it as a loop doesn't change the underlying cost.",
+              less:"Writing the same comparisons as an explicit loop doesn't skip any of them. It just makes the existing work visible.",
+              more:"A list's in check is already comparing one entry at a time. The rewritten loop isn't doing extra work, just the same work spelled out."}});
+
+  K.quiz({id:"q-recall-worst", buttonSelector:"#card-recall-worst .mlrk-choice", feedbackSelector:"#recallworstfb", correct:"12000",
+    feedback:{"12000":"With no match anywhere in the list, there's no entry to stop early on, so all 12,000 get compared before the check can answer False.",
+              "0":"Even a value that isn't present still has to be ruled out entry by entry. That ruling-out is exactly what gets checked.",
+              half:"Nothing about a list lets it skip checking half the entries. Every one needs to be ruled out before answering False."}});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.quiz({id:"q-slowdown", buttonSelector:"#card-slowdown .mlrk-choice", feedbackSelector:"#slowdownfb", correct:"container",
+    feedback:{container:"That's the classic version of this bug: a list's membership check compares against more and more entries as the blocklist grows, so the same code gets slower purely because of scale, not logic.",
+              operator:"The in operator itself doesn't degrade over time. What changes is how much work it has to do, which depends on the container and how large it's gotten.",
+              servers:"Server strength doesn't explain a slowdown that tracks so closely with blocklist size. The growth pattern points at the container, not the hardware."}});
+
+  const BLOCKLIST_PCT = {10:8, 1000:22, 100000:55, 5000000:100};
+  const triedSizes = new Set();
+  const markGrowth = K.activity("act-lookup-growth", () => triedSizes.size >= 3);
+  function updateBlocklist(){
+    const n = +$("#blocklist-size").value;
+    $("#listCount").textContent = n.toLocaleString();
+    $("#listBar").style.width = BLOCKLIST_PCT[n] + "%";
+    triedSizes.add(n);
+    markGrowth();
+  }
+  $("#blocklist-size").addEventListener("change", updateBlocklist);
+  updateBlocklist();
+
+  K.quiz({id:"q-double", buttonSelector:"#card-double .mlrk-choice", feedbackSelector:"#doublefb", correct:"double",
+    feedback:{double:"That's the linear pattern this reading keeps coming back to: double the list, and the worst-case number of comparisons roughly doubles too.",
+              same:"If a match could be anywhere, doubling the list increases how much there is to check before ruling everything out.",
+              square:"Membership checks on a list grow in step with the list's size, not with its square. Doubling gives roughly double, not a huge jump like that."}});
+
+  K.dragDrop("#dragarea", "act-drag-fastslow");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneFast", label:"set", expectedLabel:"Fast"},
+    chip2:{expectedId:"zoneSlow", label:"list", expectedLabel:"Slow"},
+    chip3:{expectedId:"zoneSlow", label:"tuple", expectedLabel:"Slow"},
+    chip4:{expectedId:"zoneFast", label:"dict keys", expectedLabel:"Fast"}
+  }});
+
+  K.quiz({id:"q-dictvalues", buttonSelector:"#card-dictvalues .mlrk-choice", feedbackSelector:"#dictvaluesfb", correct:"scan",
+    feedback:{scan:".values() builds a view that has to be scanned one entry at a time, the same way a list would be, so the fast key-based check is gone.",
+              same:"Checking against .values() does not reach a value directly by key. It has to compare against each stored value in turn.",
+              faster:".values() doesn't sort or index anything. It's just a scan, so it isn't faster than checking directly against the dict's keys."}});
+
+  K.traceStepper("#tracestep", {steps:[
+    {cell:"entry 1", line:'"9004" == "1058"? No match.'},
+    {cell:"entry 2", line:'"9004" == "2203"? No match.'},
+    {cell:"entry 3", line:'"9004" == "4471"? No match.'},
+    {cell:"entry 4", line:'"9004" == "6614"? No match.'},
+    {cell:"entry 5", line:'"9004" == "7732"? No match.'},
+    {cell:"entry 6", line:'"9004" == "8890"? No match. Nothing left to check: returns False.'}
+  ]});
+
+  K.quiz({id:"q-worstcase-tf", buttonSelector:"#card-worstcase-tf .mlrk-choice", feedbackSelector:"#worstcasetffb", correct:"true", maxAttempts:1,
+    feedback:{"true":"That's exactly what the trace above just showed: with no match anywhere, every single entry gets compared before the check can return False.",
+              "false":"The trace needed all 6 entries compared before it could conclude there was no match. That's the worst case in action."}});
+
+  K.orderSteps("#ordersteps", {id:"act-order-in", correctOrder:["start","compare","match","advance","exhausted"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const val = $("#blankinput").value.trim().toLowerCase();
+    const ok = val==="set" || val==="set()";
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> Converting flagged_accounts to a set (flagged_accounts = set(flagged_accounts)) keeps each in check close to the same cost no matter how large it grows.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing word is <code>set</code>.";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"The same in syntax works on a list, tuple, dict, and set, but the amount of work it does underneath can be very different.", correct:true,
+      hint:"Think back to section 6's drag-drop. Did every container land in the same zone?",
+      explain:"The syntax stays identical everywhere. The amount of underlying work is exactly what section 6 sorted into fast versus slow."},
+    {value:"b", label:"Checking membership in a tuple is just as fast, on average, as checking membership in a set.", correct:false,
+      hint:"Revisit section 6's drag-drop. Did the tuple chip land in the same zone as the set chip?",
+      explain:"A tuple is scanned one entry at a time, just like a list, which is why section 6 sorted it into the slow zone alongside list, not with the set."},
+    {value:"c", label:"By default, x in some_dict checks whether x is one of the dict's keys, not one of its values.", correct:true,
+      hint:"Think back to section 6's tricky case with .values(). What had to change to check values instead?",
+      explain:"Checking a dict directly tests its keys. Section 6's .values() case only came up because checking values needs an explicit switch."},
+    {value:"d", label:"Once a match is found early in a list, Python still has to keep checking the remaining entries just to be sure.", correct:false,
+      hint:"Think back to section 8's order-the-steps. What happens the moment a match is found?",
+      explain:"A match stops the scan immediately, as section 8's steps laid out. Only a value that's missing entirely forces every entry to be checked."}
+  ]});
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"xzDEEzH8XWk"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"cost",
+    feedback:{cost:"That's the real mechanism: a list's membership check can grow with the blocklist, a set's stays close to flat, and naming that cost difference is what the question is actually checking for.",
+              syntax:"The syntax, value in collection, is identical for a list and a set. The speedup isn't about different syntax, it's about different work underneath the same syntax.",
+              memory:"Memory use isn't what fixed the timeout here. The fix is about how many comparisons the check needs, not how much space the collection takes up."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"convert",
+    feedback:{convert:"A large list checked repeatedly inside a hot loop is exactly the pattern this whole reading has been pointing at. Converting active_users to a set or dict removes that growing cost.",
+              rename:"A clearer name wouldn't change how much work the check does. The performance issue lives in the container, not the variable's name.",
+              print:"Adding output doesn't change how many comparisons the check itself needs. It would only add more work, not remove any."}});
+
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+
+  const AI_PROMPTS = [
+    "Think about looking up a name in a phone book by flipping page by page, versus a phone's contacts app that jumps straight to a name as you type. Where else have you run into that same flip-through-everything versus jump-straight-there difference?",
+    "If you had to explain \"the same question can be fast or slow depending on how the answer is stored\" to a friend using something from your own life, what would you compare it to?",
+    "Where have you noticed a search or lookup in an app that used to feel instant start to feel slower as more data piled up? What container might be hiding behind that slowdown?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"set",
+    feedback:{set:"A set (or dict keys) keeps each membership check close to the same cost no matter how many codes have already been redeemed, which is exactly what a growing, repeated check needs.",
+              list:"Preserving redemption order doesn't help the speed of a membership check, and a list's cost still grows with how many codes have been redeemed.",
+              same:"Containers do not all check membership in the same amount of time. That difference is the entire reasoning this reading has been building."}});
+
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["data-structures"],
+      skills:["algorithmic-complexity-big-o"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>
