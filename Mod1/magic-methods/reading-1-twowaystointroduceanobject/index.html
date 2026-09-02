@@ -1,99 +1,619 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Two Ways to Introduce an Object | Magic Methods Prep</title>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Two Ways to Introduce an Object</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-:root{--ink:#20231f;--paper:#fbfaf6;--green:#214a30;--sage:#dce9df;--blue:#e6f1f8;--gold:#f4c655;--line:#d3dcd5;--good:#e2f4e7;--bad:#fbe4e7;--purple:#eee9f8;--focus:#ffbf47}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.62}button,select,textarea{font:inherit}a{color:#174e7a}button:focus,a:focus,select:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}
-header{background:var(--green);color:#fff;padding:3rem 1.2rem}.wrap,section{max-width:980px;margin:auto}h1{font-size:clamp(2.5rem,7vw,4.8rem);line-height:1;margin:.5rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{color:#d9e8dc;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.lead{font-size:1.18rem;max-width:850px}.pills,.actions{display:flex;gap:.55rem;flex-wrap:wrap}.pill{border:1px solid #9eb6a4;border-radius:999px;padding:.28rem .68rem}
-.sticky{position:sticky;top:0;background:#fff;z-index:8;border-bottom:1px solid var(--line)}.track{height:8px;background:#e8ece9}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:980px;margin:auto;padding:.55rem 1rem;color:#566159}main{padding:2rem 1.2rem 5rem}section{margin-bottom:3.2rem}
-.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:1.2rem;box-shadow:0 3px 14px #1220170d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:1rem}
-button{border:2px solid var(--green);border-radius:11px;background:#fff;color:var(--green);padding:.7rem 1rem;font-weight:750;cursor:pointer}.term{min-height:145px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
-.callout{background:var(--blue);border-left:6px solid #2c79b5;padding:1rem;border-radius:10px}.warn{background:#fff3d2;border-left:6px solid #d19b13;padding:1rem;border-radius:10px}.codebox{background:#1d211e;color:#f7f4ee;padding:1rem;border-radius:14px;overflow:auto;font:1rem/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap}
-.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:.7rem;align-items:stretch}.node{border:3px solid var(--green);border-radius:16px;padding:1rem;background:#fff}.arrow{align-self:center;font-size:2rem;font-weight:bold}.compare{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.friendly{background:var(--blue)}.precise{background:var(--purple)}.bigword{font-size:1.45rem;font-weight:800}.route{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.route .card{border-top:6px solid var(--gold)}
-.terminal{background:#151a16;color:#f7f4ee;padding:1rem;border-radius:14px;font:1rem/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}.termout{white-space:pre-wrap;min-height:65px;border-top:1px solid #59625b;margin-top:.8rem;padding-top:.8rem}.builder select{width:100%;padding:.65rem;border:2px solid #aeb8b0;border-radius:8px;margin:.35rem 0}
-.resources{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.resource{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1rem}.hint{display:none;background:#f2eef9;padding:1rem;border-radius:12px}.hint.show{display:block}textarea{width:100%;min-height:95px;padding:.75rem;border:2px solid #abb6ae;border-radius:10px}.bridge{border-top:8px solid var(--gold)}.export{background:#edf3ef;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{font-size:.92rem;color:#5b655e}.badge{display:inline-block;background:var(--gold);padding:.1rem .5rem;border-radius:999px;font-weight:bold}
-@media(max-width:720px){.flow{grid-template-columns:1fr}.arrow{text-align:center;transform:rotate(90deg)}.compare,.route,.resources{grid-template-columns:1fr}h2{font-size:1.65rem}}</style></head>
-<body><header><div class="wrap"><div class="eyebrow">Module 1 • Magic Methods Prep</div><h1>Two Ways to Introduce an Object</h1><p class="lead">A Python object can have the same data but need two different descriptions: one that is easy for a person to read, and one that is precise enough to help a developer inspect what is happening. Python's <code>__str__</code> and <code>__repr__</code> give you those two views.</p><div class="pills"><span class="pill">~17–19 minutes</span><span class="pill">Easy-language diagrams</span><span class="pill">Repeated prediction practice</span><span class="pill">Extra resources</span></div></div></header>
-<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Keep asking one question: <strong>“How is Python being asked to show this object?”</strong></p></div><main>
+.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-route-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.mlrk-route-grid .mlrk-card{border-top:6px solid var(--mlrk-callout-gold-border)}
+.mlrk-fillcode{width:100%;padding:.7rem;border:2px solid var(--mlrk-gray-500);border-radius:8px;
+  font-family:var(--mlrk-font-code);font-size:.95rem;margin-top:.5rem}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:8rem}
+@media(max-width:650px){.mlrk-route-grid{grid-template-columns:1fr}}
+</style>
+</head><body>
 
-<section><h2>1. Start with a puzzle</h2><div class="card"><p>Imagine a delivery app has an object named <code>parcel</code>. The object already knows its tracking code and destination. But when a developer prints it, Python shows something like:</p><pre class="codebox">&lt;__main__.Parcel object at 0x...&gt;</pre><p>The data exists. The problem is that Python has not been told how to turn this custom object into a useful description.</p></div><p class="callout"><strong>Today's idea:</strong> magic methods are special method names Python knows to call in certain situations. You write the method; Python chooses when to use it.</p></section>
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Two Ways to Introduce an Object</h1>
+<p class="mlrk-lead">A nonprofit's donor-tracking script stores each supporter as a <code>Donor</code> object. Print one in the Python shell while debugging and you get something like <code>&lt;__main__.Donor object at 0x7f2b1c0a4d90&gt;</code> — technically correct, completely useless. Print the same object on a public thank-you page and you want something a person would actually want to read. One object, two audiences, two jobs. This reading is about the two methods that let an object describe itself both ways.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~46–50 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
 
-<section><h2>2. Vocabulary: flip before you code</h2><div class="grid">
-<button class="card term"><span class="front"><strong>magic / special method</strong><br><span class="small">Flip</span></span><span class="back">A method with a special double-underscore name that Python knows how to use automatically in certain operations.</span></button>
-<button class="card term"><span class="front"><strong>dunder</strong><br><span class="small">Flip</span></span><span class="back">Short for “double underscore.” Example: <code>__str__</code> is often said “dunder str.”</span></button>
-<button class="card term"><span class="front"><strong>__init__</strong><br><span class="small">Flip</span></span><span class="back">The familiar method used during object creation to set up a new object's starting state.</span></button>
-<button class="card term"><span class="front"><strong>__str__</strong><br><span class="small">Flip</span></span><span class="back">Returns a readable string for people. <code>print(obj)</code> and <code>str(obj)</code> use it when defined.</span></button>
-<button class="card term"><span class="front"><strong>__repr__</strong><br><span class="small">Flip</span></span><span class="back">Returns a more precise, information-rich representation, commonly useful for developers and debugging.</span></button>
-</div></section>
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
 
-<section><h2>3. Recall from the last lesson</h2><div class="card"><p>Which statement about <code>self</code> is correct?</p><button class="choice recall" data-a="specific"><code>self</code> means the specific object receiving this method call.</button><button class="choice recall" data-a="class"><code>self</code> means the class itself.</button><button class="choice recall" data-a="all"><code>self</code> means every object created from the class.</button><div id="recfb" class="feedback" tabindex="-1"></div></div></section>
+<main class="mlrk-main"><div class="mlrk-wrap">
 
-<section><h2>4. Diagram: one object, two descriptions</h2><div class="flow"><div class="node"><span class="badge">OBJECT</span><p class="bigword">parcel</p><p>code: "Q7"<br>city: "Queens"</p></div><div class="arrow">→</div><div class="node friendly"><span class="badge">__str__</span><p><strong>Readable view</strong></p><p><code>Q7 → Queens</code></p></div><div class="arrow">↔</div><div class="node precise"><span class="badge">__repr__</span><p><strong>Precise view</strong></p><p><code>Parcel('Q7', 'Queens')</code></p></div></div><p class="warn"><strong>Easy-language rule:</strong> these methods do not create a second object. They return <strong>different strings describing the same object</strong>.</p></section>
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
 
-<section><h2>5. What each method looks like</h2><pre class="codebox">class Parcel:
-    def __init__(self, code, city):
-        self.code = code
-        self.city = city
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Object-Oriented Programming</strong> — Designing a class with the right attributes and methods for a real problem, and explaining how its objects behave independently of each other.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Picture a small nonprofit, Bright Path Community Fridge Network, that tracks every supporter with a <code>Donor</code> class: a name and a running total of what they've given. A case manager debugging the donation script drops into the Python shell and types the donor's variable name to sanity-check it. Instead of anything useful, Python hands back a memory address. Meanwhile, the same organization's website needs to list donors on a public thank-you page in a sentence a visitor would actually want to read. Same object, two completely different jobs.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 660 260" role="img" aria-labelledby="reprTitle reprDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="reprTitle">One Donor object, printed three ways</title>
+  <desc id="reprDesc">On the left, a box shows the default Python output for a Donor object with no __str__ or __repr__ defined: an unreadable object-and-memory-address string. An arrow labeled "add two methods" points to two boxes on the right: one showing the __str__ output, a friendly sentence, and one showing the __repr__ output, a precise constructor-style string.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="14" y="70" width="230" height="120" rx="16" fill="#FFFFFF" stroke="#264326" stroke-width="3"/>
+    <text x="129" y="96" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">No methods defined</text>
+    <text x="129" y="128" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">&lt;__main__.Donor</text>
+    <text x="129" y="146" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">object at</text>
+    <text x="129" y="164" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">0x7f2b1c0a4d90&gt;</text>
+
+    <polygon points="256,118 300,118 300,108 326,130 300,152 300,142 256,142" fill="#264326"/>
+    <text x="291" y="100" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">add two methods</text>
+
+    <rect x="340" y="20" width="306" height="90" rx="16" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="493" y="44" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">__str__ (human-readable)</text>
+    <text x="493" y="72" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">Maya Chen has given</text>
+    <text x="493" y="90" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">$500 total</text>
+
+    <rect x="340" y="150" width="306" height="90" rx="16" fill="#FFEECA" stroke="#83671C" stroke-width="3"/>
+    <text x="493" y="174" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">__repr__ (developer-precise)</text>
+    <text x="493" y="202" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">Donor('Maya Chen',</text>
+    <text x="493" y="220" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">500)</text>
+  </g>
+</svg>
+
+<p>Both boxes on the right come from the exact same object, with the exact same data. Nothing about the <code>Donor</code> changed. What changed is which method Python was asked to call to describe it.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> almost every real Python codebase you'll touch, in a data role or a software engineering one, has classes whose default printout is useless. Fixing that with a couple of short methods is one of the fastest ways to make your own debugging sessions less painful, and "what's the difference between <code>__str__</code> and <code>__repr__</code>?" is a genuinely common interview question, not just a classroom exercise.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to write <code>__init__</code> to set an object's starting attributes. This reading assumes that part is solid and adds two more methods on top of the same kind of class: one Python calls automatically in some situations, and one it calls in others. Once "the method Python picks depends on context" clicks here, it's the same reasoning you'll use later for methods that control how objects compare to each other or sort against each other.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before you start</h2>
+<p class="mlrk-small">Understanding <code>__init__</code>, attribute access, and f-string formatting are prerequisite skills for this reading. Test each one below before moving on.</p>
+
+<div class="mlrk-card" id="card-init"><p><strong>What does <code>__init__</code> do?</strong></p>
+<button type="button" class="mlrk-choice" data-a="setup">Sets up a new object's starting attributes when it's created.</button>
+<button type="button" class="mlrk-choice" data-a="print">Runs automatically every time the object is printed.</button>
+<button type="button" class="mlrk-choice" data-a="delete">Removes the object from memory when the program ends.</button>
+<div id="initfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-attr" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">class Donor:
+    def __init__(self, name, total_given):
+        self.name = name
+        self.total_given = total_given
+
+maya = Donor("Maya Chen", 500)</div></div>
+<p><strong>What is <code>maya.name</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="mayachen">"Maya Chen"</button>
+<button type="button" class="mlrk-choice" data-a="name">"name"</button>
+<button type="button" class="mlrk-choice" data-a="donor">"Donor"</button>
+<div id="attrfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-fstring" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a teammate runs <code>city = "Queens"</code>, then <code>print(f"Shipped to {city}")</code>.</p>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="shippedqueens">Shipped to Queens</button>
+<button type="button" class="mlrk-choice" data-a="shippedcity">Shipped to city</button>
+<button type="button" class="mlrk-choice" data-a="literal">Shipped to {city}</button>
+<div id="fstringfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-whytwo" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> the same <code>Donor</code> object might need to be shown to a case manager debugging code, and separately to a supporter reading a public page.</p>
+<p><strong>Why might one object need two different descriptions instead of one?</strong></p>
+<button type="button" class="mlrk-choice" data-a="audiences">Different audiences need different information pulled from the same underlying object.</button>
+<button type="button" class="mlrk-choice" data-a="required">Python requires every class to define exactly two ways to print itself.</button>
+<button type="button" class="mlrk-choice" data-a="duplicate">The object secretly creates a separate copy of itself for each audience.</button>
+<div id="whytwofb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">Attribute access and f-string formatting both show up again below exactly as they work here, inside the methods you're about to write. Get each one right in isolation first.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>dunder method</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Dunder method</strong><br>Short for "double underscore method." A method whose name starts and ends with two underscores, like <code>__init__</code> or <code>__str__</code>. Python calls dunder methods automatically in specific situations; you almost never call them directly.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>__str__</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>__str__</strong><br>A dunder method that returns a human-readable string for an object. Called by <code>str(obj)</code>, and by <code>print(obj)</code> whenever it's defined.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>__repr__</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>__repr__</strong><br>A dunder method that returns a precise, developer-facing string for an object. Called by <code>repr(obj)</code>, and used to display every object shown inside a list, dict, or tuple.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>default representation</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Default representation</strong><br>What Python shows for an object when neither <code>__str__</code> nor <code>__repr__</code> is defined: something like <code>&lt;__main__.Donor object at 0x7f...&gt;</code>, built from the class name and a memory address.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>the REPL</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>The REPL</strong><br>The interactive Python shell you get from typing <code>python</code> at a terminal. Typing a bare variable name there prints its <code>__repr__</code>, which is exactly why a clear <code>__repr__</code> matters for debugging.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Which method fires? Context decides</h2>
+<p>The key question is never "which method is better." It's <strong>what is asking Python to describe the object, right now?</strong></p>
+<div class="mlrk-route-grid">
+<div class="mlrk-card"><h3><code>print(obj)</code>, <code>str(obj)</code>, an f-string like <code>f"{obj}"</code></h3><p>All three ask for the human-readable view. If <code>__str__</code> is defined, Python uses it. If it isn't, Python falls back to <code>__repr__</code> instead.</p></div>
+<div class="mlrk-card"><h3><code>repr(obj)</code>, and any object shown inside a list, dict, or tuple</h3><p>This always calls <code>__repr__</code> directly, no fallback needed. A container has to show something for each item it holds, so Python always reaches for the more detailed view.</p></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Practice: predict the default</h2>
+<div class="mlrk-code"><div class="mlrk-screen">class Donor:
+    def __init__(self, name, total_given):
+        self.name = name
+        self.total_given = total_given
+
+maya = Donor("Maya Chen", 500)
+print(maya)</div></div>
+<div class="mlrk-card" id="card-round1" style="margin-top:1rem"><p><strong>This class has no <code>__str__</code> or <code>__repr__</code> yet. What does <code>print(maya)</code> show?</strong></p>
+<button type="button" class="mlrk-choice" data-a="default">Something like &lt;__main__.Donor object at 0x7f2b1c0a4d90&gt; — Python's built-in default.</button>
+<button type="button" class="mlrk-choice" data-a="friendly">Maya Chen has given $500 total</button>
+<button type="button" class="mlrk-choice" data-a="error">An error, because Python can't print a custom object.</button>
+<div id="round1fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Add __str__</h2>
+<div class="mlrk-code"><div class="mlrk-screen">class Donor:
+    def __init__(self, name, total_given):
+        self.name = name
+        self.total_given = total_given
 
     def __str__(self):
-        return f"{self.code} → {self.city}"
+        return f"{self.name} has given ${self.total_given} total"
+
+maya = Donor("Maya Chen", 500)
+print(maya)</div></div>
+<div class="mlrk-card" id="card-round2" style="margin-top:1rem"><p><strong>What prints now?</strong></p>
+<button type="button" class="mlrk-choice" data-a="friendly">Maya Chen has given $500 total</button>
+<button type="button" class="mlrk-choice" data-a="precise">Donor('Maya Chen', 500)</button>
+<button type="button" class="mlrk-choice" data-a="default">&lt;__main__.Donor object at 0x7f2b1c0a4d90&gt;</button>
+<div id="round2fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Add __repr__ too</h2>
+<div class="mlrk-code"><div class="mlrk-screen">class Donor:
+    def __init__(self, name, total_given):
+        self.name = name
+        self.total_given = total_given
+
+    def __str__(self):
+        return f"{self.name} has given ${self.total_given} total"
 
     def __repr__(self):
-        return f"Parcel('{self.code}', '{self.city}')"</pre>
-<div class="compare"><div class="card friendly"><h3><code>__str__</code></h3><p>Think: <strong>nice to read</strong>.</p><p>Called by <code>str(parcel)</code> and normally what <code>print(parcel)</code> displays.</p></div><div class="card precise"><h3><code>__repr__</code></h3><p>Think: <strong>useful to inspect</strong>.</p><p>Called by <code>repr(parcel)</code>. It is also the representation you'll see for objects contained inside a list.</p></div></div></section>
+        return f"Donor('{self.name}', {self.total_given})"
 
-<section><h2>6. Practice round 1: direct print</h2><pre class="codebox">parcel = Parcel("Q7", "Queens")
-print(parcel)</pre><div class="card"><p>Which description should Python use?</p><button class="choice direct" data-a="str"><code>__str__</code> → Q7 → Queens</button><button class="choice direct" data-a="repr"><code>__repr__</code> → Parcel('Q7', 'Queens')</button><button class="choice direct" data-a="init"><code>__init__</code></button><div id="directfb" class="feedback" tabindex="-1"></div></div></section>
+maya = Donor("Maya Chen", 500)
+print(repr(maya))</div></div>
+<div class="mlrk-card" id="card-round3" style="margin-top:1rem"><p><strong>This code calls <code>repr()</code> explicitly. What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="precise">Donor('Maya Chen', 500)</button>
+<button type="button" class="mlrk-choice" data-a="friendly">Maya Chen has given $500 total</button>
+<button type="button" class="mlrk-choice" data-a="nothing">Nothing. repr() only works inside a debugger.</button>
+<div id="round3fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>7. Diagram: Python's decision path</h2><div class="route"><div class="card"><h3><code>print(object)</code> / <code>str(object)</code></h3><p>Does the class define <code>__str__</code>?</p><p><strong>YES → use __str__</strong></p><p>No? Python can fall back to the object's <code>__repr__</code>-style representation.</p></div><div class="card"><h3><code>repr(object)</code></h3><p>This request is explicit.</p><p><strong>→ use __repr__</strong></p><p>No guessing: you asked for the representation.</p></div></div><p class="callout">The key is not “Which method is better?” The key is <strong>what context is asking Python to represent the object?</strong></p></section>
+<section class="mlrk-section">
+<h2>8. Your turn: write __repr__</h2>
+<p>A different part of the same codebase tracks volunteers with this class. <code>__str__</code> is already written. Fill in <code>__repr__</code> yourself.</p>
+<div class="mlrk-code"><div class="mlrk-screen">class Volunteer:
+    def __init__(self, name, hours_logged):
+        self.name = name
+        self.hours_logged = hours_logged
 
-<section><h2>8. Practice round 2: explicit <code>repr()</code></h2><pre class="codebox">parcel = Parcel("Q7", "Queens")
-print(repr(parcel))</pre><div class="card"><p>Predict the output.</p><button class="choice reprq" data-a="precise"><code>Parcel('Q7', 'Queens')</code></button><button class="choice reprq" data-a="friendly"><code>Q7 → Queens</code></button><button class="choice reprq" data-a="none">Nothing prints</button><div id="reprfb" class="feedback" tabindex="-1"></div></div></section>
+    def __str__(self):
+        return f"{self.name} logged {self.hours_logged} hours"
 
-<section><h2>9. The tricky part: an object inside a list</h2><p>This is where many learners mix the two methods up. A list needs a representation for each item it contains, so it uses each item's <code>__repr__</code>.</p><div class="flow"><div class="node"><code>print(parcel)</code></div><div class="arrow">→</div><div class="node friendly"><strong>__str__</strong><br><code>Q7 → Queens</code></div><div class="arrow"> </div><div class="node"><span class="small">object by itself</span></div></div><br><div class="flow"><div class="node"><code>print([parcel])</code></div><div class="arrow">→</div><div class="node precise"><strong>list asks item for __repr__</strong><br><code>[Parcel('Q7', 'Queens')]</code></div><div class="arrow"> </div><div class="node"><span class="small">object inside list</span></div></div></section>
+    def __repr__(self):
+        # write the return statement below</div></div>
+<p>Target: <code>repr(jordan)</code> should produce <code>Volunteer('Jordan Diaz', 12)</code> — the class name, then the values in the same order as <code>__init__</code>, with the name quoted.</p>
+<label for="reprinput"><strong>Type the return statement:</strong></label>
+<input type="text" id="reprinput" class="mlrk-fillcode" autocomplete="off" spellcheck="false" placeholder='return f"Volunteer(...)"'>
+<div class="mlrk-actions"><button type="button" id="reprcheck" class="mlrk-btn">Check my code</button></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+<p>Look at how <code>__repr__</code> was written for <code>Donor</code> two sections up. The shape is the same: an f-string that starts with <code>return f"ClassName(</code>, includes both attributes, and quotes the string one.</p>
+</details>
+<div id="reprcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
 
-<section><h2>10. Practice round 3: the list gotcha</h2><pre class="codebox">a = Parcel("K2", "Bronx")
-b = Parcel("M9", "Brooklyn")
-print([a, b])</pre><div class="card"><p>What kind of description appears for <code>a</code> and <code>b</code>?</p><button class="choice listq" data-a="repr"><code>__repr__</code> for each object</button><button class="choice listq" data-a="str"><code>__str__</code> for each object</button><button class="choice listq" data-a="init"><code>__init__</code> runs again</button><div id="listfb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+<h2>9. The real gotcha: a list of objects</h2>
+<p>This is where most learners mix the two methods up. A container has to show something for every item it holds, so it always reaches for that item's <code>__repr__</code>, whether or not <code>__str__</code> exists.</p>
+<div class="mlrk-code"><div class="mlrk-screen">donors = [Donor("Maya Chen", 500), Donor("Andre Bell", 120)]
+print(donors)</div></div>
+<div class="mlrk-card" id="card-round4" style="margin-top:1rem"><p><strong>What does this print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="reprlist">[Donor('Maya Chen', 500), Donor('Andre Bell', 120)]</button>
+<button type="button" class="mlrk-choice" data-a="strlist">[Maya Chen has given $500 total, Andre Bell has given $120 total]</button>
+<button type="button" class="mlrk-choice" data-a="error">An error, because lists can't hold custom objects.</button>
+<div id="round4fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>11. Practice round 4: change one condition</h2><p>Suppose this class defines <code>__repr__</code> but <strong>does not define <code>__str__</code></strong>.</p><div class="card"><p>What should you expect from <code>print(parcel)</code>?</p><button class="choice fallback" data-a="repr">Python can use the <code>__repr__</code> representation as a fallback.</button><button class="choice fallback" data-a="error">Python must raise an error.</button><button class="choice fallback" data-a="init">Python calls <code>__init__</code> again.</button><div id="fallfb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+<h2>10. Practice: the fallback path</h2>
+<p>Suppose a class defines <code>__repr__</code> but <strong>not</strong> <code>__str__</code>.</p>
+<div class="mlrk-card" id="card-round5"><p><strong>What happens when you call <code>print()</code> on one of its objects?</strong></p>
+<button type="button" class="mlrk-choice" data-a="fallback">Python uses __repr__ as a fallback, since no __str__ exists.</button>
+<button type="button" class="mlrk-choice" data-a="attributeerror">Python raises an error, because __str__ is missing.</button>
+<button type="button" class="mlrk-choice" data-a="uglydefault">Python falls back to the ugly default, ignoring __repr__ entirely.</button>
+<div id="round5fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>12. Practice round 5: build the two returns</h2><div class="card builder"><p>A <code>Playlist</code> object stores <code>name</code> and <code>songs</code>. Pick a readable <code>__str__</code> and a precise <code>__repr__</code>.</p>
-<label for="s1"><strong>__str__ return:</strong></label><select id="s1"><option value="">Choose…</option><option value="friendly">return f"{self.name}: {self.songs} songs"</option><option value="precise">return f"Playlist('{self.name}', {self.songs})"</option></select>
-<label for="s2"><strong>__repr__ return:</strong></label><select id="s2"><option value="">Choose…</option><option value="friendly">return f"{self.name}: {self.songs} songs"</option><option value="precise">return f"Playlist('{self.name}', {self.songs})"</option></select>
-<p><button id="checkbuilder">Check my choices</button></p><div id="builderfb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+<h2>11. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about __str__ and __repr__.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> If a class defines __str__ but not __repr__, print(obj) still works, using __str__.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A list of custom objects always displays each item using its __repr__, even if __str__ is also defined.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> __repr__ and __str__ must always return the exact same string.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Defining __init__ automatically gives you a useful __str__ for free.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
 
-<section><h2>13. Mini simulator: compare all three contexts</h2><p>This is a page simulation of the Python behavior we're practicing; no setup is required.</p><div class="actions"><button class="sim" data-mode="print">Run print(track)</button><button class="sim" data-mode="repr">Run repr(track)</button><button class="sim" data-mode="list">Run print([track])</button></div><div class="terminal"><div id="cmd">$ choose a command above</div><div>[Output]:</div><div id="termout" class="termout">Your output will appear here.</div></div></section>
+<section class="mlrk-section">
+<h2>12. Match the call site to the method it uses</h2>
+<p>Drag each call below into the zone for the method it actually triggers, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable"><code>print(maya)</code>, __str__ defined</span>
+  <span id="chip2" class="mlrk-draggable"><code>f"{maya}"</code>, __str__ defined</span>
+  <span id="chip3" class="mlrk-draggable"><code>repr(maya)</code></span>
+  <span id="chip4" class="mlrk-draggable"><code>print([maya, andre])</code></span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Uses __str__</strong></p><div class="mlrk-dropzone" id="zoneStr"></div></div>
+  <div><p class="mlrk-small"><strong>Uses __repr__</strong></p><div class="mlrk-dropzone" id="zoneRepr"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
 
-<section><h2>14. Extra help: resources for a tough concept</h2><div class="resources"><div class="resource"><h3>Python's official explanation</h3><p>Use this after the easy-language model above when you want the exact technical rule for <code>__str__</code> and <code>__repr__</code>.</p><p><a href="https://docs.python.org/3/reference/datamodel.html#object.__repr__" target="_blank" rel="noopener">Open Python Data Model: __repr__ / __str__</a></p></div><div class="resource"><h3>Read the diagrams aloud</h3><p>Try this 20-second script: “Direct print asks for the friendly string. <code>repr()</code> asks for the precise representation. A list shows each object using its representation.” Then cover the diagram and say it again.</p></div></div></section>
+<section class="mlrk-section">
+<h2>13. Order the steps: fixing an ugly default</h2>
+<p>You inherit a class whose objects print as an unreadable default. Click steps, in order, to build the sequence you'd actually follow. Click a step again to remove it if you change your mind, then press "Check my order" — this is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="confirm"><span class="mlrk-order-num"></span> Confirm the class doesn't already define __str__ or __repr__ somewhere you missed.</li>
+  <li class="mlrk-orderitem" data-step="addrepr"><span class="mlrk-order-num"></span> Add __repr__ first, since it's the most broadly useful one for debugging.</li>
+  <li class="mlrk-orderitem" data-step="addstr"><span class="mlrk-order-num"></span> Add __str__ too, only if you also need a separate human-friendly display.</li>
+  <li class="mlrk-orderitem" data-step="test"><span class="mlrk-order-num"></span> Test both str(obj) and repr(obj) yourself, rather than assuming which one runs where.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
 
-<section><h2>15. Explain it without jargon</h2><p><button id="hintbtn">Generate a sentence starter</button></p><div id="hint" class="hint"></div><label for="explain"><strong>Explain to a classmate:</strong> Why can <code>print(obj)</code> and <code>print([obj])</code> show the same object differently?</label><textarea id="explain" data-save placeholder="They can look different because..."></textarea></section>
+<section class="mlrk-section">
+<h2>14. Mini simulator: compare all three calls</h2>
+<p>This is a page simulation of the Python behavior practiced above; no setup is required. <code>maya</code> has both <code>__str__</code> and <code>__repr__</code> defined.</p>
+<div class="mlrk-actions">
+<button type="button" class="sim mlrk-btn" data-mode="print">Run print(maya)</button>
+<button type="button" class="sim mlrk-btn" data-mode="repr">Run repr(maya)</button>
+<button type="button" class="sim mlrk-btn" data-mode="list">Run print([maya, andre])</button>
+</div>
+<div class="mlrk-terminal" style="margin-top:1rem">
+  <div id="simcmd">$ choose a command above</div>
+  <div class="mlrk-screen" id="simout">Your output will appear here.</div>
+</div>
+</section>
 
-<section class="bridge"><h2>16. Required bridge to lecture/lab</h2><p>You just learned that <code>__str__</code> and <code>__repr__</code> are two string views of the same object, and that Python chooses between them based on context. In lecture/lab, you will extend a class you already know by adding these methods and then test which one Python actually uses.</p><p>Be ready to recognize this decision habit: <strong>first identify the context—direct print, explicit repr, or object inside a collection—then predict the representation.</strong></p><div class="card"><p><strong>New transfer challenge:</strong> A <code>Recipe</code> class defines both methods. What should you inspect first when predicting what Python will display?</p><button class="choice bridgeq" data-a="context">How the object is being displayed or requested</button><button class="choice bridgeq" data-a="first">Which method appears first in the class file</button><button class="choice bridgeq" data-a="length">Which method returns the longer string</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div><label for="bring"><strong>Bring to lecture:</strong> What part of the <code>__str__</code> / <code>__repr__</code> decision still feels easiest to mix up?</label><textarea id="bring" data-save placeholder="I want to watch for..."></textarea></section>
+<section class="mlrk-section">
+<h2>15. Watch: special methods in practice</h2>
+<p>As you watch, notice how the video frames <code>__repr__</code> as the developer-facing view and <code>__str__</code> as the human-facing one, and how that same "which method fires" logic extends to other dunder methods beyond just printing.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=3ohzBxoFHAY" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one dunder method the video mentioned besides __str__ and __repr__, and what situation triggers Python to call it?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
 
-<section><h2>17. Keep a copy</h2><div class="export"><div class="actions"><button id="md">Create Markdown file</button><button id="json">Create JSON file</button><button id="txt">Create TXT file</button><button id="show">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:250px"></textarea><p><button id="selectall">Select all text</button></p></div></div></section>
+<section class="mlrk-section">
+<h2>16. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"What's the difference between __str__ and __repr__?" is one of the most common Python OOP interview questions, for data roles and software engineering roles alike. A strong answer names the audience difference and the fallback behavior, not just a definition memorized from a slide.</p>
+<p>Interviewers are also listening for a real habit: do you drop into the REPL to sanity-check an object mid-debugging session, and does typing a bare variable there actually tell you anything? A well-written __repr__ is what makes that check worth doing at all, which is why "always implement __repr__ on your classes" is such widely repeated advice among working Python developers.</p>
+<p>The same thing shows up beyond interviews, in every log line and stack trace a larger codebase produces: the difference between a useful error message and a useless one is often just whether someone bothered to write __repr__ on the class involved.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: if you can only implement one of __str__ or __repr__, which should you pick, and why?</strong></p>
+<button type="button" class="mlrk-choice" data-a="repr">__repr__, because it also acts as the fallback for str() and print() when __str__ is missing.</button>
+<button type="button" class="mlrk-choice" data-a="str">__str__, because it's the only one Python ever calls automatically.</button>
+<button type="button" class="mlrk-choice" data-a="neither">Neither matters, since Python generates a good default automatically.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-</main><script>
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],KEY="magic-methods-two-views-v1";let history=[];
-function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history,builder:{s1:$("#s1").value,s2:$("#s2").value}}))}
-function load(){try{let d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[];if(d.builder){$("#s1").value=d.builder.s1||"";$("#s2").value=d.builder.s2||""}}catch(e){}}
-$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
-function quiz(cls,fb,right,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{let ok=b.dataset.a===right,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
-quiz(".recall","#recfb","specific",{specific:"Yes. That is why self.code means the code stored on this particular object.",class:"The class is the definition. self refers to the particular instance receiving the method call.",all:"self is one object for the current call, not every instance."});
-quiz(".direct","#directfb","str",{str:"Right. A direct print uses the object's friendly __str__ when it exists.",repr:"__repr__ is the precise representation, but direct print reaches for __str__ when it is defined.",init:"__init__ sets up a new object. Printing an existing object does not create it again."});
-quiz(".reprq","#reprfb","precise",{precise:"Correct. repr(parcel) explicitly requests __repr__.",friendly:"That is the __str__ view. The code explicitly calls repr(), so Python asks for __repr__.",none:"repr() returns a string, and the surrounding print() displays that string."});
-quiz(".listq","#listfb","repr",{repr:"Exactly. A list displays its contained objects using their __repr__ representations.",str:"This is the famous gotcha: direct print and list display do not use the same method for the contained object.",init:"The objects already exist. Displaying a list does not initialize them again."});
-quiz(".fallback","#fallfb","repr",{repr:"Correct. If a custom class has __repr__ but no __str__, the representation can serve as the informal string fallback.",error:"No error is required just because __str__ is missing; Python has a representation fallback.",init:"__init__ is for setting up a new instance, not displaying an existing one."});
-quiz(".bridgeq","#bridgefb","context",{context:"Exactly. Context is the decision key: how is Python being asked to show the object?",first:"Method order in the class file does not decide which representation Python requests.",length:"String length does not decide it. The display context does."});
-$("#checkbuilder").onclick=()=>{let ok=$("#s1").value==="friendly"&&$("#s2").value==="precise",f=$("#builderfb");f.className="feedback show "+(ok?"good":"bad");f.innerHTML=ok?"<strong>Correct.</strong> __str__ is concise and reader-friendly; __repr__ names the class and shows the object's key data more explicitly.":"<strong>Try again.</strong> Ask: Which return would be pleasant for a person to read? Put that in __str__. Which one looks more explicit about the Python object? Put that in __repr__.";f.focus();history.push({activity:"return builder",answer:$("#s1").value+" | "+$("#s2").value,correct:ok});save()};
-$("#s1").onchange=save;$("#s2").onchange=save;
-$$(".sim").forEach(b=>b.onclick=()=>{let mode=b.dataset.mode,cmd,out;if(mode==="print"){cmd="print(track)";out="Night Bus — 11 tracks"}else if(mode==="repr"){cmd="repr(track)";out="Album('Night Bus', 11)"}else{cmd="print([track])";out="[Album('Night Bus', 11)]"}$("#cmd").textContent="$ "+cmd;$("#termout").textContent=out;history.push({activity:"simulator",action:cmd,output:out});save()});
-$("#hintbtn").onclick=()=>{let a=["Start with: “Direct print asks for..., but a list needs...”","Try: “The object did not change. What changed was...”","Name the context first: “When the object is alone..., when it is inside a list...”"];let h=$("#hint");h.classList.add("show");h.textContent=a[Math.floor(Math.random()*a.length)]};
-function snap(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),builder:{strChoice:$("#s1").value,reprChoice:$("#s2").value},activityHistory:history}}
-function plain(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nBUILDER\n__str__: "+s.builder.strChoice+"\n__repr__: "+s.builder.reprChoice+"\n\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(x.output?"\n[Output]:\n"+x.output:"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
-function mdtext(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Builder\n- __str__: "+s.builder.strChoice+"\n- __repr__: "+s.builder.reprChoice+"\n\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(x.output?"\n\n[Output]:\n```\n"+x.output+"\n```":"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
-function dl(n,t,c){try{let b=new Blob([c],{type:t+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
-function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” instead."}
-$("#md").onclick=()=>stat(dl("magic-methods-prep.md","text/markdown",mdtext(snap())));$("#json").onclick=()=>stat(dl("magic-methods-prep.json","application/json",JSON.stringify(snap(),null,2)));$("#txt").onclick=()=>stat(dl("magic-methods-prep.txt","text/plain",plain(snap())));
-$("#show").onclick=()=>{let w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=plain(snap());t.focus();t.select()};$("#selectall").onclick=()=>{$("#plain").focus();$("#plain").select()};
-window.addEventListener("scroll",()=>{let d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
-</script></body></html>
+<section class="mlrk-section">
+<h2>17. Debugging habit and reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>A teammate says: "print(record) shows a friendly string, but the debugger's variable inspector shows something ugly." What's most likely going on?</strong></p>
+<button type="button" class="mlrk-choice" data-a="strnorepr">__str__ is defined, but __repr__ isn't, so the debugger's inspector falls back to the default representation.</button>
+<button type="button" class="mlrk-choice" data-a="ignores">The debugger always ignores any custom methods on a class.</button>
+<button type="button" class="mlrk-choice" data-a="fixinit">The class needs its __init__ method fixed.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your debugging habit:</strong> when you inherit code with an unfamiliar custom class, what's the first thing you'd check to see whether it's REPL-friendly?</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: The first thing I'd check is..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>18. Summary and critical thinking</h2>
+<p>Two habits carried this whole reading: asking what context is requesting the description before predicting which method fires, and remembering that any container always reaches for an item's __repr__.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a community garden's <code>Plot</code> class defines both __str__ and __repr__. A volunteer coordinator runs:</p>
+<div class="mlrk-code"><div class="mlrk-screen">plots = [Plot("A3", "tomatoes"), Plot("B1", "kale")]
+print(plots)</div></div>
+<p><strong>What should they expect to see, and why?</strong></p>
+<button type="button" class="mlrk-choice" data-a="repr">Each Plot's __repr__ output, because a list always displays its contained items using __repr__.</button>
+<button type="button" class="mlrk-choice" data-a="str">Each Plot's __str__ output, because print() always means __str__.</button>
+<button type="button" class="mlrk-choice" data-a="combined">A single combined string built from both methods.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what question should you ask yourself before predicting whether Python will use __str__ or __repr__ for a given object?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>19. Thinking ahead</h2>
+<p>Giving an object more than one way to describe itself is the first example of a bigger idea: dunder methods let a class opt into behavior that would otherwise be undefined for it. The same pattern shows up again soon: __eq__ decides how == compares two objects of your own class, __lt__ and its relatives decide how sorted() orders them, and most real-world libraries you'll eventually use, like database and web frameworks, expect a working __repr__ on every model class so their own tooling and logs stay readable.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>20. Your score and keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add two-ways-introduce-object-reading.json
+git commit -m "Complete the str vs repr reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong> — this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://docs.python.org/3/reference/datamodel.html#object.__repr__" target="_blank" rel="noopener">Python docs: Data Model, __repr__ and __str__</a> — the exact official rule, once the scenario above has it feeling intuitive.</li>
+<li><a href="https://www.geeksforgeeks.org/python/python-__repr__-magic-method/" target="_blank" rel="noopener">GeeksforGeeks: Python __repr__() Magic Method</a> — more worked examples with different classes.</li>
+<li><a href="https://www.w3schools.com/python/ref_string_format.asp" target="_blank" rel="noopener">W3Schools: Python String Formatting</a> — a refresher on the f-string syntax both methods rely on.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "two-ways-introduce-object-reading";
+  const TITLE = "Two Ways to Introduce an Object";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-init", buttonSelector:"#card-init .mlrk-choice", feedbackSelector:"#initfb", correct:"setup",
+    feedback:{setup:"Right. __init__ runs once, when the object is created, to set its starting attributes.",
+              print:"__init__ runs at creation time, not every time the object is printed. That's the job of __str__/__repr__, which this reading adds.",
+              delete:"__init__ builds an object; it has nothing to do with removing one."}});
+
+  K.quiz({id:"q-attr", buttonSelector:"#card-attr .mlrk-choice", feedbackSelector:"#attrfb", correct:"mayachen",
+    feedback:{mayachen:"Correct. __init__ stored the string \"Maya Chen\" on self.name, so maya.name holds that value.",
+              name:"\"name\" is the parameter name inside __init__, not the value that got stored on the object.",
+              donor:"\"Donor\" is the class name. The instance's name attribute holds \"Maya Chen\", not the class name."}});
+
+  K.quiz({id:"q-fstring", buttonSelector:"#card-fstring .mlrk-choice", feedbackSelector:"#fstringfb", correct:"shippedqueens", maxAttempts:1,
+    feedback:{shippedqueens:"Right. An f-string swaps {city} for the current value of city, so it prints Shipped to Queens.",
+              shippedcity:"An f-string doesn't print the variable's name. It substitutes the variable's current value."}});
+
+  K.quiz({id:"q-whytwo", buttonSelector:"#card-whytwo .mlrk-choice", feedbackSelector:"#whytwofb", correct:"audiences",
+    feedback:{audiences:"Exactly the idea this reading builds on: one object, two audiences, two different useful descriptions.",
+              required:"Python doesn't require this. A class can define zero, one, or both methods; it's a choice based on what the class actually needs.",
+              duplicate:"Nothing is duplicated. It's still one object; only the string used to describe it changes."}});
+
+  K.quiz({id:"q-round1", buttonSelector:"#card-round1 .mlrk-choice", feedbackSelector:"#round1fb", correct:"default",
+    feedback:{default:"Right. With neither method defined, Python falls back to its own default: class name plus a memory address.",
+              friendly:"That output would require a __str__ method, and this class doesn't have one yet.",
+              error:"Printing a custom object with no __str__/__repr__ is completely legal Python; it just isn't useful output."}});
+
+  K.quiz({id:"q-round2", buttonSelector:"#card-round2 .mlrk-choice", feedbackSelector:"#round2fb", correct:"friendly",
+    feedback:{friendly:"Correct. A direct print() call uses __str__ once it's defined.",
+              precise:"That's the __repr__-style output. This class's __repr__ hasn't been added yet in this step, and print() reaches for __str__ first anyway.",
+              default:"Once __str__ is defined, Python no longer falls back to the ugly default for print()."}});
+
+  K.quiz({id:"q-round3", buttonSelector:"#card-round3 .mlrk-choice", feedbackSelector:"#round3fb", correct:"precise",
+    feedback:{precise:"Right. repr() is an explicit request, so it calls __repr__ directly, regardless of what __str__ returns.",
+              friendly:"That's the __str__ output. The code explicitly calls repr(), so Python calls __repr__ instead.",
+              nothing:"repr() returns a plain string like any other function call; the surrounding print() displays it normally."}});
+
+  K.quiz({id:"q-round4", buttonSelector:"#card-round4 .mlrk-choice", feedbackSelector:"#round4fb", correct:"reprlist",
+    feedback:{reprlist:"Exactly the gotcha. A list shows its contained objects using their __repr__, even though __str__ also exists.",
+              strlist:"This is the common mix-up: direct print() and display-inside-a-list don't use the same method for the contained objects.",
+              error:"Lists can hold any Python object, custom classes included."}});
+
+  K.quiz({id:"q-round5", buttonSelector:"#card-round5 .mlrk-choice", feedbackSelector:"#round5fb", correct:"fallback",
+    feedback:{fallback:"Correct. When __str__ is missing, Python uses __repr__ as the fallback for print() and str().",
+              attributeerror:"No error is required. Python has a defined fallback path, so it doesn't need __str__ to exist.",
+              uglydefault:"The ugly default only appears when both methods are missing. A defined __repr__ is used well before Python falls back that far."}});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"repr",
+    feedback:{repr:"This is the real-world reasoning behind \"always implement __repr__\": it covers you for both repr() and, through the fallback, print()/str() too.",
+              str:"__str__ has no fallback role. If it's missing, print()/str() fall back to __repr__, not the other way around.",
+              neither:"Python's automatic default is the unreadable memory-address string; it's exactly what these methods exist to replace."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"strnorepr",
+    feedback:{strnorepr:"Right. Many debugger inspectors and the REPL itself display a variable using __repr__, so a missing __repr__ shows the ugly default even when __str__ works fine.",
+              ignores:"Debuggers don't ignore custom methods across the board; the specific behavior here is which method a given tool calls.",
+              fixinit:"__init__ isn't implicated here. The symptom points specifically at a missing __repr__."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"repr",
+    feedback:{repr:"Right, the same rule from section 9: a list always displays its contained items using their __repr__.",
+              str:"print() on a list doesn't reach into each item's __str__; the list's own display logic uses __repr__ for its contents.",
+              combined:"Python doesn't merge the two methods. Exactly one is used for a given display, based on context."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"If a class defines __str__ but not __repr__, print(obj) still works, using __str__.", correct:true,
+      hint:"Think about which method print() reaches for first, and whether __repr__ needs to exist for that to work.",
+      explain:"print() looks for __str__ first. Since it's defined, __repr__ being absent doesn't stop print() from working."},
+    {value:"b", label:"A list of custom objects always displays each item using its __repr__, even if __str__ is also defined.", correct:true,
+      hint:"This is the same gotcha practiced in section 9. Does defining __str__ change what a container shows for its items?",
+      explain:"This is the section 9 gotcha: containers always use each item's __repr__, regardless of __str__."},
+    {value:"c", label:"__repr__ and __str__ must always return the exact same string.", correct:false,
+      hint:"Look back at the Donor example. Did its __str__ output and __repr__ output match?",
+      explain:"They're typically different on purpose: __str__ reads naturally, __repr__ is precise and constructor-like."},
+    {value:"d", label:"Defining __init__ automatically gives you a useful __str__ for free.", correct:false,
+      hint:"Section 5 printed a Donor with only __init__ defined. What did that actually show?",
+      explain:"Section 5 showed that __init__ alone still leaves you with Python's ugly default output; __str__ has to be written separately."}
+  ]});
+
+  K.dragDrop("#dragarea", "act-drag-scope");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneStr", label:"print(maya), __str__ defined", expectedLabel:"Uses __str__"},
+    chip2:{expectedId:"zoneStr", label:"f\"{maya}\", __str__ defined", expectedLabel:"Uses __str__"},
+    chip3:{expectedId:"zoneRepr", label:"repr(maya)", expectedLabel:"Uses __repr__"},
+    chip4:{expectedId:"zoneRepr", label:"print([maya, andre])", expectedLabel:"Uses __repr__"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["confirm","addrepr","addstr","test"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  const simMark = K.activity("act-simulator", () => window.__simModes && window.__simModes.size >= 3);
+  window.__simModes = new Set();
+  document.querySelectorAll(".sim").forEach(b => b.addEventListener("click", () => {
+    const mode = b.dataset.mode;
+    let cmd, out;
+    if(mode === "print"){ cmd = "print(maya)"; out = "Maya Chen has given $500 total"; }
+    else if(mode === "repr"){ cmd = "repr(maya)"; out = "Donor('Maya Chen', 500)"; }
+    else { cmd = "print([maya, andre])"; out = "[Donor('Maya Chen', 500), Donor('Andre Bell', 120)]"; }
+    $("#simcmd").textContent = "$ " + cmd;
+    $("#simout").textContent = out;
+    window.__simModes.add(mode);
+    simMark();
+  }));
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"3ohzBxoFHAY"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  K.Scoring.register("act-fillcode-repr", 1, "activity");
+  let reprAttempts = 0, reprDone = false;
+  $("#reprcheck").addEventListener("click", () => {
+    if(reprDone) return;
+    reprAttempts++;
+    const val = $("#reprinput").value.trim();
+    const ok = /^return\b/.test(val) && /f("|')/.test(val) && /self\.name/.test(val) && /self\.hours_logged/.test(val) && /Volunteer\(/.test(val);
+    const fb = $("#reprcheckfb");
+    if(ok){
+      K.Scoring.award("act-fillcode-repr", 1);
+      fb.className = "mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML = "<strong>That works.</strong> It returns an f-string starting with Volunteer(, includes both self.name and self.hours_logged, and quotes the name, the same shape as Donor's __repr__ above.";
+      reprDone = true;
+    } else if(reprAttempts >= 2){
+      K.Scoring.award("act-fillcode-repr", 0);
+      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML = "<strong>Here's one way to write it. You'll get it next time.</strong> <code>return f\"Volunteer('{self.name}', {self.hours_logged})\"</code>";
+      reprDone = true;
+    } else {
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>Not quite yet.</strong> Check that you start with <code>return</code>, use an f-string, reference both <code>self.name</code> and <code>self.hours_logged</code>, and start the string with <code>Volunteer(</code>. One more try before the answer is revealed.";
+    }
+    fb.setAttribute("tabindex","-1"); fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think of something in daily life that has both a quick label and a full, precise description, like a restaurant's name versus its full listing with address and hours. Where's the __str__ and where's the __repr__ in that comparison?",
+    "If you had to explain \"a list always shows __repr__, even when __str__ exists\" to a teammate who's never heard either term, what everyday example would you reach for?",
+    "Where have you run into a tool that showed you an unhelpful default description of something, the way Python's default object printout is unhelpful? What would a better description have looked like?"
+  ];
+  $("#aiprompt").addEventListener("click", () => {
+    const box = $("#aipromptbox");
+    box.style.display = "block";
+    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random() * AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb = $("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["oop-design"],
+      skills:["object-oriented-programming"], onDone(status,message){
+      fb.textContent = message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

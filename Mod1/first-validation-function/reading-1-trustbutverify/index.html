@@ -1,153 +1,612 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Trust, But Verify the Line | Your First Validation Function</title>
+<title>What Goes In, What Comes Out | Designing Your First Validation Function</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-:root{--ink:#19221c;--paper:#fbfaf6;--card:#fff;--forest:#21482f;--sage:#dce9df;--blue:#2b78b5;--gold:#e0ad2e;--line:#d6ddd8;--good:#e7f5eb;--bad:#fbe9ec;--focus:#ffbf47;--code:#151b17}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--paper);line-height:1.62}button,textarea{font:inherit}button:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}
-header{background:var(--forest);color:#fff;padding:3rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.4rem,6vw,4.6rem);line-height:1.02;margin:.4rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{text-transform:uppercase;font-weight:800;letter-spacing:.08em;color:#dce9df}.lead{font-size:1.2rem;max-width:820px}.meta{display:flex;gap:.6rem;flex-wrap:wrap}.pill{border:1px solid #a9bcad;border-radius:999px;padding:.3rem .7rem}
-.sticky{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:5}.track{height:8px;background:#e8ece9}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.55rem 1rem;color:#56615a}
-main{padding:2rem 1.2rem 5rem}section{margin-bottom:3.3rem}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.25rem;box-shadow:0 3px 14px #1420190d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
-.callout{border-left:6px solid var(--blue);background:#edf6fb;padding:1rem 1.2rem;border-radius:10px}.warn{border-left:6px solid var(--gold);background:#fff5dc;padding:1rem 1.2rem;border-radius:10px}
-button{border:2px solid var(--forest);border-radius:11px;padding:.72rem 1rem;background:#fff;color:var(--forest);font-weight:750;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
-.term{min-height:150px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}
-.pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem}.step{background:var(--sage);border-radius:14px;padding:1rem;text-align:center}.code{background:var(--code);color:#f5f7f5;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:125px;margin:0}.codeactions,.actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}.code button{background:#26342b;color:#fff;border-color:#cad8cd}
-textarea{width:100%;min-height:105px;padding:.75rem;border:2px solid #aeb8b1;border-radius:10px}.hint{display:none;background:#f3f0fb;border-radius:12px;padding:1rem}.hint.show{display:block}.bridge{border-top:8px solid var(--gold)}.export{background:#f0f4f1;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{color:#59635d;font-size:.92rem}
-@media(max-width:700px){.pipeline{grid-template-columns:1fr 1fr}h2{font-size:1.65rem}}
-</style></head><body>
-<header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Trust, But Verify the Line</h1>
-<p class="lead">A support system receives hundreds of text records overnight. Most are fine. A few are malformed. Your job is not to stare at the whole file and hope—you need a repeatable function that checks every line, explains what failed, and tells you exactly where to look.</p>
-<div class="meta"><span class="pill">~17–19 minutes</span><span class="pill">Interactive</span><span class="pill">No Python setup needed</span><span class="pill">Saves locally</span></div></div></header>
-<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Goal: combine loops, conditionals, functions, string splitting, and <code>enumerate()</code> into a validation workflow.</p></div>
-<main>
-<section><h2>1. Vocabulary: validation language</h2><p>Flip each card. These terms describe the job your function is about to do.</p><div class="grid">
-<button class="card term" type="button"><span class="front"><strong>validation</strong><br><span class="small">Flip</span></span><span class="back"><strong>Validation</strong><br>Checking data against rules before trusting or using it.</span></button>
-<button class="card term" type="button"><span class="front"><strong>record</strong><br><span class="small">Flip</span></span><span class="back"><strong>Record</strong><br>One unit of data. In a line-based text file, one line can represent one record.</span></button>
-<button class="card term" type="button"><span class="front"><strong>enumerate()</strong><br><span class="small">Flip</span></span><span class="back"><strong>enumerate()</strong><br>Lets a loop receive both a position counter and the item itself.</span></button>
-<button class="card term" type="button"><span class="front"><strong>field</strong><br><span class="small">Flip</span></span><span class="back"><strong>Field</strong><br>One piece inside a record after you split it into parts.</span></button>
-</div></section>
+.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:11rem}
+.contract-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin:1rem 0}
+.contract-grid .mlrk-card{text-align:center}
+.contract-grid .mlrk-card strong{display:block;color:var(--mlrk-bg-brand-deep);margin-bottom:.35rem;font-size:1.05rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
 
-<section><h2>2. Recall the pieces before combining them</h2><div class="card"><p><strong>Which pattern best describes what a reusable validator needs?</strong></p>
-<button class="choice recall" data-a="right" type="button">A function containing a loop, with conditionals inside the loop</button>
-<button class="choice recall" data-a="loop" type="button">Only a loop, because all records should receive the same result</button>
-<button class="choice recall" data-a="if" type="button">Only a conditional, because it can check the whole list at once</button><div id="recfb" class="feedback" tabindex="-1"></div></div>
-<p class="callout"><strong>Connection to prior skills:</strong> the function makes the logic reusable, the loop visits every record, and the conditional decides how to classify each one.</p></section>
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>What Goes In, What Comes Out</h1>
+<p class="mlrk-lead">Every evening, a community food bank's loading dock logs each donation drop-off as a single line of text: who dropped it off, and how many pounds came in. Most nights the log is clean. Some nights a volunteer forgets to write down a weight, or a driver scribbles "heavy" instead of a number. Before any of that data gets summarized into a weekly report, something has to look at every line and decide, one at a time, whether it's usable or whether a human needs to look at it. That single job, and only that job, belongs to one function &mdash; and this reading is about designing that function well, not just making it run.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~36&ndash;40 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
 
-<section><h2>3. The validation pipeline</h2><div class="pipeline"><div class="step"><strong>1</strong><br>Visit one line</div><div class="step"><strong>2</strong><br>Split into fields</div><div class="step"><strong>3</strong><br>Check rules</div><div class="step"><strong>4</strong><br>Report result</div></div>
-<p>Good validators do not start by trying every possible rule at once. They work from simple structure checks toward more specific content checks.</p></section>
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
 
-<section><h2>4. Start with fresh data</h2><p>These support-ticket records use <code>|</code> as a separator. Each valid line should have exactly three fields: <code>action | ticket_id | priority</code>.</p>
-<div class="code"><div class="screen">records = [
-    "OPEN|T104|3",
-    "OPEN|T105|high",
-    "CLOSE|T106",
-    "OPEN|T107|2"
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Functions &amp; Modular Programming</strong> &mdash; breaking a program into well-scoped, reusable functions instead of one long block, and independently debugging code organized that way.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Picture that loading dock's log file. Every line should look like <code>"DROPOFF|D118|42"</code>: an action, a donor ID, and a weight in pounds, separated by <code>|</code>. Before anyone tallies tonight's total weight or emails a thank-you receipt, one function needs to walk through every line and answer a narrow question: is this line usable, and if not, exactly why? Nothing else. Not printing a summary, not tallying pounds, not deciding what to do about a bad line &mdash; just checking, and reporting back.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 720 250" role="img" aria-labelledby="fnIntroTitle fnIntroDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="fnIntroTitle">Raw donation log lines passing through one validating function into two outcomes</title>
+  <desc id="fnIntroDesc">On the left, four raw log lines stacked as cards. An arrow leads into a box labeled the validating function. Two arrows lead out of that box: one to a small pile labeled looks fine, and one to a pile labeled flagged, with example reasons "wrong number of fields" and "weight is not a number" attached.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="90" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Raw log lines</text>
+    <g fill="#FFFCF7" stroke="#264326" stroke-width="2.5">
+      <rect x="15" y="30" width="150" height="34" rx="8"/>
+      <rect x="15" y="70" width="150" height="34" rx="8"/>
+      <rect x="15" y="110" width="150" height="34" rx="8"/>
+      <rect x="15" y="150" width="150" height="34" rx="8"/>
+    </g>
+    <g font-size="12.5" font-weight="600" fill="#261F1D" text-anchor="middle" font-family="Consolas, Monaco, monospace">
+      <text x="90" y="52">DROPOFF|D118|42</text>
+      <text x="90" y="92">DROPOFF|D204</text>
+      <text x="90" y="132">DROPOFF|D205|heavy</text>
+      <text x="90" y="172">DROPOFF|D207|9</text>
+    </g>
+
+    <polygon points="172,98 210,98 210,90 232,105 210,120 210,112 172,112" fill="#264326"/>
+
+    <rect x="250" y="60" width="150" height="90" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="325" y="98" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">the validating</text>
+    <text x="325" y="118" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">function</text>
+    <text x="325" y="138" text-anchor="middle" font-size="12" fill="#261F1D">one job: check</text>
+
+    <polygon points="405,84 435,84 435,77 450,90 435,103 435,96 405,96" fill="#264326"/>
+    <polygon points="405,126 435,126 435,119 450,132 435,145 435,138 405,138" fill="#264326"/>
+
+    <rect x="460" y="20" width="130" height="60" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="525" y="45" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">looks fine</text>
+    <text x="525" y="64" text-anchor="middle" font-size="12" fill="#261F1D">(2 of 4 lines)</text>
+
+    <rect x="460" y="105" width="230" height="120" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="575" y="128" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">flagged, with a reason</text>
+    <text x="575" y="152" text-anchor="middle" font-size="12" fill="#261F1D">Line 2: wrong number</text>
+    <text x="575" y="169" text-anchor="middle" font-size="12" fill="#261F1D">of fields</text>
+    <text x="575" y="193" text-anchor="middle" font-size="12" fill="#261F1D">Line 3: weight is not</text>
+    <text x="575" y="210" text-anchor="middle" font-size="12" fill="#261F1D">a number</text>
+  </g>
+</svg>
+
+<p>Two design decisions have to be made before a single line of the loop gets written: what does this function need to receive (its <strong>input</strong>), and what will it hand back to whoever calls it (its <strong>output</strong>)? Those two answers, together, are the function's <strong>contract</strong> &mdash; a promise the rest of the program can rely on without needing to know how the checking actually happens inside.</p>
+
+<div class="contract-grid">
+  <div class="mlrk-card"><strong>IN</strong>The list of raw log lines, exactly as they came off the dock.</div>
+  <div class="mlrk-card"><strong>ONE JOB</strong>Decide whether each line is usable, and why not if it isn't.</div>
+  <div class="mlrk-card"><strong>OUT</strong>A list of problem descriptions &mdash; empty if every line was fine.</div>
+</div>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> "write a function that checks a batch of records" is one of the most common warm-up and take-home tasks in a data or software interview, and a shaky answer almost always comes from skipping this contract step, not from getting the loop wrong. A function that quietly mixes in printing, tallying, or deciding what happens next is much harder to test, reuse, or hand off to a teammate than one with exactly one clearly stated job.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to define a function with parameters and a return value, and you already know how to loop through a collection and branch on a condition inside it. This reading is entirely about combining those two skills inside one well-designed function. Once deciding a function's contract before writing its body feels automatic, the same habit keeps paying off: it's exactly how you'd design a second function that does something different with this one's output, or decide when a value needs to be handled the moment it fails rather than checked for in advance.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before combining</h2>
+<p class="mlrk-small">A few earlier skills get reused directly in this reading: what a function's return value actually is, tracing a single (non-nested) loop, picking the right branch of a single conditional, and what <code>str.split()</code> produces. Test each one below before moving on.</p>
+
+<div class="mlrk-card" id="card-return"><p><strong>Coding check:</strong> a function is defined with a <code>return</code> statement at the end. You call it, but never do anything with what it hands back &mdash; no <code>print()</code>, no assignment.</p>
+<button type="button" class="mlrk-choice" data-a="discard">The return value is produced and then discarded; nothing captured it.</button>
+<button type="button" class="mlrk-choice" data-a="auto">Python automatically prints the return value for you.</button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error, since a return value must always be used.</button>
+<div id="returnfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-loop" style="margin-top:.8rem"><p><strong>Trace check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">for line in ["a", "b", "c", "d"]:
+    print(line)</div></div>
+<p><strong>How many lines print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="4">4</button>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="1">1</button>
+<div id="loopfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-branch" style="margin-top:.8rem"><p><strong>Scenario check:</strong> <code>count = 3</code>.</p>
+<div class="mlrk-code"><div class="mlrk-screen">if count == 0:
+    print("empty")
+elif count < 5:
+    print("low")
+else:
+    print("plenty")</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="low">low</button>
+<button type="button" class="mlrk-choice" data-a="empty">empty</button>
+<button type="button" class="mlrk-choice" data-a="plenty">plenty</button>
+<div id="branchfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-split" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>"DROPOFF|D204".split("|")</code></p>
+<p><strong>What does this produce?</strong></p>
+<button type="button" class="mlrk-choice" data-a="two">A list of 2 strings: <code>["DROPOFF", "D204"]</code></button>
+<button type="button" class="mlrk-choice" data-a="one">A list of 1 string: <code>["DROPOFF|D204"]</code></button>
+<button type="button" class="mlrk-choice" data-a="three">A list of 3 strings, since split always makes three parts.</button>
+<div id="splitfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">Nothing about combining a loop, a conditional, and a function changes how any of these four work on their own &mdash; they show up again below exactly as they work here.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card. These are the terms this reading adds on top of what you already know about functions.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>contract</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Contract</strong><br>The agreement a function keeps with whoever calls it: exactly what it needs as input, and exactly what it hands back as output.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>side effect</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Side effect</strong><br>Anything a function does besides returning a value, like printing to the screen. A function full of side effects is much harder to test on its own.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>single responsibility</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Single responsibility</strong><br>The idea that a function should do one job well, not several unrelated jobs bundled together.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>structure check</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Structure check</strong><br>Confirming a record has the right shape before looking at what's inside it, like counting how many fields a split produced.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>value check</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Value check</strong><br>Confirming a specific field actually holds the kind of value it's supposed to, like a number where a number is expected.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>enumerate()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>enumerate()</strong><br>A built-in function that pairs each item in a collection with a position counter, so a loop receives both without tracking a counter by hand.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>testable in isolation</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Testable in isolation</strong><br>Being able to call a function directly with a small, made-up input and check its return value, without running the rest of the program.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Decide the contract before you decide anything else</h2>
+<p>Before writing a loop or a conditional, the very first design question is: what should this function return when it finds problems?</p>
+<div class="mlrk-card" id="card-contract"><p><strong>Which contract serves the rest of the program best?</strong></p>
+<button type="button" class="mlrk-choice" data-a="list">Return a list of problem descriptions, one per bad line &mdash; an empty list if every line is fine.</button>
+<button type="button" class="mlrk-choice" data-a="print">Print each problem as it's found, and don't return anything in particular.</button>
+<button type="button" class="mlrk-choice" data-a="bool">Return <code>True</code> if every line is fine, <code>False</code> otherwise, with no detail about which line or why.</button>
+<div id="contractfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Sort by contract vs. implementation detail</h2>
+<p>Drag each item into the zone that describes it, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">the list of raw log lines the function receives</span>
+  <span id="chip2" class="mlrk-draggable">the list of problem messages the function hands back</span>
+  <span id="chip3" class="mlrk-draggable">the for loop that walks each line one at a time</span>
+  <span id="chip4" class="mlrk-draggable">the if/elif that tells a structure problem from a value problem</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Part of the contract (what a caller needs to know)</strong></p><div class="mlrk-dropzone" id="zoneContract"></div></div>
+  <div><p class="mlrk-small"><strong>Implementation detail (hidden inside the function)</strong></p><div class="mlrk-dropzone" id="zoneImpl"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Order the design steps</h2>
+<p>Click steps, in order, to build the sequence of DECISIONS a well-scoped function should follow, before worrying about the code inside it. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="job"><span class="mlrk-order-num"></span> Decide the one job this function is responsible for.</li>
+  <li class="mlrk-orderitem" data-step="input"><span class="mlrk-order-num"></span> Decide what it needs as input &mdash; its parameters.</li>
+  <li class="mlrk-orderitem" data-step="output"><span class="mlrk-order-num"></span> Decide exactly what it will hand back &mdash; its return contract.</li>
+  <li class="mlrk-orderitem" data-step="implementation"><span class="mlrk-order-num"></span> Only now write the loop and conditionals that make that contract true.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Structure check, then value check</h2>
+<p>With the contract decided, here's the batch this reading uses. A valid line always has exactly 3 fields: action, donor ID, weight.</p>
+<div class="mlrk-code"><div class="mlrk-screen">donations = [
+    "DROPOFF|D118|42",
+    "DROPOFF|D204",
+    "DROPOFF|D205|heavy",
+    "DROPOFF|D207|9"
 ]</div></div>
-<div class="card" style="margin-top:1rem"><p><strong>Which line clearly has the wrong number of fields?</strong></p>
-<button class="choice shapeq" data-a="third" type="button"><code>"CLOSE|T106"</code></button>
-<button class="choice shapeq" data-a="second" type="button"><code>"OPEN|T105|high"</code></button>
-<button class="choice shapeq" data-a="first" type="button"><code>"OPEN|T104|3"</code></button><div id="shapefb" class="feedback" tabindex="-1"></div></div></section>
+<div class="mlrk-card" id="card-shape" style="margin-top:1rem"><p><strong>Which line fails the structure check &mdash; not the value check?</strong></p>
+<button type="button" class="mlrk-choice" data-a="d204"><code>"DROPOFF|D204"</code></button>
+<button type="button" class="mlrk-choice" data-a="d205"><code>"DROPOFF|D205|heavy"</code></button>
+<button type="button" class="mlrk-choice" data-a="d207"><code>"DROPOFF|D207|9"</code></button>
+<div id="shapefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">A structure check has to run first: if a line doesn't have 3 fields at all, checking <code>fields[2]</code> for its value could fail before the value check ever gets a chance to run.</p>
 
-<section><h2>5. Shape check first</h2><div class="code"><div id="shapeScreen" class="screen">line = "CLOSE|T106"
-fields = line.split("|")
+<p style="margin-top:1rem">Writing both checks well needs two small tools. <code>str.isdigit()</code> checks whether a string is made entirely of digits:</p>
+<div class="mlrk-code"><div class="mlrk-screen">"42".isdigit()
+[Output] True
 
-if len(fields) == 3:
-    print("shape OK")
-else:
-    print("wrong field count")</div><div class="codeactions"><button id="shaperun" type="button">Reveal simulated output</button></div></div>
-<p class="warn"><strong>Why shape first?</strong> Later checks may assume a field exists at a specific position. If the shape is wrong, checking a missing field can cause an error.</p></section>
-
-<section><h2>6. Then check what a field contains</h2><div class="card"><p>Suppose the shape is correct. The third field should be a whole-number priority.</p><div class="code"><div class="screen">fields = ["OPEN", "T105", "high"]
-
-if not fields[2].isdigit():
-    print("priority must be numeric")</div></div>
-<p><strong>What happens?</strong></p><button class="choice digitq" data-a="message" type="button">It prints <code>priority must be numeric</code></button><button class="choice digitq" data-a="nothing" type="button">Nothing prints because the list has three fields</button><button class="choice digitq" data-a="crash" type="button">Python crashes because <code>isdigit()</code> only works on integers</button><div id="digitfb" class="feedback" tabindex="-1"></div></div></section>
-
-<section><h2>7. Why check order matters</h2><div class="card"><p><strong>Which order is safer?</strong></p>
-<button class="choice orderq" data-a="safe" type="button">First check <code>len(fields)</code>; only then inspect <code>fields[2]</code></button>
-<button class="choice orderq" data-a="unsafe" type="button">Check <code>fields[2]</code> first; count the fields later</button><div id="orderfb" class="feedback" tabindex="-1"></div></div>
-<p class="callout">A validator should report bad data rather than crash while trying to inspect it. Structure checks protect later, more specific checks.</p></section>
-
-<section><h2>8. Make error reports actionable with <code>enumerate()</code></h2><p>Text editors show the first line as line 1. Python's <code>enumerate()</code> starts at 0 unless you tell it otherwise.</p>
-<div class="code"><div class="screen">for line_number, line in enumerate(records, start=1):
+"heavy".isdigit()
+[Output] False</div></div>
+<p style="margin-top:1rem">And <code>enumerate()</code> hands a loop two things per pass instead of one: a position counter, and the item itself.</p>
+<div class="mlrk-code"><div class="mlrk-screen">for line_number, line in enumerate(donations, start=1):
     print(line_number, line)</div></div>
-<div class="card" style="margin-top:1rem"><p><strong>Why use <code>start=1</code> here?</strong></p>
-<button class="choice enumq" data-a="human" type="button">So reported line numbers match the way humans count lines in a file</button>
-<button class="choice enumq" data-a="change" type="button">So <code>enumerate()</code> changes the records themselves</button>
-<button class="choice enumq" data-a="needed" type="button">Because <code>enumerate()</code> does not work without it</button><div id="enumfb" class="feedback" tabindex="-1"></div></div></section>
+<div class="mlrk-card" id="card-enum" style="margin-top:1rem"><p><strong>Why <code>start=1</code> here, instead of leaving it out?</strong></p>
+<button type="button" class="mlrk-choice" data-a="human">So the reported line numbers match how a human counts lines in a file, starting at 1.</button>
+<button type="button" class="mlrk-choice" data-a="change">So enumerate() changes the values inside donations itself.</button>
+<button type="button" class="mlrk-choice" data-a="required">Because enumerate() cannot run at all without a start argument.</button>
+<div id="enumfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<section><h2>9. Predict the complete validator</h2><div class="code"><div id="fullScreen" class="screen">def inspect_records(records):
+<div class="mlrk-code" style="margin-top:1rem"><div id="traceScreen" class="mlrk-screen">Click "Reveal the full report" to see what find_donation_problems(donations) returns.</div>
+<div class="mlrk-actions"><button type="button" id="tracerun" class="mlrk-btn">Reveal the full report</button></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Write the missing pieces yourself</h2>
+<p>Here's the function this reading has been designing toward. Three pieces are missing. Type what belongs in each blank, referring back to the contract you already chose: this function returns a <strong>list</strong> of problems, not a printed message.</p>
+<div class="mlrk-code"><div class="mlrk-screen">def find_donation_problems(records):
+    problems = []
+    for line_number, line in <span id="blankA-slot">_____</span>(records, start=1):
+        fields = line.split("|")
+
+        if len(fields) != 3:
+            problems.append(f"Line {line_number}: expected 3 fields, got {len(fields)}")
+        elif not fields[2].<span id="blankB-slot">_____</span>():
+            problems.append(f"Line {line_number}: weight '{fields[2]}' is not a number")
+
+    return <span id="blankC-slot">_____</span></div></div>
+<div class="mlrk-fillblank">
+  <label for="blankA">Blank 1 &mdash; gives you a position counter alongside each line</label>
+  <input type="text" id="blankA" autocomplete="off">
+</div>
+<div class="mlrk-fillblank">
+  <label for="blankB">Blank 2 &mdash; string method that checks "is this all digits"</label>
+  <input type="text" id="blankB" autocomplete="off">
+</div>
+<div class="mlrk-fillblank">
+  <label for="blankC">Blank 3 &mdash; what the function's contract says it hands back</label>
+  <input type="text" id="blankC" autocomplete="off">
+</div>
+<p><button type="button" id="blankcheck" class="mlrk-btn">Check my code</button></p>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+<p>Blank 1 and blank 2 were both introduced with examples in section 7, right above the "Reveal the full report" button: the tool that hands a loop a position counter alongside each item, and the string method that checks "is this all digits." Blank 3 is just the variable name being built up inside the loop, matching the contract chosen back in section 4.</p>
+</details>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about designing a function like this one well.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A function that validates a batch and also prints a running total is doing two jobs, even if the code is short.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Returning a list of problem strings makes the function easier to test, since you can compare the return value directly against what you expect.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> As long as a function eventually returns something, it doesn't matter whether it also prints, logs, or changes something outside itself along the way.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A function's contract only describes its parameters. What it returns is an implementation detail a caller doesn't need to know.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Debug: where did the other problems go?</h2>
+<p>A teammate wrote this version of the same function:</p>
+<div class="mlrk-code"><div class="mlrk-screen">def find_donation_problems(records):
+    problem = None
     for line_number, line in enumerate(records, start=1):
         fields = line.split("|")
 
         if len(fields) != 3:
-            print(f"Line {line_number}: bad shape")
+            problem = f"Line {line_number}: expected 3 fields, got {len(fields)}"
         elif not fields[2].isdigit():
-            print(f"Line {line_number}: bad priority")
-        else:
-            print(f"Line {line_number}: OK")</div><div class="codeactions"><button id="fullrun" type="button">Run conceptual test data</button></div></div>
-<div class="card" style="margin-top:1rem"><p><strong>For <code>"OPEN|T105|high"</code>, which branch runs?</strong></p>
-<button class="choice fullq" data-a="priority" type="button"><code>bad priority</code></button><button class="choice fullq" data-a="shape" type="button"><code>bad shape</code></button><button class="choice fullq" data-a="ok" type="button"><code>OK</code></button><div id="fullfb" class="feedback" tabindex="-1"></div></div></section>
+            problem = f"Line {line_number}: weight '{fields[2]}' is not a number"
 
-<section><h2>10. Build the logic without staring at a blank screen</h2><p>If you get stuck writing a validator from scratch, use a planning frame first.</p>
-<div class="grid"><div class="card"><strong>Input</strong><p>What collection of lines enters the function?</p></div><div class="card"><strong>Repeat</strong><p>What must happen once per line?</p></div><div class="card"><strong>Rules</strong><p>Which simple check should happen before the more specific check?</p></div><div class="card"><strong>Report</strong><p>What should the message tell a human?</p></div></div>
-<label for="plan"><strong>Your mini-plan:</strong> In 2–4 sentences, describe the order you would follow to build a validator from scratch.</label><textarea id="plan" data-save placeholder="Try: “First I would… Then I would…”"></textarea><p><button id="hintbtn" type="button">Generate a planning hint</button></p><div id="hint" class="hint"></div></section>
+    return problem</div></div>
+<div class="mlrk-card" id="card-debug"><p><strong>Called on the four-line donations batch above, what's actually wrong with this version?</strong></p>
+<button type="button" class="mlrk-choice" data-a="overwrite">Only the last problem found survives; every earlier problem gets overwritten and is lost.</button>
+<button type="button" class="mlrk-choice" data-a="correct">It correctly returns every problem found, just in a different order.</button>
+<button type="button" class="mlrk-choice" data-a="crash">It crashes with an error before it can return anything.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>This is exactly the kind of bug that hides if the function only ever gets run against a whole 400-line file and glanced at once. Calling it directly, by itself, on a tiny made-up batch would show the missing problems immediately.</p>
+<label for="isolate"><strong>Your turn:</strong> what tiny, made-up input would you call this function with, by itself, to catch this bug fast?</label>
+<textarea id="isolate" class="mlrk-response" data-save placeholder="Try describing 2-3 short lines you'd make up, and what you'd expect back."></textarea>
+</section>
 
-<section class="bridge"><h2>11. Required bridge to lecture + project</h2><p>You just practiced the architecture of a validation function without copying the lecture's worked dataset: a function receives lines, loops through them, splits each line, checks simple structure before specific content, and reports a human-usable line number with <code>enumerate()</code>. In lecture/lab, you will build that logic step by step in live Python and then combine multiple checks in one function.</p>
-<p>The project connection is direct: the larger project expects the same kind of thinking in its validation workflow—reusable logic, line-by-line checks, specific error reporting, and no crashing on malformed input.</p>
-<div class="card"><p><strong>Bridge challenge — new situation:</strong> A file has 500 records. Your validator reports “bad priority,” but gives no line number. Which change gives the most useful improvement?</p>
-<button class="choice bridgeq" data-a="enum" type="button">Use <code>enumerate(..., start=1)</code> and include the line number in the message</button>
-<button class="choice bridgeq" data-a="printall" type="button">Print the entire file before every error</button>
-<button class="choice bridgeq" data-a="stop" type="button">Stop after checking the first line</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
-<label for="bring"><strong>Bring to lecture:</strong> Why should a validator usually check the record's shape before checking a specific field inside it?</label><textarea id="bring" data-save></textarea></section>
+<section class="mlrk-section">
+<h2>11. Watch: enumerate() in practice</h2>
+<p>As you watch, notice how the position counter from <code>enumerate()</code> is exactly what turned "weight is not a number" into "Line 3: weight is not a number" in the function above &mdash; a message someone can actually act on in a long file.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=-MZiQaNI0QA" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: how does the video's use of enumerate() compare to how it's used inside find_donation_problems above?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
 
-<section><h2>12. Keep a copy of your work</h2><div class="export"><div class="actions"><button id="md" type="button">Create Markdown file</button><button id="json" type="button">Create JSON file</button><button id="txt" type="button">Create TXT file</button><button id="show" type="button">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:260px"></textarea><p><button id="selectall" type="button">Select all text</button></p></div></div></section>
-</main>
+<section class="mlrk-section">
+<h2>12. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"Write a function that validates a batch of records" is one of the most common warm-up or take-home tasks in a data or software technical screen. Interviewers are rarely grading whether the loop compiles on the first try &mdash; they're watching whether you state the contract out loud before writing any code ("this takes a list of strings, and returns a list of problem descriptions") and whether validation logic stays separate from anything that prints, tallies, or decides what happens next.</p>
+<p>A very common follow-up: "how would you test this without running the whole file?" The expected answer is the exact isolation habit practiced in section 10 &mdash; call the function directly with a small, made-up batch and check what it returns.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>An interviewer asks you to test your validation function without running a 400-line batch file. What's the strongest answer?</strong></p>
+<button type="button" class="mlrk-choice" data-a="isolate">Call the function directly with a small, hand-built list covering a couple of good and bad lines, and check what it returns.</button>
+<button type="button" class="mlrk-choice" data-a="full">Run the whole program and read through everything it prints.</button>
+<button type="button" class="mlrk-choice" data-a="wait">Explain that testing isn't really possible until the whole project is finished.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Summary &amp; critical thinking</h2>
+<p>One habit carried this whole reading: decide a function's contract, its one job, its input, and its exact return value, before writing the loop and conditionals that make that contract true. A structure check runs before a value check, and a returned list of specific problems is what makes a function testable on its own, in isolation from the rest of the program.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a community theater's box office logs each ticket sale as a line: <code>"SALE|show_id|seat_count"</code>. You're asked to write a function that checks a batch of these lines the same way. Before writing any code, what's the first design decision to make?</p>
+<button type="button" class="mlrk-choice" data-a="contract">Decide exactly what the function will take in and hand back.</button>
+<button type="button" class="mlrk-choice" data-a="loop">Start writing the for loop, since every validator needs one.</button>
+<button type="button" class="mlrk-choice" data-a="print">Decide how the results will be printed to the screen.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> why does deciding a function's return contract before writing its loop make the function easier for someone else (or future you) to reuse?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Thinking ahead</h2>
+<p>The same contract-first habit scales in two directions from here. Sometimes the next step is a second function with a completely different job that consumes this one's returned list &mdash; summarizing, reporting, or alerting on data this function already approved, while staying just as narrowly scoped itself. Other times a value fails in a way a plain <code>if</code> check can't safely catch in advance at all, like a conversion that raises an error the instant Python attempts it, which calls for handling the failure directly at the moment it happens rather than checking for it beforehand.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add first-validation-function-reading.json
+git commit -m "Complete validation function design reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong> &mdash; this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue &mdash; you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://docs.python.org/3/tutorial/controlflow.html#defining-functions" target="_blank" rel="noopener">Python docs: Defining Functions</a> &mdash; the official reference on parameters and structure.</li>
+<li><a href="https://docs.python.org/3/reference/simple_stmts.html#the-return-statement" target="_blank" rel="noopener">Python docs: The return statement</a> &mdash; the official language reference.</li>
+<li><a href="https://docs.python.org/3/library/functions.html#enumerate" target="_blank" rel="noopener">Python docs: enumerate()</a> &mdash; the official reference for the built-in used throughout this reading.</li>
+<li><a href="https://www.w3schools.com/python/ref_string_split.asp" target="_blank" rel="noopener">W3Schools: str.split()</a> &mdash; more worked examples of splitting a string into fields.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
 <script>
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let history=[];const KEY="validation-function-reading-v1";
-function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
-function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
-$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
-function quiz(cls,fb,correct,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{const ok=b.dataset.a===correct,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
-quiz(".recall","#recfb","right",{right:"A validator needs reuse, repetition, and decisions: function + loop + conditionals.",loop:"A loop can visit every record, but it cannot classify different records without decision logic.",if:"A conditional checks one situation at a time; the loop is what visits the whole collection."});
-quiz(".shapeq","#shapefb","third",{third:"Splitting on | gives only two fields: CLOSE and T106.",second:"This line has three fields. Its problem is content, not shape: high is not numeric.",first:"This line has three fields and a numeric third field."});
-quiz(".digitq","#digitfb","message",{message:"fields[2] is the string high, so isdigit() is False and the not makes the condition True.",nothing:"The shape is correct, but the third field still fails the numeric-content check.",crash:"isdigit() is a string method, so calling it on the string high is valid."});
-quiz(".orderq","#orderfb","safe",{safe:"If the record is too short, fields[2] may not exist. Checking shape first prevents that later access from failing.",unsafe:"This can crash on a two-field record because fields[2] may not exist yet."});
-quiz(".enumq","#enumfb","human",{human:"Python counts from 0 by default, but file line numbers usually start at 1 for humans.",change:"enumerate() adds a counter; it does not modify the records.",needed:"enumerate() works without start=1; it simply starts counting at 0."});
-quiz(".fullq","#fullfb","priority",{priority:"The record has three fields, so it passes the shape check. The third field high is not digits, so bad priority runs.",shape:"The record has exactly three fields, so bad shape is skipped.",ok:"OK is only reached after both earlier checks are passed."});
-quiz(".bridgeq","#bridgefb","enum",{enum:"A specific human-readable line number makes the report actionable in a large file.",printall:"Printing the whole file adds noise without pinpointing the failing location.",stop:"Stopping after one line defeats the goal of validating the collection."});
-$("#shaperun").addEventListener("click",()=>{$("#shapeScreen").textContent=`line = "CLOSE|T106"
-fields = line.split("|")
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "first-validation-function-reading1";
+  const TITLE = "What Goes In, What Comes Out | Designing Your First Validation Function";
 
-if len(fields) == 3:
-    print("shape OK")
-else:
-    print("wrong field count")
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
 
-[Output]:
-wrong field count`;history.push({activity:"shape-check-simulation",action:"revealed wrong field count"});save()});
-$("#fullrun").addEventListener("click",()=>{$("#fullScreen").textContent=`def inspect_records(records):
-    for line_number, line in enumerate(records, start=1):
-        fields = line.split("|")
+  K.quiz({id:"q-return", buttonSelector:"#card-return .mlrk-choice", feedbackSelector:"#returnfb", correct:"discard",
+    feedback:{discard:"A return value only exists where it's captured or used. If nothing catches it, it's produced and then discarded.",
+              auto:"Python never auto-prints a return value on its own. Something has to explicitly print or store it.",
+              error:"An unused return value is completely normal and never raises an error."}});
 
-        if len(fields) != 3:
-            print(f"Line {line_number}: bad shape")
-        elif not fields[2].isdigit():
-            print(f"Line {line_number}: bad priority")
-        else:
-            print(f"Line {line_number}: OK")
+  K.quiz({id:"q-loop", buttonSelector:"#card-loop .mlrk-choice", feedbackSelector:"#loopfb", correct:"4", maxAttempts:1,
+    feedback:{"4":"The list has 4 items, so the loop body runs 4 times.",
+              "3":"The list has 4 items, not 3, so the loop runs one more time than that."}});
 
-[Output]:
-Line 1: OK
-Line 2: bad priority
-Line 3: bad shape
-Line 4: OK`;history.push({activity:"full-validator-simulation",action:"revealed four-line report"});save()});
-$("#hintbtn").addEventListener("click",()=>{const h=$("#hint");h.classList.add("show");h.textContent="Use this sequence: define the function → loop with enumerate → split one line → check field count → check field content → report a specific message."});
-function snapshot(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
-function text(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
-function markdown(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
-function dl(name,type,content){try{const b=new Blob([content],{type:type+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
-function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” below."}
-$("#md").addEventListener("click",()=>stat(dl("validation-function-reading.md","text/markdown",markdown(snapshot()))));$("#json").addEventListener("click",()=>stat(dl("validation-function-reading.json","application/json",JSON.stringify(snapshot(),null,2))));$("#txt").addEventListener("click",()=>stat(dl("validation-function-reading.txt","text/plain",text(snapshot()))));
-$("#show").addEventListener("click",()=>{const w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=text(snapshot());t.focus();t.select()});$("#selectall").addEventListener("click",()=>{$("#plain").focus();$("#plain").select()});
-window.addEventListener("scroll",()=>{const d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
-</script></body></html>
+  K.quiz({id:"q-branch", buttonSelector:"#card-branch .mlrk-choice", feedbackSelector:"#branchfb", correct:"low",
+    feedback:{low:"count == 0 is false, but count < 5 is true, so low prints and the else branch is skipped.",
+              empty:"count is 3, not 0, so the first branch is false.",
+              plenty:"Python already found a true branch (count < 5) before ever reaching else, so else never runs."}});
+
+  K.quiz({id:"q-split", buttonSelector:"#card-split .mlrk-choice", feedbackSelector:"#splitfb", correct:"two",
+    feedback:{two:"Splitting on | breaks the string wherever a | appears. There's only one | here, so you get 2 pieces.",
+              one:"split() actually breaks the string apart at every |, so this isn't left as one whole piece.",
+              three:"split() produces one more piece than the number of separators it finds, not always exactly three."}});
+
+  K.quiz({id:"q-contract", buttonSelector:"#card-contract .mlrk-choice", feedbackSelector:"#contractfb", correct:"list",
+    feedback:{list:"A returned list is real data the rest of the program can count, log, filter, or hand to a report, and it's simple to check by calling the function directly.",
+              print:"Printing is a side effect, not a return value. A caller can't act on plain text sent to a terminal, and a test can't easily check what got printed.",
+              bool:"A single True or False throws away exactly the detail a long batch needs most: which line, and why."}});
+
+  K.quiz({id:"q-shape", buttonSelector:"#card-shape .mlrk-choice", feedbackSelector:"#shapefb", correct:"d204",
+    feedback:{d204:"Splitting on | gives only 2 fields here, so this fails the structure check before any value is even looked at.",
+              d205:"This line has all 3 fields. Its problem is the value in one of them, not the count.",
+              d207:"This line has 3 fields and a numeric weight, so it passes both checks."}});
+
+  K.quiz({id:"q-enum", buttonSelector:"#card-enum .mlrk-choice", feedbackSelector:"#enumfb", correct:"human",
+    feedback:{human:"Python counts from 0 by default, but the line numbers people expect when they open a file start at 1.",
+              change:"enumerate() only adds a counter alongside each item. It never modifies the collection itself.",
+              required:"enumerate() works fine without start=1; it just starts counting at 0 instead."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"overwrite",
+    feedback:{overwrite:"problem gets reassigned every time a new issue is found, so only the very last one found is still sitting in the variable when the function returns.",
+              correct:"Reassigning the same variable on every match means earlier problems are overwritten, not collected.",
+              crash:"Nothing here raises an error. The bug is silent: it just quietly loses information."}});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"isolate",
+    feedback:{isolate:"Calling the function directly with a small, hand-built batch and checking its return value is exactly what a returned-list contract makes possible.",
+              full:"Reading through printed output from the whole program is slow and easy to misread, and it doesn't test the function on its own.",
+              wait:"A well-scoped function with a clear contract can be tested the moment it's written, independent of the rest of the project."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"contract",
+    feedback:{contract:"The same habit practiced throughout this reading: decide the input and the exact return value before writing any loop or conditional.",
+              loop:"Writing the loop first, before deciding what the function even returns, is exactly the order this reading argued against.",
+              print:"How results get displayed is a caller's decision, not something the validating function itself should be deciding."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"A function that validates a batch and also prints a running total is doing two jobs, even if the code is short.", correct:true,
+      hint:"Line count isn't what defines a job. Think about how many different questions the function is answering.",
+      explain:"Validating and tallying are two separate questions, no matter how few lines the code takes."},
+    {value:"b", label:"Returning a list of problem strings makes the function easier to test, since you can compare the return value directly against what you expect.", correct:true,
+      hint:"Think back to section 10's isolation habit. Would that habit work as well if the function only printed instead of returning?",
+      explain:"A returned list can be compared directly in a test. Printed text can't be checked nearly as cleanly."},
+    {value:"c", label:"As long as a function eventually returns something, it doesn't matter whether it also prints, logs, or changes something outside itself along the way.", correct:false,
+      hint:"Revisit section 3's definition of a side effect. Does having extra side effects come free, or does it cost something?",
+      explain:"Extra side effects make a function harder to reuse and test in isolation, even if it still returns a value at the end."},
+    {value:"d", label:"A function's contract only describes its parameters. What it returns is an implementation detail a caller doesn't need to know.", correct:false,
+      hint:"Look back at section 4's contract grid. Which part of IN / ONE JOB / OUT did it leave out?",
+      explain:"The contract grid in section 4 explicitly includes OUT. A caller absolutely needs to know what a function returns."}
+  ]});
+
+  K.dragDrop("#dragarea", "act-drag-contract");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneContract", label:"the list of raw log lines the function receives", expectedLabel:"Part of the contract"},
+    chip2:{expectedId:"zoneContract", label:"the list of problem messages the function hands back", expectedLabel:"Part of the contract"},
+    chip3:{expectedId:"zoneImpl", label:"the for loop that walks each line one at a time", expectedLabel:"Implementation detail"},
+    chip4:{expectedId:"zoneImpl", label:"the if/elif that tells a structure problem from a value problem", expectedLabel:"Implementation detail"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-design", correctOrder:["job","input","output","implementation"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  function revealTrace(){
+    $("#traceScreen").textContent = `donations = [
+    "DROPOFF|D118|42",
+    "DROPOFF|D204",
+    "DROPOFF|D205|heavy",
+    "DROPOFF|D207|9"
+]
+
+find_donation_problems(donations)
+
+[Returns]
+["Line 2: expected 3 fields, got 2", "Line 3: weight 'heavy' is not a number"]`;
+  }
+  const markTrace = K.activity("act-trace-reveal", () => true);
+  $("#tracerun").addEventListener("click", () => { revealTrace(); markTrace(); });
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"-MZiQaNI0QA"});
+  K.freeResponse({id:"resp-isolate", selector:"#isolate", minWords:8});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:8});
+
+  const CORRECT_BLANKS = {blankA:"enumerate", blankB:"isdigit", blankC:"problems"};
+  K.Scoring.register("q-fillfn", 1, "quiz");
+  let fillAttempts = 0, fillDone = false;
+  $("#blankcheck").addEventListener("click", () => {
+    if(fillDone) return;
+    fillAttempts++;
+    const given = {
+      blankA: $("#blankA").value.trim().toLowerCase(),
+      blankB: $("#blankB").value.trim().toLowerCase(),
+      blankC: $("#blankC").value.trim().toLowerCase()
+    };
+    const results = Object.keys(CORRECT_BLANKS).map(k => ({key:k, ok: given[k] === CORRECT_BLANKS[k]}));
+    const allOk = results.every(r => r.ok);
+    const fb = $("#blankfb");
+    if(allOk){
+      K.Scoring.award("q-fillfn", fillAttempts === 1 ? 1 : 0.5);
+      fb.className = "mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML = "<strong>Correct"+(fillAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> enumerate(records, start=1) numbers each line starting at 1, isdigit() checks the weight field, and returning problems is exactly the list contract chosen in section 4.";
+      fillDone = true;
+      $("#blankA-slot").textContent = "enumerate";
+      $("#blankB-slot").textContent = "isdigit";
+      $("#blankC-slot").textContent = "problems";
+    } else if(fillAttempts >= 2){
+      K.Scoring.award("q-fillfn", 0);
+      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML = "<strong>Here's the complete function. You'll get it next time.</strong> Blank 1 is <code>enumerate</code>, blank 2 is <code>isdigit</code>, blank 3 is <code>problems</code>.";
+      fillDone = true;
+      $("#blankA-slot").textContent = "enumerate";
+      $("#blankB-slot").textContent = "isdigit";
+      $("#blankC-slot").textContent = "problems";
+    } else {
+      const wrongCount = results.filter(r => !r.ok).length;
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>Not quite yet.</strong> "+wrongCount+" of 3 blanks still need a look. One more try before the answer is shown.";
+    }
+    fb.setAttribute("tabindex","-1"); fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think of a form you've filled out that only accepted certain kinds of answers, like a phone number field. What was that form's contract: what did it take in, and what did it hand back when something was wrong?",
+    "If you had to explain 'decide the contract before writing the loop' to a friend using something from your own daily life, like following a recipe, what would you compare it to?",
+    "Where have you already seen 'one function, one job' outside of code, like a single kitchen tool built for exactly one task instead of ten?"
+  ];
+  $("#aiprompt").addEventListener("click", () => {
+    const box = $("#aipromptbox");
+    box.style.display = "block";
+    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["debugging-testing","python-fundamentals"],
+      skills:["functions-modular-programming"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

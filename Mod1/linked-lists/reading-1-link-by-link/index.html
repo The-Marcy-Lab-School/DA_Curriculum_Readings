@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Link by Link — Linked Lists</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:720px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:16rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Link by Link</h1>
+<p class="mlrk-lead">This one isn't tied to any project you have due right now. Think of it as optional depth: a linked list is one of the most foundational data structures in software engineering, and reversing one is one of the most commonly asked questions in a real technical interview, so time spent here pays off well beyond this single topic. Picture a music app's Up Next queue. Every song in it only "knows" about the one song that comes right after it. Ask the app for song #47 directly and it cannot jump straight there. It has to start at the top and walk the queue, one song at a time, following that chain of connections until it arrives.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">Optional enrichment</span>
+  <span class="mlrk-pill">~48–52 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Data Structures &amp; Algorithms</strong> — Explaining how a data structure (hash map, linked list, tree) or a recursive process actually works under the hood, and applying that understanding to solve a real coding-interview-style problem, not just naming the structure from memory.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Start as small as possible: a single box holding one value, with a spot reserved for a connection to whatever comes after it, currently empty. That single box is a <strong>node</strong>. A node holds a value, plus a reference to whatever node should come next. Nothing follows it yet, so that reference is empty, written in Python as <code>None</code>.</p>
+
+<p>Now add a second node. Python does not automatically know "this one comes second" the way it does with list indexes. Someone has to say so explicitly: the first node's "what comes next" reference gets pointed at the second node. That single connection is the entire relationship between them. Neither node's location in memory changed. They could be anywhere at all. What makes them a chain is only that one reference.</p>
+
+<p>Keep going: add a third node the same way, point the second node at it, and there is a genuine chain: three separate nodes, each one aware only of the single node immediately after it, connected purely by references rather than by sitting next to each other.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 720 440" role="img" aria-labelledby="svgATitle svgADesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="svgATitle">Array stored as one contiguous block compared to a linked list of scattered nodes connected by pointers</title>
+  <desc id="svgADesc">On the left, four boxes labeled Song A through Song D sit immediately next to each other in one continuous block, each with an index number 0 through 3 below it. On the right, four separate boxes holding the same four song names sit at different positions, connected in order by arrows from each node down into the next node, starting from a head pointer above the first node and ending with the last node's pointer aimed at a box labeled None.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <line x1="370" y1="20" x2="370" y2="420" stroke="#B3BBB0" stroke-width="2" stroke-dasharray="6 6"/>
+
+    <text x="190" y="60" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Array: one contiguous block</text>
+    <g fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5">
+      <rect x="20" y="90" width="85" height="70"/>
+      <rect x="105" y="90" width="85" height="70"/>
+      <rect x="190" y="90" width="85" height="70"/>
+      <rect x="275" y="90" width="85" height="70"/>
+    </g>
+    <g font-size="13" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="62" y="130">Song A</text><text x="147" y="130">Song B</text>
+      <text x="232" y="130">Song C</text><text x="317" y="130">Song D</text>
+    </g>
+    <g font-size="13" font-weight="600" fill="#264326" text-anchor="middle">
+      <text x="62" y="180">index 0</text><text x="147" y="180">index 1</text>
+      <text x="232" y="180">index 2</text><text x="317" y="180">index 3</text>
+    </g>
+    <text x="190" y="215" text-anchor="middle" font-size="13" fill="#261F1D">Index tells Python exactly how many bytes to jump ahead.</text>
+    <text x="190" y="235" text-anchor="middle" font-size="13" fill="#261F1D">No arrows needed. No box knows about any other box.</text>
+
+    <text x="550" y="20" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Linked list: scattered nodes, connected by pointers</text>
+    <text x="445" y="45" text-anchor="middle" font-size="13" font-weight="700" fill="#264326">head</text>
+    <line x1="445" y1="50" x2="445" y2="68" stroke="#264326" stroke-width="3"/>
+    <polygon points="439,60 451,60 445,68" fill="#264326"/>
+
+    <g fill="#A6C2B4" stroke="#264326" stroke-width="2.5">
+      <rect x="380" y="70" width="130" height="55"/>
+      <rect x="470" y="150" width="130" height="55"/>
+      <rect x="560" y="230" width="130" height="55"/>
+      <rect x="470" y="310" width="130" height="55"/>
+    </g>
+    <g font-size="13" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="445" y="102">Song A</text><text x="535" y="182">Song B</text>
+      <text x="625" y="262">Song C</text><text x="535" y="342">Song D</text>
+    </g>
+
+    <g stroke="#264326" stroke-width="3" fill="none">
+      <path d="M445,125 L445,140 L535,140 L535,150"/>
+      <path d="M535,205 L535,220 L625,220 L625,230"/>
+      <path d="M625,285 L625,300 L535,300 L535,310"/>
+    </g>
+    <g fill="#264326">
+      <polygon points="529,142 541,142 535,150"/>
+      <polygon points="619,222 631,222 625,230"/>
+      <polygon points="529,302 541,302 535,310"/>
+    </g>
+
+    <line x1="535" y1="365" x2="535" y2="385" stroke="#264326" stroke-width="3"/>
+    <polygon points="529,377 541,377 535,385" fill="#264326"/>
+    <rect x="495" y="385" width="80" height="35" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="535" y="407" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">None</text>
+  </g>
+</svg>
+
+<p>That is the core difference from a Python list. A list is one contiguous block: Python can compute exactly where element <code>7</code> lives with simple arithmetic on the starting address, no matter how big the list is. A linked list has no such shortcut. Each node can live anywhere, and the only way to reach the fifth node is to start at the first one and follow "next" four times. That is called <strong>traversal</strong>, and it is the price a linked list pays for something a list cannot offer as cheaply: changing what sits in the middle without moving anything else around it (more on that soon).</p>
+
+<p>Here is that exact three-node chain in Python, built with a small class that holds a value and a "next" reference:</p>
+
+<div class="mlrk-code"><div class="mlrk-screen">class Node:
+    def __init__(self, value):
+        self.value = value
+        self.next = None
+
+head = Node("Song A")
+second = Node("Song B")
+head.next = second
+
+third = Node("Song C")
+second.next = third
+
+# head -&gt; "Song A" -&gt; "Song B" -&gt; "Song C" -&gt; None</div></div>
+
+<p>Compare that to the one-line list version, <code>queue = ["Song A", "Song B", "Song C"]</code>. The list version is shorter to write and lets you jump straight to <code>queue[2]</code>. The linked version took more setup and can only be reached by starting at <code>head</code>. Cheap random access versus cheap insertion and removal is the entire trade-off, and it is why both structures exist side by side rather than one replacing the other.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> linked lists rarely show up as the actual container you reach for day to day in a typical data workflow, but the thinking behind them, knowing exactly what a variable points to and what happens when that reference gets reassigned, shows up constantly in interviews and underneath tools used every day: version control history, database indexes, and how a program's memory actually gets managed all lean on this same node-and-reference idea. "Reverse a linked list," specifically, is one of the single most commonly asked warm-up problems in software engineering interviews, at companies of every size.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to store a sequence of values in a Python list and loop over it from front to back. A linked list keeps that same "sequence of values, one after another" idea, but swaps contiguous memory and index math for something more explicit: nodes that only know about their own immediate neighbor. Once following one "next" reference at a time feels natural, the same idea scales up directly: give a node a second reference, one forward and one backward, and it becomes a doubly linked list.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before traversal</h2>
+<p class="mlrk-small">A few skills get reused heavily later in this reading: indexing into a sequence, a while loop that stops on its own when a condition changes, what <code>None</code> actually represents, and what really happens when one variable is assigned to another. Test each one below before moving on.</p>
+
+<div class="mlrk-card" id="card-prereq-index"><p><strong>Quick recall:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">playlist = ["Song A", "Song B", "Song C"]
+print(playlist[1])</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="b">Song B</button>
+<button type="button" class="mlrk-choice" data-a="a">Song A</button>
+<button type="button" class="mlrk-choice" data-a="all">['Song A', 'Song B', 'Song C']</button>
+<div id="prereqindexfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-prereq-while" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a loop is written as <code>while current is not None:</code>, and somewhere inside its body, <code>current</code> gets reassigned to <code>current.next</code> on every pass. In plain English, when does this loop actually stop running?</p>
+<button type="button" class="mlrk-choice" data-a="becomes">As soon as current actually becomes None.</button>
+<button type="button" class="mlrk-choice" data-a="three">After exactly three passes, no matter what.</button>
+<button type="button" class="mlrk-choice" data-a="outside">It never stops on its own. Something outside the loop has to stop it.</button>
+<div id="prereqwhilefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-prereq-none" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> in Python, what does a variable holding the value <code>None</code> actually represent?</p>
+<button type="button" class="mlrk-choice" data-a="absence">The explicit absence of a value. Not zero, not an empty string, genuinely nothing there.</button>
+<button type="button" class="mlrk-choice" data-a="zero">The number zero.</button>
+<button type="button" class="mlrk-choice" data-a="error">An error that Python already raised.</button>
+<div id="prereqnonefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-prereq-ref" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">a = [1, 2, 3]
+b = a
+b.append(4)
+print(a)</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="four">[1, 2, 3, 4]</button>
+<button type="button" class="mlrk-choice" data-a="three">[1, 2, 3]</button>
+<button type="button" class="mlrk-choice" data-a="err">Python raises an error, since b was never really allowed to change.</button>
+<div id="prereqreffb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">That last one is the important habit to carry forward: <code>b = a</code> does not copy a list, it points a second name at the exact same object. A node's <code>.next</code> works the same way. It never holds a copy of the next node's value, only a reference to the node itself.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>node</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Node</strong><br>A single unit in the chain. Holds a value plus a reference to whatever node comes next.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>pointer / reference</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Pointer / reference</strong><br>The part of a node that stores where the next node lives, not the next value itself. In Python this is written <code>.next</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>head</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Head</strong><br>The first node in the chain, and the only entry point. Lose track of it and the rest of the chain becomes unreachable.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>tail</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Tail</strong><br>The last node in the chain. Its <code>.next</code> is None, marking the end.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>traversal</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Traversal</strong><br>Walking the chain one node at a time, starting at head and following <code>.next</code> until reaching the node you need, or None.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>singly linked list</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Singly linked list</strong><br>A linked list where each node holds exactly one reference, forward only, to the next node.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Build a chain, node by node</h2>
+<p>Referring back to section 1's three-song chain: here is the same idea from scratch, listed out of order. Click the steps below in the order Python actually has to execute them to end up with <code>Alpha -&gt; Beta -&gt; Gamma -&gt; None</code>. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="create-head"><span class="mlrk-order-num"></span> Create <code>head = Node("Alpha")</code>. Its <code>.next</code> is automatically None.</li>
+  <li class="mlrk-orderitem" data-step="create-second"><span class="mlrk-order-num"></span> Create <code>second = Node("Beta")</code>, a separate node head does not know about yet.</li>
+  <li class="mlrk-orderitem" data-step="link-head"><span class="mlrk-order-num"></span> Set <code>head.next = second</code>. Only now is Alpha actually connected to Beta.</li>
+  <li class="mlrk-orderitem" data-step="create-third"><span class="mlrk-order-num"></span> Create <code>third = Node("Gamma")</code>.</li>
+  <li class="mlrk-orderitem" data-step="link-second"><span class="mlrk-order-num"></span> Set <code>second.next = third</code>, connecting Beta to Gamma.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Where linked lists show up in real software</h2>
+<p>Two real products lean on exactly this node-and-pointer shape.</p>
+<p>An <strong>Up Next queue</strong>, the one from the top of this reading, does not need random access nearly as often as it needs to insert a song wherever a listener taps "play next," or drop whichever song just finished playing. Both of those touch only the node right next to the change.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 720 240" role="img" aria-labelledby="svgCTitle svgCDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="svgCTitle">A music app's Up Next queue modeled as a linked list</title>
+  <desc id="svgCDesc">A Now Playing box holding Song A points to a head node, Song B, which points to Song C, which points to Song D, the tail. Song D's pointer aims at a box labeled None, marking the end of the queue.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="20" y="100" width="140" height="60" rx="8" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="90" y="123" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">Now Playing:</text>
+    <text x="90" y="143" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">Song A</text>
+
+    <text x="270" y="55" text-anchor="middle" font-size="13" font-weight="700" fill="#264326">head</text>
+    <line x1="270" y1="60" x2="270" y2="98" stroke="#264326" stroke-width="3"/>
+    <polygon points="264,90 276,90 270,98" fill="#264326"/>
+    <text x="630" y="55" text-anchor="middle" font-size="13" font-weight="700" fill="#264326">tail</text>
+    <line x1="630" y1="60" x2="630" y2="98" stroke="#264326" stroke-width="3"/>
+    <polygon points="624,90 636,90 630,98" fill="#264326"/>
+
+    <g fill="#A6C2B4" stroke="#264326" stroke-width="2.5">
+      <rect x="200" y="100" width="140" height="60"/>
+      <rect x="380" y="100" width="140" height="60"/>
+      <rect x="560" y="100" width="140" height="60"/>
+    </g>
+    <g font-size="13" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="270" y="135">Song B</text><text x="450" y="135">Song C</text><text x="630" y="135">Song D</text>
+    </g>
+    <g stroke="#264326" stroke-width="3" fill="none">
+      <line x1="160" y1="130" x2="198" y2="130"/>
+      <line x1="340" y1="130" x2="378" y2="130"/>
+      <line x1="520" y1="130" x2="558" y2="130"/>
+    </g>
+    <g fill="#264326">
+      <polygon points="192,124 192,136 200,130"/>
+      <polygon points="372,124 372,136 380,130"/>
+      <polygon points="552,124 552,136 560,130"/>
+    </g>
+    <line x1="630" y1="160" x2="630" y2="192" stroke="#264326" stroke-width="3"/>
+    <polygon points="624,184 636,184 630,192" fill="#264326"/>
+    <rect x="590" y="192" width="80" height="35" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="630" y="214" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">None</text>
+  </g>
+</svg>
+
+<p>A <strong>browser's back and forward history</strong> gives every visited page its own node, connected to the page before it and the page after it, with the browser also tracking a "current page" pointer somewhere inside that chain. Clicking back moves the current pointer one node earlier without deleting anything. Clicking forward moves it one node later. Visit a brand-new page while sitting a few pages back in history, though, and everything that used to be "forward" from there gets cut loose, because it no longer reflects what actually happened. Hold onto that detail. It resurfaces at the very end of this reading.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Inserting and removing: pointers vs. shifting</h2>
+<p>Picture a listener asking to queue "New Song" immediately after Song A in that Up Next queue.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 780 440" role="img" aria-labelledby="svgBTitle svgBDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="svgBTitle">Inserting a node into a linked list versus inserting an element into an array</title>
+  <desc id="svgBDesc">Top block: a linked list of Song A, Song B, Song C before insertion, and after inserting New Song right after Song A, where only Song A's pointer and New Song's new pointer change, shown in gold, while the pointer from Song B to Song C stays unchanged. Bottom block: an array holding Song A, Song B, Song C before insertion, and after inserting New Song at index 1, where Song B and Song C are both highlighted in gold to show they had to shift one slot to the right.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="390" y="20" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Linked list: insert "New Song" right after Song A</text>
+    <text x="30" y="55" font-size="13" font-weight="700" fill="#264326">Before:</text>
+    <g fill="#A6C2B4" stroke="#264326" stroke-width="2.5">
+      <rect x="90" y="65" width="90" height="50"/>
+      <rect x="250" y="65" width="90" height="50"/>
+      <rect x="410" y="65" width="90" height="50"/>
+    </g>
+    <g font-size="12" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="135" y="95">Song A</text><text x="295" y="95">Song B</text><text x="455" y="95">Song C</text>
+    </g>
+    <g stroke="#264326" stroke-width="3" fill="none">
+      <line x1="180" y1="90" x2="248" y2="90"/>
+      <line x1="340" y1="90" x2="408" y2="90"/>
+    </g>
+    <g fill="#264326"><polygon points="240,84 240,96 250,90"/><polygon points="400,84 400,96 410,90"/></g>
+
+    <text x="30" y="140" font-size="13" font-weight="700" fill="#264326">After:</text>
+    <g fill="#A6C2B4" stroke="#264326" stroke-width="2.5">
+      <rect x="90" y="150" width="90" height="50"/>
+      <rect x="650" y="150" width="90" height="50"/>
+    </g>
+    <g fill="#FECC5B" stroke="#83671C" stroke-width="2.5">
+      <rect x="280" y="150" width="90" height="50"/>
+      <rect x="470" y="150" width="90" height="50"/>
+    </g>
+    <g font-size="12" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="135" y="180">Song A</text><text x="325" y="180">New Song</text><text x="515" y="180">Song B</text><text x="695" y="180">Song C</text>
+    </g>
+    <g stroke="#83671C" stroke-width="3" fill="none">
+      <line x1="180" y1="175" x2="278" y2="175"/>
+      <line x1="370" y1="175" x2="468" y2="175"/>
+    </g>
+    <g fill="#83671C"><polygon points="270,169 270,181 280,175"/><polygon points="460,169 460,181 470,175"/></g>
+    <g stroke="#264326" stroke-width="3" fill="none"><line x1="560" y1="175" x2="648" y2="175"/></g>
+    <polygon points="640,169 640,181 650,175" fill="#264326"/>
+    <text x="390" y="215" text-anchor="middle" font-size="12" fill="#261F1D">Only Song A's pointer and New Song's brand-new pointer changed (gold). Song B's pointer to Song C never moved.</text>
+
+    <line x1="10" y1="235" x2="770" y2="235" stroke="#B3BBB0" stroke-width="2" stroke-dasharray="6 6"/>
+
+    <text x="390" y="260" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Array: insert "New Song" at index 1</text>
+    <text x="30" y="295" font-size="13" font-weight="700" fill="#264326">Before:</text>
+    <g fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5">
+      <rect x="90" y="305" width="90" height="50"/>
+      <rect x="180" y="305" width="90" height="50"/>
+      <rect x="270" y="305" width="90" height="50"/>
+    </g>
+    <g font-size="12" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="135" y="335">Song A</text><text x="225" y="335">Song B</text><text x="315" y="335">Song C</text>
+    </g>
+
+    <text x="30" y="380" font-size="13" font-weight="700" fill="#264326">After:</text>
+    <g fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5">
+      <rect x="90" y="390" width="90" height="50"/>
+    </g>
+    <g fill="#FECC5B" stroke="#83671C" stroke-width="2.5">
+      <rect x="180" y="390" width="90" height="50"/>
+      <rect x="270" y="390" width="90" height="50"/>
+      <rect x="360" y="390" width="90" height="50"/>
+    </g>
+    <g font-size="12" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="135" y="420">Song A</text><text x="225" y="420">New Song</text><text x="315" y="420">Song B</text><text x="405" y="420">Song C</text>
+    </g>
+  </g>
+</svg>
+<p class="mlrk-small">Song B and Song C are highlighted in the "after" row above because both had to physically shift one slot to the right to make room. In a very long list, that means every element after the insert point moves, not just two.</p>
+
+<div class="mlrk-card" id="card-insert-ll"><p><strong>Based on the linked list diagram above: what actually had to change to insert New Song?</strong></p>
+<button type="button" class="mlrk-choice" data-a="two">Song A's pointer now targets New Song, and New Song's own pointer targets whatever Song A used to point to. Nothing else moved.</button>
+<button type="button" class="mlrk-choice" data-a="copy">Every song already in the queue after Song A had to be recreated in a new position.</button>
+<button type="button" class="mlrk-choice" data-a="end">Nothing changes. New Song is simply appended to the very end, regardless of where it was requested.</button>
+<div id="insertllfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-insert-array" style="margin-top:.8rem"><p><strong>Same request, but the queue is stored as a plain Python list instead. What has to happen?</strong></p>
+<button type="button" class="mlrk-choice" data-a="shift">Every element from that position onward shifts over by one to make room.</button>
+<button type="button" class="mlrk-choice" data-a="two">Only the two neighboring elements change, exactly like the linked list.</button>
+<button type="button" class="mlrk-choice" data-a="free">Python automatically finds free space between existing elements without moving anything.</button>
+<div id="insertarrayfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p>Drag each situation into the structure that usually handles it faster, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">Insert a node once you already have a reference to the spot</span>
+  <span id="chip2" class="mlrk-draggable">Jump straight to the element at index 500</span>
+  <span id="chip3" class="mlrk-draggable">Remove a node once you already have a reference to it and the one before it</span>
+  <span id="chip4" class="mlrk-draggable">Check the value sitting at one specific, already-known position</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Usually faster: linked list</strong></p><div class="mlrk-dropzone" id="zoneLinked"></div></div>
+  <div><p class="mlrk-small"><strong>Usually faster: array (Python list)</strong></p><div class="mlrk-dropzone" id="zoneArray"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. The classic interview problem: reverse a linked list</h2>
+<p>Here is the problem, stated the way an interviewer would say it: given the head of a singly linked list, reverse it in place so the last node becomes the first, without building a brand-new list. This is one of the most frequently asked warm-up problems in technical interviews, and it rewards exactly the pointer-tracking habit this reading has been building.</p>
+
+<p>The standard approach walks the chain once, using three separate pointers: <code>prev</code> (the reversed portion built so far), <code>curr</code> (the node currently being flipped), and a temporary <code>next_node</code> that saves where the chain used to continue before that connection gets overwritten. That temporary pointer is the entire trick. Look at the exact instant it matters:</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 640 300" role="img" aria-labelledby="svgDTitle svgDDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="svgDTitle">Three pointers mid-reversal: prev, curr, and a just-saved next_node</title>
+  <desc id="svgDDesc">Three nodes holding 10, 20, and 30. Node 10 already points to None. Node 20 still points forward to node 30, its original connection, not yet rewired. Above the nodes, prev points at 10, curr points at 20, and next_node, drawn with a dashed line, points at 30, showing it was just saved before curr's connection gets overwritten.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="90" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#264326">prev</text>
+    <line x1="90" y1="65" x2="90" y2="108" stroke="#264326" stroke-width="3"/>
+    <polygon points="84,100 96,100 90,108" fill="#264326"/>
+    <text x="270" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#2274B5">curr</text>
+    <line x1="270" y1="65" x2="270" y2="108" stroke="#2274B5" stroke-width="3"/>
+    <polygon points="264,100 276,100 270,108" fill="#2274B5"/>
+    <text x="450" y="45" text-anchor="middle" font-size="13" font-weight="700" fill="#83671C">next_node</text>
+    <text x="450" y="60" text-anchor="middle" font-size="12" fill="#83671C">(just saved)</text>
+    <line x1="450" y1="65" x2="450" y2="108" stroke="#83671C" stroke-width="3" stroke-dasharray="5 4"/>
+    <polygon points="444,100 456,100 450,108" fill="#83671C"/>
+
+    <g fill="#A6C2B4" stroke="#264326" stroke-width="2.5">
+      <rect x="30" y="110" width="120" height="55"/>
+      <rect x="210" y="110" width="120" height="55"/>
+      <rect x="390" y="110" width="120" height="55"/>
+    </g>
+    <g font-size="15" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="90" y="142">10</text><text x="270" y="142">20</text><text x="450" y="142">30</text>
+    </g>
+    <line x1="330" y1="137" x2="388" y2="137" stroke="#264326" stroke-width="3"/>
+    <polygon points="382,131 382,143 390,137" fill="#264326"/>
+
+    <line x1="90" y1="165" x2="90" y2="198" stroke="#264326" stroke-width="3"/>
+    <polygon points="84,190 96,190 90,198" fill="#264326"/>
+    <rect x="50" y="198" width="80" height="35" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="90" y="220" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">None</text>
+
+    <text x="320" y="265" text-anchor="middle" font-size="12" fill="#261F1D">This is right after next_node grabbed a reference to node 30, but right before curr.next is reassigned.</text>
+    <text x="320" y="285" text-anchor="middle" font-size="12" fill="#261F1D">Skip saving next_node first, and reassigning curr.next now would cut node 30 loose with no way back.</text>
+  </g>
+</svg>
+
+<p>Here is the full function, with one line hidden. That hidden line is the actual reversal: the moment <code>curr</code>'s pointer gets redirected backward instead of forward.</p>
+<div class="mlrk-code"><div class="mlrk-screen">def reverse_linked_list(head):
+    prev = None
+    curr = head
+    while curr:
+        next_node = curr.next
+        ____________________
+        prev = curr
+        curr = next_node
+    return prev  # prev is the new head</div></div>
+<div class="mlrk-fillblank">
+  <label for="revblankinput">Type the missing line of code:</label>
+  <input type="text" id="revblankinput" autocomplete="off" placeholder="e.g. curr.next = ...">
+  <button type="button" id="revblankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="revblankfb" class="mlrk-feedback" tabindex="-1"></div>
+
+<div class="mlrk-card" id="card-predict-head" style="margin-top:1.2rem"><p><strong>Predict first:</strong> starting list is <code>10 -&gt; 20 -&gt; 30 -&gt; None</code>. After <code>reverse_linked_list</code> runs all the way through, which node is the new head?</p>
+<button type="button" class="mlrk-choice" data-a="30">30</button>
+<button type="button" class="mlrk-choice" data-a="10">10</button>
+<button type="button" class="mlrk-choice" data-a="20">20</button>
+<div id="predictheadfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1.2rem">Now trace it for real, one full pass of the loop at a time.</p>
+<div id="reversetrace"></div>
+
+<div class="mlrk-card" id="card-why-temp" style="margin-top:1.2rem"><p><strong>Right before the hidden line runs, why did the function already save <code>next_node = curr.next</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="lose">Because the hidden line overwrites curr.next, and without saving it first, the rest of the original list would become unreachable.</button>
+<button type="button" class="mlrk-choice" data-a="convention">It is just a naming convention. The loop would work identically without it.</button>
+<button type="button" class="mlrk-choice" data-a="required">Python requires every variable to be copied to a temporary name before it can be reassigned.</button>
+<div id="whytempfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-loop-end" style="margin-top:.8rem"><p><strong>The loop's condition is <code>while curr:</code>. What actually causes the loop to stop?</strong></p>
+<button type="button" class="mlrk-choice" data-a="none">curr eventually becomes None, once the original last node's next_node (already None) gets assigned into it.</button>
+<button type="button" class="mlrk-choice" data-a="three">The loop always runs exactly three times, hard-coded into while.</button>
+<button type="button" class="mlrk-choice" data-a="prev">The loop stops once prev becomes equal to head.</button>
+<div id="loopendfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about linked lists.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A linked list node stores its value and a reference to the next node, not the next value directly.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> You can jump directly to the 10th node of a linked list in one step, the same way you index a Python list.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Inserting a brand-new first node only requires updating one pointer, not shifting anything else.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Every node in a linked list is guaranteed to sit in the memory slot immediately after the previous node.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Watch: linked lists in action</h2>
+<p>As you watch, notice how the video shows the exact same idea practiced above: a node holding a value plus a separate pointer to the next node, and a chain that only knows itself node by node, never all at once.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=N6dOwBde7-M" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what real-world use case did the video mention that felt most familiar to you, and why?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>Linked lists are an interview staple for a specific reason: they are simple enough to explain in thirty seconds, but tracing pointer changes accurately under a bit of pressure genuinely separates candidates. "Reverse a linked list," the exact problem practiced above, shows up constantly, sometimes asked directly, sometimes as a warm-up before a harder follow-up.</p>
+<p>The other question that comes up just as often is cycle detection: given a linked list, determine whether it loops back on itself somewhere instead of ending at None. The classic answer is Floyd's tortoise-and-hare technique: move one pointer one node at a time and a second pointer two nodes at a time. If the list has a cycle, the faster pointer eventually laps the slower one and they land on the same node. If it does not, the faster pointer simply reaches None first.</p>
+<p>Interviewers are listening for the reasoning as much as the final answer. Being able to say out loud "I need to save the next reference before I overwrite it, or I lose the rest of the list" is a stronger signal than getting the code right by memorization alone.</p>
+</div>
+<div class="mlrk-card" id="card-interview-cycle"><p><strong>An interviewer asks how you would detect a cycle in a linked list without using extra memory for a "visited" set. What is the classic approach?</strong></p>
+<button type="button" class="mlrk-choice" data-a="floyd">Floyd's tortoise-and-hare: one pointer moves one node at a time, another moves two. If they ever land on the same node, there is a cycle.</button>
+<button type="button" class="mlrk-choice" data-a="count">Count the nodes twice and compare the two counts.</button>
+<button type="button" class="mlrk-choice" data-a="impossible">It cannot be done without a visited set of some kind.</button>
+<div id="interviewcyclefb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug-attr"><p><strong>Your traversal loop crashes with <code>AttributeError: 'NoneType' object has no attribute 'next'</code>. What is the most likely cause?</strong></p>
+<button type="button" class="mlrk-choice" data-a="past">The loop went one step past the last real node, then tried to call .next on something that was already None.</button>
+<button type="button" class="mlrk-choice" data-a="toomany">The list has too many nodes for Python to traverse.</button>
+<button type="button" class="mlrk-choice" data-a="init">The Node class is missing an __init__ method.</button>
+<div id="debugattrfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your habit:</strong> in 1-2 sentences, describe the check you would add to a traversal loop to make sure it never calls <code>.next</code> on something that is already None.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: Before accessing .next, I would check whether..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Summary &amp; critical thinking</h2>
+<p>Two ideas carried this whole reading: a node is only a value plus a reference to what comes next, and following that chain of references, one at a time, is the only way in, whether you are building it, searching it, or reversing it.</p>
+<div class="mlrk-card" id="card-summary-undoredo"><p><strong>New situation:</strong> a text editor's undo history keeps a chain of past document states with a "current state" pointer sitting somewhere in the middle, since a user might undo a few steps and still be able to redo forward again. If the user makes a brand-new edit while sitting a few undos back in that history, what should happen to the states that were "ahead" of the current pointer, the ones redo would have reached?</strong></p>
+<button type="button" class="mlrk-choice" data-a="drop">They typically get discarded. The chain forward from the current pointer no longer reflects what actually happened, so the new edit branches off and the old "future" is dropped.</button>
+<button type="button" class="mlrk-choice" data-a="keep">They stay in the chain permanently alongside the new edit, so redo has two different futures to pick from.</button>
+<button type="button" class="mlrk-choice" data-a="reset">The entire undo history resets back to just the very first state.</button>
+<div id="summaryundoredofb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what do a browser's back/forward history and a text editor's undo/redo have in common, structurally?</label>
+<textarea id="clue" class="mlrk-response" data-save placeholder="Think back to section 5's browser history example."></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Thinking ahead</h2>
+<p>Everything here used a singly linked list: one value, one forward pointer. Give a node a second reference, one pointing backward as well as forward, and it becomes a doubly linked list, which is exactly what lets a browser move backward through history as cheaply as forward, without re-walking the whole chain from the start every time. Push the idea further, and a node that holds several "next" references instead of exactly one is how a hierarchy, like folders nested inside folders, gets represented at all. And the very act of walking a chain by repeatedly asking "what does this node point to next" is a small preview of a much bigger idea: a function that solves a problem by calling a smaller version of itself on whatever is left of the chain.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add linked-lists-reading1.json
+git commit -m "Complete link by link reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>. This should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you did not rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://www.hackerrank.com/challenges/reverse-a-linked-list/problem" target="_blank" rel="noopener">HackerRank: Reverse a Linked List</a> — the exact canonical problem practiced in section 7, ready to try in your own code.</li>
+<li><a href="https://www.geeksforgeeks.org/dsa/linked-list-data-structure/" target="_blank" rel="noopener">GeeksforGeeks: Linked List Data Structure</a> — a fuller reference covering variations like doubly and circular linked lists.</li>
+<li><a href="https://visualgo.net/en/list" target="_blank" rel="noopener">VisuAlgo: Linked List visualization</a> — step through insertions, removals, and traversal visually, at your own pace.</li>
+<li><a href="https://docs.python.org/3/library/collections.html#collections.deque" target="_blank" rel="noopener">Python docs: collections.deque</a> — Python's real, built-in structure backed by a doubly linked list under the hood.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "linked-lists-reading1-linkbylink";
+  const TITLE = "Link by Link — Linked Lists";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-prereq-index", buttonSelector:"#card-prereq-index .mlrk-choice", feedbackSelector:"#prereqindexfb", correct:"b",
+    feedback:{b:"Indexing starts at 0, so playlist[1] is the second item, Song B.",
+              a:"Song A sits at index 0, not index 1.",
+              all:"Indexing with a single number returns one element, not the whole list."}});
+
+  K.quiz({id:"q-prereq-while", buttonSelector:"#card-prereq-while .mlrk-choice", feedbackSelector:"#prereqwhilefb", correct:"becomes",
+    feedback:{becomes:"The loop's condition is checked every pass. Once current actually becomes None, the condition is false and the loop ends on its own.",
+              three:"Nothing here hard-codes three passes. The loop keeps going for as many nodes as actually exist.",
+              outside:"A while loop absolutely can stop on its own, as soon as its condition evaluates to false."}});
+
+  K.quiz({id:"q-prereq-none", buttonSelector:"#card-prereq-none .mlrk-choice", feedbackSelector:"#prereqnonefb", correct:"absence",
+    feedback:{absence:"None is Python's way of representing that a variable is deliberately holding no value at all.",
+              zero:"Zero is still a real number value. None represents the absence of a value entirely.",
+              error:"None is a normal, valid value, not an error state."}});
+
+  K.quiz({id:"q-prereq-ref", buttonSelector:"#card-prereq-ref .mlrk-choice", feedbackSelector:"#prereqreffb", correct:"four",
+    feedback:{four:"b = a does not copy the list. Both names point at the exact same list object, so appending through b also changes what a sees.",
+              three:"a stays at [1, 2, 3] only if b held a separate copy, and it does not here.",
+              err:"This is completely valid Python. No error, just a shared reference."}});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.orderSteps("#ordersteps", {id:"act-order-build", correctOrder:["create-head","create-second","link-head","create-third","link-second"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+
+  K.quiz({id:"q-insert-ll", buttonSelector:"#card-insert-ll .mlrk-choice", feedbackSelector:"#insertllfb", correct:"two",
+    feedback:{two:"Exactly two pointers change: Song A now points to New Song, and New Song points to whatever Song A used to point to.",
+              copy:"Nothing after the insertion point needs to be recreated. Song B and Song C are untouched.",
+              end:"Insertion happens exactly where requested, right after Song A, not tacked onto the end."}});
+
+  K.quiz({id:"q-insert-array", buttonSelector:"#card-insert-array .mlrk-choice", feedbackSelector:"#insertarrayfb", correct:"shift",
+    feedback:{shift:"An array keeps its elements contiguous, so making room in the middle means physically shifting every later element over by one.",
+              two:"A list has no separate per-element pointers to rewire. Making room means moving elements, not relinking two of them.",
+              free:"Python's list storage is a contiguous block, so there is no free gap sitting between existing elements to drop something into."}});
+
+  K.dragDrop("#dragarea", "act-drag-fasterstruct");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneLinked", label:"Insert a node once you already have a reference to the spot", expectedLabel:"linked list"},
+    chip2:{expectedId:"zoneArray", label:"Jump straight to the element at index 500", expectedLabel:"array"},
+    chip3:{expectedId:"zoneLinked", label:"Remove a node once you already have a reference to it and the one before it", expectedLabel:"linked list"},
+    chip4:{expectedId:"zoneArray", label:"Check the value sitting at one specific, already-known position", expectedLabel:"array"}
+  }});
+
+  K.Scoring.register("q-revblank",1,"quiz");
+  let revblankAttempts=0, revblankDone=false;
+  $("#revblankcheck").addEventListener("click",()=>{
+    if(revblankDone) return;
+    revblankAttempts++;
+    const cleaned = $("#revblankinput").value.trim().toLowerCase().replace(/\s+/g,"");
+    const ok = cleaned === "curr.next=prev";
+    const fb=$("#revblankfb");
+    if(ok){
+      K.Scoring.award("q-revblank", revblankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> curr.next = prev is the actual reversal: it redirects this node's pointer backward instead of forward.";
+      revblankDone=true;
+    } else if(revblankAttempts>=2){
+      K.Scoring.award("q-revblank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing line is <code>curr.next = prev</code>.";
+      revblankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try. Think about which node's pointer needs to flip direction on this exact pass.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.quiz({id:"q-predict-head", buttonSelector:"#card-predict-head .mlrk-choice", feedbackSelector:"#predictheadfb", correct:"30",
+    feedback:{30:"The original last node ends up first once every pointer along the chain has been flipped backward.",
+              10:"10 was the original head, but reversal makes the original tail the new head instead.",
+              20:"20 ends up in the middle of the reversed list, not at either end."}});
+
+  K.traceStepper("#reversetrace", {steps:[
+    {cell:"Before loop", line:"prev = None, curr = 10. List is unchanged: 10 -> 20 -> 30 -> None"},
+    {cell:"After pass 1", line:"Node 10's pointer now points to None (it used to point to 20). prev = 10, curr = 20. Reversed so far: 10 -> None"},
+    {cell:"After pass 2", line:"Node 20's pointer now points to 10. prev = 20, curr = 30. Reversed so far: 20 -> 10 -> None"},
+    {cell:"After pass 3", line:"Node 30's pointer now points to 20. prev = 30, curr = None, so the loop stops. Final list: 30 -> 20 -> 10 -> None"}
+  ]});
+
+  K.quiz({id:"q-why-temp", buttonSelector:"#card-why-temp .mlrk-choice", feedbackSelector:"#whytempfb", correct:"lose",
+    feedback:{lose:"Exactly. curr.next is about to be overwritten, so the only remaining way to reach the rest of the original chain has to be saved first.",
+              convention:"Removing next_node would actually break the function. Without it, curr.next = prev would overwrite the only reference to the rest of the list before curr = next_node could use it.",
+              required:"Python does not enforce this in general. It matters here specifically because this particular value is about to be lost."}});
+
+  K.quiz({id:"q-loop-end", buttonSelector:"#card-loop-end .mlrk-choice", feedbackSelector:"#loopendfb", correct:"none",
+    feedback:{none:"The original last node's next_node is None. Once that gets assigned into curr, while curr: evaluates false and the loop ends.",
+              three:"Three passes happened to be right for this three-node example, but the loop actually runs once per node, however many there are.",
+              prev:"The loop's condition only checks curr. prev is never compared to head anywhere in this function."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"A linked list node stores its value and a reference to the next node, not the next value directly.", correct:true,
+      hint:"Revisit section 1's Node class. What are the two things __init__ actually stores?",
+      explain:"A node's .next holds a reference to another node object, never a copy of that node's value."},
+    {value:"b", label:"You can jump directly to the 10th node of a linked list in one step, the same way you index a Python list.", correct:false,
+      hint:"Think back to section 1's array-vs-linked-list diagram. Which one supports index math, and which one has to walk from the start?",
+      explain:"Reaching the 10th node means traversing from head, following .next nine times. There is no index shortcut."},
+    {value:"c", label:"Inserting a brand-new first node only requires updating one pointer, not shifting anything else.", correct:true,
+      hint:"Think about what a brand-new head node needs: just point its .next at the old head, then update head itself. Does anything else move?",
+      explain:"A new first node just points its .next at the old head. Every other node stays exactly where it already was."},
+    {value:"d", label:"Every node in a linked list is guaranteed to sit in the memory slot immediately after the previous node.", correct:false,
+      hint:"Revisit section 1's diagram again. Which structure was drawn as scattered, and which was drawn as one contiguous block?",
+      explain:"Nodes can live anywhere. Only the array in section 1's diagram was contiguous; the linked list was deliberately drawn scattered."}
+  ]});
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"N6dOwBde7-M"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  K.quiz({id:"q-interview-cycle", buttonSelector:"#card-interview-cycle .mlrk-choice", feedbackSelector:"#interviewcyclefb", correct:"floyd",
+    feedback:{floyd:"This is Floyd's tortoise-and-hare technique. A cycle guarantees the faster pointer eventually catches up to the slower one from behind.",
+              count:"There is no separate 'total count' to compare against in a list you have not already fully counted once, and a cycle would make a plain count loop forever anyway.",
+              impossible:"It can be done with no extra memory at all. Floyd's technique uses only two pointers, no visited set required."}});
+
+  K.quiz({id:"q-debug-attr", buttonSelector:"#card-debug-attr .mlrk-choice", feedbackSelector:"#debugattrfb", correct:"past",
+    feedback:{past:"This error means .next got called on None itself. The traversal did not stop at the last real node in time.",
+              toomany:"Python can traverse lists of essentially any length. Node count is not the issue here.",
+              init:"A missing __init__ would fail immediately when creating a node, not partway through a traversal like this."}});
+
+  const AI_PROMPTS = [
+    "Think of a real chain of items in your own life where each one only points forward to the next, like a scavenger hunt where each clue reveals the next one. Where is the 'node' and where is the 'pointer' in that example?",
+    "If you had to explain to a friend why you cannot jump straight to the 100th person in a conga line the way you can jump to the 100th seat in a numbered section, what would you say?",
+    "Where else, in software or daily life, have you seen a 'current position' pointer moving through a fixed sequence of things, the way browser history or undo/redo does?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  K.quiz({id:"q-summary-undoredo", buttonSelector:"#card-summary-undoredo .mlrk-choice", feedbackSelector:"#summaryundoredofb", correct:"drop",
+    feedback:{drop:"A new edit branches off from wherever the current pointer sits, and the old 'forward' chain no longer matches reality, so it typically gets dropped, the same way visiting a new page cuts off old forward history.",
+              keep:"Keeping two different 'futures' alive at once would need a fundamentally different structure than a single chain with one current pointer.",
+              reset:"Resetting all the way to the first state would throw away every earlier undo step too, which is far more than this situation calls for."}});
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["data-structures"],
+      skills:["data-structures-algorithms"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

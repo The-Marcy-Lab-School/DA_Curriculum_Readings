@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Call Yourself Back — Understanding Recursion</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:12rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+
+/* interactive call-stack visualizer for the factorial(4) walkthrough */
+.mlrk-stackwrap{display:flex;flex-direction:column-reverse;gap:.5rem;min-height:70px;margin:1rem 0}
+.mlrk-frame{border:2px solid var(--mlrk-gray-400);border-radius:10px;padding:.7rem 1rem;
+  background:var(--mlrk-white);font-family:var(--mlrk-font-code);font-size:.95rem;transition:background .2s,border-color .2s}
+.mlrk-frame.mlrk-frame-active{border-color:var(--mlrk-bg-brand-deep);background:var(--mlrk-bg-light-alt)}
+.mlrk-frame.mlrk-frame-base{border-color:var(--mlrk-callout-green-border);background:var(--mlrk-callout-green-fill)}
+.mlrk-frame.mlrk-frame-resolved{border-color:var(--mlrk-callout-blue-border);background:var(--mlrk-callout-blue-fill)}
+.mlrk-stacknote{min-height:2.6rem;padding:.7rem 1rem;border-radius:10px;background:var(--mlrk-bg-light-alt);
+  border-left:5px solid var(--mlrk-bg-brand-deep);margin-top:.4rem}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Call Yourself Back</h1>
+<p class="mlrk-lead">This reading isn't required for any current project. But recursion changes how you see a whole category of problems, from searching a nested folder structure to walking a tree of comments on a webpage, and it's one of the most reliable topics an interviewer will reach for. Picture looking for a file on your laptop: you open a folder, and inside it there's another folder, and inside that one there's yet another folder, until finally you find the file. You didn't write a new search process for each level. You did the exact same thing, over and over, on a smaller piece of the problem each time. That's the whole idea behind recursion, and it's what this reading is about.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~42–46 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Data Structures &amp; Algorithms</strong> — Explaining how a data structure (hash map, linked list, tree) or a recursive process actually works under the hood, and applying that understanding to solve a real coding-interview-style problem, not just naming the structure from memory.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Introduction</h2>
+<p>Go back to that file search for a second. Say you're looking for <code>report.pdf</code>, and it's buried inside <code>Documents</code>, which contains <code>Projects</code>, which contains <code>2026</code>, which finally contains the file. A file explorer doesn't have four different pieces of code, one for each level of nesting. It has one piece of logic: "look inside this folder; for anything that's a file, check if it's the one I want; for anything that's itself a folder, do this exact same check inside it." That single instruction, applied to itself, is enough to search a folder tree that's four levels deep, or forty.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 680 220" role="img" aria-labelledby="introTitle introDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="introTitle">Searching for a file nested inside three folders</title>
+  <desc id="introDesc">Four connected boxes in a row: Documents, then Projects, then 2026, then the file report.pdf. Each arrow is labeled "look inside," showing the same action repeated at every level until the file is found.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <g fill="#FFEECA" stroke="#83671C" stroke-width="2.5">
+      <path d="M20,60 h60 l10,-14 h60 a6,6 0 0 1 6,6 v88 a6,6 0 0 1 -6,6 h-130 a6,6 0 0 1 -6,-6 v-74 a6,6 0 0 1 6,-6 z"/>
+    </g>
+    <text x="90" y="165" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">Documents</text>
+
+    <g fill="#FFEECA" stroke="#83671C" stroke-width="2.5">
+      <path d="M195,60 h60 l10,-14 h60 a6,6 0 0 1 6,6 v88 a6,6 0 0 1 -6,6 h-130 a6,6 0 0 1 -6,-6 v-74 a6,6 0 0 1 6,-6 z"/>
+    </g>
+    <text x="265" y="165" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">Projects</text>
+
+    <g fill="#FFEECA" stroke="#83671C" stroke-width="2.5">
+      <path d="M370,60 h60 l10,-14 h60 a6,6 0 0 1 6,6 v88 a6,6 0 0 1 -6,6 h-130 a6,6 0 0 1 -6,-6 v-74 a6,6 0 0 1 6,-6 z"/>
+    </g>
+    <text x="440" y="165" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">2026</text>
+
+    <rect x="545" y="46" width="120" height="100" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="605" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">report.pdf</text>
+    <text x="605" y="110" text-anchor="middle" font-size="12" font-weight="600" fill="#264326">found it</text>
+
+    <g fill="#264326">
+      <polygon points="163,96 190,96 190,89 202,103 190,117 190,110 163,110"/>
+      <polygon points="338,96 365,96 365,89 377,103 365,117 365,110 338,110"/>
+      <polygon points="513,96 540,96 540,89 552,103 540,117 540,110 513,110"/>
+    </g>
+    <g font-size="12" font-weight="600" fill="#264326" text-anchor="middle">
+      <text x="176" y="80">look inside</text>
+      <text x="351" y="80">look inside</text>
+      <text x="527" y="80">look inside</text>
+    </g>
+  </g>
+</svg>
+
+<p>Now stretch that idea to a function. What if a function, in the middle of doing its job, could pause and call itself again to handle a smaller version of the same problem, then use that answer to finish its own job? The first time you hear that description it can sound like nonsense, or like an infinite loop waiting to happen: if <code>search_folder()</code> calls <code>search_folder()</code>, what stops it from calling itself forever? That question is exactly the right one to ask, and answering it is what this whole reading builds toward.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> a huge share of real data and code isn't flat. Folders contain folders. A comment on a post can have replies, and those replies can have their own replies. A JSON object can have a value that is itself another JSON object. Recursion is the natural way to process anything that's shaped like "the same structure, repeated inside itself," and interviewers know it: "write a recursive function" or "walk me through the base case" shows up constantly in technical screens, for data roles and software roles alike.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to repeat an action with a loop, checking a condition each time around. Recursion repeats an action too, but instead of a loop checking a condition, it's a function calling itself and checking when to stop. Once that clicks, you'll have a second, genuinely different tool for "do this over and over" problems, one that fits nested, branching structures far more naturally than a loop ever could.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Concept overview: a function that calls itself</h2>
+<p>Start as small as possible. Here's a function that counts down from a number to zero:</p>
+<div class="mlrk-code"><div id="countdownScreen" class="mlrk-screen">def countdown(n):
+    if n == 0:
+        print("Liftoff!")
+        return
+    print(n)
+    countdown(n - 1)
+
+countdown(3)</div>
+<div class="mlrk-actions"><button type="button" id="countdownrun" class="mlrk-btn">Reveal simulated output</button></div></div>
+
+<div class="mlrk-card" id="card-countdown" style="margin-top:1rem"><p><strong>Predict first:</strong> what happens when <code>countdown(3)</code> runs?</p>
+<button type="button" class="mlrk-choice" data-a="stops">It prints 3, 2, 1, then "Liftoff!", and stops there.</button>
+<button type="button" class="mlrk-choice" data-a="forever">It prints numbers forever, since the function calls itself.</button>
+<button type="button" class="mlrk-choice" data-a="error">Python refuses to run it, since a function can't call itself.</button>
+<div id="countdownfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p>Read <code>countdown</code> closely and two very different jobs are happening inside it. Most of the time, it prints the current number and then calls itself with a smaller number, <code>n - 1</code>, getting one step closer to zero. But when <code>n</code> actually reaches <code>0</code>, it does something completely different: it prints "Liftoff!" and returns, without calling itself again at all. That second branch is the only reason this doesn't run forever.</p>
+
+<p>Those two jobs have names, and every working recursive function needs both of them:</p>
+<ul>
+<li><strong>The base case</strong> is the condition under which the function stops calling itself and just returns an answer directly.</li>
+<li><strong>The recursive case</strong> is everything else: the function does a small piece of work, then calls itself again with an input that's closer to the base case.</li>
+</ul>
+
+<p>Here's the same shape in a more useful example: computing a factorial. The factorial of 4, written <code>4!</code>, means <code>4 × 3 × 2 × 1</code>, which is <code>24</code>. Notice that <code>4! = 4 × 3!</code>, and <code>3! = 3 × 2!</code>, and so on, all the way down to <code>1! = 1</code>. That last fact, that the factorial of 1 is just 1 with no further multiplying needed, is the base case waiting to happen.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 700 300" role="img" aria-labelledby="labelTitle labelDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="labelTitle">The factorial function's code, with the base case and recursive case labeled</title>
+  <desc id="labelDesc">A four-line Python function. The if-block that returns 1 when n equals 1 is boxed in green and labeled base case: stops the recursion, no further call. The final return line that multiplies n by factorial of n minus 1 is boxed in blue and labeled recursive case: calls itself with a smaller problem, moving toward the base case.</desc>
+  <g font-family="Roboto Mono, Consolas, monospace" font-size="16" fill="#FFFCF7">
+    <rect x="0" y="0" width="700" height="300" fill="#261F1D" rx="14"/>
+    <text x="20" y="34">def factorial(n):</text>
+    <text x="40" y="64">if n == 1:</text>
+    <text x="60" y="94">return 1</text>
+    <text x="40" y="150">return n * factorial(n - 1)</text>
+  </g>
+  <rect x="28" y="46" width="230" height="66" rx="8" fill="none" stroke="#A6C2B4" stroke-width="3"/>
+  <rect x="28" y="132" width="420" height="34" rx="8" fill="none" stroke="#2274B5" stroke-width="3"/>
+  <polygon points="258,79 286,79 286,72 300,86 286,100 286,93 258,93" fill="#A6C2B4"/>
+  <polygon points="448,149 476,149 476,142 490,156 476,170 476,163 448,163" fill="#2274B5"/>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="14">
+    <text x="305" y="72" font-weight="700" fill="#A6C2B4">BASE CASE</text>
+    <text x="305" y="92" fill="#FFFCF7">Stops the recursion.</text>
+    <text x="305" y="110" fill="#FFFCF7">No further call is made.</text>
+    <text x="495" y="145" font-weight="700" fill="#2274B5">RECURSIVE CASE</text>
+    <text x="495" y="165" fill="#FFFCF7">Calls itself with a smaller</text>
+    <text x="495" y="183" fill="#FFFCF7">problem, moving toward</text>
+    <text x="495" y="201" fill="#FFFCF7">the base case.</text>
+  </g>
+</svg>
+
+<div class="mlrk-card" id="card-identify" style="margin-top:1rem"><p><strong>In the diagram above, what makes <code>n == 1</code> the base case rather than just another condition?</strong></p>
+<button type="button" class="mlrk-choice" data-a="stopscall">It's the only branch where <code>factorial</code> does not call itself again.</button>
+<button type="button" class="mlrk-choice" data-a="firstcheck">It's the first condition Python checks, so it must be the base case.</button>
+<button type="button" class="mlrk-choice" data-a="returns1">It's the base case because it returns the number 1 specifically.</button>
+<div id="identifyfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Recall before recursion</h2>
+<p class="mlrk-small">Three skills get leaned on heavily later in this reading: how a function's <code>return</code> value can be used inside a larger expression, how <code>if</code>/<code>else</code> picks a branch, and comparing values for equality. Test each one below before moving on.</p>
+
+<div class="mlrk-card" id="card-recall"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">def double(x):
+    return x * 2
+
+result = 3 + double(5)
+print(result)</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="13">13</button>
+<button type="button" class="mlrk-choice" data-a="10">10</button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error, since a function call can't be added to a number.</button>
+<div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-equality" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>n = 1</code>. What does <code>n == 1</code> evaluate to?</p>
+<button type="button" class="mlrk-choice" data-a="true">True</button>
+<button type="button" class="mlrk-choice" data-a="false">False</button>
+<button type="button" class="mlrk-choice" data-a="one">The number 1</button>
+<div id="equalityfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-branch" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a function has an <code>if</code> branch that returns immediately, and an <code>else</code> branch below it. If the <code>if</code> condition is true, does the code in the <code>else</code> branch ever run for that call?</p>
+<button type="button" class="mlrk-choice" data-a="no">No. Once a branch returns, that call is finished; the other branch is skipped.</button>
+<button type="button" class="mlrk-choice" data-a="yes">Yes, Python always runs both branches to be safe.</button>
+<div id="branchfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">Hold onto that last one especially. A recursive function's base case almost always looks exactly like that: an <code>if</code> that returns immediately, with the recursive work sitting below it, never reached once the base case fires.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Technical vocabulary</h2>
+<p>Flip each card before the walkthrough below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>recursion</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Recursion</strong><br>A function solving a problem by calling itself on a smaller version of that same problem.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>base case</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Base case</strong><br>The condition where a recursive function stops calling itself and returns an answer directly.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>recursive case</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Recursive case</strong><br>The branch where the function does a bit of work, then calls itself again with an input closer to the base case.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>call stack</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Call stack</strong><br>Where a program keeps track of function calls that are waiting on other function calls to finish, most recent call on top.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>stack frame</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Stack frame</strong><br>The record of one single function call: its inputs, its local variables, and where it should resume once a call it's waiting on returns.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>stack overflow</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Stack overflow</strong><br>What happens when recursion never reaches a base case: frames keep piling up until there's no room left, and the program crashes with an error.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. The call stack, growing and unwinding</h2>
+<p>Here's the part that makes recursion feel less like magic: when <code>factorial(4)</code> calls <code>factorial(3)</code>, Python doesn't throw away <code>factorial(4)</code>'s work. It pauses <code>factorial(4)</code> exactly where it is, remembers everything it needs to finish later, and starts a brand new call to <code>factorial(3)</code> on top of it. That "pause and remember" record is a stack frame, and the whole pile of paused, waiting calls is the call stack.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 640 460" role="img" aria-labelledby="stackTitle stackDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="stackTitle">The call stack for factorial(4), growing upward then resolving back down</title>
+  <desc id="stackDesc">Four stacked boxes. Bottom: factorial(4), calls factorial(3), eventually returns 4 times 6 equals 24, the final answer. Above it: factorial(3), calls factorial(2), returns 3 times 2 equals 6. Above that: factorial(2), calls factorial(1), returns 2 times 1 equals 2. Top box, shown in green as the base case: factorial(1), returns 1 with no further call. Arrows on the left point upward showing calls going in. Arrows on the right point downward showing return values coming back out.</desc>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13">
+    <text x="150" y="20" text-anchor="middle" font-weight="700" fill="#264326">calls go in</text>
+    <text x="490" y="20" text-anchor="middle" font-weight="700" fill="#2274B5">answers come back out</text>
+  </g>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="90" y="330" width="330" height="90" rx="12" fill="#FFFCF7" stroke="#264326" stroke-width="3"/>
+    <text x="255" y="358" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">factorial(4)</text>
+    <text x="255" y="380" text-anchor="middle" font-size="13" fill="#261F1D">calls factorial(3)</text>
+    <text x="255" y="400" text-anchor="middle" font-size="14" font-weight="700" fill="#2274B5">returns 4 × 6 = 24 (final answer)</text>
+
+    <rect x="90" y="230" width="330" height="80" rx="12" fill="#FFFCF7" stroke="#264326" stroke-width="3"/>
+    <text x="255" y="256" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">factorial(3)</text>
+    <text x="255" y="277" text-anchor="middle" font-size="13" fill="#261F1D">calls factorial(2)</text>
+    <text x="255" y="297" text-anchor="middle" font-size="14" font-weight="700" fill="#2274B5">returns 3 × 2 = 6</text>
+
+    <rect x="90" y="130" width="330" height="80" rx="12" fill="#FFFCF7" stroke="#264326" stroke-width="3"/>
+    <text x="255" y="156" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">factorial(2)</text>
+    <text x="255" y="177" text-anchor="middle" font-size="13" fill="#261F1D">calls factorial(1)</text>
+    <text x="255" y="197" text-anchor="middle" font-size="14" font-weight="700" fill="#2274B5">returns 2 × 1 = 2</text>
+
+    <rect x="90" y="40" width="330" height="70" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="255" y="65" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">factorial(1) — base case</text>
+    <text x="255" y="88" text-anchor="middle" font-size="14" font-weight="700" fill="#264326">returns 1, no further call</text>
+  </g>
+  <g fill="#264326">
+    <polygon points="60,220 60,190 53,190 65,175 77,190 70,190 70,220"/>
+    <polygon points="60,320 60,290 53,290 65,275 77,290 70,290 70,320"/>
+    <polygon points="60,420 60,390 53,390 65,375 77,390 70,390 70,420"/>
+  </g>
+  <g fill="#2274B5">
+    <polygon points="560,175 560,205 553,205 565,220 577,205 570,205 570,175"/>
+    <polygon points="560,275 560,305 553,305 565,320 577,305 570,305 570,275"/>
+    <polygon points="560,375 560,405 553,405 565,420 577,405 570,405 570,375"/>
+  </g>
+</svg>
+
+<p>Every call is real and every call is still "alive," just paused, waiting for the one above it. Once <code>factorial(1)</code> hits the base case and returns <code>1</code> without calling anyone else, there's nothing left waiting above <code>factorial(2)</code>. It resumes exactly where it paused, finishes its own multiplication, and returns its own answer to <code>factorial(3)</code>. That's the unwind: the stack shrinks back down in the exact reverse order it grew, and each frame disappears once it hands its answer to the one below it.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Trace it yourself: factorial(4), step by step</h2>
+<p>This is the same call stack from above, but now you drive it one step at a time.</p>
+
+<div class="mlrk-card" id="card-predictcalls"><p><strong>Predict first:</strong> including the very first call, how many separate calls to <code>factorial</code> happen before any of them return a value?</p>
+<button type="button" class="mlrk-choice" data-a="4">4</button>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="24">24</button>
+<div id="predictcallsfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-code" style="margin-top:1rem"><div class="mlrk-screen">def factorial(n):
+    if n == 1:
+        return 1
+    return n * factorial(n - 1)
+
+factorial(4)</div></div>
+
+<div id="stackvis" class="mlrk-stackwrap"></div>
+<div class="mlrk-actions">
+  <button type="button" id="stackstep" class="mlrk-btn">Step forward</button>
+  <button type="button" id="stackreset" class="mlrk-btn">Start over</button>
+</div>
+<div id="stacknote" class="mlrk-stacknote" aria-live="polite">Click "Step forward" to make the first call, <code>factorial(4)</code>.</div>
+
+<div class="mlrk-card" id="card-transfer" style="margin-top:1.2rem"><p><strong>Without re-running the stepper: what would <code>factorial(3)</code> return on its own, following the exact same pattern?</strong></p>
+<button type="button" class="mlrk-choice" data-a="6">6</button>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="24">24</button>
+<div id="transferfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Which happens first: the call, or the return?</h2>
+<p>Look again at the recursive case: <code>return n * factorial(n - 1)</code>. It's tempting to read code left to right and assume <code>n *</code> happens before <code>factorial(n - 1)</code>. Put these four events in the order they actually happen for one recursive call, then use the self-check button to confirm.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="callmade"><span class="mlrk-order-num"></span> Python evaluates <code>factorial(n - 1)</code>, which means making that recursive call.</li>
+  <li class="mlrk-orderitem" data-step="waits"><span class="mlrk-order-num"></span> The current call pauses on this line, waiting for that recursive call to fully finish and return a value.</li>
+  <li class="mlrk-orderitem" data-step="multiply"><span class="mlrk-order-num"></span> Once a value comes back, Python multiplies it by <code>n</code>.</li>
+  <li class="mlrk-orderitem" data-step="returnup"><span class="mlrk-order-num"></span> The current call returns that product to whichever call is waiting on it.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem">The recursive call always finishes completely, all the way down to a base case and all the way back up, before the line that made it can move on to its own multiplication and return. Nothing about "call yourself" skips that waiting.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Predict the output: same shape, different input</h2>
+<p>Here's a recursive function that adds up every number in a list, one item at a time:</p>
+<div class="mlrk-code"><div class="mlrk-screen">def sum_list(numbers):
+    if len(numbers) == 0:
+        return 0
+    return numbers[0] + sum_list(numbers[1:])</div></div>
+<p>Its base case is an empty list, since the sum of nothing is 0. Its recursive case takes the first number and adds it to the sum of everything else in the list, a slightly smaller list each time. Predict the output for each call below.</p>
+
+<div class="mlrk-card" id="card-sum1"><p><strong><code>sum_list([5])</code> returns:</strong></p>
+<button type="button" class="mlrk-choice" data-a="5">5</button>
+<button type="button" class="mlrk-choice" data-a="0">0</button>
+<button type="button" class="mlrk-choice" data-a="error">An error, since a list of one item can't be split</button>
+<div id="sum1fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-sum2" style="margin-top:.8rem"><p><strong><code>sum_list([4, 6, 2])</code> returns:</strong></p>
+<button type="button" class="mlrk-choice" data-a="12">12</button>
+<button type="button" class="mlrk-choice" data-a="4">4</button>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<div id="sum2fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-sum3" style="margin-top:.8rem"><p><strong><code>sum_list([])</code> returns:</strong></p>
+<button type="button" class="mlrk-choice" data-a="0">0</button>
+<button type="button" class="mlrk-choice" data-a="none">None, since there's nothing to add</button>
+<button type="button" class="mlrk-choice" data-a="error">An error, since the list is empty</button>
+<div id="sum3fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. When there's no way out: stack overflow</h2>
+<p>Every recursive function you've seen so far has a base case that the recursive case is guaranteed to reach eventually, because each call moves the input strictly closer to it: <code>n - 1</code> counts down toward 1, an empty list is what <code>numbers[1:]</code> eventually produces. Drop the base case, or write a recursive case that never actually approaches it, and the calls never stop pausing and stacking on top of each other.</p>
+<div class="mlrk-code"><div class="mlrk-screen">def countdown_broken(n):
+    print(n)
+    countdown_broken(n - 1)   # no base case at all
+
+countdown_broken(3)</div></div>
+
+<div class="mlrk-card" id="card-overflow"><p><strong>What actually happens when <code>countdown_broken(3)</code> runs?</strong></p>
+<button type="button" class="mlrk-choice" data-a="overflow">It keeps calling itself with smaller and smaller numbers, and eventually crashes with a stack overflow / recursion error.</button>
+<button type="button" class="mlrk-choice" data-a="silent">Python silently stops after a few calls with no error at all.</button>
+<button type="button" class="mlrk-choice" data-a="loops">It loops back to <code>countdown_broken(3)</code> once it hits a negative number.</button>
+<div id="overflowfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p>Select every true statement about recursion below.</p>
+<div class="mlrk-card">
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> Every recursive function needs at least one base case that doesn't call itself again.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Each recursive call gets its own stack frame, separate from the call that made it.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A stack frame is destroyed the moment a function calls itself, before the new call even starts.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Recursion that never reaches its base case can crash a program by running out of stack space.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Real-world recursion: folders, threads, and nested data</h2>
+<p>The folder search from the introduction is one real example, but it's far from the only one. Three shapes show up constantly in real software, and all three are naturally recursive because each one is "the same structure, nested inside itself":</p>
+<ul>
+<li><strong>File systems.</strong> A folder can contain files and other folders, and those folders can contain more folders. Searching, counting every file, or computing total size all recurse into each subfolder the same way.</li>
+<li><strong>Nested comment threads.</strong> A comment on a post can have replies, and each reply can have its own replies. Rendering a whole thread means rendering a comment, then recursively rendering each of its replies the exact same way.</li>
+<li><strong>Nested JSON objects.</strong> A JSON object's value can itself be another JSON object (or a list of them). Pulling every value out of a deeply nested API response means checking each value: if it's a plain value, use it; if it's itself an object, recurse into it.</li>
+</ul>
+
+<svg class="mlrk-illustration" viewBox="0 0 640 260" role="img" aria-labelledby="realTitle realDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="realTitle">A recursive folder search, going down to find a file and returning back up</title>
+  <desc id="realDesc">Three boxes stacked vertically: search_folder called on Documents, then on Projects, then on 2026, where the target file is found. Green downward arrows on the left are labeled "calls itself on this subfolder." A dashed blue upward arrow on the right shows the found file's path returning back up through all three calls to the original caller.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="80" y="20" width="280" height="60" rx="10" fill="#FFFCF7" stroke="#264326" stroke-width="3"/>
+    <text x="220" y="45" text-anchor="middle" font-size="15" font-weight="700" fill="#261F1D">search_folder("Documents")</text>
+    <text x="220" y="65" text-anchor="middle" font-size="12" fill="#264326">calls itself on subfolder "Projects"</text>
+
+    <rect x="80" y="100" width="280" height="60" rx="10" fill="#FFFCF7" stroke="#264326" stroke-width="3"/>
+    <text x="220" y="125" text-anchor="middle" font-size="15" font-weight="700" fill="#261F1D">search_folder("Projects")</text>
+    <text x="220" y="145" text-anchor="middle" font-size="12" fill="#264326">calls itself on subfolder "2026"</text>
+
+    <rect x="80" y="180" width="280" height="60" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="220" y="205" text-anchor="middle" font-size="15" font-weight="700" fill="#261F1D">search_folder("2026")</text>
+    <text x="220" y="225" text-anchor="middle" font-size="12" fill="#264326">finds report.pdf: base case, returns the path</text>
+  </g>
+  <g fill="#327A5F">
+    <polygon points="70,84 70,94 63,94 75,109 87,94 80,94 80,84"/>
+    <polygon points="70,164 70,174 63,174 75,189 87,174 80,174 80,164"/>
+  </g>
+  <g fill="none" stroke="#2274B5" stroke-width="3" stroke-dasharray="7 5">
+    <path d="M420,205 C480,205 480,45 420,45"/>
+  </g>
+  <polygon points="420,38 420,52 413,52 425,66 437,52 430,52 430,38" fill="#2274B5" transform="rotate(-90 425 45)"/>
+  <text x="480" y="130" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#2274B5">found file's path returns back up through every waiting call</text>
+</svg>
+
+<p>Now try writing the recursive step yourself. Here's a simplified <code>search_folder</code> in pseudocode:</p>
+<div class="mlrk-code"><div class="mlrk-screen">def search_folder(folder, target_name):
+    for item in folder.contents:
+        if item.is_file and item.name == target_name:
+            return item                      # base case: found it
+        if item.is_folder:
+            found = ____(item, target_name)  # what goes here?
+            if found:
+                return found
+    return None                              # base case: not in this branch</div></div>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Type the missing call:</label>
+  <input type="text" id="blankinput" autocomplete="off" placeholder="e.g. some_function(args)">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+
+<div class="mlrk-card" id="card-realuse" style="margin-top:1rem"><p><strong>Why can't a single, non-nested loop replace <code>search_folder</code> here?</strong></p>
+<button type="button" class="mlrk-choice" data-a="unknown">The folder structure can be arbitrarily deep, and a loop can't call itself to go one level deeper on demand the way a function can.</button>
+<button type="button" class="mlrk-choice" data-a="slow">A loop is always slower than a function call in Python.</button>
+<button type="button" class="mlrk-choice" data-a="cant">Loops can't be used with files or folders at all.</button>
+<div id="realusefb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Watch: recursion in action</h2>
+<p>As you watch, notice how the video shows a function pausing mid-call to wait on a recursive call it made, and compare that to the countdown and factorial examples above.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=ivl5-snqul8" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: the video compares an iterative version of a function to a recursive version of the same function. What's one difference you noticed between how they work?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>Recursion is one of the most common topics in a technical interview, in two different forms. The first is direct: "write a recursive function to do X," often factorial, summing a list, or reversing a string. The second is a follow-up question, no matter which approach you used: "what's the base case here, and how do you know it's actually reached?" Interviewers ask that second question because a recursive function without a guaranteed base case is a real, ship-blocking bug, not just an academic detail.</p>
+<p>A very common interview moment is being handed a recursive function with a bug in its base case, like a factorial function that checks <code>n == 0</code> but is only ever called on positive integers starting at 1, or one with no base case at all, and being asked to find the problem by tracing it out loud. Narrating the call stack, "this call is waiting on that call, which is waiting on that one," is exactly the skill practiced in section 6 above, and it's what separates a confident answer from a guess.</p>
+<p>For software-engineering-leaning roles, expect a follow-up about cost too: recursion that calls itself once per element, like <code>sum_list</code> above, uses one stack frame per call, so a very long list can use a meaningful amount of memory that a loop-based version wouldn't.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: you're handed a recursive function and asked "what happens if this input never reaches the base case?" What's the honest answer?</strong></p>
+<button type="button" class="mlrk-choice" data-a="crash">Stack frames keep piling up with nothing to stop them, and the program eventually crashes with a stack overflow / recursion error.</button>
+<button type="button" class="mlrk-choice" data-a="fine">Nothing. Python automatically detects the problem and stops safely.</button>
+<button type="button" class="mlrk-choice" data-a="loop">It quietly turns into a regular loop instead.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>A recursive function crashes with a recursion-depth error on every input, even small ones. What should you check first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="basecase">Whether the base case condition can actually ever be true for the inputs this function receives.</button>
+<button type="button" class="mlrk-choice" data-a="printmore">Whether more print statements are needed throughout the function.</button>
+<button type="button" class="mlrk-choice" data-a="rename">Whether the function's variable names are too similar to each other.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your trace strategy:</strong> in 1-2 sentences, describe how you'd check whether a new recursive function you just wrote is guaranteed to reach its base case.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I'd check whether each recursive call..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Summary &amp; critical thinking</h2>
+<p>Every working recursive function rests on the same two pieces: a base case that stops the calling, reachable without fail, and a recursive case that does a little work and moves strictly closer to that base case. The call stack is what makes it possible: each call pauses and waits rather than disappearing, so once the base case answers, every waiting call above it can finish in reverse order, all the way back to the original call.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> you need a function that counts how many items are in a nested list, like <code>[1, [2, 3, [4]], 5]</code>, where a list can contain more lists inside it to any depth. What should the base case be?</p>
+<button type="button" class="mlrk-choice" data-a="notlist">An item that is not itself a list. Count it as one item and stop recursing on it.</button>
+<button type="button" class="mlrk-choice" data-a="emptylist">The list must always be empty before counting can start.</button>
+<button type="button" class="mlrk-choice" data-a="none">There's no need for a base case if every item eventually gets counted.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what question would you ask yourself first when trying to spot the base case in someone else's recursive function?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Thinking ahead</h2>
+<p>Nested structures with no fixed depth, folders inside folders, comments inside comments, are everywhere once you start looking, and a tree is exactly that shape formalized: a node that can have child nodes, each of which can have their own children. Walking a tree top to bottom, searching it, or adding up every value inside it almost always reads more naturally as recursion than as a loop, for the same reason the folder search did here. If a tree structure comes up next, the base case and recursive case habit practiced in this reading, and the "trust that the smaller call works" leap of faith behind it, is the exact foundation that idea builds on.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add recursion-reading1-callyourselfback.json
+git commit -m "Complete call yourself back recursion reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://docs.python.org/3/library/sys.html#sys.setrecursionlimit" target="_blank" rel="noopener">Python docs: sys.setrecursionlimit</a> — the official reference for how Python's recursion depth limit and stack overflow protection actually work.</li>
+<li><a href="https://www.w3schools.com/python/gloss_python_function_recursion.asp" target="_blank" rel="noopener">W3Schools: Python Recursion</a> — more worked examples with explanations.</li>
+<li><a href="https://www.geeksforgeeks.org/python/recursion-in-python/" target="_blank" rel="noopener">GeeksforGeeks: Recursion in Python</a> — additional practice problems beyond factorial and list sums.</li>
+<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — paste in a recursive function and step through the real call stack, frame by frame, visually.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "recursion-reading1-callyourselfback";
+  const TITLE = "Call Yourself Back — Understanding Recursion";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-countdown", buttonSelector:"#card-countdown .mlrk-choice", feedbackSelector:"#countdownfb", correct:"stops",
+    feedback:{stops:"n counts down 3, 2, 1 by calling itself each time, then n == 0 fires the base case, which prints Liftoff! and returns without calling itself again.",
+              forever:"It looks that way at first glance, but the base case (n == 0) stops the calls. Nothing here runs forever.",
+              error:"Python fully supports a function calling itself. This code runs without any special permission needed."},
+    onDone(){revealCountdown()}});
+
+  K.quiz({id:"q-identify", buttonSelector:"#card-identify .mlrk-choice", feedbackSelector:"#identifyfb", correct:"stopscall",
+    feedback:{stopscall:"That's the defining feature of a base case: it's the branch that returns an answer directly instead of calling the function again.",
+              firstcheck:"Being checked first is a coincidence of how this function happens to be written, not what makes something a base case.",
+              returns1:"The specific value returned doesn't make a branch the base case. What matters is that no further call happens."}});
+
+  K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"13",
+    feedback:{13:"double(5) returns 10, and Python evaluates that call first, then adds 3, giving 13.",
+              10:"10 is just double(5) on its own. The 3 + in front still gets added to that result.",
+              error:"A function call evaluates to its return value, and that value can be used in a larger expression exactly like any other number."}});
+
+  K.quiz({id:"q-equality", buttonSelector:"#card-equality .mlrk-choice", feedbackSelector:"#equalityfb", correct:"true", maxAttempts:1,
+    feedback:{true:"n holds 1, and 1 == 1 is True.",
+              one:"== compares for equality and produces True or False, not the number itself."}});
+
+  K.quiz({id:"q-branch", buttonSelector:"#card-branch .mlrk-choice", feedbackSelector:"#branchfb", correct:"no", maxAttempts:1,
+    feedback:{no:"Returning ends that function call immediately. Any code below it, including an else branch, is skipped for that call.",
+              yes:"Python does not run both branches. Once a return statement executes, that call is over."}});
+
+  K.quiz({id:"q-predictcalls", buttonSelector:"#card-predictcalls .mlrk-choice", feedbackSelector:"#predictcallsfb", correct:"4",
+    feedback:{4:"factorial(4), factorial(3), factorial(2), and factorial(1): four calls stack up before factorial(1) hits the base case and the first return happens.",
+              3:"That's one short. factorial(4) itself counts as the first call, along with 3, 2, and 1.",
+              24:"24 is the final answer the whole expression produces, not the number of calls made to get there."}});
+
+  K.quiz({id:"q-transfer", buttonSelector:"#card-transfer .mlrk-choice", feedbackSelector:"#transferfb", correct:"6",
+    feedback:{6:"factorial(3) follows the same pattern as factorial(4) one level down: it calls factorial(2), gets 2 back, and returns 3 × 2 = 6.",
+              3:"3 is just n on its own. factorial(3) still has to multiply n by factorial(2)'s result.",
+              24:"24 is factorial(4)'s answer, not factorial(3)'s. factorial(3) stops one level earlier."}});
+
+  K.quiz({id:"q-sum1", buttonSelector:"#card-sum1 .mlrk-choice", feedbackSelector:"#sum1fb", correct:"5",
+    feedback:{5:"numbers[0] is 5, and numbers[1:] is an empty list, so this becomes 5 + sum_list([]), which is 5 + 0.",
+              0:"0 would be the answer for an empty list, but [5] has one item to add first.",
+              error:"Slicing [1:] on a one-item list just produces an empty list. No error happens here."}});
+
+  K.quiz({id:"q-sum2", buttonSelector:"#card-sum2 .mlrk-choice", feedbackSelector:"#sum2fb", correct:"12",
+    feedback:{12:"4 + sum_list([6, 2]), which is 4 + (6 + sum_list([2])), which is 4 + 6 + 2 = 12.",
+              4:"4 is only the first item. The recursive call still has to add the rest of the list.",
+              3:"3 is the length of the list, not the sum of its values."}});
+
+  K.quiz({id:"q-sum3", buttonSelector:"#card-sum3 .mlrk-choice", feedbackSelector:"#sum3fb", correct:"0", maxAttempts:1,
+    feedback:{0:"This is the base case: an empty list has nothing to add, so it returns 0 directly with no further call.",
+              none:"The function's base case explicitly returns 0, not None. Returning 0 is exactly what makes the addition chain work correctly."}});
+
+  K.quiz({id:"q-overflow", buttonSelector:"#card-overflow .mlrk-choice", feedbackSelector:"#overflowfb", correct:"overflow",
+    feedback:{overflow:"With no base case, every call makes another call. Stack frames keep piling up until Python hits its recursion limit and raises a RecursionError, the stack overflow this whole reading has been building toward.",
+              silent:"Python doesn't silently give up. Running out of stack space raises a real, visible error.",
+              loops:"Nothing about hitting a low number makes Python treat this call specially. It keeps recursing straight through negative numbers."}});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"crash",
+    feedback:{crash:"That's the honest, correct answer, and exactly what a stack overflow / RecursionError is: unstoppable stacking with nowhere for it to resolve.",
+              fine:"Python doesn't have a built-in safety net that fixes a missing base case. It has a recursion limit that turns the problem into a crash instead of an infinite hang, which is not the same as detecting and fixing it.",
+              loop:"Recursion doesn't automatically convert itself into a loop. The calls keep stacking exactly as written."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"basecase",
+    feedback:{basecase:"A recursion-depth error on every input, even small ones, is the classic symptom of a base case that's never actually reachable, whether it's missing, checks the wrong condition, or checks a value the recursive case never produces.",
+              printmore:"Extra print statements might help you see the problem, but they won't fix it. The base case itself needs to be checked.",
+              rename:"Variable names have no effect on whether the base case can ever be reached."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"notlist",
+    feedback:{notlist:"Once an item isn't a list itself, there's nothing left to recurse into. Counting it as one and stopping there is exactly what a base case needs to do.",
+              emptylist:"Requiring the whole structure to be empty first would mean the function never counts anything at all.",
+              none:"Every recursive function needs a base case. Without one here, a plain number like 4 would cause an error trying to check its length."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"Every recursive function needs at least one base case that doesn't call itself again.", correct:true,
+      hint:"Think back to countdown and factorial. What did both of them have that countdown_broken was missing?",
+      explain:"Without a reachable base case, a recursive function has no branch that ever stops calling itself."},
+    {value:"b", label:"Each recursive call gets its own stack frame, separate from the call that made it.", correct:true,
+      hint:"Revisit the section 5 diagram. Did factorial(4) and factorial(3) share one box, or get separate ones?",
+      explain:"Every call, recursive or not, gets its own stack frame with its own local variables, as shown by the separate stacked boxes in section 5."},
+    {value:"c", label:"A stack frame is destroyed the moment a function calls itself, before the new call even starts.", correct:false,
+      hint:"Think about how factorial(2) resumes after factorial(1) returns. Would that be possible if its frame were already gone?",
+      explain:"A frame is paused, not destroyed, when it makes a call. It has to still exist so the function can resume once that call returns."},
+    {value:"d", label:"Recursion that never reaches its base case can crash a program by running out of stack space.", correct:true,
+      hint:"This is exactly what section 9's countdown_broken example demonstrated.",
+      explain:"That's the stack overflow / RecursionError behavior demonstrated with countdown_broken in section 9."}
+  ]});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["callmade","waits","multiply","returnup"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"ivl5-snqul8"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  function revealCountdown(){
+    $("#countdownScreen").textContent = `def countdown(n):
+    if n == 0:
+        print("Liftoff!")
+        return
+    print(n)
+    countdown(n - 1)
+
+countdown(3)
+
+[Output]
+3
+2
+1
+Liftoff!`;
+  }
+  $("#countdownrun").addEventListener("click", revealCountdown);
+
+  /* ---- interactive call-stack stepper for factorial(4) ---- */
+  const STACK_STEPS = [
+    {type:"call", n:4, text:"factorial(4) is called. n is 4, not 1, so it needs the answer to factorial(3) before it can finish."},
+    {type:"call", n:3, text:"factorial(3) is called. Same story: it needs factorial(2) first."},
+    {type:"call", n:2, text:"factorial(2) is called. It needs factorial(1) first."},
+    {type:"call", n:1, text:"factorial(1) is called. n equals 1: the base case. It returns 1 immediately, with no further call."},
+    {type:"return", n:2, value:2, text:"factorial(2) resumes exactly where it paused. It multiplies 2 × 1 = 2 and returns 2 to factorial(3)."},
+    {type:"return", n:3, value:6, text:"factorial(3) resumes. It multiplies 3 × 2 = 6 and returns 6 to factorial(4)."},
+    {type:"return", n:4, value:24, text:"factorial(4) resumes one last time. It multiplies 4 × 6 = 24 and returns 24. That's the final answer."}
+  ];
+  const stackEl = $("#stackvis");
+  const noteEl = $("#stacknote");
+  const markStack = K.activity("act-stack-trace", () => stepIdx >= STACK_STEPS.length - 1);
+  let stepIdx = -1;
+
+  function renderStack(){
+    stackEl.innerHTML = "";
+    for(let n = 4; n >= 1; n--){
+      const doneStep = STACK_STEPS.slice(0, stepIdx + 1).find(s => s.type === "return" && s.n === n);
+      const calledStep = STACK_STEPS.slice(0, stepIdx + 1).find(s => s.type === "call" && s.n === n);
+      if(!calledStep) continue;
+      const div = document.createElement("div");
+      const isCurrent = STACK_STEPS[stepIdx] && STACK_STEPS[stepIdx].n === n;
+      div.className = "mlrk-frame" + (doneStep ? " mlrk-frame-resolved" : (n === 1 ? " mlrk-frame-base" : "")) + (isCurrent ? " mlrk-frame-active" : "");
+      div.textContent = doneStep
+        ? `factorial(${n}) — returns ${doneStep.value}`
+        : (n === 1 ? `factorial(1) — base case` : `factorial(${n}) — waiting on factorial(${n-1})`);
+      stackEl.appendChild(div);
+    }
+  }
+  function renderNote(){
+    if(stepIdx < 0){ noteEl.innerHTML = 'Click "Step forward" to make the first call, <code>factorial(4)</code>.'; return; }
+    noteEl.textContent = STACK_STEPS[stepIdx].text;
+  }
+  $("#stackstep").addEventListener("click", () => {
+    if(stepIdx >= STACK_STEPS.length - 1) return;
+    stepIdx++;
+    renderStack();
+    renderNote();
+    markStack();
+    if(stepIdx >= STACK_STEPS.length - 1) $("#stackstep").disabled = true;
+  });
+  $("#stackreset").addEventListener("click", () => {
+    stepIdx = -1;
+    $("#stackstep").disabled = false;
+    renderStack();
+    renderNote();
+  });
+  renderStack();
+  renderNote();
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const val = $("#blankinput").value.trim().toLowerCase().replace(/\s+/g,"");
+    const ok = val === "search_folder(item,target_name)" || val === "search_folder(item,targetname)";
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> search_folder(item, target_name) is the recursive call: the same function, aimed at the subfolder one level down.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing call is <code>search_folder(item, target_name)</code>: the function calling itself on the subfolder it just found.";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> Think about which function needs to run again, just aimed at item instead of folder. One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.quiz({id:"q-realuse", buttonSelector:"#card-realuse .mlrk-choice", feedbackSelector:"#realusefb", correct:"unknown",
+    feedback:{unknown:"A single loop has no natural way to go one level deeper into a subfolder it just discovered. A function calling itself can, at any depth, without knowing in advance how deep the structure goes.",
+              slow:"Speed isn't the reason here. The real issue is that a loop by itself has no way to descend into a newly found subfolder.",
+              cant:"Loops work fine for listing items directly inside one folder. The problem is going deeper into subfolders whose depth isn't known ahead of time."}});
+
+  const AI_PROMPTS = [
+    "Think of a real container you've opened that had another container of the same kind inside it, like a box of boxes, or folders inside folders on your own computer. Where's the base case in that picture: the moment you finally find something that isn't another container?",
+    "If you had to explain \"the function trusts that the smaller call will work\" to a friend using something from your own daily life, what would you compare it to?",
+    "Where have you seen something \"nested inside itself\" in an app you use often, like replies to replies in a comment thread? What would the base case be for exploring it?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["data-structures"],
+      skills:["data-structures-algorithms"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

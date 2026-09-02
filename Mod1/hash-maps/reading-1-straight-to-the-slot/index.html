@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Straight to the Slot — Hash Maps</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:760px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading &middot; optional enrichment</div>
+<h1>Straight to the Slot</h1>
+<p class="mlrk-lead">This reading isn't required for any current project. But hash maps are one of the most frequently asked-about topics in real technical interviews, and Python's own <code>dict</code> is a hash map you already use every day, so understanding how it works under the hood pays off well beyond this one reading. A hospital's patient record system needs the front desk to type in a medical record number and see the full chart appear immediately, whether the hospital has five hundred patients on file or five million. Scanning every chart in order until one matches would make busy mornings unworkable. Python's <code>dict</code> already solves this for you, instantly, no matter how big it gets. This reading opens up exactly how it manages that trick: a technique called hashing.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">Optional enrichment</span>
+  <span class="mlrk-pill">~50–55 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Data Structures &amp; Algorithms</strong> — Explaining how a data structure (hash map, linked list, tree) or a recursive process actually works under the hood, and applying that understanding to solve a real coding-interview-style problem, not just naming the structure from memory.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-gold">
+    <p><strong>Before you start:</strong> nothing in your current project requires this reading. It exists because hash maps come up constantly in real interviews and in real production code, and actually understanding how one works under the hood, not just that Python hands you a fast <code>dict</code> for free, is worth genuine time on its own.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Picture that front desk again. Somewhere, the hospital's system has to hold every patient's chart. The simplest possible design is a list: chart after chart, in some order. Finding "MRN-77190" means starting at the front and checking each chart's ID until one matches, or until you run out of charts. With five hundred patients that's barely noticeable. With five million, a front-desk lookup that used to take a heartbeat could take real, felt time, and it gets slower the more patients the hospital has, not the more the front desk asks. That's exactly the kind of slowdown a list-based membership check runs into as it grows.</p>
+<p>A hash map sidesteps the scan entirely by computing where a value belongs instead of searching for it. Underneath a Python <code>dict</code>, there's a fixed-size array of storage locations called <strong>slots</strong> (or buckets). A <strong>hash function</strong> takes a key, such as "MRN-77190", and turns it into a number. That number gets reduced, usually with a modulo operation, down to one of the array's slot indexes. Store the chart there, and later, looking it up means running that exact same key through that exact same hash function again, landing on the exact same slot, and checking what's there. No scanning. No matter how many other patients are on file.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 780 300" role="img" aria-labelledby="hashTitle hashDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="hashTitle">A key traveling through a hash function into an array slot</title>
+  <desc id="hashDesc">A box labeled "MRN-77190" feeds into a hash function box, which produces a number. That number is reduced with modulo 8 down to index 2. Below, a row of eight numbered slots (0 through 7) shows slot 2 highlighted, holding this patient's chart.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="90" y="20" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">Patient chart ID (the key)</text>
+    <rect x="15" y="30" width="150" height="55" rx="10" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="90" y="63" text-anchor="middle" font-size="15" font-weight="700" fill="#261F1D">MRN-77190</text>
+
+    <polygon points="168,50 182,57 168,65" fill="#264326"/>
+
+    <rect x="188" y="15" width="185" height="85" rx="14" fill="#2274B5" stroke="#2F5A8B" stroke-width="2.5"/>
+    <text x="280" y="48" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">hash function</text>
+    <text x="280" y="68" text-anchor="middle" font-size="13" fill="#FFFCF7">turns the key into</text>
+    <text x="280" y="85" text-anchor="middle" font-size="13" fill="#FFFCF7">a number, every time</text>
+
+    <text x="280" y="118" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">for this example: 26</text>
+
+    <polygon points="280,128 288,142 272,142" fill="#264326"/>
+
+    <rect x="205" y="148" width="150" height="50" rx="8" fill="#FFEECA" stroke="#83671C" stroke-width="2.5"/>
+    <text x="280" y="179" text-anchor="middle" font-size="15" font-weight="700" fill="#261F1D">26 % 8 = 2</text>
+
+    <polygon points="280,201 288,215 272,215" fill="#264326"/>
+
+    <text x="390" y="222" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">the table's 8 slots (index 0–7)</text>
+    <g font-size="13" font-weight="700" text-anchor="middle">
+      <rect x="10" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="54" y="252" fill="#261F1D">0</text><text x="54" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="104" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="148" y="252" fill="#261F1D">1</text><text x="148" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="198" y="232" width="88" height="52" rx="6" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+      <text x="242" y="252" fill="#261F1D">2</text><text x="242" y="270" fill="#261F1D" font-size="11" font-weight="700">MRN-77190</text>
+      <rect x="292" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="336" y="252" fill="#261F1D">3</text><text x="336" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="386" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="430" y="252" fill="#261F1D">4</text><text x="430" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="480" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="524" y="252" fill="#261F1D">5</text><text x="524" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="574" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="618" y="252" fill="#261F1D">6</text><text x="618" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="668" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="712" y="252" fill="#261F1D">7</text><text x="712" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+    </g>
+  </g>
+</svg>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> "how does a hash map actually achieve O(1) lookup" is one of the most frequently asked follow-up questions in a technical interview, right after a candidate correctly names a dict or hash map as the answer to some other problem. Being able to answer with "a hash function converts the key to a slot index" instead of "it's just fast" is the difference that gets noticed.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know a Python dict maps keys to values and that a list gets slower to search as it grows. This reading is about the mechanism underneath that speed difference. Once hashing itself feels natural, other ways of organizing data start making more sense too: some structures keep related pieces linked together in a strict sequence, others branch entries into a hierarchy, each trading raw lookup speed for a different guarantee, like preserving order or supporting fast insertion in the middle.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before hashing</h2>
+<p class="mlrk-small">A few skills get reused directly later in this reading: the modulo operator, indexing into a fixed-size sequence, and reasoning about how a scan's cost grows. Test each one below before moving on.</p>
+
+<div class="mlrk-card" id="card-recall-mod"><p><strong>Coding check:</strong> what does <code>26 % 8</code> evaluate to in Python?</p>
+<button type="button" class="mlrk-choice" data-a="2">2</button>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="8">8</button>
+<div id="recallmodfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-index" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">scores = [10, 20, 30, 40]
+print(scores[2])</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="30">30</button>
+<button type="button" class="mlrk-choice" data-a="20">20</button>
+<button type="button" class="mlrk-choice" data-a="40">40</button>
+<div id="recallindexfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-scan" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a support tool checks whether a ticket ID has already been marked resolved by comparing it, one at a time, against every ticket already in today's resolved list. If that resolved list grows from 5 tickets to 5,000, what happens to how long that check can take?</p>
+<button type="button" class="mlrk-choice" data-a="slower">It can take much longer, since the loop may need to check far more tickets before finding a match or reaching the end.</button>
+<button type="button" class="mlrk-choice" data-a="same">It takes exactly the same amount of time no matter how long the list gets.</button>
+<button type="button" class="mlrk-choice" data-a="faster">It gets faster automatically because Python optimizes longer lists.</button>
+<div id="recallscanfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-turn" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> before a hash map can decide which slot a key belongs in, what must it first be able to turn that key into?</p>
+<button type="button" class="mlrk-choice" data-a="number">A number, computed the exact same way every time for that same key.</button>
+<button type="button" class="mlrk-choice" data-a="sorted">A sorted list of every other key already stored.</button>
+<button type="button" class="mlrk-choice" data-a="string">A string, even if the key wasn't originally text.</button>
+<div id="recallturnfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the matching practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>hash function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Hash function</strong><br>A function that takes a key and consistently produces the same number for that same key, every single time it runs.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>hash code</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Hash code</strong><br>The raw number a hash function produces for a key, before it gets reduced down to fit inside the table.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>bucket / slot</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Bucket (slot)</strong><br>One storage location inside a hash table's underlying array, identified by an index.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>key/value pair</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Key/value pair</strong><br>One entry in a hash map: a key used to look something up, and the value stored under it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>collision</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Collision</strong><br>When two different keys reduce down to the same slot index.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>chaining</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Chaining</strong><br>One way to resolve a collision: each slot holds a small list of entries instead of just one, so colliding entries live together at that slot.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>load factor</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Load factor</strong><br>The ratio of stored entries to the number of slots. A high load factor means longer chains and slower lookups.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>resize / rehash</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Resize (rehash)</strong><br>Growing the underlying array and recomputing every entry's slot, done automatically once the load factor gets too high, to keep lookups fast.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Under the hood: from key to slot</h2>
+<p>Click through the exact steps a hash map runs for a brand-new key, one at a time.</p>
+<div id="tracehash"></div>
+
+<p style="margin-top:1.2rem">Now try one yourself. A new patient's chart uses the key <code>"MRN-19004"</code>. For this example, imagine its raw hash code comes out to <strong>59</strong>, and the table still has <strong>8</strong> slots.</p>
+<div class="mlrk-fillblank">
+  <label for="indexinput">Which slot index (0–7) does this key land in?</label>
+  <input type="text" id="indexinput" autocomplete="off">
+  <button type="button" id="indexcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="indexfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. When two keys collide</h2>
+<p>Table sizes are fixed, but the number of possible keys is not. Sooner or later, two different keys reduce down to the same slot. That's a <strong>collision</strong>, and it's expected, not a bug. One common fix is <strong>chaining</strong>: instead of one value per slot, each slot holds a small list, and a colliding entry just joins that list instead of overwriting what's already there.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 780 300" role="img" aria-labelledby="collideTitle collideDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="collideTitle">Two different keys hashing to the same slot, resolved with chaining</title>
+  <desc id="collideDesc">Two key boxes, MRN-77190 and MRN-40355, each reduce to index 2. Below, the row of eight slots shows slot 2 holding a small chain of two linked entries instead of just one, while every other slot stays empty.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="15" y="20" width="165" height="65" rx="10" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="97" y="48" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">MRN-77190</text>
+    <text x="97" y="68" text-anchor="middle" font-size="12" fill="#264326">hash 26, then 26 % 8 = 2</text>
+
+    <rect x="205" y="20" width="165" height="65" rx="10" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="287" y="48" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">MRN-40355</text>
+    <text x="287" y="68" text-anchor="middle" font-size="12" fill="#264326">hash 34, then 34 % 8 = 2</text>
+
+    <polygon points="97,88 220,150 210,158 90,98" fill="#EF541E"/>
+    <polygon points="287,88 250,150 260,158 297,98" fill="#EF541E"/>
+    <text x="192" y="112" text-anchor="middle" font-size="13" font-weight="700" fill="#EF541E">both land on slot 2 — a collision</text>
+
+    <g font-size="13" font-weight="700" text-anchor="middle">
+      <rect x="10" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="54" y="252" fill="#261F1D">0</text><text x="54" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="104" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="148" y="252" fill="#261F1D">1</text><text x="148" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+    </g>
+    <rect x="198" y="160" width="130" height="124" rx="8" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+    <text x="263" y="180" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">slot 2 (chain)</text>
+    <rect x="210" y="190" width="106" height="34" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+    <text x="263" y="211" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">MRN-77190</text>
+    <line x1="263" y1="224" x2="263" y2="236" stroke="#264326" stroke-width="2.5"/>
+    <circle cx="263" cy="230" r="3" fill="#264326"/>
+    <rect x="210" y="238" width="106" height="34" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+    <text x="263" y="259" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">MRN-40355</text>
+
+    <g font-size="13" font-weight="700" text-anchor="middle">
+      <rect x="386" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="430" y="252" fill="#261F1D">4</text><text x="430" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="480" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="524" y="252" fill="#261F1D">5</text><text x="524" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="574" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="618" y="252" fill="#261F1D">6</text><text x="618" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="668" y="232" width="88" height="52" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="712" y="252" fill="#261F1D">7</text><text x="712" y="270" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+    </g>
+  </g>
+</svg>
+
+<p>Order the steps below to build the sequence a hash map follows when a new key arrives. Click a step again to remove it if you change your mind, then check when ready.</p>
+<ul class="mlrk-orderlist" id="chainsteps">
+  <li class="mlrk-orderitem" data-step="hash"><span class="mlrk-order-num"></span> Compute a hash number for the new key and reduce it to a slot index.</li>
+  <li class="mlrk-orderitem" data-step="locate"><span class="mlrk-order-num"></span> Look at that slot to see whether it already holds an entry.</li>
+  <li class="mlrk-orderitem" data-step="compare"><span class="mlrk-order-num"></span> If an entry is already there and its key is different, this is a collision: the new entry is about to join that slot's chain rather than overwrite anything.</li>
+  <li class="mlrk-orderitem" data-step="insert"><span class="mlrk-order-num"></span> The new entry is added alongside the existing one in that slot, so both stay reachable later.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="chaincheck" class="mlrk-btn">Check my order</button></div>
+<div id="chainstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+
+<div class="mlrk-card" id="card-collision-predict" style="margin-top:1.2rem"><p><strong>Predict:</strong> the table still has 8 slots, and slot 2 already holds MRN-77190 and MRN-40355 from above. A third key's raw hash code is 42. Which slot does it land in, and does it collide with the entries already there?</p>
+<button type="button" class="mlrk-choice" data-a="slot2yes">Slot 2, and yes, it collides with both entries already there.</button>
+<button type="button" class="mlrk-choice" data-a="slot5no">Slot 5, no collision.</button>
+<button type="button" class="mlrk-choice" data-a="slot3no">Slot 3, no collision.</button>
+<div id="collisionpredictfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Real hash maps in the wild</h2>
+<p>The same mechanism, a key reduced to a slot, shows up constantly outside of hospital charts, wherever "key" and "value" stop being abstract and start being something a real system actually needs.</p>
+<p><strong>Deduplicating IDs during a data migration.</strong> When two hospital systems merge their patient records, the same patient can appear in both source files under the same medical record number. A migration script that tracks "MRNs already written to the new system" in a set (which is a hash map that only stores keys) checks each new ID in roughly constant time, no matter how many records have already been merged, so it can drop repeats instead of quietly double-counting a patient.</p>
+<p><strong>Caching results by key.</strong> A nonprofit's donation platform has to check every incoming donation against a donor's tax-eligibility status, a calculation that takes real work to compute. Instead of recomputing it on every single donation from the same donor, the platform stores the result once in a dict keyed by donor ID. The next donation from that same donor hits the cache and skips the computation entirely.</p>
+<p><strong>Counting occurrences by key.</strong> A professional-services firm collects open-ended client survey responses and wants to know which words or phrases show up most. A dict keyed by word, with the value as a running count, builds a full frequency count in a single pass through every response: see a word, look up its current count in the dict (or default to zero), add one, and move on.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 780 260" role="img" aria-labelledby="cacheTitle cacheDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="cacheTitle">A donor ID hashing into a cache slot holding an already-computed result</title>
+  <desc id="cacheDesc">A request for donor number 5521's eligibility hashes to index 4 in a 6-slot cache. Slot 4 already holds a cached result, so the platform returns it immediately instead of recomputing it.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="15" y="20" width="200" height="65" rx="10" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="115" y="48" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">Donor #5521</text>
+    <text x="115" y="68" text-anchor="middle" font-size="12" fill="#264326">eligibility check requested</text>
+
+    <polygon points="220,52 234,59 220,67" fill="#264326"/>
+
+    <rect x="240" y="10" width="185" height="85" rx="14" fill="#2274B5" stroke="#2F5A8B" stroke-width="2.5"/>
+    <text x="332" y="43" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">hash function</text>
+    <text x="332" y="63" text-anchor="middle" font-size="13" fill="#FFFCF7">same donor ID</text>
+    <text x="332" y="80" text-anchor="middle" font-size="13" fill="#FFFCF7">lands on the same slot, every time</text>
+
+    <text x="332" y="118" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">hashes to index 4 (of 6 slots)</text>
+
+    <polygon points="332,128 340,142 324,142" fill="#264326"/>
+
+    <g font-size="13" font-weight="700" text-anchor="middle">
+      <rect x="10" y="150" width="112" height="56" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="66" y="172" fill="#261F1D">0</text><text x="66" y="192" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="132" y="150" width="112" height="56" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="188" y="172" fill="#261F1D">1</text><text x="188" y="192" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="254" y="150" width="112" height="56" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="310" y="172" fill="#261F1D">2</text><text x="310" y="192" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="376" y="150" width="112" height="56" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="432" y="172" fill="#261F1D">3</text><text x="432" y="192" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+      <rect x="498" y="150" width="112" height="56" rx="6" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+      <text x="554" y="170" fill="#261F1D">4</text><text x="554" y="188" fill="#261F1D" font-size="10.5" font-weight="700">cached: eligible</text>
+      <rect x="620" y="150" width="112" height="56" rx="6" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+      <text x="676" y="172" fill="#261F1D">5</text><text x="676" y="192" fill="#261F1D" font-size="11" font-weight="400">empty</text>
+    </g>
+    <text x="390" y="230" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">already computed once, returned instantly on every repeat check</text>
+  </g>
+</svg>
+
+<p>Drag each situation below into the property of a hash map that actually makes it work: checking whether something has already been seen, or fetching a value that's been stored under a key.</p>
+<div id="dragarea2">
+<div class="mlrk-drag-source" id="dragsource2">
+  <span id="chipa" class="mlrk-draggable">Checking whether a patient ID has already been merged into the new records system</span>
+  <span id="chipb" class="mlrk-draggable">Flagging a transaction ID that's already been processed, to avoid billing it twice</span>
+  <span id="chipc" class="mlrk-draggable">Looking up a donor's already-computed eligibility result by donor ID</span>
+  <span id="chipd" class="mlrk-draggable">Looking up how many times a word has appeared so far while scanning survey feedback</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Membership check: has this key been seen before?</strong></p><div class="mlrk-dropzone" id="zoneMembership"></div></div>
+  <div><p class="mlrk-small"><strong>Key lookup: fetch or update a value stored under a key</strong></p><div class="mlrk-dropzone" id="zoneLookup"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck2" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb2" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. The classic interview problem: Two Sum</h2>
+<p>A compliance analyst is reviewing a batch of transaction amounts, looking for any two transactions that add up exactly to a flagged total, a pattern worth a closer look. This is the "Two Sum" problem, one of the most commonly asked coding-interview questions there is, precisely because it has a slow, obvious solution and a fast one that depends entirely on understanding hash maps.</p>
+<div class="mlrk-code"><div class="mlrk-screen">amounts = [4200, 1900, 3300, 1100, 2200]
+target = 5500</div></div>
+
+<h3 style="margin-top:1.4rem">The brute-force approach</h3>
+<p>The obvious plan: check every possible pair of amounts, one against another, until two of them add up to the target.</p>
+<div class="mlrk-code"><div class="mlrk-screen">for i in range(len(amounts)):
+    for j in range(i + 1, len(amounts)):
+        if amounts[i] + amounts[j] == target:
+            print(i, j)</div></div>
+<p>This works, but it checks every pair, which is a nested loop: for each amount, it compares against every other amount that comes after it.</p>
+<div class="mlrk-card" id="card-twosum-complexity"><p><strong>Predict:</strong> if the number of transactions in the list doubles, what happens to the number of pairwise comparisons the brute-force version above has to make?</p>
+<button type="button" class="mlrk-choice" data-a="quad">It roughly quadruples, since nested loops compare every item against every other item.</button>
+<button type="button" class="mlrk-choice" data-a="double">It roughly doubles, since there's just one more pass to run.</button>
+<button type="button" class="mlrk-choice" data-a="same">It stays about the same either way.</button>
+<div id="twosumcomplexityfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<h3 style="margin-top:1.4rem">The hash-map approach</h3>
+<p>Instead of comparing every pair, walk through the list once. For each amount, ask: "have I already seen the other number that, added to this one, hits the target?" A dict answers that question in roughly constant time.</p>
+<div class="mlrk-code"><div class="mlrk-screen">amounts = [4200, 1900, 3300, 1100, 2200]
+target = 5500
+seen = {}
+
+for i, amount in enumerate(amounts):
+    complement = target - amount
+    if complement in seen:
+        print(seen[complement], i)
+        break
+    seen[amount] = i</div></div>
+<p><code>seen</code> maps an amount already visited to its index. At every step, checking <code>complement in seen</code> is a hash-map lookup, not a scan back through everything visited so far. That's what turns a nested loop into a single pass.</p>
+
+<p style="margin-top:1rem">Click through below to watch <code>seen</code> build up exactly as the loop runs.</p>
+<div id="twosumtrace"></div>
+
+<div class="mlrk-card" id="card-complement" style="margin-top:1.2rem"><p><strong>Type it yourself:</strong> at <code>i = 3</code>, <code>amount</code> is 1,100. What complement value does the code look for inside <code>seen</code> on that step (target minus this amount)?</p>
+<div class="mlrk-fillblank">
+  <label for="complementinput">complement =</label>
+  <input type="text" id="complementinput" autocomplete="off">
+  <button type="button" id="complementcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="complementfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-twosum-predicttotal" style="margin-top:1.2rem"><p><strong>Before scrolling back up to check:</strong> by the time the hash-map version finds the matching pair at <code>i = 4</code>, how many entries does <code>seen</code> contain from prior steps (not counting the amount that completes the match)?</p>
+<button type="button" class="mlrk-choice" data-a="4">4</button>
+<button type="button" class="mlrk-choice" data-a="5">5</button>
+<button type="button" class="mlrk-choice" data-a="1">1</button>
+<div id="twosumpredicttotalfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Watch: hash tables explained</h2>
+<p>As you watch, notice how the video walks through the same idea practiced above: a key becomes a number, that number becomes a slot index, and collisions get handled instead of ignored.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=FsfRsGFHuv4" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching:</strong> which part of how a hash table decides where to store something felt least intuitive before this reading, and what changed?</p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>Hash maps are among the single most common technical-interview topics there is, in both data and software-engineering-leaning roles. Two Sum specifically is asked often enough that most interviewers assume a candidate has seen it before, and are really listening for whether the candidate can explain the jump from a nested loop to a single pass, out loud, not just recite the final code.</p>
+<p>For data roles, expect questions framed around deduplication and counting: "how would you find duplicate records in a dataset without comparing every row to every other row" is the same hash-map idea wearing different clothes.</p>
+<p>For software-engineering-leaning roles, expect a direct follow-up like "why is that lookup O(1) and not O(n)" or "what happens if two keys hash to the same slot." Answering with hash functions, slot indexes, and collision handling, rather than "dicts are just fast," is what separates a memorized answer from real understanding.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> an interviewer asks why the hash-map version of Two Sum runs in O(n) instead of O(n²). What's the strongest answer?</p>
+<button type="button" class="mlrk-choice" data-a="hashlookup">Checking whether a number's complement already exists is a hash-map lookup, which takes roughly constant time on average, not a scan through everything seen so far.</button>
+<button type="button" class="mlrk-choice" data-a="pyalways">Because Python dictionaries are always faster than lists, no matter what they're used for.</button>
+<button type="button" class="mlrk-choice" data-a="halflist">Because the algorithm only has to look at half of the list.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-loadfactor"><p><strong>A teammate says their hash map's lookups have started feeling noticeably slower after millions of entries were added, even though hash maps are supposed to average O(1). What's the most likely explanation?</strong></p>
+<button type="button" class="mlrk-choice" data-a="resize">As more keys pile into a fixed number of slots, chains get longer, and the table needs to resize (grow and rehash) to keep lookups fast.</button>
+<button type="button" class="mlrk-choice" data-a="alwaysslow">Hash maps always slow down once they get large enough, and nothing can be done about it.</button>
+<button type="button" class="mlrk-choice" data-a="nothashable">The keys must have stopped being hashable after enough entries were added.</button>
+<div id="loadfactorfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your decision rule:</strong> in 1-2 sentences, describe the question you'd ask yourself to decide whether a list, a set, or a dict is the fastest fit for a new membership-check or lookup problem.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I ask whether..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Summary &amp; critical thinking</h2>
+<p>A hash function turns a key into a number, that number gets reduced to a slot index, and lookups become "go straight to that slot" instead of "check everything." Collisions are expected, not failures, and chaining keeps them from breaking anything. That single mechanism is what makes a dict, a set, a cache, and a frequency counter all fast in the same way.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a city's building-permits office wants instant lookup of a permit's status by permit number, across potentially millions of permits filed over decades. Which property of a hash map makes it the right fit here?</p>
+<button type="button" class="mlrk-choice" data-a="speed">Looking up a value by its key takes roughly constant time on average, regardless of how many permits are on file.</button>
+<button type="button" class="mlrk-choice" data-a="order">A hash map keeps entries in the exact order they were filed.</button>
+<button type="button" class="mlrk-choice" data-a="dedup">A hash map automatically removes duplicate permit numbers on its own.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> name one real system, not mentioned in this reading, where you think instant lookup by key would matter, and why.</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Thinking ahead</h2>
+<p>Chaining solved a collision by linking a few entries together at one slot instead of overwriting anything, a small preview of a bigger idea: not every data structure organizes things the same way. Some link related pieces together in a strict sequence, trading fast direct lookup for cheap insertion anywhere in that sequence. Others branch entries into a hierarchy, trading a bit of that O(1) speed for the ability to keep everything in sorted order or search efficiently by range instead of by exact key. Hashing is one very good trade-off among several, not the only one.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add hash-maps-reading1.json
+git commit -m "Complete straight to the slot reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://docs.python.org/3/faq/design.html#how-are-dictionaries-implemented-in-cpython" target="_blank" rel="noopener">Python docs: How are dictionaries implemented in CPython?</a> — the official explanation, straight from Python's own FAQ.</li>
+<li><a href="https://www.freecodecamp.org/news/hash-tables/" target="_blank" rel="noopener">freeCodeCamp: Hash Table Explained</a> — a fuller written walkthrough of hashing, buckets, and collision handling.</li>
+<li><a href="https://www.w3schools.com/python/python_dsa_hashtables.asp" target="_blank" rel="noopener">W3Schools: Hash Tables with Python</a> — more worked examples of hash functions and collisions.</li>
+<li><a href="https://neetcode.io/solutions/two-sum" target="_blank" rel="noopener">NeetCode: Two Sum solution &amp; explanation</a> — more practice with the exact problem walked through above.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "hash-maps-reading1";
+  const TITLE = "Straight to the Slot — Hash Maps";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-recall-mod", buttonSelector:"#card-recall-mod .mlrk-choice", feedbackSelector:"#recallmodfb", correct:"2",
+    feedback:{2:"26 divided by 8 is 3 with a remainder of 2, and modulo returns that remainder.",
+              3:"3 is how many times 8 fits into 26, but modulo returns the leftover remainder, not the count of times it divides.",
+              8:"8 is the divisor itself, not the result of the operation."}});
+
+  K.quiz({id:"q-recall-index", buttonSelector:"#card-recall-index .mlrk-choice", feedbackSelector:"#recallindexfb", correct:"30",
+    feedback:{30:"Indexing starts at 0, so scores[2] is the third item, 30.",
+              20:"That's scores[1], the second item, not scores[2].",
+              40:"That's scores[3], the fourth item, not scores[2]."}});
+
+  K.quiz({id:"q-recall-scan", buttonSelector:"#card-recall-scan .mlrk-choice", feedbackSelector:"#recallscanfb", correct:"slower",
+    feedback:{slower:"A loop-based check compares one item at a time, so a longer list means more comparisons in the worst case.",
+              same:"The loop still has to run through more items as the list grows, so the time isn't fixed.",
+              faster:"Python doesn't automatically speed up a plain loop over a growing list."}});
+
+  K.quiz({id:"q-recall-turn", buttonSelector:"#card-recall-turn .mlrk-choice", feedbackSelector:"#recallturnfb", correct:"number",
+    feedback:{number:"A stable, repeatable number is exactly what a hash function produces, and it's what gets reduced into a slot index.",
+              sorted:"Nothing about hashing requires sorting the other keys first.",
+              string:"Hashing works on all sorts of hashable values, not just strings, and doesn't require converting to text first."}});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.traceStepper("#tracehash", {steps:[
+    {cell:"key arrives", line:"key = 'MRN-77190'"},
+    {cell:"hash function runs", line:"raw_hash = hash_function(key)   # for this example: 26"},
+    {cell:"reduce to a slot", line:"index = 26 % 8   # = 2"},
+    {cell:"store / look up", line:"table[2] now holds the record for MRN-77190"}
+  ]});
+
+  K.Scoring.register("q-blankindex",1,"quiz");
+  let indexAttempts=0, indexDone=false;
+  $("#indexcheck").addEventListener("click",()=>{
+    if(indexDone) return;
+    indexAttempts++;
+    const ok = $("#indexinput").value.trim()==="3";
+    const fb=$("#indexfb");
+    if(ok){
+      K.Scoring.award("q-blankindex", indexAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> 59 % 8 = 3, since 8 fits into 59 seven times (56) with 3 left over.";
+      indexDone=true;
+    } else if(indexAttempts>=2){
+      K.Scoring.award("q-blankindex",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> 59 % 8 = 3.";
+      indexDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try: divide 59 by 8 and think about the remainder.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.orderSteps("#chainsteps", {id:"act-chain-order", correctOrder:["hash","locate","compare","insert"], feedbackSelector:"#chainstepsfb", checkSelector:"#chaincheck"});
+
+  K.quiz({id:"q-collision-predict", buttonSelector:"#card-collision-predict .mlrk-choice", feedbackSelector:"#collisionpredictfb", correct:"slot2yes",
+    feedback:{slot2yes:"42 % 8 = 2 (8 fits into 42 five times, 40, with 2 left over), the same slot MRN-77190 and MRN-40355 already share.",
+              slot5no:"42 % 8 isn't 5. Divide 42 by 8 and check the remainder again.",
+              slot3no:"42 % 8 isn't 3 either. The remainder after dividing by 8 is what matters."}});
+
+  K.dragDrop("#dragarea2", "act-drag-usecases");
+  K.selfCheck({buttonSelector:"#dragcheck2", feedbackSelector:"#dragcheckfb2", mapping:{
+    chipa:{expectedId:"zoneMembership", label:"Patient ID already merged?", expectedLabel:"Membership check"},
+    chipb:{expectedId:"zoneMembership", label:"Transaction ID already processed?", expectedLabel:"Membership check"},
+    chipc:{expectedId:"zoneLookup", label:"Donor's cached eligibility result", expectedLabel:"Key lookup"},
+    chipd:{expectedId:"zoneLookup", label:"Word's running count", expectedLabel:"Key lookup"}
+  }});
+
+  K.quiz({id:"q-twosum-complexity", buttonSelector:"#card-twosum-complexity .mlrk-choice", feedbackSelector:"#twosumcomplexityfb", correct:"quad",
+    feedback:{quad:"Nested loops compare every item against every other item, so doubling the input roughly quadruples the work: this is O(n squared) growth.",
+              double:"A single extra pass would double the work. Two nested loops compound instead, which grows faster than that.",
+              same:"More items always means more comparisons for a nested loop over every pair."}});
+
+  K.traceStepper("#twosumtrace", {steps:[
+    {cell:"i=0: 4,200", line:"complement = 5500 - 4200 = 1300 (not in seen) -> seen = {4200: 0}"},
+    {cell:"i=1: 1,900", line:"complement = 5500 - 1900 = 3600 (not in seen) -> seen = {4200: 0, 1900: 1}"},
+    {cell:"i=2: 3,300", line:"complement = 5500 - 3300 = 2200 (not in seen) -> seen = {4200: 0, 1900: 1, 3300: 2}"},
+    {cell:"i=3: 1,100", line:"complement = 5500 - 1100 = 4400 (not in seen) -> seen = {4200: 0, 1900: 1, 3300: 2, 1100: 3}"},
+    {cell:"i=4: 2,200", line:"complement = 5500 - 2200 = 3300 -> FOUND at index 2! Pair: indices (2, 4), amounts (3300, 2200)"}
+  ]});
+
+  K.Scoring.register("q-complement",1,"quiz");
+  let complementAttempts=0, complementDone=false;
+  $("#complementcheck").addEventListener("click",()=>{
+    if(complementDone) return;
+    complementAttempts++;
+    const raw = $("#complementinput").value.trim().replace(/[$,]/g,"");
+    const ok = raw==="4400";
+    const fb=$("#complementfb");
+    if(ok){
+      K.Scoring.award("q-complement", complementAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> 5,500 - 1,100 = 4,400.";
+      complementDone=true;
+    } else if(complementAttempts>=2){
+      K.Scoring.award("q-complement",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> 5,500 - 1,100 = 4,400.";
+      complementDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try: subtract 1,100 from the target, 5,500.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.quiz({id:"q-twosum-predicttotal", buttonSelector:"#card-twosum-predicttotal .mlrk-choice", feedbackSelector:"#twosumpredicttotalfb", correct:"4",
+    feedback:{4:"Indices 0 through 3 each added one entry to seen before the match was found at index 4: four entries.",
+              5:"That would count the matching amount itself, which is checked against seen, not added before the match.",
+              1:"Every prior index adds its own entry to seen, not just the most recent one."}});
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"FsfRsGFHuv4"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"hashlookup",
+    feedback:{hashlookup:"That's exactly the mechanism: a hash-map lookup replaces a scan, which is what turns a nested loop into a single pass.",
+              pyalways:"Dicts aren't universally faster than lists for every operation. The speedup here is specifically about key lookup versus scanning.",
+              halflist:"The algorithm can still touch every element in the worst case. The speedup comes from how each check is done, not from skipping elements."}});
+
+  K.quiz({id:"q-loadfactor", buttonSelector:"#card-loadfactor .mlrk-choice", feedbackSelector:"#loadfactorfb", correct:"resize",
+    feedback:{resize:"A growing load factor means longer chains per slot. Resizing (growing the array and rehashing every entry) is exactly what keeps lookups close to O(1) as a table grows.",
+              alwaysslow:"Resizing is the fix, not an unavoidable dead end. A well-implemented hash map stays fast by growing before chains get too long.",
+              nothashable:"Hashability is a property of the key's type, not something that changes as more entries get added."}});
+
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"speed",
+    feedback:{speed:"Constant-time average lookup by key, no matter how large the table gets, is exactly what a millions-of-records permit lookup needs.",
+              order:"A dict happens to preserve insertion order in modern Python, but that's not the property solving this instant-lookup problem.",
+              dedup:"A hash map doesn't automatically dedupe values by itself. A set built on the same mechanism could, but that's a different structure than what's being asked about here."}});
+
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  const AI_PROMPTS = [
+    "Think about a hotel that assigns a room by taking a reservation number and computing which floor and room it maps to with simple math, instead of checking a guest list page by page. Where else have you seen a system compute a fixed \"address\" for something instead of searching for it?",
+    "A parking garage assigns your spot by your ticket number, modulo the number of spots on that level. If two cars get mapped to the same spot, what happens in real life, and how is that like a hash collision?",
+    "If you had to explain \"a hash function decides where a value lives, and a table resizes when it gets too crowded\" to a friend using something from your own daily life, what would you compare it to?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["data-structures"],
+      skills:["data-structures-algorithms"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>
