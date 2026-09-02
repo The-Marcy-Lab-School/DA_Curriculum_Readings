@@ -62,6 +62,16 @@ def check_banned_phrases(text):
     for line in text.splitlines():
         if line.count("—") >= 3:
             findings.append(("WARN", f"em-dash pileup (3+) in one line: {line.strip()[:80]}"))
+    # ASCII "->" is the same typed-arrow problem in disguise (e.g. "10 -> 20 -> None"
+    # in a trace/summary string). A real Python return-type annotation
+    # ("def foo(x: int) -> str:") is the one legitimate use — skip only that shape.
+    PY_RETURN_TYPE = re.compile(r"\)\s*->\s*[\w\[\], .\"']+\s*:")
+    for line in text.splitlines():
+        if "->" not in line:
+            continue
+        if PY_RETURN_TYPE.search(line):
+            continue
+        findings.append(("WARN", f"possible typed arrow ('->') outside a Python return-type annotation — spell it out ('then'/'leads to') unless this is real command output: {line.strip()[:90]}"))
     return findings
 
 
