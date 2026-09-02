@@ -1,126 +1,670 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Make It Survive | Data Serialization</title>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Make It Survive — Data Serialization</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-:root{--ink:#1d241f;--paper:#fbfaf5;--green:#21482f;--sage:#dce9df;--blue:#dfeefa;--gold:#f1c24f;--line:#d5ddd7;--good:#e5f4e9;--bad:#fbe8eb;--code:#171c18;--focus:#ffbf47}*{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--paper);color:var(--ink);line-height:1.62}button,textarea{font:inherit}button:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}
-header{background:var(--green);color:white;padding:3.4rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.5rem,7vw,4.8rem);line-height:1;margin:.5rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#d8e7db}.lead{font-size:1.2rem;max-width:800px}.pills{display:flex;gap:.5rem;flex-wrap:wrap}.pill{border:1px solid #a9c0af;border-radius:999px;padding:.3rem .7rem}
-.sticky{position:sticky;top:0;background:white;z-index:5;border-bottom:1px solid var(--line)}.track{height:8px;background:#e7ebe8}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.55rem 1rem;color:#566159}
-main{padding:2rem 1.2rem 5rem}section{margin-bottom:3.2rem}.card{background:white;border:1px solid var(--line);border-radius:18px;padding:1.2rem;box-shadow:0 3px 14px #1220170d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
-.term{min-height:145px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}button{border:2px solid var(--green);border-radius:11px;background:white;color:var(--green);padding:.7rem 1rem;font-weight:750;cursor:pointer}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}
-.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}.callout{background:var(--blue);border-left:6px solid #2d79b5;padding:1rem;border-radius:10px}.warn{background:#fff4d7;border-left:6px solid #d39d15;padding:1rem;border-radius:10px}
-.memory{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1rem}.bubble{padding:1.2rem;border-radius:18px;text-align:center;background:var(--sage)}.arrow{font-size:2rem}.formats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}.format{border-top:7px solid var(--green)}.code{background:var(--code);color:#f5f7f5;border-radius:16px;padding:1rem;font-family:Consolas,Monaco,monospace}.screen{white-space:pre-wrap;min-height:105px;margin:0}.code button{background:#27362c;color:white;border-color:#c7d7cb}.actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}
-textarea{width:100%;min-height:100px;padding:.75rem;border:2px solid #abb6ae;border-radius:10px}.hint{display:none;background:#f2eef9;padding:1rem;border-radius:12px}.hint.show{display:block}.bridge{border-top:8px solid var(--gold)}.export{background:#eef3ef;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{font-size:.92rem;color:#5b655e}
-@media(max-width:700px){.formats{grid-template-columns:1fr}.memory{grid-template-columns:1fr}.arrow{transform:rotate(90deg);text-align:center}h2{font-size:1.65rem}}</style></head>
-<body><header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Make It Survive</h1><p class="lead">You build a tiny Python program that tracks your favorite study spots. It works perfectly. Then the program closes. Tomorrow you reopen it—and the list is gone. How can data outlive the program that created it?</p><div class="pills"><span class="pill">~16–18 minutes</span><span class="pill">Interactive</span><span class="pill">No setup required</span><span class="pill">Saves locally</span></div></div></header>
-<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Mission: understand persistence, serialization, and when JSON, CSV, or TXT fits the data.</p></div><main>
+.mlrk-illustration{width:100%;max-width:760px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:11rem}
+.mlrk-format-card{border-top:6px solid var(--mlrk-bg-brand-deep)}
+.mlrk-format-card.mlrk-format-csv{border-top-color:var(--mlrk-callout-blue-border)}
+.mlrk-format-card.mlrk-format-txt{border-top-color:var(--mlrk-callout-gold-border)}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
 
-<section><h2>1. Vocabulary: words for data that travels</h2><p>Flip all four cards before moving on.</p><div class="grid">
-<button class="card term"><span class="front"><strong>serialization</strong><br><span class="small">Flip</span></span><span class="back"><strong>Serialization</strong><br>Converting program data into a representation that can be stored or transmitted.</span></button>
-<button class="card term"><span class="front"><strong>deserialization</strong><br><span class="small">Flip</span></span><span class="back"><strong>Deserialization</strong><br>Reading stored data and rebuilding a usable program value from it.</span></button>
-<button class="card term"><span class="front"><strong>persistence</strong><br><span class="small">Flip</span></span><span class="back"><strong>Persistence</strong><br>Data continuing to exist after the program that created it stops running.</span></button>
-<button class="card term"><span class="front"><strong>format</strong><br><span class="small">Flip</span></span><span class="back"><strong>Format</strong><br>An agreed structure for representing information, such as JSON, CSV, or a custom TXT layout.</span></button>
-</div></section>
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Make It Survive</h1>
+<p class="mlrk-lead">A neighborhood tool library lends out drills, ladders, and hand tools to anyone in the community. A volunteer at the front desk runs a short Python program to track every checkout: which tool, who borrowed it, and where it belongs on the shelf. All afternoon the program works perfectly. Then the volunteer closes the laptop for the night. The next morning, a different volunteer opens it back up, and every checkout is gone. The tools themselves didn't move, but the program has no memory of any of it. Getting data to outlive the program that created it, and to come back exactly the way you expect, is what this reading is about.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~40–44 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
 
-<section><h2>2. Recall: what do dicts and lists give us?</h2><div class="card"><p>A study-spot record needs a name, neighborhood, and list of features. Which Python structure best keeps labeled pieces together?</p>
-<button class="choice recall" data-a="dict">A dictionary</button><button class="choice recall" data-a="list">A list only</button><button class="choice recall" data-a="string">One long string with no structure</button><div id="recfb" class="feedback" tabindex="-1"></div></div>
-<p class="callout"><strong>Why this matters today:</strong> JSON is especially useful when your Python data already has dictionary/list-like structure.</p></section>
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
 
-<section><h2>3. Memory is temporary; files persist</h2><div class="memory"><div class="bubble"><strong>While Python runs</strong><br><code>spots = [...]</code><br>live value in memory</div><div class="arrow" aria-hidden="true">→</div><div class="bubble"><strong>After writing</strong><br><code>spots.json</code><br>stored representation on disk</div></div>
-<p>The file does not keep the original live Python object running. It stores a representation of the data. Later, Python can read that representation and build a fresh usable value.</p>
-<div class="card"><p><strong>You close Python after creating a list but never write it anywhere. What should you expect next time?</strong></p>
-<button class="choice memoryq" data-a="gone">That in-memory list is gone</button><button class="choice memoryq" data-a="automatic">Python automatically restores it</button><button class="choice memoryq" data-a="hidden">It becomes a hidden JSON file</button><div id="memfb" class="feedback" tabindex="-1"></div></div></section>
+<main class="mlrk-main"><div class="mlrk-wrap">
 
-<section><h2>4. Three formats, three useful shapes</h2><div class="formats">
-<div class="card format"><h3>JSON</h3><p><strong>Shape:</strong> nested keys, values, arrays.</p><p><strong>Think:</strong> structured records, APIs, AI-tool data.</p></div>
-<div class="card format"><h3>CSV</h3><p><strong>Shape:</strong> flat rows and columns.</p><p><strong>Think:</strong> spreadsheet-style tables.</p></div>
-<div class="card format"><h3>TXT</h3><p><strong>Shape:</strong> whatever convention you define.</p><p><strong>Think:</strong> simple or custom line-based data.</p></div></div></section>
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
 
-<section><h2>5. Format detective</h2><div class="card"><p>A club tracks <strong>member name, meeting count, and cohort</strong>. Every row has the same three columns, and someone wants to open it naturally in spreadsheet software. Best fit?</p>
-<button class="choice formatq" data-a="csv">CSV</button><button class="choice formatq" data-a="json">JSON</button><button class="choice formatq" data-a="txt">Custom TXT</button><div id="formatfb" class="feedback" tabindex="-1"></div></div>
-<div class="card" style="margin-top:1rem"><p>A service stores user preferences with nested settings and lists. Best fit?</p><button class="choice nestedq" data-a="json">JSON</button><button class="choice nestedq" data-a="csv">CSV</button><button class="choice nestedq" data-a="txt">TXT because all files are technically text</button><div id="nestedfb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Attention to Detail</strong> — Independently catching a planted bug, edge case, or inconsistency that a surface-level read-through would miss.</p>
+  </div>
+</section>
 
-<section><h2>6. File modes change what happens</h2><p>You'll work with real files in lecture. For now, reason about the behavior without copying the lecture's file or values.</p>
-<div class="code"><div id="writeScreen" class="screen">with open("ideas.txt", "w") as f:
-    f.write("Practice SQL")
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
 
-[Output]:
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>While the front-desk program is running, a checkout looks like an ordinary Python dictionary sitting in memory: <code>checkout = {7: "Cordless Drill", "location": (3, "B")}</code>. That dictionary is real and usable for as long as the program keeps running. The instant the program closes, whether the volunteer quits on purpose or the laptop just dies, every variable the program was holding disappears with it. Nothing about a running Python program keeps its values around on its own.</p>
+<p>To survive past the program that created it, that dictionary has to be converted into something that can sit on disk as plain bytes, independent of any running process, and later be turned back into a usable Python value. Converting a live value into a stored, written-out representation is called <strong>serialization</strong>. Reading that representation back and rebuilding a usable value from it is <strong>deserialization</strong>. The diagram below follows one checkout record through exactly that round trip, and shows two places where the rebuilt version isn't quite identical to the original.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 800 270" role="img" aria-labelledby="survivalTitle survivalDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="survivalTitle">A Python dictionary saved to a JSON file and loaded back, with two values changing type along the way</title>
+  <desc id="survivalDesc">Panel one shows a Python dictionary while the program is running, with an integer key 7 and a tuple value for location. An arrow labeled json.dump() leads to panel two, the same data written into tools.json on disk, where the key is now a quoted string and the tuple is now a bracketed array. An arrow labeled json.load() leads to panel three, the dictionary rebuilt in a later Python session, where the key is permanently the string "7" and the location is permanently a list instead of a tuple. Captions below the diagram spell out both changes.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="10" y="40" width="210" height="170" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="115" y="64" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">In Python (running)</text>
+    <g font-family="Consolas, Monaco, monospace" font-size="13" fill="#261F1D" xml:space="preserve">
+      <text x="25" y="94">checkout = {</text>
+      <text x="25" y="114">  7: "Cordless Drill",</text>
+      <text x="25" y="134">  "location": (3, "B")</text>
+      <text x="25" y="154">}</text>
+    </g>
+
+    <text x="265" y="100" text-anchor="middle" font-family="Consolas, Monaco, monospace" font-size="13" font-weight="700" fill="#264326">json.dump()</text>
+    <polygon points="232,118 278,118 278,111 296,125 278,139 278,132 232,132" fill="#264326"/>
+
+    <rect x="300" y="40" width="210" height="170" rx="16" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="405" y="64" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">tools.json (on disk)</text>
+    <g font-family="Consolas, Monaco, monospace" font-size="13" fill="#261F1D" xml:space="preserve">
+      <text x="315" y="94">{</text>
+      <text x="315" y="114">  <tspan fill="#C92929" font-weight="700">"7"</tspan>: "Cordless Drill",</text>
+      <text x="315" y="134">  "location": <tspan fill="#C92929" font-weight="700">[3, "B"]</tspan></text>
+      <text x="315" y="154">}</text>
+    </g>
+
+    <text x="544" y="100" text-anchor="middle" font-family="Consolas, Monaco, monospace" font-size="13" font-weight="700" fill="#2274B5">json.load()</text>
+    <polygon points="512,118 558,118 558,111 576,125 558,139 558,132 512,132" fill="#2274B5"/>
+
+    <rect x="580" y="40" width="210" height="170" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="685" y="64" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Back in Python (later)</text>
+    <g font-family="Consolas, Monaco, monospace" font-size="13" fill="#261F1D" xml:space="preserve">
+      <text x="595" y="94">checkout = {</text>
+      <text x="595" y="114">  <tspan fill="#C92929" font-weight="700">"7"</tspan>: "Cordless Drill",</text>
+      <text x="595" y="134">  "location": <tspan fill="#C92929" font-weight="700">[3, "B"]</tspan></text>
+      <text x="595" y="154">}</text>
+    </g>
+
+    <text x="400" y="238" text-anchor="middle" font-size="13" font-weight="700" fill="#C92929">What changed: the integer key 7 became the string '7'</text>
+    <text x="400" y="256" text-anchor="middle" font-size="13" font-weight="700" fill="#C92929">...and the tuple (3, "B") became the list [3, "B"]</text>
+  </g>
+</svg>
+
+<div class="mlrk-card" id="card-memory"><p><strong>The volunteer builds the <code>checkout</code> dictionary but the program closes before anything is written to a file. What should the next volunteer expect?</strong></p>
+<button type="button" class="mlrk-choice" data-a="gone">The dictionary is gone. Nothing was ever saved anywhere outside the running program.</button>
+<button type="button" class="mlrk-choice" data-a="auto">Python automatically remembers it and reloads it next time.</button>
+<button type="button" class="mlrk-choice" data-a="hidden">It quietly becomes a JSON file on its own.</button>
+<div id="memfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> a checkout record with the wrong key type after reload sounds like a tiny detail, but a program that looks up tools by an integer ID will fail to find anything once every key silently became a string. That kind of bug doesn't crash loudly. It just quietly returns wrong answers, which is exactly the kind of thing a surface-level read-through misses and a careful one catches.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to build dicts, lists, and tuples that hold structured data while a program runs. This reading is about what happens the moment that data needs to leave memory and come back later, ideally changed only in ways you saw coming. That same habit, checking exactly what a saved value becomes once it's loaded back, comes up again anytime a program talks to a database, reads an API response, or opens a file it wrote itself.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Prerequisite recall</h2>
+<p class="mlrk-small">Two structures come up constantly in this reading: dictionaries and tuples. Test your recall of both before moving on.</p>
+<div class="mlrk-card" id="card-recall"><p><strong>Which best describes what a Python dict stores?</strong></p>
+<button type="button" class="mlrk-choice" data-a="pairs">Key-value pairs, where each key looks up its own value</button>
+<button type="button" class="mlrk-choice" data-a="sequence">An ordered sequence of values with no labels</button>
+<button type="button" class="mlrk-choice" data-a="fixed">A single value that can never change</button>
+<div id="recallfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-tuple" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>point = (3, "B")</code>. What is <code>point[1]</code>?</p>
+<button type="button" class="mlrk-choice" data-a="b">"B"</button>
+<button type="button" class="mlrk-choice" data-a="three">3</button>
+<button type="button" class="mlrk-choice" data-a="error">A TypeError, because tuples can't be indexed</button>
+<div id="tuplefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-record" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a checkout record needs a tool name, a due date, and a list of past borrowers. Which structure keeps those pieces labeled and together?</p>
+<button type="button" class="mlrk-choice" data-a="dict">A dictionary, so each piece of information has its own key</button>
+<button type="button" class="mlrk-choice" data-a="tuple">A tuple, since tuples can hold more than one type</button>
+<button type="button" class="mlrk-choice" data-a="string">One string with everything joined together</button>
+<div id="recordfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip every card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>serialization</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Serialization</strong><br>Converting a live Python value into a stored, written-out representation, such as text in a file.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>deserialization</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Deserialization</strong><br>Reading a stored representation back and rebuilding a usable Python value from it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>JSON</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>JSON</strong><br>A structured, text-based format (JavaScript Object Notation) that mirrors Python's own dicts and lists almost exactly.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>CSV</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>CSV</strong><br>A plain-text format for flat, table-shaped data: comma-separated values, one row per line.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>plaintext</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Plaintext</strong><br>Text with no required structure beyond whatever convention a program or person defines, such as a custom .txt layout.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>persistence</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Persistence</strong><br>Data continuing to exist after the program that created it has stopped running.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Three shapes, three formats</h2>
+<p>Every format below stores data as plain text in the end. What differs is the shape of data each one is built for.</p>
+<div class="mlrk-grid">
+<div class="mlrk-card mlrk-format-card"><h3>JSON</h3><p><strong>Shape:</strong> nested keys, values, and arrays.</p><p><strong>Fits:</strong> a record with structure inside it, like one borrower with a list of tools.</p></div>
+<div class="mlrk-card mlrk-format-card mlrk-format-csv"><h3>CSV</h3><p><strong>Shape:</strong> flat rows and columns, every row the same shape.</p><p><strong>Fits:</strong> a table you'd naturally open in a spreadsheet.</p></div>
+<div class="mlrk-card mlrk-format-card mlrk-format-txt"><h3>Plaintext (.txt)</h3><p><strong>Shape:</strong> whatever line-by-line convention you define yourself.</p><p><strong>Fits:</strong> a simple or custom log a script controls end to end.</p></div>
+</div>
+<p style="margin-top:1rem">Match each situation below to the format it fits best. Drag each chip into a zone, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">a borrower record with a nested list of currently checked-out tools</span>
+  <span id="chip2" class="mlrk-draggable">every row has the same three columns and needs to open in spreadsheet software</span>
+  <span id="chip3" class="mlrk-draggable">a simple line-per-entry log that only your own script ever reads</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>JSON</strong></p><div class="mlrk-dropzone" id="zoneJSON"></div></div>
+  <div><p class="mlrk-small"><strong>CSV</strong></p><div class="mlrk-dropzone" id="zoneCSV"></div></div>
+  <div><p class="mlrk-small"><strong>Plaintext (.txt)</strong></p><div class="mlrk-dropzone" id="zoneTXT"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Write it, then prove it's really there</h2>
+<p>The front desk keeps a running log of tonight's drop-offs in a plain text file.</p>
+<div class="mlrk-code"><div id="writeScreen" class="mlrk-screen">with open("dropoffs.txt", "w") as f:
+    f.write("Ladder returned")
+
+[Output]
 File now contains:
-Practice SQL</div><div class="actions"><button id="overwrite">Simulate writing again in "w"</button></div></div>
-<p class="warn"><strong>Important:</strong> <code>"w"</code> means write mode. If the file already exists, writing this way replaces its previous contents rather than adding to the end.</p></section>
+Ladder returned</div><div class="mlrk-actions"><button type="button" id="overwrite" class="mlrk-btn">Simulate writing again in "w" mode</button></div></div>
+<div class="mlrk-card" id="card-write" style="margin-top:1rem"><p><strong>If <code>dropoffs.txt</code> already has content and you open it again with <code>"w"</code>, what happens to that existing content?</strong></p>
+<button type="button" class="mlrk-choice" data-a="replaced">It's replaced. "w" mode starts the file over from empty.</button>
+<button type="button" class="mlrk-choice" data-a="kept">It stays, and the new text is added to the end.</button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error if the file already has content.</button>
+<div id="writefb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>7. Reading is the other half of persistence</h2><div class="card"><p>Suppose <code>ideas.txt</code> exists on disk. What is the purpose of opening it for reading later?</p>
-<button class="choice readq" data-a="retrieve">Retrieve the stored text so the program can use it again</button><button class="choice readq" data-a="keepalive">Keep the old Python process alive forever</button><button class="choice readq" data-a="convert">Automatically convert any file into JSON</button><div id="readfb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+<h2>6. Reading it back</h2>
+<div class="mlrk-card" id="card-read"><p>Suppose <code>dropoffs.txt</code> exists from last night. <strong>What is the point of opening it for reading tonight?</strong></p>
+<button type="button" class="mlrk-choice" data-a="retrieve">To bring the stored text back into the current program so it can be used again</button>
+<button type="button" class="mlrk-choice" data-a="keepalive">To keep last night's Python process running in the background</button>
+<button type="button" class="mlrk-choice" data-a="convert">To automatically convert the file into JSON</button>
+<div id="readfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
 
-<section><h2>8. JSON: structured data makes a round trip</h2><p>Consider a different record from lecture:</p><div class="code"><div id="jsonScreen" class="screen">import json
+<section class="mlrk-section">
+<h2>7. Predict, then check: will it survive the round trip?</h2>
+<p>For each snippet below, predict what actually happens before you click an answer. The real output only appears after you answer, so you can't peek first. This is the exact habit the diagram in section 1 was demonstrating, just with two new bugs added.</p>
 
-place = {
-    "name": "North Library",
-    "quiet": True,
-    "features": ["outlets", "wifi"]
-}
+<div class="mlrk-card">
+<p><strong>Round 1: integer keys</strong></p>
+<div class="mlrk-code"><div id="round1Screen" class="mlrk-screen">checkout = {7: "Cordless Drill", 12: "Extension Cord"}
 
-# Conceptual action:
-# json.dump(place, file)
+with open("checkout.json", "w") as f:
+    json.dump(checkout, f)
 
-[Output]:
-A JSON representation is written to the file.</div><div class="actions"><button id="loadsim">Simulate loading it later</button></div></div>
-<p><code>json.dump()</code> converts the Python value and writes it. <code>json.load()</code> reads JSON from a file and creates a usable Python value.</p>
-<div class="card"><p><strong>After <code>json.load()</code> reads a JSON object, what Python structure should you expect?</strong></p><button class="choice loadq" data-a="dict">A dictionary</button><button class="choice loadq" data-a="file">The original live object preserved inside the file</button><button class="choice loadq" data-a="csv">A CSV table</button><div id="loadfb" class="feedback" tabindex="-1"></div></div></section>
+with open("checkout.json") as f:
+    restored = json.load(f)
 
-<section><h2>9. The representation is not the live object</h2><div class="card"><p><strong>Choose the strongest explanation.</strong></p>
-<button class="choice objectq" data-a="fresh">Serialization stores a representation of data; deserialization builds a fresh usable value from that representation</button>
-<button class="choice objectq" data-a="freeze">Serialization freezes the exact Python object itself inside the file</button>
-<button class="choice objectq" data-a="memory">Serialization makes RAM permanent</button><div id="objectfb" class="feedback" tabindex="-1"></div></div></section>
+print(restored[7])</div></div>
+<p style="margin-top:.8rem"><strong>What happens when <code>print(restored[7])</code> runs?</strong></p>
+<button type="button" class="mlrk-choice round1" data-a="works">It prints "Cordless Drill", same as before.</button>
+<button type="button" class="mlrk-choice round1" data-a="keyerror">It raises a KeyError, because the key is now the string "7", not the integer 7.</button>
+<button type="button" class="mlrk-choice round1" data-a="typeerror">It raises a TypeError, because dicts can't be reloaded from JSON.</button>
+<div id="round1fb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
 
-<section><h2>10. Decision practice: choose for the need</h2><p>Use the generator if you need help brainstorming what to pay attention to when choosing a format.</p><p><button id="hintbtn">Generate decision hints</button></p><div id="hint" class="hint"></div>
-<label for="decision"><strong>Your reasoning:</strong> A community garden wants to store each plot's owner plus a nested list of plants and care preferences. Which format would you start with, and why?</label><textarea id="decision" data-save placeholder="I would choose... because the data is..."></textarea></section>
+<div class="mlrk-card" style="margin-top:1rem">
+<p><strong>Round 2: tuple values</strong></p>
+<div class="mlrk-code"><div id="round2Screen" class="mlrk-screen">item = {"name": "Drill", "location": (3, "Shelf B")}
 
-<section class="bridge"><h2>11. Required bridge to lecture/lab</h2><p>You just learned why data must leave memory to persist, what serialization/deserialization mean, how file modes affect stored content, and how the shape of a problem helps you choose JSON, CSV, or TXT. In lecture/lab, you'll make real files appear on disk, read them back, and use Python's JSON tools with live dicts and lists. Be ready to recognize the habit <strong>choose the format based on the data's shape and intended use</strong>, not just the file extension you remember.</p>
-<div class="card"><p><strong>Bridge challenge — new situation:</strong> You need a simple line-by-line command file consumed by a custom script. Each line follows a convention your team controls. Which starting format is most reasonable?</p>
-<button class="choice bridgeq" data-a="txt">TXT</button><button class="choice bridgeq" data-a="json">JSON must always be used for programs</button><button class="choice bridgeq" data-a="csv">CSV, even though there are no rows-and-columns requirements</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
-<label for="bring"><strong>Bring to lecture:</strong> In your own words, what is the difference between a live Python value and its serialized representation?</label><textarea id="bring" data-save></textarea></section>
+with open("item.json", "w") as f:
+    json.dump(item, f)
 
-<section><h2>12. Keep a copy</h2><div class="export"><div class="actions"><button id="md">Create Markdown file</button><button id="json">Create JSON file</button><button id="txt">Create TXT file</button><button id="show">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:250px"></textarea><p><button id="selectall">Select all text</button></p></div></div></section>
+with open("item.json") as f:
+    restored = json.load(f)
 
-</main><script>
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],KEY="serialization-reading-v1";let history=[];
-function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
-function load(){try{let d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
-$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
-function quiz(cls,fb,right,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{let ok=b.dataset.a===right,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
-quiz(".recall","#recfb","dict",{dict:"A dict associates labels (keys) with values, which fits a record with named properties.",list:"A list is useful for ordered items, but by itself it does not label name, neighborhood, and features.",string:"A single string can store text, but it throws away the useful labeled structure you already know how to model."});
-quiz(".memoryq","#memfb","gone",{gone:"Variables live in memory while the program runs. Persistence requires storing a representation somewhere outside that running process.",automatic:"Python does not automatically restore arbitrary variables from a previous run.",hidden:"A variable does not silently become a file. Your program must explicitly write data if you want it persisted."});
-quiz(".formatq","#formatfb","csv",{csv:"Flat, repeated columns are exactly the shape CSV is designed to represent.",json:"JSON could represent the data, but the flat spreadsheet-style requirement points more directly to CSV.",txt:"A custom TXT format could work, but it would require inventing conventions that CSV already provides for tabular rows."});
-quiz(".nestedq","#nestedfb","json",{json:"Nested keys and lists fit JSON's structured object/array shape.",csv:"CSV shines for flat rows and columns; nested settings are a less natural fit.",txt:"JSON is text too, but its defined structure is the important advantage here."});
-quiz(".readq","#readfb","retrieve",{retrieve:"Reading brings stored content back into the current program so you can work with it.",keepalive:"The old process does not need to remain alive; persistence is the point.",convert:"Opening a file for reading does not automatically change its format."});
-quiz(".loadq","#loadfb","dict",{dict:"A JSON object maps naturally back to a Python dict when loaded.",file:"The file stores a representation, not the original live object itself.",csv:"json.load() interprets JSON; it does not create a CSV table."});
-quiz(".objectq","#objectfb","fresh",{fresh:"That distinction is central: stored representation first, fresh usable value after loading.",freeze:"The file does not contain a still-running Python object.",memory:"Serialization writes a representation outside RAM; it does not make RAM permanent."});
-quiz(".bridgeq","#bridgefb","txt",{txt:"A simple custom line-based convention is a strong use case for TXT.",json:"Programs can use many formats; JSON is not automatically the best choice.",csv:"CSV is strongest when the data naturally behaves like rows and columns."});
-$("#overwrite").addEventListener("click",()=>{$("#writeScreen").textContent=`with open("ideas.txt", "w") as f:
-    f.write("Review dictionaries")
+print(type(restored["location"]))</div></div>
+<p style="margin-top:.8rem"><strong>What does <code>type(restored["location"])</code> print?</strong></p>
+<button type="button" class="mlrk-choice round2" data-a="tuple">&lt;class 'tuple'&gt;</button>
+<button type="button" class="mlrk-choice round2" data-a="list">&lt;class 'list'&gt;</button>
+<button type="button" class="mlrk-choice round2" data-a="str">&lt;class 'str'&gt;</button>
+<div id="round2fb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
 
-[Output]:
-Previous contents are replaced.
+<div class="mlrk-card" style="margin-top:1rem">
+<p><strong>Round 3: a date value</strong></p>
+<div class="mlrk-code"><div id="round3Screen" class="mlrk-screen">from datetime import date
+
+record = {"tool": "Drill", "due": date(2026, 9, 10)}
+
+with open("record.json", "w") as f:
+    json.dump(record, f)</div></div>
+<p style="margin-top:.8rem"><strong>What happens when this code runs?</strong></p>
+<button type="button" class="mlrk-choice round3" data-a="fine">It saves fine, and "due" comes back as a real date object next time.</button>
+<button type="button" class="mlrk-choice round3" data-a="typeerror">It raises a TypeError before anything gets written, because a date object isn't JSON-serializable by default.</button>
+<button type="button" class="mlrk-choice round3" data-a="empty">It silently saves "due" as an empty string.</button>
+<div id="round3fb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Typed practice: name the two functions</h2>
+<p>Both blanks below need a real <code>json</code> module function name.</p>
+<div class="mlrk-code"><div class="mlrk-screen">import json
+
+with open("checkout.json", "w") as f:
+    json.____(checkout, f)
+
+with open("checkout.json") as f:
+    restored = json.____(f)</div></div>
+<div class="mlrk-fillblank">
+  <label for="blank1">First blank (saves data into the open file):</label>
+  <input type="text" id="blank1" autocomplete="off">
+</div>
+<div class="mlrk-fillblank">
+  <label for="blank2">Second blank (rebuilds a Python value from the open file):</label>
+  <input type="text" id="blank2" autocomplete="off">
+</div>
+<p><button type="button" id="fncheck" class="mlrk-btn">Check both</button></p>
+<div id="fnfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Order the steps: save now, reload later</h2>
+<p>Click steps, in order, to build the sequence a program actually follows to save data and reload it in a later run. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="openw"><span class="mlrk-order-num"></span> Open the file in write mode ("w").</li>
+  <li class="mlrk-orderitem" data-step="dump"><span class="mlrk-order-num"></span> Call <code>json.dump()</code> with the Python value and the open file.</li>
+  <li class="mlrk-orderitem" data-step="close"><span class="mlrk-order-num"></span> The <code>with</code> block ends and the file closes.</li>
+  <li class="mlrk-orderitem" data-step="openr"><span class="mlrk-order-num"></span> In a later run of the program, open the same file in read mode.</li>
+  <li class="mlrk-orderitem" data-step="load"><span class="mlrk-order-num"></span> Call <code>json.load()</code> to rebuild a Python value from it.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about serialization.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> An integer dict key is automatically converted to a string when saved with <code>json.dump()</code>, but a tuple used as a dict key raises an error instead.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> <code>json.load()</code> always reconstructs the exact same Python types that were originally saved, including tuples.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A CSV file stores every value as literal text, so a column of numbers has to be converted back to int or float after reading, even though it looks numeric.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Deserializing a JSON file gives you a brand-new Python object built from the stored text, not the original object that existed before saving.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Decision practice</h2>
+<p>Use the generator if you need help brainstorming what to weigh when choosing a format.</p>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+<label for="decision"><strong>Your reasoning:</strong> a small pottery studio wants to save which glaze recipe each artist used, including a nested list of ingredients and their measurements for that recipe. Which format would you start with, and why?</label>
+<textarea id="decision" class="mlrk-response" data-save placeholder="I would choose... because the data is..."></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Watch: JSON in Python</h2>
+<p>As you watch, notice how the video moves between <code>dump</code>/<code>dumps</code> and <code>load</code>/<code>loads</code>, and whether it ever shows a Python type quietly changing after a round trip the way section 7 just did.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=-51jxlQaxyA" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one detail the video showed about reading or writing JSON that this reading hadn't covered yet?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>Take-home projects and technical assessments constantly involve reading a file, saving results, or talking to an API, and every one of those is serialization under a different name. An interviewer reviewing a take-home submission is often specifically looking for whether you handled a file's data correctly, not just whether the feature "worked" once on a lucky run.</p>
+<p>APIs communicate almost entirely in JSON. Explaining, out loud, what a Python value looks like right after <code>json.load()</code> reconstructs it, and what it might not look like anymore, is a genuinely common follow-up question once a candidate says they've "worked with JSON before."</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>A take-home project reads a CSV column called "price" and runs <code>total += row["price"]</code> without converting anything first. What's the most likely bug?</strong></p>
+<button type="button" class="mlrk-choice" data-a="concat">"+=" silently does string concatenation instead of addition, because CSV values are read in as strings.</button>
+<button type="button" class="mlrk-choice" data-a="import">Python raises an ImportError because the csv module wasn't set up correctly.</button>
+<button type="button" class="mlrk-choice" data-a="auto">Nothing breaks. csv.reader automatically converts numeric-looking text to floats.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>An AI assistant suggests this JSON file for you to save by hand:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">{
+    'tool': 'Drill',
+    'available': True,
+}</div></div>
+<p><strong>Before trusting this, what should you check first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="syntax">Whether it's actually valid JSON: double quotes only, no trailing comma, and lowercase true/false instead of Python's True/False.</button>
+<button type="button" class="mlrk-choice" data-a="filename">Whether the file name ends in .json.</button>
+<button type="button" class="mlrk-choice" data-a="trust">Nothing. Text an AI assistant generates in this format is always valid.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy" style="margin-top:1rem;display:block"><strong>Your verification strategy:</strong> in 1-2 sentences, describe how you'd check whether saved data will come back the way you expect, before trusting it in a larger program.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I'd check..."></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Summary &amp; critical thinking</h2>
+<p>Two habits carried this whole reading: remembering that a file stores a representation of your data, not the live object itself, and actually checking what type each rebuilt value turns out to be instead of assuming it matches what you saved.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a birdwatching club logs sightings as tuples of <code>(species, count)</code> inside a list, then saves the whole list with <code>json.dump()</code>. A week later, someone loads the file back.</p>
+<p><strong>What should they expect about each sighting?</strong></p>
+<button type="button" class="mlrk-choice" data-a="list">Each sighting is now a list, not a tuple, even though the values inside are unchanged.</button>
+<button type="button" class="mlrk-choice" data-a="tuple">Each sighting is still a tuple, exactly as it was saved.</button>
+<button type="button" class="mlrk-choice" data-a="fails">The file fails to load, because tuples can never appear anywhere in JSON.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="ownwords" style="margin-top:1rem;display:block"><strong>In your own words:</strong> what's the difference between data that looks unchanged after a round trip and data that actually is unchanged, type and all?</label>
+<textarea id="ownwords" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Thinking ahead</h2>
+<p>This exact habit, checking what a value actually became instead of assuming it survived intact, keeps resurfacing: a value pulled from a database row, a field parsed out of an API response, a number read from a CSV before any math gets done on it. In every one of those cases, the data made a trip through some other representation first, and the honest question is always the same one practiced here: what type does this really have right now?</p>
+</section>
+
+<section class="mlrk-section">
+<h2>17. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add data-serialization-reading.json
+git commit -m "Complete data serialization reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong> — this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://docs.python.org/3/library/json.html" target="_blank" rel="noopener">Python docs: json — JSON encoder and decoder</a> — the official reference for <code>dump</code>, <code>dumps</code>, <code>load</code>, and <code>loads</code>.</li>
+<li><a href="https://docs.python.org/3/tutorial/inputoutput.html#reading-and-writing-files" target="_blank" rel="noopener">Python docs: Reading and Writing Files</a> — file modes and the <code>with</code> statement, straight from the tutorial.</li>
+<li><a href="https://www.w3schools.com/python/python_file_handling.asp" target="_blank" rel="noopener">W3Schools: Python File Handling</a> — more worked examples of opening, writing, and reading files.</li>
+<li><a href="https://www.geeksforgeeks.org/python/reading-and-writing-csv-files-in-python/" target="_blank" rel="noopener">GeeksforGeeks: Reading and Writing CSV Files in Python</a> — the CSV side, including the <code>csv</code> module.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "data-serialization-reading";
+  const TITLE = "Make It Survive — Data Serialization";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-memory", buttonSelector:"#card-memory .mlrk-choice", feedbackSelector:"#memfb", correct:"gone",
+    feedback:{gone:"Variables live in memory only while the program runs. Nothing persists past that unless the program explicitly writes it somewhere.",
+              auto:"Python does not automatically save or restore arbitrary variables between separate runs.",
+              hidden:"A dictionary doesn't turn itself into a file. Serializing it is something the program has to do on purpose."}});
+
+  K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recallfb", correct:"pairs",
+    feedback:{pairs:"A dict maps each key to its own value, which is exactly what a labeled record needs.",
+              sequence:"That describes a list. A dict's whole point is attaching a label to each value.",
+              fixed:"Dicts are mutable. You can add, remove, and change key-value pairs after creating one."}});
+
+  K.quiz({id:"q-tuple", buttonSelector:"#card-tuple .mlrk-choice", feedbackSelector:"#tuplefb", correct:"b",
+    feedback:{b:"Tuples are indexed by position just like lists. point[1] is the second item, \"B\".",
+              three:"3 is point[0], the first item, not point[1].",
+              error:"Tuples support indexing the same way lists do. No error here."}});
+
+  K.quiz({id:"q-record", buttonSelector:"#card-record .mlrk-choice", feedbackSelector:"#recordfb", correct:"dict",
+    feedback:{dict:"A dict lets you label each field (tool name, due date, borrowers) instead of relying on position to know what's what.",
+              tuple:"A tuple could hold all three values, but nothing labels which value is which once you're reading it back later.",
+              string:"Joining everything into one string throws away the structure you'd need to pull individual fields back out."}});
+
+  K.dragDrop("#dragarea", "act-drag-formats");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneJSON", label:"a borrower record with a nested list of checked-out tools", expectedLabel:"JSON"},
+    chip2:{expectedId:"zoneCSV", label:"every row has the same three columns, opens in a spreadsheet", expectedLabel:"CSV"},
+    chip3:{expectedId:"zoneTXT", label:"a simple line-per-entry log only your own script reads", expectedLabel:"Plaintext (.txt)"}
+  }});
+
+  K.quiz({id:"q-write", buttonSelector:"#card-write .mlrk-choice", feedbackSelector:"#writefb", correct:"replaced",
+    feedback:{replaced:"\"w\" mode truncates the file first. Whatever was there before is gone the moment you open it this way.",
+              kept:"That describes append mode, \"a\". \"w\" mode starts from empty every time.",
+              error:"Opening an existing file in \"w\" mode is completely normal. It just erases the old contents rather than raising an error."},
+    onDone(){revealWrite()}});
+
+  K.quiz({id:"q-read", buttonSelector:"#card-read .mlrk-choice", feedbackSelector:"#readfb", correct:"retrieve",
+    feedback:{retrieve:"Reading brings the stored text back into a running program so it can actually be used again.",
+              keepalive:"Last night's process is already gone. Reading a file never revives an old process.",
+              convert:"Opening a file for reading doesn't change its format. It just gives the program access to the bytes already there."}});
+
+  K.quiz({id:"q-round1", buttonSelector:".round1", feedbackSelector:"#round1fb", correct:"keyerror",
+    feedback:{works:"It looks like it should, but JSON object keys must be strings, so the integer key 7 became the string \"7\" on the way out.",
+              keyerror:"JSON keys are always strings. Saving and reloading silently turned 7 into \"7\", so restored[7] can't find a match.",
+              typeerror:"Dicts reload from JSON just fine. The real problem is one specific key's type, not the whole reload."},
+    onDone(){revealRound1()}});
+
+  K.quiz({id:"q-round2", buttonSelector:".round2", feedbackSelector:"#round2fb", correct:"list",
+    feedback:{tuple:"JSON has no tuple type at all, so there's nothing for it to come back as.",
+              list:"JSON only has arrays, so json.dump() writes a tuple as an array, and json.load() reads it back as a list every time.",
+              str:"The values inside are preserved as numbers and text, not flattened into one string."},
+    onDone(){revealRound2()}});
+
+  K.quiz({id:"q-round3", buttonSelector:".round3", feedbackSelector:"#round3fb", correct:"typeerror",
+    feedback:{fine:"Python's json module has no built-in idea of how to write a date object as text, so it doesn't save fine.",
+              typeerror:"json.dump() only knows how to handle a specific set of built-in types by default, and date isn't one of them.",
+              empty:"There's no silent fallback to an empty string. The call fails loudly, before the file is even written."},
+    onDone(){revealRound3()}});
+
+  K.Scoring.register("q-fnnames",1,"quiz");
+  let fnAttempts=0, fnDone=false;
+  $("#fncheck").addEventListener("click",()=>{
+    if(fnDone) return;
+    fnAttempts++;
+    const b1=$("#blank1").value.trim().toLowerCase(), b2=$("#blank2").value.trim().toLowerCase();
+    const ok = b1==="dump" && b2==="load";
+    const fb=$("#fnfb");
+    if(ok){
+      K.Scoring.award("q-fnnames", fnAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct"+(fnAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> json.dump() writes, json.load() reads.";
+      fnDone=true;
+    } else if(fnAttempts>=2){
+      K.Scoring.award("q-fnnames",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> First blank: <code>dump</code>. Second blank: <code>load</code>.";
+      fnDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite yet.</strong> One more try before the answer is shown.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.orderSteps("#ordersteps", {id:"act-order-save", correctOrder:["openw","dump","close","openr","load"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"An integer dict key is automatically converted to a string when saved with json.dump(), but a tuple used as a dict key raises an error instead.", correct:true,
+      hint:"Think back to round 1 of the predict-then-check activity, then consider what's different about using a tuple as a key instead of a value.",
+      explain:"json.dump() coerces int, float, bool, and None keys to strings automatically, but a tuple key has no such conversion and raises an error."},
+    {value:"b", label:"json.load() always reconstructs the exact same Python types that were originally saved, including tuples.", correct:false,
+      hint:"Round 2 of the predict-then-check activity tested exactly this claim with a tuple value. What actually came back?",
+      explain:"Rounds 1 and 2 both showed types changing after a round trip: an int key became a string, and a tuple became a list."},
+    {value:"c", label:"A CSV file stores every value as literal text, so a column of numbers has to be converted back to int or float after reading, even though it looks numeric.", correct:true,
+      hint:"Think about the interview-style question in section 13 about a price column and a += operation.",
+      explain:"CSV has no type system at all. Every field is just text until your own code converts it."},
+    {value:"d", label:"Deserializing a JSON file gives you a brand-new Python object built from the stored text, not the original object that existed before saving.", correct:true,
+      hint:"Revisit the very first callout in section 1, about what a file actually stores versus what a running program holds.",
+      explain:"The file only ever holds a text representation. Every load rebuilds a fresh object from that text; it never hands back the original object."}
+  ]});
+
+  const AI_PROMPTS = [
+    "Think about who or what opens this file next: a person in a spreadsheet, or another Python program expecting nested structure. Which does the glaze data sound more like?",
+    "If a new ingredient got added to one recipe later but not the others, would a strict grid of columns handle that gracefully, or would a nested format handle it better?",
+    "Ask yourself: does this data have one natural flat-table shape, or does it look more like folders inside folders?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"-51jxlQaxyA"});
+  K.freeResponse({id:"resp-decision", selector:"#decision", minWords:10});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:6});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"concat",
+    feedback:{concat:"CSV values arrive as plain strings, so total += row[\"price\"] concatenates text instead of adding numbers unless you convert first.",
+              import:"Nothing about reading a CSV column requires an extra import beyond the csv module itself.",
+              auto:"csv.reader never guesses at types. Every field comes back as a string no matter how it looks."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"syntax",
+    feedback:{syntax:"Real JSON requires double quotes, forbids a trailing comma, and uses lowercase true/false/null, none of which match what's shown here.",
+              filename:"A file extension is just a label. It has no effect on whether the content inside is valid JSON.",
+              trust:"AI-generated text still needs to be checked. This particular snippet has three separate JSON syntax problems."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"list",
+    feedback:{list:"Same rule as round 2 of the predict-then-check activity: JSON has no tuple type, so every tuple becomes a list on the way through.",
+              tuple:"Nothing about JSON preserves tuple-ness. It only has arrays, so a list is what comes back.",
+              fails:"Tuples save fine as values. They just come back reshaped into a different, very similar-looking type."}});
+
+  function revealWrite(){
+    $("#writeScreen").textContent = `with open("dropoffs.txt", "w") as f:
+    f.write("Truck arriving Friday")
+
+[Output]
+Previous contents are gone.
 File now contains:
-Review dictionaries`;history.push({activity:"write-mode simulation",action:"simulated overwrite"});save()});
-$("#loadsim").addEventListener("click",()=>{$("#jsonScreen").textContent=`import json
+Truck arriving Friday`;
+  }
+  $("#overwrite").addEventListener("click", revealWrite);
 
-with open("place.json") as f:
-    place = json.load(f)
+  function revealRound1(){
+    $("#round1Screen").textContent = `checkout = {7: "Cordless Drill", 12: "Extension Cord"}
 
-print(type(place))
-print(place["features"])
+with open("checkout.json", "w") as f:
+    json.dump(checkout, f)
 
-[Output]:
-<class 'dict'>
-['outlets', 'wifi']`;history.push({activity:"JSON load simulation",action:"revealed reconstructed Python value"});save()});
-$("#hintbtn").addEventListener("click",()=>{let h=$("#hint");h.classList.add("show");h.textContent="Ask: Is the data nested and structured? Is it a flat table? Or is it a simple/custom line format? Then ask who or what needs to read it later."});
-function snap(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
-function plain(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
-function mdtext(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
-function dl(n,t,c){try{let b=new Blob([c],{type:t+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
-function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” instead."}
-$("#md").onclick=()=>stat(dl("data-serialization-reading.md","text/markdown",mdtext(snap())));$("#json").onclick=()=>stat(dl("data-serialization-reading.json","application/json",JSON.stringify(snap(),null,2)));$("#txt").onclick=()=>stat(dl("data-serialization-reading.txt","text/plain",plain(snap())));
-$("#show").onclick=()=>{let w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=plain(snap());t.focus();t.select()};$("#selectall").onclick=()=>{$("#plain").focus();$("#plain").select()};
-window.addEventListener("scroll",()=>{let d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
-</script></body></html>
+with open("checkout.json") as f:
+    restored = json.load(f)
+
+print(restored)
+print(restored[7])
+
+[Output]
+{'7': 'Cordless Drill', '12': 'Extension Cord'}
+Traceback (most recent call last):
+KeyError: 7`;
+  }
+
+  function revealRound2(){
+    $("#round2Screen").textContent = `item = {"name": "Drill", "location": (3, "Shelf B")}
+
+with open("item.json", "w") as f:
+    json.dump(item, f)
+
+with open("item.json") as f:
+    restored = json.load(f)
+
+print(type(restored["location"]))
+print(restored["location"])
+
+[Output]
+<class 'list'>
+[3, 'Shelf B']`;
+  }
+
+  function revealRound3(){
+    $("#round3Screen").textContent = `from datetime import date
+
+record = {"tool": "Drill", "due": date(2026, 9, 10)}
+
+with open("record.json", "w") as f:
+    json.dump(record, f)
+
+[Output]
+Traceback (most recent call last):
+  ...
+TypeError: Object of type date is not JSON serializable`;
+  }
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["data-serialization"],
+      skills:["attention-to-detail"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

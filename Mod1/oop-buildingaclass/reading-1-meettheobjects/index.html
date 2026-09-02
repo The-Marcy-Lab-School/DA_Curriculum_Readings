@@ -1,105 +1,572 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Meet the Objects | OOP Pre-Lecture Reading</title>
+<title>Meet the Objects — Defining a Class From Scratch</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-:root{--ink:#20231f;--paper:#fbfaf6;--green:#214a30;--sage:#dce9df;--blue:#e3f0f8;--gold:#f4c655;--line:#d5ddd6;--good:#e3f4e8;--bad:#fbe5e8;--focus:#ffbf47;--purple:#eee8f7}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}button,textarea,select{font:inherit}button:focus,textarea:focus,select:focus,a:focus{outline:4px solid var(--focus);outline-offset:3px}
-header{background:var(--green);color:white;padding:3rem 1.2rem}.wrap,section{max-width:960px;margin:auto}h1{font-size:clamp(2.6rem,7vw,4.8rem);line-height:1;margin:.5rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#d8e7db}.lead{font-size:1.18rem;max-width:820px}.pills,.actions{display:flex;gap:.55rem;flex-wrap:wrap}.pill{border:1px solid #aac0af;border-radius:999px;padding:.3rem .7rem}
-.sticky{position:sticky;top:0;background:white;z-index:5;border-bottom:1px solid var(--line)}.track{height:8px;background:#e7ebe8}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:960px;margin:auto;padding:.55rem 1rem;color:#566159}
-main{padding:2rem 1.2rem 5rem}section{margin-bottom:3rem}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:1.2rem;box-shadow:0 3px 14px #1220170d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem}
-button{border:2px solid var(--green);border-radius:11px;background:white;color:var(--green);padding:.7rem 1rem;font-weight:750;cursor:pointer}.term{min-height:135px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
-.callout{background:var(--blue);border-left:6px solid #2d79b5;padding:1rem;border-radius:10px}.warn{background:#fff3d2;border-left:6px solid #d29d17;padding:1rem;border-radius:10px}.codebox{background:#201d1d;color:#f7f4ee;padding:1rem;border-radius:14px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap}.diagram{display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:center}.obj{border:3px solid var(--green);border-radius:18px;padding:1rem;background:white}.arrow{font-size:2rem;font-weight:bold}.memory{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.slot{background:var(--purple);border-radius:12px;padding:.7rem}.builder select{width:100%;padding:.6rem;margin:.35rem 0;border:2px solid #aeb8b0;border-radius:8px}.terminal{background:#151a16;color:#f7f4ee;padding:1rem;border-radius:14px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.termout{white-space:pre-wrap;min-height:65px;border-top:1px solid #59625b;margin-top:.8rem;padding-top:.8rem}
-.video{position:relative;padding-top:56.25%;border-radius:16px;overflow:hidden;background:#111}.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.video-note{background:#fff3d2;padding:1rem;border-radius:12px}.video-note a{color:#174c7a;font-weight:700}.hint{display:none;background:#f2eef9;padding:1rem;border-radius:12px}.hint.show{display:block}textarea{width:100%;min-height:95px;padding:.75rem;border:2px solid #abb6ae;border-radius:10px}.bridge{border-top:8px solid var(--gold)}.export{background:#eef3ef;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{font-size:.92rem;color:#5b655e}.badge{display:inline-block;background:var(--gold);padding:.1rem .5rem;border-radius:999px;font-weight:bold}
-@media(max-width:700px){.diagram{grid-template-columns:1fr}.arrow{text-align:center;transform:rotate(90deg)}.memory{grid-template-columns:1fr}h2{font-size:1.65rem}}</style></head>
-<body><header><div class="wrap"><div class="eyebrow">Module 1 • OOP Prep</div><h1>Meet the Objects</h1><p class="lead">Imagine a music festival app tracking thousands of reusable wristbands. Every wristband has its own owner, balance, and access level—and each wristband can answer questions about <em>its own</em> data. How could Python represent that without juggling separate lists?</p><div class="pills"><span class="pill">~19 minutes including video</span><span class="pill">7:34 video</span><span class="pill">Lots of practice</span><span class="pill">Saves locally</span></div></div></header>
-<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Mission: understand class → object → attributes → methods → <code>self</code> before the partner code-along.</p></div><main>
+.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-memory-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
+.mlrk-memory-slot{background:var(--mlrk-callout-blue-fill);border:2px solid var(--mlrk-callout-blue-border);border-radius:12px;padding:.9rem}
+.mlrk-fillcode{width:100%;padding:.7rem;border:2px solid var(--mlrk-gray-500);border-radius:8px;
+  font-family:var(--mlrk-font-code);font-size:.95rem;margin-top:.5rem;min-height:5rem}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}.mlrk-memory-grid{grid-template-columns:1fr}}
+</style>
+</head><body>
 
-<section><h2>1. Vocabulary first: five ideas that travel together</h2><p>Flip all five. Say each definition aloud once—OOP vocabulary is easier when you hear yourself use it.</p><div class="grid">
-<button class="card term"><span class="front"><strong>class</strong><br><span class="small">Flip</span></span><span class="back"><strong>Class</strong><br>A definition/template for what a kind of object stores and can do.</span></button>
-<button class="card term"><span class="front"><strong>object</strong><br><span class="small">Flip</span></span><span class="back"><strong>Object</strong><br>One specific instance created from a class.</span></button>
-<button class="card term"><span class="front"><strong>attribute</strong><br><span class="small">Flip</span></span><span class="back"><strong>Attribute</strong><br>A piece of data stored on a specific object.</span></button>
-<button class="card term"><span class="front"><strong>method</strong><br><span class="small">Flip</span></span><span class="back"><strong>Method</strong><br>A function defined inside a class—an action an object can perform.</span></button>
-<button class="card term"><span class="front"><strong>self</strong><br><span class="small">Flip</span></span><span class="back"><strong>self</strong><br>“This specific object right now.” It lets a method reach that object's own attributes.</span></button>
-</div></section>
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Meet the Objects</h1>
+<p class="mlrk-lead">A personal budgeting app lets one user track several savings goals at once: an emergency fund, a vacation fund, a fund for a new laptop. Every goal needs the same three pieces of information — a name, a target amount, and how much has been saved so far — but each goal's numbers have to stay completely separate from every other goal's numbers, for every user. Three plain variables can hold one goal's data. The moment a second goal shows up, that approach falls apart. This reading is about the tool Python gives you instead: defining a class once, then creating as many independently-stored objects from it as you need.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~46–49 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
 
-<section><h2>2. Recall: connect OOP to what you already know</h2><div class="card"><p>You already know dictionaries can bundle related values. Which idea is most similar to an object's <strong>attributes</strong>?</p>
-<button class="choice recall" data-a="values">Stored key/value data such as <code>{"owner": "Mina", "balance": 18}</code></button>
-<button class="choice recall" data-a="loop">A <code>for</code> loop</button><button class="choice recall" data-a="return">A function's <code>return</code> keyword</button><div id="recfb" class="feedback" tabindex="-1"></div></div></section>
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
 
-<section><h2>3. The mental model: definition vs. specific thing</h2><div class="diagram"><div class="obj"><span class="badge">CLASS</span><h3>FestivalPass</h3><p>Defines that passes have an owner and balance, and can check whether they need a refill.</p></div><div class="arrow">→</div><div class="obj"><span class="badge">OBJECTS</span><p><strong>pass_a</strong><br>owner: Mina<br>balance: 18</p><hr><p><strong>pass_b</strong><br>owner: Theo<br>balance: 3</p></div></div>
-<p class="callout"><strong>Important:</strong> the class describes the shape. Each object created from it gets its <strong>own stored attribute values</strong>.</p></section>
+<main class="mlrk-main"><div class="mlrk-wrap">
 
-<section><h2>4. Watch: get the big picture</h2><p>This short video gives a broader OOP picture. For today's reading, focus on the early idea that objects bundle data and behavior. The video goes beyond today's lesson into additional OOP ideas, so you do not need to memorize everything.</p>
-<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/pTB0EiLXUC8" title="Object-Oriented Programming, Simplified by Programming with Mosh" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<p class="video-note"><strong>Watch target (7:34):</strong> Listen for why putting related data and behavior together can make programs easier to organize. If the embed does not load, <a href="https://www.youtube.com/watch?v=pTB0EiLXUC8" target="_blank" rel="noopener">open the video on YouTube</a>.</p>
-<div class="card"><p>After watching: which statement best matches today's focus?</p><button class="choice videoq" data-a="bundle">An object can keep related data and behaviors together.</button><button class="choice videoq" data-a="same">Every object from a class must contain the same attribute values.</button><button class="choice videoq" data-a="replace">OOP means functions are no longer useful.</button><div id="videofb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
 
-<section><h2>5. Read the shape of a class</h2><p>Fresh example—different from the lecture code you'll see later:</p><pre class="codebox">class FestivalPass:
-    def __init__(self, owner, balance):
-        self.owner = owner
-        self.balance = balance
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Object-Oriented Programming</strong> — Designing a class with the right attributes and methods for a real problem, and explaining how its objects behave independently of each other.</p>
+  </div>
+</section>
 
-    def needs_refill(self):
-        return self.balance &lt; 5
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
 
-pass_a = FestivalPass("Mina", 18)</pre>
-<p><strong>Trace the creation call:</strong> <code>"Mina"</code> flows into <code>owner</code>, then <code>self.owner = owner</code> stores it on <em>this new object</em>. The same thing happens to <code>18</code> and <code>balance</code>.</p>
-<div class="card"><p>What is the value of <code>pass_a.owner</code>?</p><button class="choice attr" data-a="mina"><code>"Mina"</code></button><button class="choice attr" data-a="owner"><code>"owner"</code></button><button class="choice attr" data-a="class"><code>"FestivalPass"</code></button><div id="attrfb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Picture that budgeting app. A user sets up a goal called "Emergency Fund," with a target of $5,000 and $4,200 saved so far. Tracking that with three plain variables — <code>name</code>, <code>target_amount</code>, <code>saved_amount</code> — works fine, right up until the same user adds a second goal, "Vacation Fund," with its own target and its own saved amount. Now you either overwrite the first goal's variables or start inventing <code>name_2</code>, <code>target_2</code>, <code>saved_2</code>, hoping you never mix up which number belongs to which goal. Multiply that by every user and every goal they create, and plain variables stop being a plan at all.</p>
 
-<section><h2>6. The tough part: what does <code>self</code> point to?</h2><p>Change which object calls the method, and <code>self</code> changes with it.</p><div class="memory"><div class="slot"><strong>pass_a.needs_refill()</strong><p>Inside the method:<br><code>self → pass_a</code><br><code>self.balance → 18</code><br><code>18 &lt; 5 → False</code></p></div><div class="slot"><strong>pass_b.needs_refill()</strong><p>Inside the method:<br><code>self → pass_b</code><br><code>self.balance → 3</code><br><code>3 &lt; 5 → True</code></p></div></div>
-<div class="card"><p>When Python runs <code>pass_b.needs_refill()</code>, what does <code>self.balance</code> mean?</p><button class="choice selfq" data-a="b">The balance stored on <code>pass_b</code></button><button class="choice selfq" data-a="a">The balance stored on the first object ever created</button><button class="choice selfq" data-a="all">Every object's balance at once</button><div id="selffb" class="feedback" tabindex="-1"></div></div></section>
+<p>A <strong>class</strong> solves this by defining the shape of a "savings goal" exactly once: it always has a name, a target amount, and a saved amount, and it can always report whether it's fully funded. Python then lets you create as many independently-stored <strong>objects</strong> from that one definition as you need. Each object keeps its own values for those three pieces of data, completely separate from every other object built from the same class.</p>
 
-<section><h2>7. Practice: build the missing class lines</h2><p>You do not need a Python installation for this practice. Choose the line that correctly stores each incoming value on the current object.</p><div class="card builder"><pre class="codebox">class TransitCard:
-    def __init__(self, rider, trips_left):</pre>
-<label for="line1"><strong>Store rider:</strong></label><select id="line1"><option value="">Choose a line…</option><option>self.rider = rider</option><option>rider = self</option><option>self = rider</option></select>
-<label for="line2"><strong>Store trips_left:</strong></label><select id="line2"><option value="">Choose a line…</option><option>self.trips_left = trips_left</option><option>trips_left = trips_left</option><option>self.trips_left = self</option></select>
-<p><button id="checkbuilder">Check my class</button></p><div id="builderfb" class="feedback" tabindex="-1"></div></div></section>
+<svg class="mlrk-illustration" viewBox="0 0 680 260" role="img" aria-labelledby="classTitle classDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="classTitle">One SavingsGoal class, two independently stored objects</title>
+  <desc id="classDesc">On the left, a single SavingsGoal class definition listing three attributes and one method. An arrow labeled "creates" points to two separate boxes on the right, each representing one object made from that class: goal_a holds name Emergency Fund, target amount 5000, and saved amount 4200; goal_b holds name Vacation Fund, target amount 1200, and saved amount 1200. Each object's values are independent of the other's.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="14" y="40" width="230" height="180" rx="16" fill="#FFFCF7" stroke="#264326" stroke-width="3"/>
+    <text x="129" y="66" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">class SavingsGoal</text>
+    <text x="129" y="94" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">name</text>
+    <text x="129" y="114" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">target_amount</text>
+    <text x="129" y="134" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">saved_amount</text>
+    <text x="129" y="164" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">is_funded()</text>
+    <text x="129" y="196" text-anchor="middle" font-size="12" font-weight="600" fill="#264326">defined once</text>
 
-<section><h2>8. Practice: predict before you “run”</h2><pre class="codebox">card_x = TransitCard("Ari", 6)
-card_y = TransitCard("Nia", 1)
+    <polygon points="256,124 300,124 300,114 326,136 300,158 300,148 256,148" fill="#264326"/>
+    <text x="291" y="106" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">creates</text>
 
-card_x.trips_left = 2</pre>
-<div class="card"><p>What should <code>card_y.trips_left</code> be now?</p><button class="choice independent" data-a="1"><code>1</code></button><button class="choice independent" data-a="2"><code>2</code></button><button class="choice independent" data-a="6"><code>6</code></button><div id="indfb" class="feedback" tabindex="-1"></div></div>
-<p><button id="runobjects">Run object check</button></p><div class="terminal"><div>$ inspect_cards()</div><div>[Output]:</div><div id="termout" class="termout">Predict first, then run the object check.</div></div></section>
+    <rect x="340" y="16" width="326" height="96" rx="16" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="503" y="40" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">goal_a</text>
+    <text x="503" y="62" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">name: "Emergency Fund"</text>
+    <text x="503" y="80" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">target_amount: 5000</text>
+    <text x="503" y="98" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">saved_amount: 4200</text>
 
-<section><h2>9. Practice: method or attribute?</h2><div class="card"><p>For <code>card_y</code>, which expression is a <strong>method call</strong>?</p><button class="choice method" data-a="call"><code>card_y.can_ride()</code></button><button class="choice method" data-a="attr"><code>card_y.trips_left</code></button><button class="choice method" data-a="object"><code>card_y</code></button><div id="methodfb" class="feedback" tabindex="-1"></div></div></section>
+    <rect x="340" y="128" width="326" height="96" rx="16" fill="#FFEECA" stroke="#83671C" stroke-width="3"/>
+    <text x="503" y="152" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">goal_b</text>
+    <text x="503" y="174" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">name: "Vacation Fund"</text>
+    <text x="503" y="192" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">target_amount: 1200</text>
+    <text x="503" y="210" text-anchor="middle" font-family="monospace" font-size="12" fill="#261F1D">saved_amount: 1200</text>
 
-<section><h2>10. Practice: catch the <code>__init__</code> misconception</h2><div class="card"><p>After <code>card_x = TransitCard("Ari", 6)</code>, you later read <code>card_x.rider</code>. What happens?</p><button class="choice initq" data-a="read">Python reads the value already stored on <code>card_x</code>.</button><button class="choice initq" data-a="again"><code>__init__</code> runs again automatically.</button><button class="choice initq" data-a="new">A brand-new object is created.</button><div id="initfb" class="feedback" tabindex="-1"></div></div></section>
+    <text x="503" y="244" text-anchor="middle" font-size="12" font-weight="600" fill="#264326">each object's values are its own</text>
+  </g>
+</svg>
 
-<section><h2>11. Explain it: make <code>self</code> stick</h2><p>If you're stuck, generate a sentence starter.</p><p><button id="hintbtn">Generate a sentence starter</button></p><div id="hint" class="hint"></div>
-<label for="selfex"><strong>In your own words:</strong> Why can the same method behave differently when called on two different objects?</label><textarea id="selfex" data-save placeholder="The same method can behave differently because self..."></textarea></section>
+<p>Nothing about the class definition changes between <code>goal_a</code> and <code>goal_b</code>. What changes is that each object stores its own separate copy of <code>name</code>, <code>target_amount</code>, and <code>saved_amount</code>. Update one object's saved amount, and the other object never notices.</p>
 
-<section class="bridge"><h2>12. Required bridge to lecture/lab</h2><p>You just practiced the hardest foundations: a <strong>class</strong> defines a reusable shape, <strong>objects</strong> are specific instances, <strong>attributes</strong> store each object's own data, a <strong>method</strong> uses that data, and <strong>self</strong> means the particular object receiving the method call.</p>
-<p>In the upcoming partner code-along, you will follow a worked template to define a class with <code>__init__</code>, store real attributes, add a method, then create multiple objects and confirm their data stays independent. Be ready to recognize the flow <strong>creation argument → parameter → self.attribute</strong> and the habit <strong>“Which object is self right now?”</strong></p>
-<div class="card"><p><strong>Bridge challenge — new situation:</strong> Two <code>Locker</code> objects come from the same class. <code>locker_a</code> stores code <code>812</code>; <code>locker_b</code> stores code <code>305</code>. A method is called on <code>locker_b</code>. Which code should <code>self.code</code> use?</p><button class="choice bridgeq" data-a="305"><code>305</code></button><button class="choice bridgeq" data-a="812"><code>812</code></button><button class="choice bridgeq" data-a="both">Both codes</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div>
-<label for="bring"><strong>Bring to lecture:</strong> Write one question you still have about classes, objects, methods, attributes, <code>__init__</code>, or <code>self</code>.</label><textarea id="bring" data-save placeholder="One thing I want to watch for in lecture is..."></textarea></section>
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> "design a class for X" is one of the most common early interview and take-home prompts in both data and software engineering roles, and modeling a real-world thing as a class is a skill you'll use in nearly every project going forward. It also fixes a real, common bug: tracking several similar real-world items with a pile of separate variables (or separate lists that have to be kept in sync by hand) is exactly how one item's data quietly ends up overwriting another's.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to write a function that takes parameters, and how a dict groups related values together under labeled keys. A class combines both ideas: a special method called <code>__init__</code> runs once per object and stores its parameters as labeled attributes, the same way a dict stores values under keys, except now that data travels together with the actions (methods) that make sense for it. Once defining a class and creating a few independent objects from it feels automatic, two ideas build directly on top of it: giving an object a cleaner way to describe itself when it gets printed, and comparing two different ways of finding one specific object out of many, by how their cost grows as the amount of data grows.</p>
+</div>
+</section>
 
-<section><h2>13. Keep a copy</h2><div class="export"><div class="actions"><button id="md">Create Markdown file</button><button id="json">Create JSON file</button><button id="txt">Create TXT file</button><button id="show">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><label for="plain"><strong>Plain-text fallback</strong></label><textarea id="plain" style="min-height:250px"></textarea><p><button id="selectall">Select all text</button></p></div></div></section>
+<section class="mlrk-section">
+<h2>2. Recall before you start</h2>
+<p class="mlrk-small">Writing a function with parameters and grouping data in a dict are prerequisite skills for this reading. Test each one below before moving on.</p>
 
-</main><script>
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],KEY="oop-meet-objects-v1";let history=[];
-function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history,builder:{line1:$("#line1").value,line2:$("#line2").value}}))}
-function load(){try{let d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[];if(d.builder){$("#line1").value=d.builder.line1||"";$("#line2").value=d.builder.line2||""}}catch(e){}}
-$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.addEventListener("click",()=>x.classList.toggle("flip")));
-function quiz(cls,fb,right,msg){$$(cls).forEach(b=>b.addEventListener("click",()=>{let ok=b.dataset.a===right,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()}))}
-quiz(".recall","#recfb","values",{values:"Yes. Attributes are stored data attached to one object. Unlike a plain dictionary, a class can also define methods that work with that data.",loop:"Loops repeat work; they are not the closest match for stored object data.",return:"return sends a result out of a function or method; it does not describe the object's stored data."});
-quiz(".videoq","#videofb","bundle",{bundle:"Right. Today's key payoff is bundling related state and behavior.",same:"Objects share the class definition, but their own attribute values can differ.",replace:"OOP does not replace functions. Methods are functions defined inside classes."});
-quiz(".attr","#attrfb","mina",{mina:"Correct. The creation call passes \"Mina\" into owner, then self.owner = owner stores it on pass_a.",owner:"owner is the parameter name, not the stored string value.",class:"FestivalPass is the class name. pass_a.owner reads the owner attribute stored on that object."});
-quiz(".selfq","#selffb","b",{b:"Exactly. The object before the dot is your best clue: pass_b.needs_refill() means self refers to pass_b inside that method call.",a:"self does not permanently point to the first object. It follows the object receiving the method call.",all:"self is one specific object for this method call, not all objects at once."});
-quiz(".independent","#indfb","1",{"1":"Correct. Changing card_x's attribute does not rewrite card_y's separately stored attribute.","2":"That change was made only to card_x. card_y still owns its original value.","6":"6 was card_x's original value. card_y was created with 1 and has not changed."});
-quiz(".method","#methodfb","call",{call:"Correct. Parentheses show the method is being called.",attr:"This accesses stored attribute data; there are no call parentheses.",object:"This is the variable referring to the object itself, not a method call."});
-quiz(".initq","#initfb","read",{read:"Correct. __init__ ran when the object was created. Later attribute access simply reads the stored value.",again:"__init__ is tied to object creation; reading an attribute later does not re-run it.",new:"Reading an attribute does not create another object."});
-quiz(".bridgeq","#bridgefb","305",{"305":"Exactly. The method is called on locker_b, so self refers to locker_b and self.code is 305.","812":"812 belongs to locker_a. The receiving object is locker_b.","both":"self identifies one specific object for this call, so it uses one object's code."});
-$("#checkbuilder").onclick=()=>{let ok=$("#line1").value==="self.rider = rider"&&$("#line2").value==="self.trips_left = trips_left",f=$("#builderfb");f.className="feedback show "+(ok?"good":"bad");f.innerHTML=ok?"<strong>Correct.</strong> Both lines store incoming parameter values as attributes on this object.":"<strong>Not yet.</strong> Use the pattern <code>self.attribute = parameter</code>. The left side names storage on this object; the right side is the incoming value.";f.focus();history.push({activity:"class builder",answer:$("#line1").value+" | "+$("#line2").value,correct:ok});save()};
-$("#line1").onchange=save;$("#line2").onchange=save;
-$("#runobjects").onclick=()=>{let lines=["card_x.trips_left = 2","card_y.trips_left = 1","","card_x and card_y keep separate attribute storage."];$("#termout").textContent=lines.join("\n");history.push({activity:"object check",action:"inspect_cards()",output:lines.join("\n")});save()};
-$("#hintbtn").onclick=()=>{let ideas=["The method is shared, but self points to...","When object A calls the method, self means...","Two objects can use the same method yet get different results because..."];let h=$("#hint");h.classList.add("show");h.textContent=ideas[Math.floor(Math.random()*ideas.length)]};
-function snap(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),builder:{line1:$("#line1").value,line2:$("#line2").value},activityHistory:history}}
-function plain(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nCLASS BUILDER\n"+s.builder.line1+"\n"+s.builder.line2+"\n\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(x.output?"\n[Output]:\n"+x.output:"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
-function mdtext(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Class Builder\n```python\n"+s.builder.line1+"\n"+s.builder.line2+"\n```\n\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(x.output?"\n\n[Output]:\n```\n"+x.output+"\n```":"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
-function dl(n,t,c){try{let b=new Blob([c],{type:t+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
-function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” instead."}
-$("#md").onclick=()=>stat(dl("meet-the-objects.md","text/markdown",mdtext(snap())));$("#json").onclick=()=>stat(dl("meet-the-objects.json","application/json",JSON.stringify(snap(),null,2)));$("#txt").onclick=()=>stat(dl("meet-the-objects.txt","text/plain",plain(snap())));
-$("#show").onclick=()=>{let w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=plain(snap());t.focus();t.select()};$("#selectall").onclick=()=>{$("#plain").focus();$("#plain").select()};
-window.addEventListener("scroll",()=>{let d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
-</script></body></html>
+<div class="mlrk-card" id="card-func"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">def greet(name):
+    return f"Hi, {name}!"
+
+print(greet("Amara"))</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="hiamara">Hi, Amara!</button>
+<button type="button" class="mlrk-choice" data-a="hiname">Hi, name!</button>
+<button type="button" class="mlrk-choice" data-a="error">An error, because greet only takes one argument.</button>
+<div id="funcfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-dict" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">goal = {"name": "Vacation Fund", "saved_amount": 300}</div></div>
+<p><strong>What does <code>goal["saved_amount"]</code> return?</strong></p>
+<button type="button" class="mlrk-choice" data-a="300"><code>300</code></button>
+<button type="button" class="mlrk-choice" data-a="key"><code>"saved_amount"</code></button>
+<button type="button" class="mlrk-choice" data-a="wholedict">The entire <code>goal</code> dict</button>
+<div id="dictfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-organize" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a user has 3 savings goals, each with a name, a target amount, and a saved amount.</p>
+<p><strong>Which approach keeps each goal's three pieces of data organized together as one unit, instead of scattered across separate variables?</strong></p>
+<button type="button" class="mlrk-choice" data-a="dict">Storing each goal as a dict, with the name/target/saved values grouped under keys.</button>
+<button type="button" class="mlrk-choice" data-a="nine">Creating nine separate variables, three per goal, and keeping track of which numbers belong together by naming convention.</button>
+<button type="button" class="mlrk-choice" data-a="onelist">Putting all 9 values into a single flat list.</button>
+<div id="organizefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">A class is about to do what that dict already does — group related data together — and add real behavior (methods) on top. Get grouping-by-label solid here first.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>class</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Class</strong><br>A definition of what a kind of object stores (attributes) and can do (methods). Written once.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>object / instance</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Object (or instance)</strong><br>One specific thing created from a class, with its own separately stored attribute values.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>attribute</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Attribute</strong><br>A piece of data stored on one specific object, such as <code>goal_a.name</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>method</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Method</strong><br>A function defined inside a class. An action an object can perform, using its own stored data.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>__init__</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>__init__</strong><br>The method Python calls automatically, once, when a new object is created. It's where incoming values get stored as that object's attributes.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>self</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>self</strong><br>Inside a method, self means "the one specific object this call is running on right now." It's how a method reaches that object's own attributes.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Read the shape of a class</h2>
+<div class="mlrk-code"><div class="mlrk-screen">class SavingsGoal:
+    def __init__(self, name, target_amount, saved_amount):
+        self.name = name
+        self.target_amount = target_amount
+        self.saved_amount = saved_amount
+
+    def is_funded(self):
+        return self.saved_amount >= self.target_amount
+
+goal_a = SavingsGoal("Emergency Fund", 5000, 4200)</div></div>
+<p><strong>Trace the creation call:</strong> <code>"Emergency Fund"</code> flows into the parameter <code>name</code>, then <code>self.name = name</code> stores it as an attribute on <em>this new object</em>. The same thing happens to <code>5000</code> and <code>4200</code>, landing on <code>target_amount</code> and <code>saved_amount</code>.</p>
+<div class="mlrk-card" id="card-attr"><p><strong>What is the value of <code>goal_a.name</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="emergency"><code>"Emergency Fund"</code></button>
+<button type="button" class="mlrk-choice" data-a="name"><code>"name"</code></button>
+<button type="button" class="mlrk-choice" data-a="class"><code>"SavingsGoal"</code></button>
+<div id="attrfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. What does self point to?</h2>
+<p>Change which object calls the method, and <code>self</code> changes with it. Here's a second object, <code>goal_b</code>, alongside <code>goal_a</code> from above:</p>
+<div class="mlrk-code"><div class="mlrk-screen">goal_b = SavingsGoal("Vacation Fund", 1200, 1200)</div></div>
+<div class="mlrk-memory-grid">
+<div class="mlrk-memory-slot"><strong>goal_a.is_funded()</strong><p>Inside the method:<br><code>self refers to goal_a</code><br><code>self.saved_amount holds 4200</code><br><code>self.target_amount holds 5000</code><br><code>4200 &gt;= 5000 evaluates to False</code></p></div>
+<div class="mlrk-memory-slot"><strong>goal_b.is_funded()</strong><p>Inside the method:<br><code>self refers to goal_b</code><br><code>self.saved_amount holds 1200</code><br><code>self.target_amount holds 1200</code><br><code>1200 &gt;= 1200 evaluates to True</code></p></div>
+</div>
+<div class="mlrk-card" id="card-self"><p><strong>When Python runs <code>goal_b.is_funded()</code>, what does <code>self.saved_amount</code> mean?</strong></p>
+<button type="button" class="mlrk-choice" data-a="b">The saved_amount stored on goal_b</button>
+<button type="button" class="mlrk-choice" data-a="a">The saved_amount stored on goal_a</button>
+<button type="button" class="mlrk-choice" data-a="all">Every SavingsGoal object's saved_amount, added together</button>
+<div id="selffb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Your turn: write __init__</h2>
+<p>A different part of the same app tracks budget categories with this class. The two attribute lines inside <code>__init__</code> are missing. Write them yourself.</p>
+<div class="mlrk-code"><div class="mlrk-screen">class BudgetCategory:
+    def __init__(self, label, monthly_limit):
+        # write the two lines that store each parameter as an attribute</div></div>
+<p>Target: after <code>groceries = BudgetCategory("Groceries", 400)</code>, both <code>groceries.label</code> and <code>groceries.monthly_limit</code> should hold the values passed in.</p>
+<label for="initinput"><strong>Type the two missing lines:</strong></label>
+<textarea id="initinput" class="mlrk-fillcode" autocomplete="off" spellcheck="false" placeholder="self.label = label&#10;self.monthly_limit = monthly_limit"></textarea>
+<div class="mlrk-actions"><button type="button" id="initcheck" class="mlrk-btn">Check my code</button></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+<p>Look at how <code>__init__</code> was written for <code>SavingsGoal</code> above. The pattern is the same for every attribute: <code>self.attribute_name = parameter_name</code>, one line per parameter.</p>
+</details>
+<div id="initcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Predict: do independent objects share this value?</h2>
+<div class="mlrk-code"><div id="predictScreen" class="mlrk-screen">goal_a = SavingsGoal("Emergency Fund", 5000, 4200)
+goal_b = SavingsGoal("Vacation Fund", 1200, 1200)
+
+goal_a.saved_amount = 4800</div>
+<div class="mlrk-actions"><button type="button" id="predictrun" class="mlrk-btn">Reveal simulated output</button></div></div>
+<div class="mlrk-card" id="card-predict" style="margin-top:1rem"><p><strong>Before revealing: what should <code>goal_b.saved_amount</code> be after that last line runs?</strong></p>
+<button type="button" class="mlrk-choice" data-a="1200"><code>1200</code></button>
+<button type="button" class="mlrk-choice" data-a="4800"><code>4800</code></button>
+<button type="button" class="mlrk-choice" data-a="3000"><code>3000</code></button>
+<div id="predictfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Practice: method or attribute?</h2>
+<div class="mlrk-card" id="card-method"><p><strong>For <code>goal_b</code>, which expression is a <strong>method call</strong>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="call"><code>goal_b.is_funded()</code></button>
+<button type="button" class="mlrk-choice" data-a="attr"><code>goal_b.saved_amount</code></button>
+<button type="button" class="mlrk-choice" data-a="object"><code>goal_b</code></button>
+<div id="methodfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Catch the __init__ misconception</h2>
+<div class="mlrk-card" id="card-init"><p><strong>After <code>goal_a = SavingsGoal("Emergency Fund", 5000, 4200)</code>, some later line in the program reads <code>goal_a.name</code>. What happens?</strong></p>
+<button type="button" class="mlrk-choice" data-a="read">Python reads the value already stored on goal_a. Nothing re-runs.</button>
+<button type="button" class="mlrk-choice" data-a="again"><code>__init__</code> runs again automatically to fetch it.</button>
+<button type="button" class="mlrk-choice" data-a="new">A brand-new SavingsGoal object gets created.</button>
+<div id="initqfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Sort by where it lives</h2>
+<p>Drag each item into the zone that describes it, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">the code inside <code>is_funded()</code></span>
+  <span id="chip2" class="mlrk-draggable"><code>goal_a.saved_amount</code>'s value</span>
+  <span id="chip3" class="mlrk-draggable">the code inside <code>__init__</code></span>
+  <span id="chip4" class="mlrk-draggable"><code>goal_b.name</code>'s value</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Defined once, on the class</strong></p><div class="mlrk-dropzone" id="zoneClass"></div></div>
+  <div><p class="mlrk-small"><strong>Stored separately, on each object</strong></p><div class="mlrk-dropzone" id="zoneObject"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Order the steps: creating an object</h2>
+<p>Click steps, in order, to build the sequence Python actually follows when <code>goal_a = SavingsGoal("Emergency Fund", 5000, 4200)</code> runs. Click a step again to remove it if you change your mind, then press "Check my order" — this is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="create"><span class="mlrk-order-num"></span> Python creates a new, empty SavingsGoal object.</li>
+  <li class="mlrk-orderitem" data-step="init"><span class="mlrk-order-num"></span> Python calls __init__, automatically passing that new object in as self.</li>
+  <li class="mlrk-orderitem" data-step="store"><span class="mlrk-order-num"></span> Each argument gets stored as an attribute on that specific object: self.name, self.target_amount, self.saved_amount.</li>
+  <li class="mlrk-orderitem" data-step="assign"><span class="mlrk-order-num"></span> The finished object is assigned to the variable goal_a.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about classes and objects.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> Two objects created from the same class can hold completely different attribute values.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Once a class is defined, every object made from it is forced to share the exact same attribute values forever.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> __init__ runs automatically when an object is created, not every time one of its attributes is read later.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Attributes must be named after the class itself, like self.SavingsGoal = name.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Watch: defining classes and objects</h2>
+<p>As you watch, notice how the video walks through the exact same pieces practiced above, in a different scenario: a class definition written once, <code>__init__</code> storing attributes, a method acting on those attributes, and more than one object created from the same class.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=1XE-_s4ZBT8" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what object did the video use to demonstrate a class, and which attribute or method from it stuck with you most?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"Design a class for X" is one of the most common early interview and take-home prompts in both data and software engineering roles: model a parking ticket, a hotel reservation, a shipment, whatever fits the role, as a class from scratch. Interviewers are listening for your reasoning on which attributes belong on every object versus which values should be computed by a method instead, and whether you can prove, not just claim, that two objects don't interfere with each other.</p>
+<p>This also shows up constantly outside interviews: any time a codebase represents a real-world thing (a user, an order, a device) with a class, someone had to make the exact same attribute/method decisions this reading practiced.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: you're asked to design a class representing a single parking ticket. Which response makes the strongest case that you understand independent objects?</strong></p>
+<button type="button" class="mlrk-choice" data-a="prove">Creating two Ticket objects for two different cars, then showing that changing one ticket's fine amount doesn't change the other's.</button>
+<button type="button" class="mlrk-choice" data-a="share">Explaining that every Ticket object shares one single variable for the fine amount.</button>
+<button type="button" class="mlrk-choice" data-a="same">Saying a class and an object are basically the same thing.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Debugging habit and reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>A teammate's code creates two separate Account objects, but changing one account's balance somehow also changes the other account's balance. What's the most likely bug?</strong></p>
+<button type="button" class="mlrk-choice" data-a="samevar">Both variable names actually point at the same object, not two separate ones.</button>
+<button type="button" class="mlrk-choice" data-a="link">Python automatically links every object made from the same class.</button>
+<button type="button" class="mlrk-choice" data-a="init">The class is missing a return statement in __init__.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your debugging habit:</strong> when two objects seem to be sharing data they shouldn't, what's the first thing you'd check?</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: The first thing I'd check is..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Summary and critical thinking</h2>
+<p>Two ideas carried this whole reading: a class defines a shape once, and <code>__init__</code> turns the values passed into a new object into that object's own stored attributes, kept completely separate from every other object's attributes.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a delivery service tracks orders with a <code>Package</code> class. Two <code>Package</code> objects are created for two different orders. One package's <code>delivered</code> attribute is set to <code>True</code>.</p>
+<p><strong>What happens to the other package's delivered attribute?</strong></p>
+<button type="button" class="mlrk-choice" data-a="unaffected">It stays whatever it was, since each Package object stores delivered separately.</button>
+<button type="button" class="mlrk-choice" data-a="alsotrue">It also becomes True, since both objects came from the same class.</button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error, since two objects can't have different values for the same attribute name.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> why can two objects made from the same class end up holding completely different attribute values?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>17. Thinking ahead</h2>
+<p>Defining a class and creating a few independent objects from it is the foundation for two ideas that build directly on top of it: giving an object a better way to describe itself than Python's default output when it gets printed, and comparing two different ways of finding one specific object out of many by how their cost grows as the number of objects grows. Both reuse the exact same class-and-object shape practiced here.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>18. Your score and keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add meet-the-objects-reading.json
+git commit -m "Complete the meet the objects reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong> — this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://docs.python.org/3/tutorial/classes.html" target="_blank" rel="noopener">Python docs: Classes</a> — the official reference, once the scenario above has it feeling intuitive.</li>
+<li><a href="https://www.w3schools.com/python/python_classes.asp" target="_blank" rel="noopener">W3Schools: Python Classes/Objects</a> — more worked examples with different classes.</li>
+<li><a href="https://www.geeksforgeeks.org/python/python-classes-and-objects/" target="_blank" rel="noopener">GeeksforGeeks: Python Classes and Objects</a> — another pass at the same ideas, different wording.</li>
+<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — step through your own class code and watch each object's attributes get stored, one line at a time.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "oop-meet-the-objects-reading";
+  const TITLE = "Meet the Objects — Defining a Class From Scratch";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-func", buttonSelector:"#card-func .mlrk-choice", feedbackSelector:"#funcfb", correct:"hiamara",
+    feedback:{hiamara:"Right. \"Amara\" flows into the parameter name, and the f-string builds \"Hi, Amara!\".",
+              hiname:"An f-string substitutes the parameter's current value, not the literal word \"name\".",
+              error:"greet takes exactly one parameter, name, and the call passes exactly one argument. No error here."}});
+
+  K.quiz({id:"q-dict", buttonSelector:"#card-dict .mlrk-choice", feedbackSelector:"#dictfb", correct:"300",
+    feedback:{"300":"Correct. Looking up the \"saved_amount\" key returns the value stored under it, 300.",
+              key:"\"saved_amount\" is the key you used to look the value up, not the value itself.",
+              wholedict:"Indexing with a specific key returns just that key's value, not the entire dict."}});
+
+  K.quiz({id:"q-organize", buttonSelector:"#card-organize .mlrk-choice", feedbackSelector:"#organizefb", correct:"dict",
+    feedback:{dict:"Right. A dict keeps a goal's name, target, and saved amount grouped under labeled keys as one unit.",
+              nine:"Nine separate variables leaves you tracking which numbers belong together by naming convention alone, an easy way to mix goals up.",
+              onelist:"A single flat list loses the labels entirely; you'd have to remember which position means what."}});
+
+  K.quiz({id:"q-attr", buttonSelector:"#card-attr .mlrk-choice", feedbackSelector:"#attrfb", correct:"emergency",
+    feedback:{emergency:"Correct. The creation call passes \"Emergency Fund\" into name, then self.name = name stores it on goal_a.",
+              name:"name is the parameter name inside __init__, not the stored string value.",
+              class:"SavingsGoal is the class name. goal_a.name reads the name attribute stored on that specific object."}});
+
+  K.quiz({id:"q-self", buttonSelector:"#card-self .mlrk-choice", feedbackSelector:"#selffb", correct:"b",
+    feedback:{b:"Exactly. The object before the dot is the clue: goal_b.is_funded() means self refers to goal_b for this call.",
+              a:"self does not stay fixed on one object. It follows whichever object the method was called on.",
+              all:"self is one specific object for this particular call, not every object combined."}});
+
+  K.quiz({id:"q-predict", buttonSelector:"#card-predict .mlrk-choice", feedbackSelector:"#predictfb", correct:"1200",
+    feedback:{"1200":"Correct. goal_a.saved_amount changed, but goal_b stores its own separate saved_amount, untouched.",
+              "4800":"That change was only made to goal_a. goal_b still holds its own original value.",
+              "3000":"1200 was goal_b's value before this line ran, and nothing in this code touches goal_b at all."},
+    onDone(){revealPredict()}});
+
+  K.quiz({id:"q-method", buttonSelector:"#card-method .mlrk-choice", feedbackSelector:"#methodfb", correct:"call",
+    feedback:{call:"Correct. The parentheses show is_funded is being called as a method.",
+              attr:"This accesses stored attribute data directly; there are no call parentheses.",
+              object:"This is just the variable referring to the object itself, not a method call."}});
+
+  K.quiz({id:"q-init", buttonSelector:"#card-init .mlrk-choice", feedbackSelector:"#initqfb", correct:"read",
+    feedback:{read:"Correct. __init__ already ran once, when goal_a was created. Reading an attribute later just reads the stored value.",
+              again:"__init__ is tied to object creation. Reading an existing attribute later does not re-run it.",
+              new:"Reading an attribute does not create another object; it reads the one that already exists."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"Two objects created from the same class can hold completely different attribute values.", correct:true,
+      hint:"Think back to goal_a and goal_b in sections 4 and 5. Did they share the same saved_amount?",
+      explain:"goal_a and goal_b came from the same class but stored completely different name, target_amount, and saved_amount values."},
+    {value:"b", label:"Once a class is defined, every object made from it is forced to share the exact same attribute values forever.", correct:false,
+      hint:"Section 7's predict activity changed one object's attribute. Did the other object's value move with it?",
+      explain:"Section 7 showed the opposite: changing goal_a's saved_amount left goal_b's completely untouched."},
+    {value:"c", label:"__init__ runs automatically when an object is created, not every time one of its attributes is read later.", correct:true,
+      hint:"Revisit section 9. Does reading goal_a.name again later re-trigger __init__?",
+      explain:"Section 9 covered exactly this: __init__ runs once at creation, and later attribute reads just read the stored value."},
+    {value:"d", label:"Attributes must be named after the class itself, like self.SavingsGoal = name.", correct:false,
+      hint:"Look back at the __init__ code in section 4. What did the attribute names actually match?",
+      explain:"Attribute names match what the data represents (self.name, self.target_amount), not the class name."}
+  ]});
+
+  K.dragDrop("#dragarea", "act-drag-scope");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneClass", label:"the code inside is_funded()", expectedLabel:"Defined once, on the class"},
+    chip2:{expectedId:"zoneObject", label:"goal_a.saved_amount's value", expectedLabel:"Stored separately, on each object"},
+    chip3:{expectedId:"zoneClass", label:"the code inside __init__", expectedLabel:"Defined once, on the class"},
+    chip4:{expectedId:"zoneObject", label:"goal_b.name's value", expectedLabel:"Stored separately, on each object"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["create","init","store","assign"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  function revealPredict(){
+    $("#predictScreen").textContent = `goal_a = SavingsGoal("Emergency Fund", 5000, 4200)
+goal_b = SavingsGoal("Vacation Fund", 1200, 1200)
+
+goal_a.saved_amount = 4800
+
+[Output]
+goal_a.saved_amount is now 4800
+goal_b.saved_amount is still 1200 (unchanged)`;
+  }
+  $("#predictrun").addEventListener("click", revealPredict);
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"1XE-_s4ZBT8"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"prove",
+    feedback:{prove:"Right. Showing, not just claiming, that two objects store data independently is exactly what an interviewer wants to see.",
+              share:"A shared variable for the fine amount would mean every ticket has the same fine, which defeats the point of separate objects.",
+              same:"A class and an object are related but different: the class is the definition, an object is one specific thing made from it."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"samevar",
+    feedback:{samevar:"Right. If two variables were assigned the same object instead of two separate ones, changing it through either name affects the one shared object.",
+              link:"Python does not link separate objects together automatically. Objects stay independent unless code explicitly makes them the same one.",
+              init:"__init__ methods don't need a return statement, and a missing one wouldn't cause two objects to share data."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"unaffected",
+    feedback:{unaffected:"Right, the same rule practiced throughout this reading: each object stores its own attributes, independent of every other object.",
+              alsotrue:"Sharing the same class does not mean sharing the same stored values. Each Package object keeps its own delivered attribute.",
+              error:"Different objects are expected to hold different values for the same attribute name. That's the entire point of an object."}});
+
+  K.Scoring.register("act-fillcode-init", 1, "activity");
+  let initAttempts = 0, initDone = false;
+  $("#initcheck").addEventListener("click", () => {
+    if(initDone) return;
+    initAttempts++;
+    const val = $("#initinput").value;
+    const ok = /self\.label\s*=\s*label/.test(val) && /self\.monthly_limit\s*=\s*monthly_limit/.test(val);
+    const fb = $("#initcheckfb");
+    if(ok){
+      K.Scoring.award("act-fillcode-init", 1);
+      fb.className = "mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML = "<strong>That works.</strong> Both lines follow self.attribute_name = parameter_name, the same shape used for SavingsGoal above.";
+      initDone = true;
+    } else if(initAttempts >= 2){
+      K.Scoring.award("act-fillcode-init", 0);
+      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML = "<strong>Here's how it's written. You'll get it next time.</strong> <code>self.label = label</code> and <code>self.monthly_limit = monthly_limit</code>.";
+      initDone = true;
+    } else {
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>Not quite yet.</strong> Each line should follow self.attribute_name = parameter_name, one line for label and one for monthly_limit. One more try before the answer is revealed.";
+    }
+    fb.setAttribute("tabindex","-1"); fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think of a real-world thing you interact with often that has both stored details and things it can do, like a phone with a battery level (data) and a way to check if it needs charging (behavior). What would the class for that look like?",
+    "If you had to explain \"two objects from the same class can hold different data\" to a friend using something from daily life, like two people's phones running the exact same app, what would you compare it to?",
+    "Where have you already seen a real system track many similar things separately, like every account at a bank having its own balance? How would you describe that using the words class and object?"
+  ];
+  $("#aiprompt").addEventListener("click", () => {
+    const box = $("#aipromptbox");
+    box.style.display = "block";
+    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random() * AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb = $("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["oop-design"],
+      skills:["object-oriented-programming"], onDone(status,message){
+      fb.textContent = message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

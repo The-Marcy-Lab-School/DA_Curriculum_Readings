@@ -1,96 +1,552 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Looks Right. Is It? | Debugging Like a Pro</title>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Looks Right. Is It? — Catching Bugs a Skim Would Miss</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-:root{--ink:#20231f;--paper:#fbfaf6;--green:#214a30;--blue:#e4f0f8;--gold:#f4c655;--line:#d4ddd6;--good:#e3f4e8;--bad:#fbe5e8;--focus:#ffbf47}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--paper);color:var(--ink);line-height:1.62}button,select,textarea{font:inherit}button:focus,a:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:3px}a{color:#174f7c}
-header{background:var(--green);color:#fff;padding:3rem 1.2rem}.wrap,section{max-width:980px;margin:auto}h1{font-size:clamp(2.5rem,7vw,4.8rem);line-height:1;margin:.5rem 0 1rem}h2{font-size:2rem;line-height:1.15}.eyebrow{font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#d9e8dc}.lead{font-size:1.18rem;max-width:850px}.pills,.actions{display:flex;gap:.55rem;flex-wrap:wrap}.pill{border:1px solid #9eb6a4;border-radius:999px;padding:.28rem .68rem}
-.sticky{position:sticky;top:0;background:#fff;z-index:7;border-bottom:1px solid var(--line)}.track{height:8px;background:#e8ece9}.bar{height:100%;width:0;background:var(--gold)}.sticky p{max-width:980px;margin:auto;padding:.55rem 1rem;color:#566159}main{padding:2rem 1.2rem 5rem}section{margin-bottom:3rem}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:1.2rem;box-shadow:0 3px 14px #1220170d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem}button{border:2px solid var(--green);border-radius:11px;background:#fff;color:var(--green);padding:.7rem 1rem;font-weight:750;cursor:pointer}.term{min-height:135px;text-align:left}.term .back{display:none}.term.flip .front{display:none}.term.flip .back{display:block}.choice{display:block;width:100%;text-align:left;margin:.45rem 0}.feedback{display:none;padding:.9rem;margin-top:.8rem;border-radius:10px}.feedback.show{display:block}.good{background:var(--good)}.bad{background:var(--bad)}
-.callout{background:var(--blue);border-left:6px solid #2d79b5;padding:1rem;border-radius:10px}.warn{background:#fff3d2;border-left:6px solid #d19b13;padding:1rem;border-radius:10px}.code{background:#1c211d;color:#f7f4ee;padding:1rem;border-radius:14px;white-space:pre-wrap;overflow:auto;font:1rem/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}.node{border:3px solid var(--green);border-radius:16px;padding:1rem;background:#fff}.trace{width:100%;border-collapse:collapse;background:#fff}.trace th,.trace td{border:1px solid #bfc8c1;padding:.6rem;text-align:left}.trace th{background:#e7efe9}.terminal{background:#151a16;color:#f7f4ee;padding:1rem;border-radius:14px;font:1rem/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}.termout{white-space:pre-wrap;min-height:90px;border-top:1px solid #59625b;margin-top:.8rem;padding-top:.8rem}.bugbox{border-left:6px solid var(--gold);background:#fff;padding:1rem;border-radius:12px}.hint{display:none;background:#f2eef9;padding:1rem;border-radius:12px}.hint.show{display:block}textarea{width:100%;min-height:95px;padding:.75rem;border:2px solid #abb6ae;border-radius:10px}.bridge{border-top:8px solid var(--gold)}.export{background:#edf3ef;border-radius:18px;padding:1.2rem}.plain{display:none}.plain.show{display:block}.small{font-size:.92rem;color:#5b655e}
-@media(max-width:720px){.flow{grid-template-columns:1fr}h2{font-size:1.65rem}}</style></head><body>
-<header><div class="wrap"><div class="eyebrow">Module 1 • Pre-Lecture Reading</div><h1>Looks Right. Is It?</h1><p class="lead">Imagine an AI gives you a polished Python script. It runs. No red error. No crash. The output is also wrong. <strong>How would you prove it?</strong> Today you build a debugging habit for the hardest kind of bug: code that looks believable.</p><div class="pills"><span class="pill">~15–18 min</span><span class="pill">Trace tables</span><span class="pill">Bug hunt simulator</span><span class="pill">No setup needed</span></div></div></header>
-<div class="sticky"><div class="track"><div id="bar" class="bar"></div></div><p>Debugger's question: <strong>What did I expect, what actually happened, and which line explains the difference?</strong></p></div><main>
+.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:8rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
 
-<section><h2>1. Vocabulary: your debugging toolkit</h2><div class="grid">
-<button class="card term"><span class="front"><strong>bug</strong><br>Flip</span><span class="back">A defect that makes a program behave differently from what is intended.</span></button>
-<button class="card term"><span class="front"><strong>logic error</strong><br>Flip</span><span class="back">Code can run without crashing but produces the wrong behavior or result.</span></button>
-<button class="card term"><span class="front"><strong>trace</strong><br>Flip</span><span class="back">Follow execution step by step while tracking values and decisions.</span></button>
-<button class="card term"><span class="front"><strong>edge case</strong><br>Flip</span><span class="back">An unusual or boundary input that can expose an assumption, such as 0 or an empty list.</span></button>
-<button class="card term"><span class="front"><strong>refactor</strong><br>Flip</span><span class="back">Restructure code without changing what it is supposed to do—often to reduce repetition or improve clarity.</span></button>
-<button class="card term"><span class="front"><strong>verify</strong><br>Flip</span><span class="back">Rerun or test after a change to gather evidence that the fix works.</span></button>
-</div></section>
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Looks Right. Is It?</h1>
+<p class="mlrk-lead">A small accounting firm's expense-reimbursement script runs clean: no red error, no crash, a confident-looking summary printed at the end. Every function has a sensible name. Nothing about it looks suspicious. It is also quietly wrong in four different ways. This reading is about training the habit that catches code like that: reading with suspicion instead of trust, and proving correctness instead of assuming it.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~38–42 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
 
-<section><h2>2. Recall: running is not the same as correct</h2><pre class="code">temperature = 8
-if temperature >= 8:
-    message = "warm"
-else:
-    message = "cold"</pre><div class="card"><p>The requirement says <em>only temperatures above 8 are “warm.”</em> The code runs and produces <code>"warm"</code>. What kind of problem is this?</p><button class="choice recall" data-a="logic">A logic error</button><button class="choice recall" data-a="syntax">A syntax error</button><button class="choice recall" data-a="none">No bug, because it ran</button><div id="recfb" class="feedback" tabindex="-1"></div></div></section>
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
 
-<section><h2>3. A repeatable debugging loop</h2><div class="flow"><div class="node"><strong>1. PREDICT</strong><p>What should happen?</p></div><div class="node"><strong>2. TRACE</strong><p>Follow values and branches.</p></div><div class="node"><strong>3. CHANGE</strong><p>Make one evidence-based fix.</p></div><div class="node"><strong>4. VERIFY</strong><p>Rerun, including an edge case.</p></div></div><p class="callout">A good debugger does not begin with random edits. First create a prediction you can compare against reality.</p></section>
+<main class="mlrk-main"><div class="mlrk-wrap">
 
-<section><h2>4. Trace tables slow your brain down—in a useful way</h2><pre class="code">prices = [5, 8, 11]
-large = 0
-for price in prices:
-    if price > 7:
-        large += 1</pre><table class="trace"><thead><tr><th>Iteration</th><th>price</th><th>price &gt; 7?</th><th>large after</th></tr></thead><tbody><tr><td>1</td><td>5</td><td>False</td><td>0</td></tr><tr><td>2</td><td>8</td><td>True</td><td>1</td></tr><tr><td>3</td><td>11</td><td>True</td><td>2</td></tr></tbody></table><p>The table makes every iteration accountable. If the final answer surprises you, you can point to the exact row where your expectation and the program separate.</p></section>
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
 
-<section><h2>5. Bug hunt #1: the missing last item</h2><pre class="code">scores = [4, 9, 12, 20]
-high = 0
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Attention to Detail</strong> — independently catching a planted bug, edge case, or inconsistency that a surface-level read-through would miss.</p>
+  </div>
+</section>
 
-for i in range(len(scores) - 1):
-    if scores[i] >= 10:
-        high += 1</pre><div class="card"><p>The intention is to inspect <strong>all four</strong> scores. Which evidence best exposes the bug?</p><button class="choice b1" data-a="range">The loop visits indices 0, 1, 2 but never 3.</button><button class="choice b1" data-a="if">The <code>if</code> statement cannot be used inside a loop.</button><button class="choice b1" data-a="var">The variable <code>high</code> must begin at 1.</button><div id="b1fb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
 
-<section><h2>6. Bug hunt #2: data that looks almost identical</h2><pre class="code">tags = ["Urgent", "urgent", "Normal", "URGENT"]
-count = 0
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Picture the firm's script: <code>process_reimbursements</code> reads a list of employee expense reports, adds up the total owed, flags any report over the daily cap for manual review, and logs report IDs so nobody gets paid twice for the same expense. Someone (maybe a coworker, maybe an AI tool) wrote it quickly, and it works — it runs top to bottom without a single exception. That's exactly the problem. "It ran" and "it's correct" are two completely different claims, and this script's fluent variable names and clean output are doing a very good job of hiding the gap between them.</p>
 
-for tag in tags:
-    if tag == "urgent":
-        count += 1</pre><div class="card"><p>The requirement says capitalization should not matter. What is the strongest fix?</p><button class="choice b2" data-a="lower">Compare <code>tag.lower() == "urgent"</code>.</button><button class="choice b2" data-a="one">Change only <code>"Urgent"</code> in the list.</button><button class="choice b2" data-a="plus">Add 2 to the final count.</button><div id="b2fb" class="feedback" tabindex="-1"></div></div></section>
+<svg class="mlrk-illustration" viewBox="0 0 680 230" role="img" aria-labelledby="queueTitle queueDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="queueTitle">Five expense reports in a processing queue, only four of which actually get processed</title>
+  <desc id="queueDesc">Five numbered report cards in a row. A shaded band labeled "loop passes over these" covers only the first four cards. The fifth card sits outside the band, unshaded, with a question mark, showing it was silently skipped even though the summary printed at the end looks complete.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="20" y="60" width="480" height="90" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3" stroke-dasharray="2 0"/>
+    <text x="260" y="46" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">loop passes over these four reports</text>
+    <g fill="#FFFCF7" stroke="#264326" stroke-width="2.5">
+      <rect x="36" y="76" width="88" height="58" rx="10"/>
+      <rect x="140" y="76" width="88" height="58" rx="10"/>
+      <rect x="244" y="76" width="88" height="58" rx="10"/>
+      <rect x="348" y="76" width="88" height="58" rx="10"/>
+    </g>
+    <g font-size="15" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="80" y="110">Report 1</text><text x="184" y="110">Report 2</text>
+      <text x="288" y="110">Report 3</text><text x="392" y="110">Report 4</text>
+    </g>
+    <rect x="560" y="76" width="100" height="58" rx="10" fill="#FFFCF7" stroke="#83671C" stroke-width="3" stroke-dasharray="6 5"/>
+    <text x="610" y="104" text-anchor="middle" font-size="15" font-weight="700" fill="#261F1D">Report 5</text>
+    <text x="610" y="124" text-anchor="middle" font-size="16" font-weight="800" fill="#83671C">?</text>
+    <text x="610" y="175" text-anchor="middle" font-size="13" font-weight="600" fill="#83671C">never entered the loop</text>
+    <text x="260" y="200" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">the printed summary still looks complete</text>
+  </g>
+</svg>
 
-<section><h2>7. Bug hunt #3: boundary values</h2><pre class="code">def has_stock(units):
-    return units >= 0</pre><div class="card"><p>The requirement says “in stock” means <strong>at least one unit</strong>. Which input is the best edge case for revealing the bug?</p><button class="choice b3" data-a="zero"><code>0</code></button><button class="choice b3" data-a="ten"><code>10</code></button><button class="choice b3" data-a="five"><code>5</code></button><div id="b3fb" class="feedback" tabindex="-1"></div></div><p class="warn"><strong>Boundary values are bug magnets.</strong> When you see <code>&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>, or <code>&lt;=</code>, test the value right on the boundary.</p></section>
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> a wrong reimbursement total doesn't announce itself. Nobody gets a stack trace when an employee is shorted twelve dollars or the firm quietly overpays a duplicate claim; the script just prints a plausible-looking number and everyone moves on. This exact situation, code that runs cleanly but does something quietly wrong, is also one of the most common formats for a technical interview: a take-home debugging exercise, or a live "find the bug" round where you're handed a working-looking function and asked what's actually wrong with it.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to write loops, conditionals, functions with parameters and default values, classes, and try/except blocks. Every bug in this reading lives inside one of those familiar tools, used almost correctly. This reading is about turning that same knowledge inward: reading code you didn't write with healthy suspicion, forming a prediction before you trust an output, and tracing to find exactly where reality and expectation split apart. That instinct, verify before you trust, is what separates code that merely runs from code you can actually ship.</p>
+</div>
+</section>
 
-<section><h2>8. Interactive simulator: prove it before fixing it</h2><p>This browser simulator models a small script; no Python installation is needed. First predict, then choose a case and run it.</p><div class="actions"><button class="sim" data-case="normal">Run normal case</button><button class="sim" data-case="edge">Run edge case</button><button class="sim" data-case="last">Run last-item case</button></div><div class="terminal"><div id="cmd">$ run_debug_case()</div><div>[Output]:</div><div id="termout" class="termout">Choose a case above.</div></div><div class="card"><p>Which run is most useful when you suspect an off-by-one loop bug?</p><button class="choice simq" data-a="last">A case where the last item should change the answer</button><button class="choice simq" data-a="same">Any input gives equally strong evidence</button><button class="choice simq" data-a="skip">Do not run it; just rewrite the loop</button><div id="simfb" class="feedback" tabindex="-1"></div></div></section>
+<section class="mlrk-section">
+<h2>2. Recall before hunting for bugs</h2>
+<p class="mlrk-small">Four skills get reused heavily below: default argument values, comparison operators, range()-based loops, and what a try/except block actually does when it catches an error. Test each one before moving on.</p>
 
-<section><h2>9. Fix one thing, then verify</h2><div class="bugbox"><strong>Tempting approach:</strong> notice three suspicious lines, edit all three, then run once.</div><p>That can work, but it weakens your evidence. If the output changes, which edit caused it? A more disciplined cycle is: reproduce → isolate → change → rerun.</p><div class="card"><p>After changing a comparison from <code>&gt;= 0</code> to <code>&gt; 0</code>, what should you do next?</p><button class="choice verify" data-a="rerun">Rerun a case containing 0 and confirm the behavior now matches the requirement.</button><button class="choice verify" data-a="done">Assume it is fixed because the new line looks right.</button><button class="choice verify" data-a="rewrite">Immediately rewrite every function too.</button><div id="verifyfb" class="feedback" tabindex="-1"></div></div></section>
+<div class="mlrk-card" id="card-recall-default"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">def greet(name="friend"):
+    return "Hi, " + name
 
-<section><h2>10. Refactoring is not the same as debugging</h2><div class="grid"><div class="card"><h3>Debug</h3><p>Change incorrect behavior so the program matches its requirement.</p></div><div class="card"><h3>Refactor</h3><p>Change structure while preserving intended behavior—for example, extracting repeated output into a reusable function.</p></div></div><pre class="code">print("Report:", label_a)
-print("Total:", count_a)
+print(greet())</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="friend"><code>Hi, friend</code></button>
+<button type="button" class="mlrk-choice" data-a="none"><code>Hi, None</code></button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error because no argument was given</button>
+<div id="recdefaultfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-# ...later...
+<div class="mlrk-card" id="card-recall-compare" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>budget = 500</code>, <code>spent = 500</code>. What does <code>spent > budget</code> evaluate to?</p>
+<button type="button" class="mlrk-choice" data-a="false">False</button>
+<button type="button" class="mlrk-choice" data-a="true">True</button>
+<button type="button" class="mlrk-choice" data-a="error">Python can't compare two equal numbers this way</button>
+<div id="reccomparefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-print("Report:", label_b)
-print("Total:", count_b)</pre><div class="card"><p>What is the clearest refactoring opportunity?</p><button class="choice ref" data-a="func">Create a function that receives a label and count and prints the report.</button><button class="choice ref" data-a="delete">Delete the second report.</button><button class="choice ref" data-a="hard">Hard-code one label so both reports match.</button><div id="reffb" class="feedback" tabindex="-1"></div></div></section>
+<div class="mlrk-card" id="card-recall-loop" style="margin-top:.8rem"><p><strong>Recall:</strong> <code>for i in range(3): print(i)</code>. What prints?</p>
+<button type="button" class="mlrk-choice" data-a="012">0 then 1 then 2</button>
+<button type="button" class="mlrk-choice" data-a="123">1 then 2 then 3</button>
+<button type="button" class="mlrk-choice" data-a="0123">0 then 1 then 2 then 3</button>
+<div id="recloopfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<section><h2>11. AI code: fluency is not evidence</h2><p>Readable names, comments, and confident explanations can make generated code feel trustworthy. But correctness comes from evidence: requirements, tracing, test cases, and verified outputs.</p><div class="card"><p>An AI-generated function runs and returns <code>14</code>. What is the best next question?</p><button class="choice ai" data-a="expected">“For this input, what result should the requirement produce, and can I trace the function to that result?”</button><button class="choice ai" data-a="style">“Does the code look professional?”</button><button class="choice ai" data-a="trust">“Did the AI sound confident?”</button><div id="aifb" class="feedback" tabindex="-1"></div></div></section>
+<div class="mlrk-card" id="card-recall-except" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> a function is wrapped in <code>try</code>/<code>except</code>, and the bare <code>except:</code> block returns <code>0</code> for any error at all. If a real bug trips that <code>except</code>, what happens to the program?</p>
+<button type="button" class="mlrk-choice" data-a="quiet">It keeps running normally, with no visible sign anything went wrong.</button>
+<button type="button" class="mlrk-choice" data-a="print">Python always prints the exception message first, even when it's caught.</button>
+<button type="button" class="mlrk-choice" data-a="crash">The program crashes the next time that line runs.</button>
+<div id="recexceptfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<section><h2>12. Build your debugging plan</h2><p>Need help starting? Generate a prompt, then write your own plan.</p><button id="hintbtn">Generate a debugging prompt</button><div id="hint" class="hint"></div><label for="plan"><strong>Your plan:</strong> When unfamiliar code runs but gives a suspicious result, what will you do before editing?</label><textarea id="plan" data-save placeholder="First I will... Then I will..."></textarea></section>
+<div class="mlrk-callout mlrk-callout-blue">None of this changes once the bugs below get harder to spot. Default arguments, comparisons, loop ranges, and except blocks all still work exactly as they do here; the trick is noticing when they're used just slightly wrong.</div>
+</section>
 
-<section class="bridge"><h2>13. Required bridge to lecture/lab</h2><p>You just practiced <strong>logic errors, tracing, edge cases, verification, and refactoring</strong> using examples that are different from the upcoming lesson. In lecture/lab, you will independently inspect a longer script that combines a class, loop, and functions, locate multiple planted logic errors, verify your fixes by rerunning, and refactor repeated code. The lesson specifically expects you to work without a debugging template. </p><p>Your most important habit to bring is: <strong>do not use “it ran” as proof that it is correct.</strong> The project connection is the same habit—your code needs to use its class consistently and actually handle edge cases, not merely survive one run.</p><div class="card"><p><strong>Transfer challenge:</strong> A new script prints a believable total and never crashes. What should you do first?</p><button class="choice bridgeq" data-a="trace">State the expected result for a small case and trace the script against that prediction.</button><button class="choice bridgeq" data-a="trust">Accept it because no exception appeared.</button><button class="choice bridgeq" data-a="rewrite">Rewrite the entire script before testing anything.</button><div id="bridgefb" class="feedback" tabindex="-1"></div></div><label for="bring"><strong>Bring to lecture:</strong> Which debugging move will you deliberately use first—predict, trace, isolate, test an edge case, or verify? Why?</label><textarea id="bring" data-save></textarea></section>
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the bug hunts below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>logic error</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Logic error</strong><br>Code that runs without crashing but produces the wrong result because it doesn't match the actual requirement.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>off-by-one error</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Off-by-one error</strong><br>A loop or index that runs one time too many or one time too few, often skipping the first or last item.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>edge case</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Edge case</strong><br>An unusual or boundary input, like 0, an empty list, or a value sitting exactly on a comparison's cutoff, that can expose an assumption a normal input wouldn't.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>silent failure</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Silent failure</strong><br>Something goes wrong, but the program keeps running and gives no error, warning, or other visible sign that it happened.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>mutable default argument</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Mutable default argument</strong><br>A default value like <code>[]</code> or <code>{}</code> that Python creates only once, the first time the function is defined, then quietly reuses and shares across every call that doesn't override it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>verify</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Verify</strong><br>Rerun or test after a change to gather actual evidence that a fix works, rather than assuming it does because the edit looks reasonable.</span></button>
+</div>
+</section>
 
-<section><h2>14. Keep a copy</h2><div class="export"><div class="actions"><button id="md">Create Markdown file</button><button id="json">Create JSON file</button><button id="txt">Create TXT file</button><button id="show">Show plain text</button></div><p id="exportfb" class="small" aria-live="polite"></p><div id="plainwrap" class="plain"><textarea id="plain" style="min-height:250px" aria-label="Plain text submission"></textarea><p><button id="selectall">Select all text</button></p></div></div></section>
-</main><script>
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],KEY="debugging-pro-prep-v1";let history=[];
-function save(){localStorage.setItem(KEY,JSON.stringify({responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),history}))}
-function load(){try{let d=JSON.parse(localStorage.getItem(KEY)||"{}");for(const[k,v]of Object.entries(d.responses||{}))if($("#"+k))$("#"+k).value=v;history=Array.isArray(d.history)?d.history:[]}catch(e){}}
-$$("[data-save]").forEach(x=>x.addEventListener("input",save));$$(".term").forEach(x=>x.onclick=()=>x.classList.toggle("flip"));
-function quiz(cls,fb,right,msg){$$(cls).forEach(b=>b.onclick=()=>{let ok=b.dataset.a===right,f=$(fb);f.className="feedback show "+(ok?"good":"bad");f.innerHTML=(ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> ")+msg[b.dataset.a];f.focus();history.push({activity:cls,answer:b.textContent.trim(),correct:ok});save()})}
-quiz(".recall","#recfb","logic",{logic:"Yes. The program is syntactically valid but its boundary rule disagrees with the requirement.",syntax:"A syntax error would prevent Python from parsing/running this code. Here, the problem is the rule.",none:"Running without crashing only proves Python could execute the instructions—not that the instructions match the requirement."});
-quiz(".b1","#b1fb","range",{range:"Exactly. With four items, len(scores)-1 is 3, and range(3) produces 0, 1, 2. The final item is silently skipped.",if:"An if statement is valid inside a loop and is not the source of this problem.",var:"Counters normally start at 0 when nothing has been counted yet."});
-quiz(".b2","#b2fb","lower",{lower:"Correct. Normalizing each tag before comparison handles all capitalization variants consistently.",one:"Changing one data value fixes only one instance, not the rule that capitalization should not matter.",plus:"Adjusting the answer hides the cause instead of fixing the comparison logic."});
-quiz(".b3","#b3fb","zero",{zero:"Correct. Zero sits exactly on the >= versus > boundary, so it distinguishes the buggy rule from the intended rule.",ten:"Both >= 0 and > 0 return True for 10, so this case cannot expose the difference.",five:"Both versions return True for 5; choose a value where the two rules disagree."});
-quiz(".simq","#simfb","last",{last:"Yes. A strong test makes the suspected bug observable. If the last item matters, skipping it changes the result.",same:"Tests differ in diagnostic power. Pick inputs that force the suspicious line to matter.",skip:"Changing code before reproducing the problem removes useful evidence about the cause."});
-quiz(".verify","#verifyfb","rerun",{rerun:"Exactly. Verification means collecting evidence after the edit, especially at the boundary that exposed the bug.",done:"A plausible-looking edit is still only a hypothesis until you test it.",rewrite:"Changing unrelated code makes it harder to know whether this fix worked."});
-quiz(".ref","#reffb","func",{func:"Correct. The repeated structure can become one reusable function with values passed in as parameters.",delete:"That changes the required behavior instead of preserving it.",hard:"Hard-coding makes the code less reusable and changes what the second report means."});
-quiz(".ai","#aifb","expected",{expected:"Yes. Correctness is a comparison between intended behavior and observed behavior, supported by tracing/testing.",style:"Professional-looking code can still contain quiet logic errors.",trust:"Confidence is not evidence of correctness."});
-quiz(".bridgeq","#bridgefb","trace",{trace:"Exactly. A small predicted case gives you a concrete standard; tracing shows where behavior diverges.",trust:"No crash does not rule out a logic error.",rewrite:"Rewriting before isolating the problem can introduce new bugs and destroys evidence about the original one."});
-$$(".sim").forEach(b=>b.onclick=()=>{let c=b.dataset.case,out;if(c==="normal")out="Input: [2, 6, 9]\nExpected items >= 6: 2\nObserved: 2\nNo difference exposed.";else if(c==="edge")out="Input threshold case: value = 0\nExpected active? False\nObserved active? True\nEvidence: inspect the boundary comparison.";else out="Input: [3, 3, 10]\nExpected tens: 1\nObserved: 0\nEvidence: trace whether the final index is visited.";$("#cmd").textContent="$ run_debug_case("+c+")";$("#termout").textContent=out;history.push({activity:"debug simulator",action:c,output:out});save()});
-$("#hintbtn").onclick=()=>{let a=["Write the expected output for the smallest input you can trace by hand.","Circle every boundary comparison: >, >=, <, <=. What happens exactly at the boundary?","For a loop, list the exact indices/items it visits. Does it reach the first and last?","Change one thing only, then rerun the case that originally exposed the problem."];let h=$("#hint");h.classList.add("show");h.textContent=a[Math.floor(Math.random()*a.length)]};
-function snap(){return{title:document.title,timestamp:new Date().toISOString(),responses:Object.fromEntries($$("[data-save]").map(x=>[x.id,x.value])),activityHistory:history}}
-function plain(s){let r=s.title+"\nTimestamp: "+s.timestamp+"\n\nRESPONSES\n";for(const[k,v]of Object.entries(s.responses))r+="\n"+k+"\n"+(v||"(not answered)")+"\n";r+="\nACTIVITY HISTORY\n"+(s.activityHistory.map((x,i)=>(i+1)+". "+x.activity+": "+(x.answer||x.action||"")+(x.output?"\n[Output]:\n"+x.output:"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"(none)")+"\n";return r}
-function mdtext(s){let r="# "+s.title+"\n\n**Timestamp:** "+s.timestamp+"\n\n## Responses\n";for(const[k,v]of Object.entries(s.responses))r+="\n### "+k+"\n"+(v||"_Not answered_")+"\n";r+="\n## Activity History\n"+(s.activityHistory.map((x,i)=>(i+1)+". **"+x.activity+"** — "+(x.answer||x.action||"")+(x.output?"\n\n[Output]:\n```\n"+x.output+"\n```":"")+(typeof x.correct==="boolean"?" — "+(x.correct?"correct":"incorrect"):"")).join("\n")||"_None_")+"\n";return r}
-function dl(n,t,c){try{let b=new Blob([c],{type:t+";charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500);return true}catch(e){return false}}
-function stat(ok){$("#exportfb").textContent=ok?"File created. Keep a copy; your instructor will tell you where/how to store or submit it.":"File generation failed. Use “Show plain text” instead."}
-$("#md").onclick=()=>stat(dl("looks-right-is-it.md","text/markdown",mdtext(snap())));$("#json").onclick=()=>stat(dl("looks-right-is-it.json","application/json",JSON.stringify(snap(),null,2)));$("#txt").onclick=()=>stat(dl("looks-right-is-it.txt","text/plain",plain(snap())));$("#show").onclick=()=>{let w=$("#plainwrap"),t=$("#plain");w.classList.add("show");t.value=plain(snap());t.focus();t.select()};$("#selectall").onclick=()=>{$("#plain").focus();$("#plain").select()};
-window.addEventListener("scroll",()=>{let d=document.documentElement,m=d.scrollHeight-d.clientHeight;$("#bar").style.width=(m?Math.min(100,d.scrollTop/m*100):0)+"%"});load();
-</script></body></html>
+<section class="mlrk-section">
+<h2>4. Bug hunt: the report that never got counted</h2>
+<div class="mlrk-code"><div id="bug1Screen" class="mlrk-screen">reports = [120, 340, 85, 610, 275]
+total = 0
+
+for i in range(len(reports) - 1):
+    total += reports[i]
+
+print(total)</div>
+<div class="mlrk-actions"><button type="button" id="bug1run" class="mlrk-btn">Reveal what this actually prints</button></div></div>
+<div class="mlrk-card" id="card-bug1" style="margin-top:1rem"><p><strong>The script is supposed to total all five reports. Predict first: what does this actually print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="1155"><code>1155</code></button>
+<button type="button" class="mlrk-choice" data-a="1430"><code>1430</code></button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an <code>IndexError</code></button>
+<div id="bug1fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Bug hunt: the comparison sitting on the fence</h2>
+<div class="mlrk-code"><div class="mlrk-screen">DAILY_CAP = 500
+
+def exceeds_cap(amount):
+    return amount > DAILY_CAP</div></div>
+<div class="mlrk-card" id="card-bug2"><p><strong>The requirement says any report <em>at or above</em> the cap should be flagged for review. Which test amount is the strongest evidence that <code>exceeds_cap</code> doesn't match that requirement?</strong></p>
+<button type="button" class="mlrk-choice" data-a="500"><code>500</code></button>
+<button type="button" class="mlrk-choice" data-a="750"><code>750</code></button>
+<button type="button" class="mlrk-choice" data-a="250"><code>250</code></button>
+<div id="bug2fb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p class="mlrk-callout mlrk-callout-gold">Boundary values are bug magnets. Whenever you see <code>&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>, or <code>&lt;=</code>, test the value sitting exactly on the line.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Bug hunt: the list that remembers too much</h2>
+<div class="mlrk-code"><div class="mlrk-screen">def flag_duplicate(report_id, seen=[]):
+    seen.append(report_id)
+    return seen</div></div>
+<p>The script calls this function once for every report it processes, in order: report 101, then report 102, then report 101 again (a genuine duplicate submission).</p>
+<div class="mlrk-card" id="card-bug3"><p><strong>Predict first: what does the third call, <code>flag_duplicate(101)</code>, actually return?</strong></p>
+<button type="button" class="mlrk-choice" data-a="three"><code>[101, 102, 101]</code></button>
+<button type="button" class="mlrk-choice" data-a="one"><code>[101]</code>, a fresh list containing only this call's ID</button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error, since <code>seen</code> was already used</button>
+<div id="bug3fb" class="mlrk-feedback" tabindex="-1"></div></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+<p>A default value like <code>[]</code> is created exactly once, when Python first reads the <code>def</code> line, not fresh on every call. Every call that doesn't pass its own <code>seen</code> argument shares that same one list.</p>
+</details>
+<p style="margin-top:1.2rem">This one is much easier to hold in your head one call at a time. Click through it below.</p>
+<div id="tracestep"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Bug hunt: the error nobody sees</h2>
+<div class="mlrk-code"><div id="bug4Screen" class="mlrk-screen">def get_reimbursement(report):
+    try:
+        return report["amount"] * report["rate"]
+    except:
+        return 0</div>
+<div class="mlrk-actions"><button type="button" id="bug4run" class="mlrk-btn">Reveal what actually happens</button></div></div>
+<div class="mlrk-card" id="card-bug4" style="margin-top:1rem"><p><strong>Report 104 is malformed: <code>{"id": 104, "amount": 200}</code>, with no <code>"rate"</code> key at all. What happens when <code>get_reimbursement</code> runs on it?</strong></p>
+<button type="button" class="mlrk-choice" data-a="silent">It returns <code>0</code> with no error or warning of any kind. That employee's real reimbursement just disappears from the total.</button>
+<button type="button" class="mlrk-choice" data-a="crash">Python prints a <code>KeyError</code> traceback and the script stops.</button>
+<button type="button" class="mlrk-choice" data-a="default">The function fills in a sensible default rate automatically.</button>
+<div id="bug4fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Fill in the blank: fix the shared list</h2>
+<p>The standard fix for a mutable default argument replaces the mutable value with a safe placeholder, then builds the real list fresh inside the function body if none was passed in.</p>
+<div class="mlrk-code"><div class="mlrk-screen">def flag_duplicate(report_id, seen=____):
+    if seen is None:
+        seen = []
+    seen.append(report_id)
+    return seen</div></div>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Type the missing default value:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Order the steps: a repeatable way to hunt a bug</h2>
+<p>Click steps, in order, to build the sequence to follow when code runs but its output looks suspicious. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="predict"><span class="mlrk-order-num"></span> Write down what the correct output should be, before touching anything.</li>
+  <li class="mlrk-orderitem" data-step="trace"><span class="mlrk-order-num"></span> Trace the code by hand (or step through it) to see what it actually does.</li>
+  <li class="mlrk-orderitem" data-step="change"><span class="mlrk-order-num"></span> Change exactly one suspected line, based on that evidence.</li>
+  <li class="mlrk-orderitem" data-step="verify"><span class="mlrk-order-num"></span> Rerun the case that first exposed the problem, including the edge case, and confirm it now matches.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about the bugs practiced above.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A function with a mutable default argument like <code>seen=[]</code> gets a brand-new empty list every time it's called.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Code that runs without raising an exception has already proven its logic is correct.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A value sitting exactly on a comparison's boundary is one of the fastest ways to expose a wrong <code>&gt;</code> vs. <code>&gt;=</code>.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A bare <code>except:</code> that returns a default value can hide the exact line where something actually went wrong.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Watch: stepping through code instead of guessing</h2>
+<p>As you watch, notice how setting a breakpoint and stepping line by line replaces guessing with directly watching a variable's real value change, the same trace-then-verify habit practiced above, just with a tool doing the bookkeeping instead of a hand-drawn table.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=XmpIBsnc3xU" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one thing a real debugger showed you that a print statement wouldn't have made as obvious?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>A take-home debugging exercise, a script with a handful of planted bugs and a request to find and fix them, is one of the most common formats for an early technical screen in a data role, precisely because it tests something a resume can't: whether you actually read code critically or just trust that it looks fine.</p>
+<p>Live "find the bug" rounds are just as common: an interviewer hands you a working-looking function, tells you it produces a wrong answer for some input, and watches how you look for it. They're listening for the method, predicting an expected result and tracing toward it, not a lucky guess, and a boundary-value test like the one in section 5 is exactly the kind of instinct that stands out.</p>
+<p>For software-engineering-leaning roles specifically, expect a direct follow-up like "why is a mutable default argument dangerous" or "what's wrong with a bare <code>except:</code>". Being able to explain the mechanism, not just recite "don't do that", is what the interviewer is actually checking for.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: you're handed a function that runs without error but returns a wrong-looking result for one specific input. What's the strongest first move?</strong></p>
+<button type="button" class="mlrk-choice" data-a="trace">State what the correct output should be for that input, then trace the function against it, line by line.</button>
+<button type="button" class="mlrk-choice" data-a="trust">Assume the function is fine, since it ran without an error.</button>
+<button type="button" class="mlrk-choice" data-a="rewrite">Rewrite the whole function from scratch before testing anything.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>A script prints a believable total and never raises an exception, but a teammate says one of the numbers looks off. What should you check first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="expected">Compute the correct answer for one small case by hand, then trace the script against that expected value.</button>
+<button type="button" class="mlrk-choice" data-a="trust">Nothing. No exception means no bug.</button>
+<button type="button" class="mlrk-choice" data-a="rewrite">Immediately rewrite every function in the script.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your plan:</strong> in 1-2 sentences, describe what you'll actually do the next time code runs cleanly but you're not sure it's correct.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I will..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Summary &amp; critical thinking</h2>
+<p>Two habits carried this whole reading: forming a prediction before you trust an output, and tracing evidence-first when reality and expectation disagree, rather than editing several lines at once and hoping. Neither habit cares what the code looks like on the surface; both care whether it's actually doing what it claims.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a small veterinary clinic's scheduling script prints a clean daily appointment count and never crashes, but the front desk says today's count is one short. What should you do first?</p>
+<button type="button" class="mlrk-choice" data-a="trace">Work out the correct count by hand from today's actual bookings, then trace the script's loop against that number to see where it diverges.</button>
+<button type="button" class="mlrk-choice" data-a="trust">Trust the printed number, since the script didn't raise an error.</button>
+<button type="button" class="mlrk-choice" data-a="rewrite">Rewrite the whole scheduling script before checking anything.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what's the difference between "this code ran" and "this code is correct", and why does that difference matter?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Thinking ahead</h2>
+<p>The same instinct, verify before you trust, keeps mattering well past a single script: it's exactly what's needed the moment you review a pull request that isn't yours, the moment you accept a function an AI tool generated for you, and the moment right before you demo your own project to someone who will absolutely try an input you didn't think to test.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add looks-right-is-it-reading.json
+git commit -m "Complete looks right, is it reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://docs.python.org/3/faq/programming.html#why-are-default-values-shared-between-objects" target="_blank" rel="noopener">Python docs FAQ: Why are default values shared between objects?</a> — the official explanation of the mutable-default-argument bug practiced above.</li>
+<li><a href="https://docs.python-guide.org/writing/gotchas/" target="_blank" rel="noopener">The Hitchhiker's Guide to Python: Common Gotchas</a> — more Python behaviors that look like bugs (and a few that are).</li>
+<li><a href="https://www.w3schools.com/python/python_try_except.asp" target="_blank" rel="noopener">W3Schools: Python Try Except</a> — a refresher on what a bare <code>except:</code> actually catches.</li>
+<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — step through your own code line by line, visually, the same idea as the video above.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "debugging-looks-right-is-it";
+  const TITLE = "Looks Right. Is It? — Catching Bugs a Skim Would Miss";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-recall-default", buttonSelector:"#card-recall-default .mlrk-choice", feedbackSelector:"#recdefaultfb", correct:"friend",
+    feedback:{friend:"When a call leaves out an argument, Python uses the default value written in the def line, so name becomes \"friend\".",
+              none:"Python doesn't substitute None here. It uses the actual default value written after the equals sign.",
+              error:"A default value exists exactly so a call without that argument doesn't raise an error."}});
+
+  K.quiz({id:"q-recall-compare", buttonSelector:"#card-recall-compare .mlrk-choice", feedbackSelector:"#reccomparefb", correct:"false",
+    feedback:{false:"500 is not greater than 500, so this comparison evaluates to False. Equal values fail a strict > check.",
+              true:"500 is equal to 500, not greater than it, so this is False, not True.",
+              error:"Comparing two equal numbers with > is completely normal Python. No error here."}});
+
+  K.quiz({id:"q-recall-loop", buttonSelector:"#card-recall-loop .mlrk-choice", feedbackSelector:"#recloopfb", correct:"012",
+    feedback:{"012":"range(3) produces 0, 1, 2. The stop value itself is never included.",
+               "123":"range(3) starts counting at 0, not 1.",
+               "0123":"The stop value 3 is not included, so there are only three values: 0, 1, 2."}});
+
+  K.quiz({id:"q-recall-except", buttonSelector:"#card-recall-except .mlrk-choice", feedbackSelector:"#recexceptfb", correct:"quiet",
+    feedback:{quiet:"A caught exception that returns a normal-looking value leaves no trace at all. The program keeps going as if nothing happened.",
+              print:"Catching an exception in a bare except: block suppresses it entirely. Nothing gets printed unless the code explicitly does that.",
+              crash:"The whole point of except is to prevent a crash. The program keeps running past that line."}});
+
+  K.quiz({id:"q-bug1", buttonSelector:"#card-bug1 .mlrk-choice", feedbackSelector:"#bug1fb", correct:"1155",
+    feedback:{"1155":"Exactly. With five reports, len(reports)-1 is 4, and range(4) produces 0, 1, 2, 3. Index 4 (the value 275) is never added.",
+              "1430":"1430 is the correct total of all five reports, but this loop's range stops one index early and never reaches it.",
+              error:"range(4) only ever produces valid indices (0 through 3) for this five-item list, so no IndexError happens. The bug is silent, not a crash."},
+    onDone(){revealBug1()}});
+
+  K.quiz({id:"q-bug2", buttonSelector:"#card-bug2 .mlrk-choice", feedbackSelector:"#bug2fb", correct:"500",
+    feedback:{"500":"Exactly. 500 sits right on the boundary: the requirement says it should be flagged (at or above the cap), but amount > DAILY_CAP evaluates that as False.",
+              "750":"750 is above the cap either way, so both the intended rule and the buggy code agree here. It doesn't expose anything.",
+              "250":"250 is below the cap either way, so both the intended rule and the buggy code agree here too."}});
+
+  K.quiz({id:"q-bug3", buttonSelector:"#card-bug3 .mlrk-choice", feedbackSelector:"#bug3fb", correct:"three",
+    feedback:{three:"Exactly. seen=[] is created once, the first time Python reads this function's definition, and every call that doesn't pass its own list keeps appending to that same shared one.",
+              one:"That's what a fresh default would look like, but Python only builds seen=[] once, not on every call. Earlier calls' values are still sitting in it.",
+              error:"Reusing the same default list doesn't raise an error. That's exactly what makes this bug so easy to miss."}});
+
+  K.quiz({id:"q-bug4", buttonSelector:"#card-bug4 .mlrk-choice", feedbackSelector:"#bug4fb", correct:"silent",
+    feedback:{silent:"Exactly. The bare except: catches the KeyError from the missing \"rate\" key and quietly returns 0, with nothing printed and no warning anywhere.",
+              crash:"The except: block exists specifically to prevent that crash. It catches the KeyError before it can stop the script.",
+              default:"Nothing about this code fills in a real rate. It just returns 0 and moves on, silently."},
+    onDone(){revealBug4()}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"A function with a mutable default argument like seen=[] gets a brand-new empty list every time it's called.", correct:false,
+      hint:"Revisit section 6's trace. Did the third call to flag_duplicate start from an empty list, or from what earlier calls had already added?",
+      explain:"The default list is built once, when Python reads the def line, and shared across every call that relies on it, as traced in section 6."},
+    {value:"b", label:"Code that runs without raising an exception has already proven its logic is correct.", correct:false,
+      hint:"Think about section 4's loop and section 7's except block. Did either one raise an error while still being wrong?",
+      explain:"Both the off-by-one loop and the silent except block ran without any error at all, while still producing the wrong result."},
+    {value:"c", label:"A value sitting exactly on a comparison's boundary is one of the fastest ways to expose a wrong > vs. >=.", correct:true,
+      hint:"Revisit section 5's cap check. Why was 500 the strongest test case, rather than 750 or 250?",
+      explain:"A boundary value is exactly where a > and a >= comparison disagree, as practiced with the 500 cap in section 5."},
+    {value:"d", label:"A bare except: that returns a default value can hide the exact line where something actually went wrong.", correct:true,
+      hint:"Revisit section 7. Did anything on screen indicate the malformed report's rate was missing?",
+      explain:"Section 7's except: swallowed the KeyError completely. Nothing on screen pointed at the missing rate key."}
+  ]});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.orderSteps("#ordersteps", {id:"act-order-debug", correctOrder:["predict","trace","change","verify"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.traceStepper("#tracestep", {steps:[
+    {cell:"call 1: flag_duplicate(101)", line:"seen = [101]"},
+    {cell:"call 2: flag_duplicate(102)", line:"seen = [101, 102]"},
+    {cell:"call 3: flag_duplicate(101)", line:"seen = [101, 102, 101]  (duplicate now hiding in the same shared list)"}
+  ]});
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"XmpIBsnc3xU"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"trace",
+    feedback:{trace:"Exactly. A concrete expected value gives you something real to trace against, instead of scanning the code hoping something looks wrong.",
+              trust:"No exception only proves the code could run. It says nothing about whether the result is correct.",
+              rewrite:"Rewriting before isolating the actual cause risks losing the one input that proved something was wrong in the first place."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"expected",
+    feedback:{expected:"Exactly. A concrete expected value for a small case gives you a real standard to trace the script against.",
+              trust:"A teammate flagging a suspicious number is itself evidence worth checking, even without an exception.",
+              rewrite:"Rewriting everything makes it harder to know which change, if any, actually fixed the real problem."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"trace",
+    feedback:{trace:"Exactly the same habit practiced throughout this reading: a concrete expected number, then a trace toward where it diverges.",
+              trust:"The front desk already has evidence the count is wrong. \"It didn't crash\" isn't a counter-argument to that.",
+              rewrite:"Rewriting before tracing risks losing the exact case, today's count, that proved something was off."}});
+
+  const AI_PROMPTS = [
+    "Think of a time you double-checked a total by hand, like a receipt or a bill split, and found a mismatch. What tipped you off that something was wrong before you even found the exact error?",
+    "If you had to explain \"it ran without crashing doesn't mean it's correct\" to a friend using something outside of code, what real-life example would you use?",
+    "Where else in life do you rely on a system that looks trustworthy on the surface (an app, a form, a spreadsheet) but that you've never actually verified? What would checking it look like?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  function revealBug1(){
+    $("#bug1Screen").textContent = `reports = [120, 340, 85, 610, 275]
+total = 0
+
+for i in range(len(reports) - 1):
+    total += reports[i]
+
+print(total)
+
+[Output]
+1155`;
+  }
+  $("#bug1run").addEventListener("click", revealBug1);
+
+  function revealBug4(){
+    $("#bug4Screen").textContent = `def get_reimbursement(report):
+    try:
+        return report["amount"] * report["rate"]
+    except:
+        return 0
+
+get_reimbursement({"id": 104, "amount": 200})
+
+[Output]
+0`;
+  }
+  $("#bug4run").addEventListener("click", revealBug4);
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const ok = $("#blankinput").value.trim().toLowerCase()==="none";
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> seen=None is safe because None is immutable and shared without risk. The real list only gets built fresh inside the function body, one per call that needs it.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing default value is <code>None</code>.";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["debugging-testing"],
+      skills:["attention-to-detail"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>
