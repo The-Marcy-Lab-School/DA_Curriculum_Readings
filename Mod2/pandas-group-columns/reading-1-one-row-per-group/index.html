@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>One Row Per Group — Pandas Grouping &amp; Derived Columns</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:900px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>One Row Per Group</h1>
+<p class="mlrk-lead">A regional blood donation nonprofit runs donation drives at library branches, fire stations, and community centers across its service area, logging one row per drive: the site, how many donors registered, how many units were actually collected, and how many volunteer hours it took to run. After a few months the program coordinator has dozens of rows and one real question: which sites are actually worth running again? Scrolling through every row by hand doesn't scale, and neither does retyping the same formula into a new column over and over. This reading is about summarizing many rows into one number per group, and building a new column instead of recalculating one by hand.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~43–45 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Data Mining</strong> — digging into a real dataset to surface a genuinely non-obvious relationship or finding, not just restating what's already visible on the surface. Grouping rows and deriving new columns are the two mechanical moves that make that kind of digging possible in the first place.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Picture the coordinator's spreadsheet. Every donation drive is its own row: which site hosted it, how many donors showed up, how many units of blood were actually collected, and how many volunteer hours it took to staff. Six drives in, the raw table looks like this:</p>
+<div class="mlrk-code"><div class="mlrk-screen">site                        donors_registered  units_collected  volunteer_hours
+Riverside Library           34                 30               6
+Eastside Community Center   22                 20               5
+Downtown Fire Station       55                 50               10
+Riverside Library           44                 40               8
+Eastside Community Center   28                 25               5
+Eastside Community Center   33                 30               6</div></div>
+<p>Three sites, six rows, mixed together in whatever order the drives actually happened. Answering "how many units did each site collect in total" by scrolling and adding by hand works for six rows. It falls apart at six hundred. <code>groupby()</code> is pandas' answer: it gathers every row that shares the same value in one column into its own group, without changing the original DataFrame at all.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 920 260" role="img" aria-labelledby="groupbyTitle groupbyDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="groupbyTitle">Six drive rows splitting into three groups, then combining into one summary row per group</title>
+  <desc id="groupbyDesc">Six colored rows on the left, two Riverside Library rows in sage green, three Eastside Community Center rows in blue, one Downtown Fire Station row in gold, are split into three grouped boxes in the middle showing each group's member rows, then combined on the right into one output row per site showing its total units collected.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="95" y="18" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Every drive = one row</text>
+    <g stroke-width="2.5" font-size="11" font-weight="600" fill="#261F1D">
+      <rect x="20" y="30" width="150" height="20" rx="6" fill="#A6C2B4" stroke="#264326"/>
+      <text x="95" y="44" text-anchor="middle">Riverside</text>
+      <rect x="20" y="54" width="150" height="20" rx="6" fill="#DEEAF4" stroke="#2274B5"/>
+      <text x="95" y="68" text-anchor="middle">Eastside</text>
+      <rect x="20" y="78" width="150" height="20" rx="6" fill="#FECC5B" stroke="#83671C"/>
+      <text x="95" y="92" text-anchor="middle">Downtown</text>
+      <rect x="20" y="102" width="150" height="20" rx="6" fill="#A6C2B4" stroke="#264326"/>
+      <text x="95" y="116" text-anchor="middle">Riverside</text>
+      <rect x="20" y="126" width="150" height="20" rx="6" fill="#DEEAF4" stroke="#2274B5"/>
+      <text x="95" y="140" text-anchor="middle">Eastside</text>
+      <rect x="20" y="150" width="150" height="20" rx="6" fill="#DEEAF4" stroke="#2274B5"/>
+      <text x="95" y="164" text-anchor="middle">Eastside</text>
+    </g>
+
+    <g font-size="13" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="220" y="100">SPLIT</text>
+      <text x="220" y="115">by site</text>
+    </g>
+    <line x1="175" y1="130" x2="258" y2="130" stroke="#264326" stroke-width="3"/>
+    <polygon points="258,122 258,138 272,130" fill="#264326"/>
+
+    <text x="420" y="18" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Grouped by site</text>
+    <rect x="270" y="30" width="300" height="64" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="420" y="56" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Riverside Library</text>
+    <text x="420" y="78" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">2 rows, values 30 and 40</text>
+
+    <rect x="270" y="104" width="300" height="64" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="420" y="130" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Eastside Community Center</text>
+    <text x="420" y="152" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">3 rows, values 20, 25, and 30</text>
+
+    <rect x="270" y="178" width="300" height="64" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="420" y="204" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Downtown Fire Station</text>
+    <text x="420" y="226" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">1 row, value 50</text>
+
+    <g font-size="13" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="615" y="100">APPLY +</text>
+      <text x="615" y="115">COMBINE</text>
+    </g>
+    <line x1="575" y1="130" x2="648" y2="130" stroke="#264326" stroke-width="3"/>
+    <polygon points="648,122 648,138 662,130" fill="#264326"/>
+
+    <text x="780" y="18" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">One row per group</text>
+    <rect x="660" y="30" width="240" height="64" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="780" y="56" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Riverside Library</text>
+    <text x="780" y="78" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">total units: 70</text>
+
+    <rect x="660" y="104" width="240" height="64" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="780" y="126" text-anchor="middle" font-weight="700" font-size="12" fill="#261F1D">Eastside Community Center</text>
+    <text x="780" y="150" text-anchor="middle" font-weight="600" font-size="11" fill="#261F1D">total units: 75</text>
+
+    <rect x="660" y="178" width="240" height="64" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="780" y="204" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Downtown Fire Station</text>
+    <text x="780" y="226" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">total units: 50</text>
+  </g>
+</svg>
+
+<p>That's the whole mechanism, in three steps pandas actually calls <strong>split, apply, combine</strong>: split the rows into groups sharing a value, apply an aggregation function separately inside each group, then combine the per-group results into one row per group. In code, once you've decided which column to aggregate:</p>
+<div class="mlrk-code"><div class="mlrk-screen">drives.groupby("site")["units_collected"].sum()
+
+[Output]
+site
+Downtown Fire Station         50
+Eastside Community Center     75
+Riverside Library             70
+Name: units_collected, dtype: int64</div></div>
+<p>Swap <code>.sum()</code> for <code>.mean()</code> or <code>.count()</code> and the split step doesn't change at all, only what happens inside each group during "apply."</p>
+<p>The second half of this reading is a different move that fits right alongside it: building a brand-new column out of columns you already have, instead of recalculating the same formula by hand every time you need it. If each drive's efficiency matters (units collected per volunteer hour, say), that's one line: <code>drives["units_per_volunteer_hour"] = drives["units_collected"] / drives["volunteer_hours"]</code>. Pandas runs that division on every row at once and stores the result as a real column, right there in the DataFrame.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> "which segment is actually driving this number" is one of the most common asks in a real data role, whether it's a program director asking which site to visit again or a manager asking which region drove this quarter's result. Grouping is the mechanical answer, and it's a standard first move in almost every real exploratory analysis, not a specialized trick reserved for advanced work.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to read a DataFrame and pull out the rows you want with a boolean filter, like <code>drives[drives["units_collected"] &gt; 30]</code>. This reading is about summarizing many rows at once instead of looking at them one at a time, and building a new column from data you already have instead of retyping the same formula. Once grouping and deriving columns both feel automatic, the natural next step is using them together to dig for a pattern that isn't obvious just from glancing at the raw numbers.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before grouping and deriving</h2>
+<p class="mlrk-small">A few skills from reading and filtering a DataFrame get reused heavily below. Test each one before moving on.</p>
+
+<div class="mlrk-card" id="card-select"><p><strong>Coding check:</strong> <code>drives["units_collected"]</code> — what does this expression return?</p>
+<button type="button" class="mlrk-choice" data-a="series">A Series holding just that one column's values</button>
+<button type="button" class="mlrk-choice" data-a="sum">A single number: the sum of the column</button>
+<button type="button" class="mlrk-choice" data-a="newdf">A brand-new DataFrame with every column except units_collected</button>
+<div id="selectfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-filter" style="margin-top:.8rem"><p><strong>Trace check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">big_drives = drives[drives["units_collected"] >= 30]
+print(len(big_drives))</div></div>
+<p><strong>Using the six-row table from section 1, what does this print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="4">4</button>
+<button type="button" class="mlrk-choice" data-a="6">6</button>
+<button type="button" class="mlrk-choice" data-a="2">2</button>
+<div id="filterfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-read" style="margin-top:.8rem"><p><strong>Scenario check:</strong> looking back at the six-row table in section 1, how many rows share the site value <code>"Eastside Community Center"</code>?</p>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="2">2</button>
+<button type="button" class="mlrk-choice" data-a="1">1</button>
+<div id="readfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-repeat" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> before grouping rows by a column, what does that column actually need for grouping to be useful at all?</p>
+<button type="button" class="mlrk-choice" data-a="repeat">At least two rows need to share the same value. Grouping by a column where every value is unique just returns one group per original row.</button>
+<button type="button" class="mlrk-choice" data-a="numeric">The column must contain only numbers.</button>
+<button type="button" class="mlrk-choice" data-a="sorted">The DataFrame must already be sorted by that column.</button>
+<div id="repeatfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">Column selection and filtering work exactly the same once grouping enters the picture. The last question previews the one idea to hold onto going forward: grouping only does something interesting when values actually repeat.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>groupby</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Groupby</strong><br>A DataFrame method that gathers rows sharing the same value in one or more columns into separate groups, as the first step before summarizing each one.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>aggregation</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Aggregation</strong><br>Reducing many values down to a single summary number, like a total, an average, or a count.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>split-apply-combine</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Split-apply-combine</strong><br>The three-step process groupby actually runs: split rows into groups, apply a function to each group separately, then combine the results into one row per group.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>derived column</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Derived column</strong><br>A new column whose values are calculated from one or more existing columns, instead of typed in by hand.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>group key</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Group key</strong><br>The column passed to groupby() that decides how rows get sorted into groups. Rows with the same key value land in the same group.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>.agg()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>.agg()</strong><br>A groupby method that applies more than one aggregation function at once, instead of chaining a separate call for each statistic.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Fill in the code: total units per site</h2>
+<p>Referring back to the six-row table in section 1:</p>
+<div class="mlrk-code"><div class="mlrk-screen">drives.groupby("site")["units_collected"].____()</div></div>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Type the missing method name that adds up every value in each group:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Predict the total, then trace the groups</h2>
+<div class="mlrk-card" id="card-predict"><p><strong>Predict first:</strong> what will <code>drives.groupby("site")["units_collected"].mean()</code> show for Riverside Library?</p>
+<button type="button" class="mlrk-choice" data-a="35">35.0</button>
+<button type="button" class="mlrk-choice" data-a="30">30.0</button>
+<button type="button" class="mlrk-choice" data-a="70">70.0</button>
+<div id="predictfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1.2rem">This is easier to hold in your head one step at a time. Click through the split, apply, and combine steps yourself below.</p>
+<div id="tracestep"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Multiple summaries at once with .agg()</h2>
+<p>Calling <code>.sum()</code>, then <code>.mean()</code>, then <code>.count()</code> separately means splitting the same six rows into groups three separate times. <code>.agg()</code> does the split once and applies every function you list:</p>
+<div class="mlrk-code"><div class="mlrk-screen">drives.groupby("site")["units_collected"].agg(["count", "mean", "sum"])
+
+[Output]
+                            count  mean  sum
+site
+Downtown Fire Station          1  50.0   50
+Eastside Community Center      3  25.0   75
+Riverside Library              2  35.0   70</div></div>
+<div class="mlrk-card" id="card-agg" style="margin-top:1rem"><p><strong>According to the table above, what is Riverside Library's mean <code>units_collected</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="35">35.0</button>
+<button type="button" class="mlrk-choice" data-a="70">70</button>
+<button type="button" class="mlrk-choice" data-a="2">2</button>
+<div id="aggfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Sort by aggregation type</h2>
+<p>Drag each method into the zone describing what it actually does within a group, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable"><code>sum()</code></span>
+  <span id="chip2" class="mlrk-draggable"><code>mean()</code></span>
+  <span id="chip3" class="mlrk-draggable"><code>count()</code></span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Adds up every value in the group</strong></p><div class="mlrk-dropzone" id="zoneSum"></div></div>
+  <div><p class="mlrk-small"><strong>Finds the average value in the group</strong></p><div class="mlrk-dropzone" id="zoneMean"></div></div>
+  <div><p class="mlrk-small"><strong>Counts how many rows are in the group</strong></p><div class="mlrk-dropzone" id="zoneCount"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Order the steps: how groupby actually runs</h2>
+<p>Click steps, in order, to build the sequence groupby follows on the six-row table from section 1. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="split"><span class="mlrk-order-num"></span> Rows are split into separate groups, one group per unique site value.</li>
+  <li class="mlrk-orderitem" data-step="apply"><span class="mlrk-order-num"></span> The aggregation function (sum, mean, count, or similar) runs separately inside each group.</li>
+  <li class="mlrk-orderitem" data-step="combine"><span class="mlrk-order-num"></span> The per-group results are combined into a single output row per group.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about groupby and aggregation.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> groupby() changes the original DataFrame in place, permanently reordering its rows by group.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> .agg() can apply more than one aggregation function in a single call.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> The number of rows in a groupby result equals the number of unique values in the group key column.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Calling .sum() and .mean() on the same grouped column always produces the same numbers.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Building a derived column</h2>
+<p>A total tells you volume. It doesn't tell you efficiency. To compare how much each drive collected relative to the volunteer time it took, the coordinator needs a column that doesn't exist yet: units collected per volunteer hour. Building it is one line, run once across every row at the same time:</p>
+<div class="mlrk-code"><div class="mlrk-screen">drives["units_per_volunteer_hour"] = drives["units_collected"] / drives["volunteer_hours"]</div></div>
+<p>Pandas performs that division row by row and stores the result as a real column, right there in <code>drives</code>. No loop, and nothing typed in by hand.</p>
+<details class="mlrk-hint"><summary>A common gotcha</summary>
+<p>If <code>drives</code> is itself a filtered slice of a bigger DataFrame, for example <code>this_year = full_log[full_log["year"] == 2026]</code>, assigning a new column onto it can trigger pandas' <code>SettingWithCopyWarning</code>. The warning doesn't always stop your code from running, but it means pandas isn't sure whether you're editing the real data or a temporary view. The fix is calling <code>.copy()</code> right when the filtered slice is created: <code>this_year = full_log[full_log["year"] == 2026].copy()</code>.</p>
+</details>
+<div class="mlrk-card" id="card-derive" style="margin-top:1rem"><p><strong>You want a new column called <code>total_donor_yield</code> showing units collected per donor who registered (<code>units_collected</code> divided by <code>donors_registered</code>). Which line actually creates it?</strong></p>
+<button type="button" class="mlrk-choice" data-a="right"><code>drives["total_donor_yield"] = drives["units_collected"] / drives["donors_registered"]</code></button>
+<button type="button" class="mlrk-choice" data-a="inverted"><code>drives["total_donor_yield"] = drives["donors_registered"] / drives["units_collected"]</code></button>
+<button type="button" class="mlrk-choice" data-a="noassign"><code>total_donor_yield = drives["units_collected"] / drives["donors_registered"]</code></button>
+<div id="derivefb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Total vs. efficiency: digging past the obvious number</h2>
+<p>Running <code>units_per_volunteer_hour</code> on all six rows gives:</p>
+<div class="mlrk-code"><div class="mlrk-screen">site                        units_collected  volunteer_hours  units_per_volunteer_hour
+Riverside Library           30               6                5.0
+Eastside Community Center   20               5                4.0
+Downtown Fire Station       50               10               5.0
+Riverside Library           40               8                5.0
+Eastside Community Center   25               5                5.0
+Eastside Community Center   30               6                5.0</div></div>
+<p>Eastside Community Center collected the most units overall (75, from three drives) and would look like the strongest site by total alone. But averaging its own <code>units_per_volunteer_hour</code> column tells a different story: (4.0 + 5.0 + 5.0) &#247; 3 &#8776; 4.67, pulled down by one weaker drive, while Riverside Library and Downtown Fire Station both average a clean 5.0.</p>
+<div class="mlrk-card" id="card-mining"><p><strong>Which site actually had the LOWEST average collection efficiency per volunteer hour, even though it collected the most total units and ran the most drives?</strong></p>
+<button type="button" class="mlrk-choice" data-a="eastside">Eastside Community Center</button>
+<button type="button" class="mlrk-choice" data-a="riverside">Riverside Library</button>
+<button type="button" class="mlrk-choice" data-a="downtown">Downtown Fire Station</button>
+<div id="miningfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Watch: pandas groupby in action</h2>
+<p>As you watch, notice how the video builds toward the exact same aggregate functions practiced above (count, mean, sum) on a real dataset, and how little code it actually takes once the DataFrame is grouped.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=VRmXto2YA2I" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which aggregate function from the video would you reach for first if you only had one line to summarize a new dataset by category?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"How would you find total sales per region from a table of individual orders?" is one of the most common warm-up prompts in a data-role technical screen, whether it's asked as a pandas question or its SQL cousin (a <code>GROUP BY</code> with <code>SUM()</code>). Interviewers are listening for the shape of the answer, not just the syntax: naming "group by the category, then aggregate" out loud is what separates a confident answer from a guess.</p>
+<p>A related follow-up: "how would you add a profit-margin column to this table?" is really asking whether you reach for a derived column (one line, applied to every row at once) instead of a loop that recalculates the same formula row by row.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>An interviewer asks: "How would you find the total revenue per region from a table of individual orders?" What's the core move you'd name first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="group"><code>orders.groupby("region")["revenue"].sum()</code></button>
+<button type="button" class="mlrk-choice" data-a="sort"><code>orders.sort_values("region")</code></button>
+<button type="button" class="mlrk-choice" data-a="total"><code>orders["revenue"].sum()</code></button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>Your code <code>sales.groupby("region")["total"].mean()</code> raises <code>KeyError: 'total'</code>. What should you check first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="colname">Whether "total" is actually a column name in sales, spelled and cased exactly as it appears in sales.columns.</button>
+<button type="button" class="mlrk-choice" data-a="import">Whether mean() requires a special import that's missing.</button>
+<button type="button" class="mlrk-choice" data-a="twocol">Whether groupby always requires exactly two columns to work.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your debugging strategy:</strong> in 1-2 sentences, describe how you'd track down a groupby result that looks wrong (say, a total that seems too small).</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I'd check..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Summary &amp; critical thinking</h2>
+<p>Two moves carried this whole reading: collapsing many rows into one summary row per group with groupby, and building a new column out of columns you already have instead of recalculating the same formula by hand. Together, they're how a question like "which site is actually most efficient" gets answered without eyeballing anything.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a community food pantry logs every distribution event: site, pounds_distributed, and volunteer_hours. A board member wants to know which site is most efficient per volunteer hour, not just which one distributes the most pounds overall. Which combination actually answers that?</p>
+<button type="button" class="mlrk-choice" data-a="right">First create a derived column, pounds_per_hour = pounds_distributed / volunteer_hours, then group by site and take the mean of that column.</button>
+<button type="button" class="mlrk-choice" data-a="sumonly">Group by site and sum pounds_distributed only.</button>
+<button type="button" class="mlrk-choice" data-a="sortonly">Sort the raw rows by pounds_distributed from highest to lowest.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> why might comparing only the total (like total units collected) mislead you about which site is actually performing best?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Thinking ahead</h2>
+<p>This same pair of moves scales up fast. Grouping by more than one column at once, like site and month together, checks whether a pattern holds across time as well as location, and deriving a column from a groupby result itself, comparing each row to its own group's average, is a natural next step once both of these feel automatic. They're also the actual mechanism behind mining a dataset for a pattern that isn't obvious from the raw numbers: the exact move used to go from a pile of individual rows to a genuinely useful finding.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>17. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add pandas-group-columns-reading1.json
+git commit -m "Complete one row per group reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://pandas.pydata.org/docs/getting_started/intro_tutorials/06_calculate_statistics.html" target="_blank" rel="noopener">pandas docs: How to calculate summary statistics</a> — the official tutorial covering groupby.</li>
+<li><a href="https://pandas.pydata.org/docs/getting_started/intro_tutorials/05_add_columns.html" target="_blank" rel="noopener">pandas docs: How to create new columns derived from existing columns</a> — the official reference for derived columns.</li>
+<li><a href="https://www.w3schools.com/python/pandas/ref_df_groupby.asp" target="_blank" rel="noopener">W3Schools: Pandas DataFrame groupby() Method</a> — more worked examples.</li>
+<li><a href="https://datagy.io/pandas-groupby/" target="_blank" rel="noopener">datagy: Pandas GroupBy — Group, Summarize, and Aggregate Data</a> — a deeper dive with more aggregation examples.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "pandas-group-columns-reading1";
+  const TITLE = "One Row Per Group — Pandas Grouping & Derived Columns";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-select", buttonSelector:"#card-select .mlrk-choice", feedbackSelector:"#selectfb", correct:"series",
+    feedback:{series:"Bracket notation with one column name returns a Series: the labels and values of just that column.",
+              sum:"Selecting a column doesn't calculate anything on its own. sum() would have to be called separately.",
+              newdf:"That's the opposite of what happened. drives[[\"units_collected\"]] with double brackets would give a one-column DataFrame; single brackets with one column name give a Series."}});
+
+  K.quiz({id:"q-filter", buttonSelector:"#card-filter .mlrk-choice", feedbackSelector:"#filterfb", correct:"4",
+    feedback:{4:"units_collected is 30, 20, 50, 40, 25, 30. Values at least 30 are 30, 50, 40, and 30: four rows.",
+              6:"That's every row in the table, but 20 and 25 are both below 30 and get filtered out.",
+              2:"That undercounts. 30, 50, 40, and 30 all satisfy >= 30, not just two of them."}});
+
+  K.quiz({id:"q-read", buttonSelector:"#card-read .mlrk-choice", feedbackSelector:"#readfb", correct:"3",
+    feedback:{3:"Eastside Community Center appears three times in the six-row table.",
+              2:"Recount the site column. Eastside Community Center actually appears a third time, in the last row.",
+              1:"Eastside Community Center is far from a single row here. It's the site with the most drives logged."}});
+
+  K.quiz({id:"q-repeat", buttonSelector:"#card-repeat .mlrk-choice", feedbackSelector:"#repeatfb", correct:"repeat",
+    feedback:{repeat:"Grouping is only interesting when at least two rows land in the same group. A column of all-unique values, like a row ID, produces one group per row, which is no different from the original table.",
+              numeric:"Group keys are commonly text categories, like site names here. Numeric columns can also be grouped, but numbers aren't a requirement.",
+              sorted:"groupby() doesn't require pre-sorted input. It figures out the groups from the values themselves, in any order."}});
+
+  K.quiz({id:"q-predict", buttonSelector:"#card-predict .mlrk-choice", feedbackSelector:"#predictfb", correct:"35",
+    feedback:{35:"Riverside Library's two values are 30 and 40. (30 + 40) / 2 = 35.0.",
+              30:"That's only the first Riverside Library row. The mean has to account for both of its rows: 30 and 40.",
+              70:"70 is the sum of Riverside Library's two values, not the mean. Dividing by the count of 2 gives 35.0."}});
+
+  K.quiz({id:"q-agg", buttonSelector:"#card-agg .mlrk-choice", feedbackSelector:"#aggfb", correct:"35",
+    feedback:{35:"The mean column for the Riverside Library row in the .agg() table reads 35.0.",
+              70:"70 is Riverside Library's sum, listed in a different column of the same table.",
+              2:"2 is Riverside Library's count (how many drives), not its mean."}});
+
+  K.quiz({id:"q-derive", buttonSelector:"#card-derive .mlrk-choice", feedbackSelector:"#derivefb", correct:"right",
+    feedback:{right:"units_collected divided by donors_registered, assigned into drives[\"total_donor_yield\"], both creates the real column and gets the division the right way around.",
+              inverted:"This divides the wrong way: donors by units instead of units by donors. The column would exist, but its values would mean something different from what was asked for.",
+              noassign:"Without drives[\"total_donor_yield\"] = ... on the left, this only creates a standalone Series in a variable. It never becomes a column in drives at all."}});
+
+  K.quiz({id:"q-mining", buttonSelector:"#card-mining .mlrk-choice", feedbackSelector:"#miningfb", correct:"eastside",
+    feedback:{eastside:"Eastside Community Center's per-drive efficiency averages about 4.67, the lowest of the three, even though its total (75 units) and drive count (3) are both the highest.",
+              riverside:"Riverside Library averages a clean 5.0 across both of its drives, tied for the highest efficiency, not the lowest.",
+              downtown:"Downtown Fire Station's single drive also runs at exactly 5.0, matching Riverside Library, not trailing behind."}});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"group",
+    feedback:{group:"Grouping by region, then summing revenue within each group, is exactly the split-apply-combine pattern this reading practiced.",
+              sort:"Sorting reorders rows. It doesn't add anything together, so it can't answer a total-per-region question on its own.",
+              total:"orders[\"revenue\"].sum() collapses every order into one grand total, with no per-region breakdown at all."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"colname",
+    feedback:{colname:"KeyError on a column name almost always means that exact name doesn't exist in the DataFrame. A typo, extra space, or different capitalization in sales.columns is the most common cause.",
+              import:"pandas' built-in aggregation methods like mean() don't need a separate import once pandas itself is imported.",
+              twocol:"groupby() works with one column, several columns, or even a computed key. There's no fixed requirement of exactly two."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"right",
+    feedback:{right:"Building the derived efficiency column first, then grouping and averaging it, directly answers the "+String.fromCharCode(34)+"per volunteer hour"+String.fromCharCode(34)+" question rather than a raw-total question.",
+              sumonly:"Summing pounds_distributed by site answers "+String.fromCharCode(34)+"which site distributed the most,"+String.fromCharCode(34)+" the same total-only trap this reading's efficiency example warned about.",
+              sortonly:"Sorting the raw rows doesn't summarize anything by site at all, and it ignores volunteer_hours completely."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"groupby() changes the original DataFrame in place, permanently reordering its rows by group.", correct:false,
+      hint:"Look back at section 1. After running .groupby(\"site\"), is the original six-row drives table itself changed at all?",
+      explain:"groupby() builds a new grouped view for the aggregation to run against. It doesn't reorder or modify the original DataFrame."},
+    {value:"b", label:".agg() can apply more than one aggregation function in a single call.", correct:true,
+      hint:"Revisit section 6's .agg([\"count\", \"mean\", \"sum\"]) example. How many statistics did that one call produce?",
+      explain:"Section 6's .agg([\"count\", \"mean\", \"sum\"]) produced all three statistics from one call, exactly what .agg() is for."},
+    {value:"c", label:"The number of rows in a groupby result equals the number of unique values in the group key column.", correct:true,
+      hint:"Count the rows in section 1's grouped output. How many unique site values were in the original six-row table?",
+      explain:"Three unique site values produced exactly three rows in every grouped result shown so far, one per group."},
+    {value:"d", label:"Calling .sum() and .mean() on the same grouped column always produces the same numbers.", correct:false,
+      hint:"Compare Riverside Library's two numbers directly. Section 5 found its mean was 35.0. Is that the same number as its sum?",
+      explain:"Riverside Library's sum is 70 and its mean is 35.0. Different aggregation functions answer different questions, even on identical data."}
+  ]});
+
+  K.dragDrop("#dragarea", "act-drag-agg");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneSum", label:"sum()", expectedLabel:"Adds up every value in the group"},
+    chip2:{expectedId:"zoneMean", label:"mean()", expectedLabel:"Finds the average value in the group"},
+    chip3:{expectedId:"zoneCount", label:"count()", expectedLabel:"Counts how many rows are in the group"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["split","apply","combine"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.traceStepper("#tracestep", {steps:[
+    {cell:"Riverside Library: rows 0, 3", line:"Riverside Library group, values [30, 40]"},
+    {cell:"Eastside Community Center: rows 1, 4, 5", line:"Eastside Community Center group, values [20, 25, 30]"},
+    {cell:"Downtown Fire Station: row 2", line:"Downtown Fire Station group, value [50]"},
+    {cell:"Apply mean() per group", line:"Riverside Library: 35.0 | Eastside Community Center: 25.0 | Downtown Fire Station: 50.0"},
+    {cell:"Combine into one row per group", line:"site\nDowntown Fire Station        50.0\nEastside Community Center    25.0\nRiverside Library            35.0"}
+  ]});
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"VRmXto2YA2I"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const ok = $("#blankinput").value.trim().toLowerCase()==="sum";
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> sum() adds up units_collected within each site's group.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing method is <code>sum</code>.";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think about a budget split across categories, like groceries, rent, and entertainment. If each expense were its own row, what would grouping by category and summing actually show you?",
+    "If you had to explain \"grouping collapses many rows into one summary row per category\" to a friend using something from your own daily life, what would you compare it to?",
+    "Where have you already seen a total that hid a more interesting average underneath it, like a team's total output hiding one person's slower week?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["eda-statistics"],
+      skills:["data-mining"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

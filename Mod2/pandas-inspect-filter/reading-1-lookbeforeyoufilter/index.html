@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Look Before You Filter — pandas DataFrame Basics</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:760px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:16rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Look Before You Filter</h1>
+<p class="mlrk-lead">A regional food bank logs every donation drop-off in a spreadsheet: who gave it, what kind of food it was, how much it weighed, which pantry site received it. Before anyone can answer a real question about that data, it has to be loaded into a tool built for tables, not just scrolling text. That tool is pandas, and the object it hands back is called a DataFrame. This reading is about the very first thing every data analyst does with one: looking at it honestly before trusting it, then keeping only the rows that actually matter for the question being asked.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~43–46 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Data Distributions &amp; Shape</strong> — Reading the shape of a real distribution (skew, outliers, spread) across multiple variables and matching it to the right chart or summary. You can't read a distribution's shape at all until you can load, inspect, and filter the table it lives in first — that's the mechanical prerequisite this reading builds.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Priya coordinates data and operations for a three-site regional food bank. Every night, volunteers log each donation as one row in a shared spreadsheet: the donor type, the food category, the weight in pounds, and which pantry site received it. Priya's board wants to know something real this quarter: is donation weight spread evenly across sites, or does the network depend on a handful of huge corporate drop-offs? Before she can answer that with any honesty, she has to load the log into a tool that treats it as an actual table she can question, not just text on a screen. For almost every working data analyst, that tool is the <strong>pandas</strong> library, and the object it hands back is called a <strong>DataFrame</strong>.</p>
+
+<p>A DataFrame is the spreadsheet, loaded into Python, as a real object: each row is one donation, each column is one recorded field about it, and every column holds one consistent type of value (all numbers, or all text, never mixed). Pull a single column out on its own — just the weights, say — and what's left is called a <strong>Series</strong>: a DataFrame is really a collection of Series that all share the same row index.</p>
+
+<p><strong>Why this matters:</strong> Priya's food bank is renewing a grant this quarter, and the renewal report needs an honest count and an honest picture of donation sizes. If she trusts whatever pandas loaded without ever actually looking at it, a real problem slides straight into her numbers unnoticed: a donation logged with no weight recorded yet, a column that loaded as text instead of numbers, a row count that's smaller than she expected because a file only half-loaded. Every experienced analyst runs the same handful of checks before touching real data, precisely because skipping them is how quietly wrong numbers end up in front of a stakeholder.</p>
+
+<p>Here is a small slice of Priya's real log, six rows of it, called <code>intake</code>:</p>
+<div class="mlrk-code"><div class="mlrk-screen">donor_type       category      weight_lbs   site
+Individual       Produce       12           Downtown
+Corporate        Canned Goods  85           Eastside
+Grocery Partner  Dairy         NaN          Downtown
+Individual       Bakery        8            Westside
+Corporate        Produce       63           Eastside
+Grocery Partner  Frozen        51           Downtown</div></div>
+
+<p>Four questions get asked of almost any new DataFrame before anything else happens to it:</p>
+<ul>
+<li><code>intake.shape</code> — how many rows and columns are there? No parentheses: <code>.shape</code> is an <strong>attribute</strong>, a stored fact about the object, not an action it performs. For <code>intake</code>, this is <code>(6, 4)</code>: 6 rows, 4 columns.</li>
+<li><code>intake.columns</code> — what are the exact column names, spelled and cased exactly as pandas sees them? Also an attribute. Getting this exactly right matters in a few sections, because a filter written against a column name that's spelled slightly wrong fails loudly (or worse, silently does nothing close to what was intended).</li>
+<li><code>intake.head()</code> — a real preview of the actual values, the first 5 rows by default. This one is a <strong>method</strong>: it does something (builds and returns a preview), so it needs parentheses, even with nothing inside them.</li>
+<li><code>intake.info()</code> — a one-shot summary of every column: its data type, and how many non-null (non-missing) values it actually has out of the total row count. Also a method.</li>
+</ul>
+
+<p>That last one is exactly how a problem like the missing weight above gets caught before it causes trouble. Running <code>intake.info()</code> on this data would report that <code>weight_lbs</code> has only 5 non-null values out of 6 rows: one donation came in before it was weighed. Catching that now, during inspection, means Priya can make a deliberate decision about it later. Missing it now means it just quietly participates in whatever she calculates next.</p>
+
+<div class="mlrk-illustration-wrap">
+<svg class="mlrk-illustration" viewBox="0 0 870 300" role="img" aria-labelledby="filterTitle filterDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="filterTitle">A DataFrame's shape, a boolean mask, and the filtered result it produces</title>
+  <desc id="filterDesc">On the left, the intake DataFrame is shown as six stacked, color-segmented row bars representing four columns each, labeled shape is 6 rows by 4 columns. In the middle, a boolean mask column shows one True or False square per row, based on whether weight_lbs is greater than 50: False, True, False, False, True, True. On the right, the filtered result keeps only the three True rows as solid bars in their original positions, while the three False rows are shown as empty dashed outlines, labeled 3 of 6 rows kept.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="135" y="30" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">intake DataFrame</text>
+    <rect x="20" y="44" width="230" height="186" rx="14" fill="#FFFCF7" stroke="#264326" stroke-width="3"/>
+    <g>
+      <g><rect x="35" y="60" width="50" height="20" fill="#DEEAF4"/><rect x="85" y="60" width="50" height="20" fill="#A6C2B4"/><rect x="135" y="60" width="50" height="20" fill="#FECC5B"/><rect x="185" y="60" width="50" height="20" fill="#E9EFEB"/><rect x="35" y="60" width="200" height="20" fill="none" stroke="#264326" stroke-width="1.2"/></g>
+      <g><rect x="35" y="86" width="50" height="20" fill="#DEEAF4"/><rect x="85" y="86" width="50" height="20" fill="#A6C2B4"/><rect x="135" y="86" width="50" height="20" fill="#FECC5B"/><rect x="185" y="86" width="50" height="20" fill="#E9EFEB"/><rect x="35" y="86" width="200" height="20" fill="none" stroke="#264326" stroke-width="1.2"/></g>
+      <g><rect x="35" y="112" width="50" height="20" fill="#DEEAF4"/><rect x="85" y="112" width="50" height="20" fill="#A6C2B4"/><rect x="135" y="112" width="50" height="20" fill="#FFFFFF"/><rect x="185" y="112" width="50" height="20" fill="#E9EFEB"/><rect x="35" y="112" width="200" height="20" fill="none" stroke="#264326" stroke-width="1.2" stroke-dasharray="3 3"/><text x="160" y="127" text-anchor="middle" font-size="12" font-weight="700" fill="#83671C">?</text></g>
+      <g><rect x="35" y="138" width="50" height="20" fill="#DEEAF4"/><rect x="85" y="138" width="50" height="20" fill="#A6C2B4"/><rect x="135" y="138" width="50" height="20" fill="#FECC5B"/><rect x="185" y="138" width="50" height="20" fill="#E9EFEB"/><rect x="35" y="138" width="200" height="20" fill="none" stroke="#264326" stroke-width="1.2"/></g>
+      <g><rect x="35" y="164" width="50" height="20" fill="#DEEAF4"/><rect x="85" y="164" width="50" height="20" fill="#A6C2B4"/><rect x="135" y="164" width="50" height="20" fill="#FECC5B"/><rect x="185" y="164" width="50" height="20" fill="#E9EFEB"/><rect x="35" y="164" width="200" height="20" fill="none" stroke="#264326" stroke-width="1.2"/></g>
+      <g><rect x="35" y="190" width="50" height="20" fill="#DEEAF4"/><rect x="85" y="190" width="50" height="20" fill="#A6C2B4"/><rect x="135" y="190" width="50" height="20" fill="#FECC5B"/><rect x="185" y="190" width="50" height="20" fill="#E9EFEB"/><rect x="35" y="190" width="200" height="20" fill="none" stroke="#264326" stroke-width="1.2"/></g>
+    </g>
+    <text x="135" y="252" text-anchor="middle" font-size="14" font-weight="600" fill="#264326">.shape is (6, 4)</text>
+
+    <text x="430" y="16" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">boolean mask</text>
+    <text x="430" y="34" text-anchor="middle" font-size="12" font-weight="600" font-family="monospace" fill="#264326">weight_lbs &gt; 50</text>
+    <rect x="390" y="44" width="80" height="186" rx="14" fill="#FFFCF7" stroke="#264326" stroke-width="3"/>
+    <g font-size="13" font-weight="700" text-anchor="middle">
+      <rect x="410" y="60" width="40" height="20" rx="4" fill="#E1E3E0" stroke="#83671C" stroke-width="1.5"/><text x="430" y="75" fill="#83671C">F</text>
+      <rect x="410" y="86" width="40" height="20" rx="4" fill="#327A5F" stroke="#264326" stroke-width="1.5"/><text x="430" y="101" fill="#FFFCF7">T</text>
+      <rect x="410" y="112" width="40" height="20" rx="4" fill="#E1E3E0" stroke="#83671C" stroke-width="1.5"/><text x="430" y="127" fill="#83671C">F</text>
+      <rect x="410" y="138" width="40" height="20" rx="4" fill="#E1E3E0" stroke="#83671C" stroke-width="1.5"/><text x="430" y="153" fill="#83671C">F</text>
+      <rect x="410" y="164" width="40" height="20" rx="4" fill="#327A5F" stroke="#264326" stroke-width="1.5"/><text x="430" y="179" fill="#FFFCF7">T</text>
+      <rect x="410" y="190" width="40" height="20" rx="4" fill="#327A5F" stroke="#264326" stroke-width="1.5"/><text x="430" y="205" fill="#FFFCF7">T</text>
+    </g>
+    <text x="430" y="252" text-anchor="middle" font-size="14" font-weight="600" fill="#264326">one value per row</text>
+
+    <polygon points="297,130 322,130 322,122 342,137 322,152 322,144 297,144" fill="#264326"/>
+    <text x="320" y="112" text-anchor="middle" font-size="11" font-weight="600" fill="#264326">apply the</text>
+    <text x="320" y="123" text-anchor="middle" font-size="11" font-weight="600" fill="#264326">condition</text>
+
+    <polygon points="518,130 543,130 543,122 563,137 543,152 543,144 518,144" fill="#264326"/>
+    <text x="540" y="112" text-anchor="middle" font-size="11" font-weight="600" fill="#264326">keep only</text>
+    <text x="540" y="123" text-anchor="middle" font-size="11" font-weight="600" fill="#264326">True rows</text>
+
+    <text x="725" y="30" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">filtered result</text>
+    <rect x="610" y="44" width="230" height="186" rx="14" fill="#FFFCF7" stroke="#264326" stroke-width="3"/>
+    <g>
+      <rect x="625" y="60" width="200" height="20" fill="none" stroke="#B3BBB0" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <g><rect x="625" y="86" width="50" height="20" fill="#DEEAF4"/><rect x="675" y="86" width="50" height="20" fill="#A6C2B4"/><rect x="725" y="86" width="50" height="20" fill="#FECC5B"/><rect x="775" y="86" width="50" height="20" fill="#E9EFEB"/><rect x="625" y="86" width="200" height="20" fill="none" stroke="#264326" stroke-width="1.5"/></g>
+      <rect x="625" y="112" width="200" height="20" fill="none" stroke="#B3BBB0" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <rect x="625" y="138" width="200" height="20" fill="none" stroke="#B3BBB0" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <g><rect x="625" y="164" width="50" height="20" fill="#DEEAF4"/><rect x="675" y="164" width="50" height="20" fill="#A6C2B4"/><rect x="725" y="164" width="50" height="20" fill="#FECC5B"/><rect x="775" y="164" width="50" height="20" fill="#E9EFEB"/><rect x="625" y="164" width="200" height="20" fill="none" stroke="#264326" stroke-width="1.5"/></g>
+      <g><rect x="625" y="190" width="50" height="20" fill="#DEEAF4"/><rect x="675" y="190" width="50" height="20" fill="#A6C2B4"/><rect x="725" y="190" width="50" height="20" fill="#FECC5B"/><rect x="775" y="190" width="50" height="20" fill="#E9EFEB"/><rect x="625" y="190" width="200" height="20" fill="none" stroke="#264326" stroke-width="1.5"/></g>
+    </g>
+    <text x="725" y="252" text-anchor="middle" font-size="14" font-weight="600" fill="#264326">3 of 6 rows kept</text>
+
+    <rect x="20" y="270" width="12" height="12" fill="#DEEAF4"/><text x="38" y="280" font-size="12" fill="#261F1D">donor_type</text>
+    <rect x="140" y="270" width="12" height="12" fill="#A6C2B4"/><text x="158" y="280" font-size="12" fill="#261F1D">category</text>
+    <rect x="255" y="270" width="12" height="12" fill="#FECC5B"/><text x="273" y="280" font-size="12" fill="#261F1D">weight_lbs</text>
+    <rect x="370" y="270" width="12" height="12" fill="#E9EFEB" stroke="#B3BBB0" stroke-width="1"/><text x="388" y="280" font-size="12" fill="#261F1D">site</text>
+  </g>
+</svg>
+</div>
+
+<p>Read the diagram left to right: the six colored bars on the left are the six real rows, split into their four columns — the cell with a question mark is the missing weight from row 2. The middle column applies one condition, <code>weight_lbs &gt; 50</code>, to every row and produces exactly one <code>True</code> or <code>False</code> per row: that column of booleans is called a <strong>boolean mask</strong>. On the right, pandas uses that mask to keep only the rows marked <code>True</code>, in their original positions, and drop the rest. Notice the missing-weight row: comparing a missing value to a number never raises an error, it just quietly evaluates to <code>False</code>, so that row gets dropped from this filter without any warning at all. That's worth remembering, and it comes back later in this reading.</p>
+
+<p>In code, that whole right-hand result is one line:</p>
+<div class="mlrk-code"><div class="mlrk-screen">big_drops = intake[intake["weight_lbs"] > 50]</div></div>
+<p>Two conditions can be combined with <code>&amp;</code> (and) or <code>|</code> (or) — not Python's plain <code>and</code>/<code>or</code>, which don't work row-by-row across a whole column — and each condition needs its own parentheses:</p>
+<div class="mlrk-code"><div class="mlrk-screen">produce_drops = intake[(intake["weight_lbs"] > 50) & (intake["category"] == "Produce")]</div></div>
+<p>And when the goal is a single column from a filtered result, not the whole row, <code>.loc[]</code> takes both the mask and the column name in one step:</p>
+<div class="mlrk-code"><div class="mlrk-screen">intake.loc[intake["weight_lbs"] > 50, "donor_type"]</div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> "which pandas method fits this question" is a skill graded directly the first time a project asks for it unguided, and it starts here: nearly every later step, comparing groups, building new columns, choosing a chart, only works on data that was inspected and filtered correctly first. Get this wrong quietly (a misspelled column name, a filter that silently drops rows because of a missing value) and every number built on top of it inherits the mistake.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how a comparison like <code>x &gt; 50</code> evaluates to <code>True</code> or <code>False</code>, and how square brackets pull one item out of a list by position. This reading is about that same comparison running once per row across an entire column at once, and square brackets used to keep only the rows where it came out <code>True</code>. Once filtering rows down to the ones that matter feels automatic, the next idea builds directly on it: comparing groups of rows against each other, and building brand-new columns computed from the ones already there, instead of reading the same values over and over.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before pandas</h2>
+<p class="mlrk-small">A few foundational skills get reused heavily later in this reading: comparison operators, square-bracket indexing, and what a comparison actually evaluates to. Test each one below before moving on.</p>
+
+<div class="mlrk-card" id="card-recall"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">shipment_weight = 42
+print(shipment_weight >= 50)</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="false">False</button>
+<button type="button" class="mlrk-choice" data-a="true">True</button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error comparing an int to a number like this</button>
+<div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-bracket" style="margin-top:.8rem"><p><strong>Recall:</strong> <code>sites = ["Downtown", "Eastside", "Westside"]</code>. What does <code>sites[1]</code> return?</p>
+<button type="button" class="mlrk-choice" data-a="eastside">"Eastside"</button>
+<button type="button" class="mlrk-choice" data-a="downtown">"Downtown"</button>
+<button type="button" class="mlrk-choice" data-a="index">The number 1</button>
+<div id="bracketfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">Nothing about pandas changes how either of these work on their own. A boolean mask is exactly this same one-comparison idea, just running once for every row in a column instead of once. Get each one right in isolation first.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the matching practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>DataFrame</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>DataFrame</strong><br>A pandas table: rows and named, typed columns, loaded as a real Python object.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Series</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Series</strong><br>One column of a DataFrame on its own, still lined up with the same row index.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>boolean mask</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Boolean mask</strong><br>A Series of True/False values, one per row, produced by applying a condition to a column.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>attribute</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Attribute</strong><br>A stored fact about an object, accessed with no parentheses. <code>.shape</code> and <code>.columns</code> are attributes.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>method</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Method</strong><br>An action an object performs, called with parentheses. <code>.head()</code> and <code>.info()</code> are methods.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>.loc[]</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>.loc[]</strong><br>Selects rows and, optionally, specific columns by label or by boolean mask, in one step.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>NaN</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>NaN</strong><br>Pandas's marker for a missing value. Comparing NaN to anything with &gt;, &lt;, or == always gives False.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Match the question to the method</h2>
+<p>Referring back to Priya's <code>intake</code> table from section 1, match each situation to the method or attribute built for it.</p>
+<div class="mlrk-card" id="card-match-a"><p><strong>A. You just loaded a new CSV and want, as a single pair of numbers, how many rows and columns it has.</strong></p>
+<button type="button" class="mlrk-choice" data-a="shape">.shape</button>
+<button type="button" class="mlrk-choice" data-a="head">.head()</button>
+<button type="button" class="mlrk-choice" data-a="info">.info()</button>
+<button type="button" class="mlrk-choice" data-a="columns">.columns</button>
+<div id="matchafb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-match-b" style="margin-top:.8rem"><p><strong>B. You want to see the actual values: a real preview of the first several rows.</strong></p>
+<button type="button" class="mlrk-choice" data-a="shape">.shape</button>
+<button type="button" class="mlrk-choice" data-a="head">.head()</button>
+<button type="button" class="mlrk-choice" data-a="info">.info()</button>
+<button type="button" class="mlrk-choice" data-a="columns">.columns</button>
+<div id="matchbfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-match-c" style="margin-top:.8rem"><p><strong>C. You want every column's data type and its non-null count, all at once.</strong></p>
+<button type="button" class="mlrk-choice" data-a="shape">.shape</button>
+<button type="button" class="mlrk-choice" data-a="head">.head()</button>
+<button type="button" class="mlrk-choice" data-a="info">.info()</button>
+<button type="button" class="mlrk-choice" data-a="columns">.columns</button>
+<div id="matchcfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-match-d" style="margin-top:.8rem"><p><strong>D. You want the exact column names, spelled and cased exactly as pandas sees them, before writing a filter.</strong></p>
+<button type="button" class="mlrk-choice" data-a="shape">.shape</button>
+<button type="button" class="mlrk-choice" data-a="head">.head()</button>
+<button type="button" class="mlrk-choice" data-a="info">.info()</button>
+<button type="button" class="mlrk-choice" data-a="columns">.columns</button>
+<div id="matchdfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Predict, then check the real output</h2>
+<p>The <code>intake</code> table from section 1 has 6 rows. Predict each answer below before revealing the simulated output.</p>
+
+<div class="mlrk-card" id="card-headcount"><p><strong>By default, if you call <code>intake.head()</code> with nothing inside the parentheses, how many rows does it show?</strong></p>
+<button type="button" class="mlrk-choice" data-a="5">5</button>
+<button type="button" class="mlrk-choice" data-a="10">10</button>
+<button type="button" class="mlrk-choice" data-a="all">All 6, since that's every row there is</button>
+<div id="headcountfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-infocount" style="margin-top:.8rem"><p><strong>According to <code>intake.info()</code>, how many non-null values will the <code>weight_lbs</code> column report, out of 6 total rows?</strong></p>
+<button type="button" class="mlrk-choice" data-a="5">5</button>
+<button type="button" class="mlrk-choice" data-a="6">6</button>
+<button type="button" class="mlrk-choice" data-a="0">0</button>
+<div id="infocountfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-code" style="margin-top:1rem"><div id="inspectScreen" class="mlrk-screen">intake.shape
+intake.head()
+intake.info()
+
+Click "Reveal simulated output" to see the real result.</div>
+<div class="mlrk-actions"><button type="button" id="inspectrun" class="mlrk-btn">Reveal simulated output</button></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Trace a boolean mask, row by row</h2>
+<p>This is the part that's genuinely hard to hold in your head the first time: one condition, applied once per row, all at once. Click through <code>intake["weight_lbs"] &gt; 50</code> one row at a time below.</p>
+<div id="tracestep"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Write the filter yourself</h2>
+<p>Complete the line of code so that <code>big_drops</code> holds only the rows of <code>intake</code> where <code>weight_lbs</code> is greater than 50.</p>
+<div class="mlrk-code"><div class="mlrk-screen">big_drops = intake[__________]</div></div>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Type what goes inside the square brackets:</label>
+  <input type="text" id="blankinput" autocomplete="off" placeholder='intake["weight_lbs"] > 50'>
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+<p>The mask goes inside the outer square brackets, and it needs the column name in its own quotes, then a comparison operator, then the number.</p>
+</details>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Combine two conditions</h2>
+<div class="mlrk-card" id="card-combo"><p><strong>Which rows satisfy BOTH <code>weight_lbs &gt; 50</code> AND <code>category == "Produce"</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="row4">Only the Corporate, Produce, 63 lbs, Eastside row.</button>
+<button type="button" class="mlrk-choice" data-a="allbig">All three rows with weight_lbs over 50, since they're all large donations.</button>
+<button type="button" class="mlrk-choice" data-a="none">No rows at all.</button>
+<div id="combofb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Filter and select a column with .loc</h2>
+<div class="mlrk-card" id="card-loc"><p><strong><code>intake.loc[intake["weight_lbs"] &gt; 50, "donor_type"]</code> returns which values?</strong></p>
+<button type="button" class="mlrk-choice" data-a="values">Corporate, Corporate, Grocery Partner — just that one column, for the matching rows.</button>
+<button type="button" class="mlrk-choice" data-a="wholedf">The entire filtered DataFrame, every column included.</button>
+<button type="button" class="mlrk-choice" data-a="count">Just the number of matching rows, as an integer.</button>
+<div id="locfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Sort by attribute vs. method</h2>
+<p>Drag each piece of syntax into the zone that describes it, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable"><code>.shape</code></span>
+  <span id="chip2" class="mlrk-draggable"><code>.head()</code></span>
+  <span id="chip3" class="mlrk-draggable"><code>.columns</code></span>
+  <span id="chip4" class="mlrk-draggable"><code>.info()</code></span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Attribute (no parentheses)</strong></p><div class="mlrk-dropzone" id="zoneAttr"></div></div>
+  <div><p class="mlrk-small"><strong>Method (needs parentheses)</strong></p><div class="mlrk-dropzone" id="zoneMethod"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about DataFrames, boolean masks, and filtering.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A boolean mask has exactly the same number of values as the DataFrame it was built from has rows.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Comparing a missing value (NaN) to a number with &gt; raises an error instead of returning False.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Combining two conditions with plain Python <code>and</code> works exactly the same as combining them with <code>&amp;</code>.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> <code>.loc[]</code> can select specific rows and a specific column in one step.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Watch: boolean indexing made simple</h2>
+<p>As you watch, notice how the video walks through the exact same idea practiced above: one condition, checked once per row, producing a column of True/False before anything actually gets kept or dropped.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=v5pJfu-yn-0" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one part of boolean masking that felt confusing before this reading, and does it feel any clearer now?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>Basic pandas fluency, loading a file, checking its shape, filtering it, is treated as an assumed baseline in almost every data-analyst technical screen. It's rarely asked about directly; it's just expected to already be automatic by the time a harder question about the actual data shows up.</p>
+<p>A very common live-coding moment is being handed a small DataFrame and asked to filter it on the spot, sometimes with two conditions combined. Interviewers are watching for the parentheses-around-each-condition habit and <code>&amp;</code>/<code>|</code> instead of <code>and</code>/<code>or</code>, since getting that wrong is the single most common pandas mistake among people who are otherwise strong Python programmers.</p>
+<p>A sharper follow-up question tests exactly what section 1's diagram showed: "if a column has a missing value and you filter for column greater than some number, what happens to that row?" Naming that it's silently excluded, because comparing NaN to a number always evaluates to False, is a strong, specific answer that a guess-based answer won't produce.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: a column has a missing value in one row, and you filter with <code>df[df["col"] &gt; 50]</code>. What happens to that row?</strong></p>
+<button type="button" class="mlrk-choice" data-a="excluded">It's silently excluded. Comparing a missing value to a number with &gt; always evaluates to False.</button>
+<button type="button" class="mlrk-choice" data-a="errors">Pandas raises an error immediately, since the comparison can't be completed.</button>
+<button type="button" class="mlrk-choice" data-a="zero">Pandas automatically treats the missing value as 0 before comparing.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>A teammate writes <code>intake[intake["weight_lbs"] &gt; 50 and intake["category"] == "Produce"]</code> and gets <code>ValueError: The truth value of a Series is ambiguous</code>. What's the fix?</strong></p>
+<button type="button" class="mlrk-choice" data-a="ampersand">Replace <code>and</code> with <code>&amp;</code>, and wrap each condition in its own parentheses.</button>
+<button type="button" class="mlrk-choice" data-a="values">Add <code>.values</code> to the end and rerun it, since it's a display-only bug.</button>
+<button type="button" class="mlrk-choice" data-a="rerun">It's a rare pandas bug; just rerun the same cell.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your decision rule:</strong> in 1-2 sentences, describe how you'd decide between <code>df[mask]</code> and <code>df.loc[mask, columns]</code> for a filtering task.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: I reach for .loc when..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Summary &amp; critical thinking</h2>
+<p>Two habits carried this whole reading: always inspecting a new DataFrame with <code>.shape</code>, <code>.head()</code>, <code>.info()</code>, and <code>.columns</code> before trusting it, and thinking of a filter as a two-step move: build a boolean mask with a condition, then use that mask to keep only the matching rows.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a small veterinary clinic keeps a <code>visits</code> DataFrame with a <code>cost</code> column and a <code>visit_type</code> column. Which line correctly keeps only visits where cost is over 200 AND visit_type is "Surgery"?</p>
+<button type="button" class="mlrk-choice" data-a="right"><code>visits[(visits["cost"] &gt; 200) &amp; (visits["visit_type"] == "Surgery")]</code></button>
+<button type="button" class="mlrk-choice" data-a="noparens"><code>visits[visits["cost"] &gt; 200 &amp; visits["visit_type"] == "Surgery"]</code></button>
+<button type="button" class="mlrk-choice" data-a="andkeyword"><code>visits[visits["cost"] &gt; 200 and visits["visit_type"] == "Surgery"]</code></button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> why does comparing a missing value to a number always evaluate to False, and why does that matter when you filter real data?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Thinking ahead</h2>
+<p>Filtering answers one kind of question: give me only the rows that match. The next idea builds directly on it: comparing groups of rows against each other, like average donation weight per site, instead of reading one row at a time, and creating brand-new columns computed from the ones already there, instead of recalculating the same formula by hand every time it's needed. Both of those start from exactly the same DataFrame habits practiced here.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>17. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add pandas-inspect-filter-reading1.json
+git commit -m "Complete look before you filter reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://pandas.pydata.org/docs/user_guide/10min.html" target="_blank" rel="noopener">pandas docs: 10 minutes to pandas</a> — the official quick tour, including inspection and boolean indexing.</li>
+<li><a href="https://pandas.pydata.org/docs/user_guide/indexing.html" target="_blank" rel="noopener">pandas docs: Indexing and selecting data</a> — the full official reference for boolean masks and <code>.loc</code>.</li>
+<li><a href="https://www.w3schools.com/python/pandas/pandas_dataframes.asp" target="_blank" rel="noopener">W3Schools: Pandas DataFrames</a> — more worked examples of the basics.</li>
+<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — step through your own filtering code, one line at a time.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "pandas-inspect-filter-reading1";
+  const TITLE = "Look Before You Filter — pandas DataFrame Basics";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"false",
+    feedback:{false:"42 is not greater than or equal to 50, so this comparison evaluates to False.",
+              true:"42 is less than 50, so this comparison is False, not True.",
+              error:"Comparing two numbers with >= is completely normal Python. No error here."}});
+
+  K.quiz({id:"q-bracket", buttonSelector:"#card-bracket .mlrk-choice", feedbackSelector:"#bracketfb", correct:"eastside",
+    feedback:{eastside:"Index 1 is the second item in the list, and counting starts at 0: sites[1] is \"Eastside\".",
+              downtown:"\"Downtown\" is sites[0], the first item, not sites[1].",
+              index:"Square brackets return the value stored at that position, not the index number itself."}});
+
+  K.quiz({id:"q-match-a", buttonSelector:"#card-match-a .mlrk-choice", feedbackSelector:"#matchafb", correct:"shape",
+    feedback:{shape:".shape returns a (rows, columns) tuple in one step, with no parentheses needed since it's an attribute.",
+              head:".head() shows actual row values, not a row/column count.",
+              info:".info() reports dtypes and non-null counts, not a simple row/column pair.",
+              columns:".columns lists the column names, not the row or column count."}});
+
+  K.quiz({id:"q-match-b", buttonSelector:"#card-match-b .mlrk-choice", feedbackSelector:"#matchbfb", correct:"head",
+    feedback:{head:".head() previews the first several actual rows of real data.",
+              shape:".shape only reports dimensions, not the values themselves.",
+              info:".info() summarizes columns; it doesn't show a row-by-row preview.",
+              columns:".columns lists names only, with no row data at all."}});
+
+  K.quiz({id:"q-match-c", buttonSelector:"#card-match-c .mlrk-choice", feedbackSelector:"#matchcfb", correct:"info",
+    feedback:{info:".info() is built exactly for this: dtype and non-null count for every column at once.",
+              shape:".shape gives dimensions only, nothing about types or missing values.",
+              head:".head() shows values but not a dtype/non-null summary.",
+              columns:".columns only lists names, not types or null counts."}});
+
+  K.quiz({id:"q-match-d", buttonSelector:"#card-match-d .mlrk-choice", feedbackSelector:"#matchdfb", correct:"columns",
+    feedback:{columns:".columns gives the exact, exact-case column names pandas is using right now.",
+              shape:".shape gives a count of columns, not their names.",
+              head:"Column names appear as headers in .head(), but .columns is the direct, exact way to get them.",
+              info:".info() lists names too, but mixed in with type and null-count details, not as a clean list."}});
+
+  K.quiz({id:"q-headcount", buttonSelector:"#card-headcount .mlrk-choice", feedbackSelector:"#headcountfb", correct:"5",
+    feedback:{5:".head() shows 5 rows by default unless you pass it a different number, like .head(10).",
+              10:"10 is a common number to pass in explicitly, but the default with no argument is 5.",
+              all:".head() previews only a handful of rows on purpose, even when the DataFrame is small enough to show all of it."},
+    onDone(){revealInspect()}});
+
+  K.quiz({id:"q-infocount", buttonSelector:"#card-infocount .mlrk-choice", feedbackSelector:"#infocountfb", correct:"5",
+    feedback:{5:"One row's weight_lbs is missing (NaN), so only 5 of the 6 rows have a real, non-null value there.",
+              6:"One row's weight was never recorded, so the true non-null count is 5, not the full 6.",
+              0:"Five of the six rows do have a real recorded weight; only one is missing."},
+    onDone(){revealInspect()}});
+
+  K.quiz({id:"q-combo", buttonSelector:"#card-combo .mlrk-choice", feedbackSelector:"#combofb", correct:"row4",
+    feedback:{row4:"Only the Corporate/Produce/63/Eastside row has weight_lbs over 50 AND category equal to Produce at the same time.",
+              allbig:"The other two rows over 50 lbs are Canned Goods and Frozen, not Produce, so the AND condition rules them out.",
+              none:"One row genuinely satisfies both conditions at once, so the filtered result isn't empty."}, maxAttempts:1});
+
+  K.quiz({id:"q-loc", buttonSelector:"#card-loc .mlrk-choice", feedbackSelector:"#locfb", correct:"values",
+    feedback:{values:".loc[mask, \"donor_type\"] filters to the matching rows and then narrows to just that one column's values.",
+              wholedf:"Naming a single column as the second argument to .loc narrows the result to just that column, not the whole row.",
+              count:".loc returns the actual values that match, not a row count."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"A boolean mask has exactly the same number of values as the DataFrame it was built from has rows.", correct:true,
+      hint:"Think back to section 6's row-by-row trace. Did every single row get its own True or False?",
+      explain:"A mask is built by checking the condition once per row, so its length always matches the DataFrame's row count exactly."},
+    {value:"b", label:"Comparing a missing value (NaN) to a number with > raises an error instead of returning False.", correct:false,
+      hint:"Revisit the missing-weight row in section 1's diagram. Did filtering on it ever raise an error?",
+      explain:"NaN compared with >, <, or == always evaluates to False quietly. It never raises an error on its own."},
+    {value:"c", label:"Combining two conditions with plain Python and works exactly the same as combining them with &.", correct:false,
+      hint:"Think about section 14's debugging scenario. What error did using and actually produce?",
+      explain:"Plain and/or can't evaluate row-by-row across a whole Series, which is exactly the ValueError from section 14."},
+    {value:"d", label:".loc[] can select specific rows and a specific column in one step.", correct:true,
+      hint:"Look back at section 9's .loc example. Did it return more than one column?",
+      explain:"Passing a mask and a column name to .loc together, as in section 9, filters rows and narrows to one column at the same time."}
+  ]});
+
+  K.dragDrop("#dragarea", "act-drag-attrmethod");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneAttr", label:".shape", expectedLabel:"Attribute"},
+    chip2:{expectedId:"zoneMethod", label:".head()", expectedLabel:"Method"},
+    chip3:{expectedId:"zoneAttr", label:".columns", expectedLabel:"Attribute"},
+    chip4:{expectedId:"zoneMethod", label:".info()", expectedLabel:"Method"}
+  }});
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.traceStepper("#tracestep", {steps:[
+    {cell:"row 0 (12)", line:"row 0: weight_lbs is 12, so 12 > 50 evaluates to False."},
+    {cell:"row 1 (85)", line:"row 1: weight_lbs is 85, so 85 > 50 evaluates to True."},
+    {cell:"row 2 (NaN)", line:"row 2: weight_lbs is missing (NaN), so the comparison quietly evaluates to False."},
+    {cell:"row 3 (8)", line:"row 3: weight_lbs is 8, so 8 > 50 evaluates to False."},
+    {cell:"row 4 (63)", line:"row 4: weight_lbs is 63, so 63 > 50 evaluates to True."},
+    {cell:"row 5 (51)", line:"row 5: weight_lbs is 51, so 51 > 50 evaluates to True."}
+  ]});
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"v5pJfu-yn-0"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  function revealInspect(){
+    $("#inspectScreen").textContent = `intake.shape
+[Output]
+(6, 4)
+
+intake.head()
+[Output]
+  donor_type       category      weight_lbs  site
+  Individual       Produce       12.0        Downtown
+  Corporate        Canned Goods  85.0        Eastside
+  Grocery Partner  Dairy         NaN         Downtown
+  Individual       Bakery        8.0         Westside
+  Corporate        Produce       63.0        Eastside
+
+intake.info()
+[Output]
+donor_type    6 non-null  object
+category      6 non-null  object
+weight_lbs    5 non-null  float64
+site          6 non-null  object`;
+  }
+  $("#inspectrun").addEventListener("click", revealInspect);
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"excluded",
+    feedback:{excluded:"NaN compared to a number with > always evaluates to False, so that row silently doesn't match the filter.",
+              errors:"The comparison completes without error; it just quietly evaluates to False for that row.",
+              zero:"Pandas doesn't substitute 0 for a missing value during a comparison like this."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"ampersand",
+    feedback:{ampersand:"Plain and/or can't evaluate across a whole Series at once. & and | can, but only once each condition has its own parentheses.",
+              values:"This isn't a display issue, and .values alone won't fix the underlying ValueError.",
+              rerun:"This error is deterministic: the same and/or mistake will raise it again every time."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"right",
+    feedback:{right:"Each condition has its own parentheses and they're combined with &, exactly the pattern from section 8.",
+              noparens:"Without parentheses around each condition, Python tries to evaluate & before the comparisons finish, which raises an error instead of filtering correctly.",
+              andkeyword:"Plain and can't evaluate row-by-row across a Series, which raises the same ValueError practiced in section 14."}});
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  function normalizeCode(s){
+    return s.trim().replace(/\s+/g,"").replace(/'/g,'"');
+  }
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const ok = normalizeCode($("#blankinput").value) === normalizeCode('intake["weight_lbs"]>50');
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> intake[\"weight_lbs\"] > 50 builds the boolean mask, and wrapping intake[...] around it keeps only the True rows.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The blank is <code>intake[\"weight_lbs\"] > 50</code>.";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> Check the column name's quotes and the comparison operator. One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think about a form that only shows a follow-up field when an earlier answer meets some condition, like a shipping option that only appears for orders over a certain size. Where's the boolean mask hiding in that everyday example?",
+    "If you had to explain \"a missing value silently fails every comparison\" to a friend using something from your own daily life, like a blank field on a form, what would you compare it to?",
+    "Where have you already filtered a real list in daily life just by eye, like picking out only the emails from one sender? What condition were you mentally applying to each one?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["eda-statistics"],
+      skills:["data-distributions-shape"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

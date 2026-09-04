@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Drop, Fill, or Flag — Handling Missing Data in Pandas</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:760px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Drop, Fill, or Flag</h1>
+<p class="mlrk-lead">Riverside Community Health Clinic's front-desk tablet logs every walk-in visit: wait time, blood pressure, insurance type, a callback number. By the end of a busy month, the export has real gaps in it: a few rows that came back completely blank from a sync glitch, some blood pressure readings a rushed nurse never took, insurance types missed on the clinic's busiest, most understaffed day, and callback numbers plenty of patients never gave in the first place. Every one of those gaps needs an answer, and "just drop the nulls" is not one answer, it's four different decisions wearing the same shrug.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~42–45 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Data Cleaning &amp; Imputation</strong> — Writing a real, reusable function to clean messy data and making a justified, documented decision about how to handle missing values.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Picture the export sitting in front of you: 4,000 rows from this month at Riverside, one row per visit, columns for wait time, blood pressure, insurance type, and a callback phone number. Four different gaps show up in it, and they are not the same problem wearing four faces.</p>
+<p>About 12 rows came back entirely blank, every column empty, including the automatically generated timestamp. That's a known glitch when the tablet syncs mid-visit. There is nothing usable left in those rows at all, which is exactly when you reach for <strong>drop</strong>: removing a row (or column) outright with <code>.dropna()</code>, because whatever remains genuinely cannot be used or trusted.</p>
+<p>Now picture 40 rows missing <code>systolic_bp</code>, because a nurse occasionally skips vitals during a rush. The rest of each row is real: a real visit, a real wait time, a real insurance type. For a monthly aggregate report, a typical blood pressure value is a defensible stand-in for the few it's missing. That's <strong>fill</strong>, also called <strong>imputation</strong>: replacing a gap with a computed value, usually a column's mean, median, or mode, via <code>.fillna()</code>.</p>
+<p>Now picture 300 rows missing <code>insurance_type</code>, concentrated on Saturdays when the clinic runs with a skeleton front desk. Guessing the most common insurance type here would not be a neutral stand-in, it would likely misrepresent exactly the patients the report is trying to describe. That's <strong>flag</strong>: instead of guessing, mark which rows were missing with a new boolean column (built from <code>.isna()</code>), so the gap stays visible rather than getting quietly papered over.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 830 460" role="img" aria-labelledby="dtreeTitle dtreeDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="dtreeTitle">A decision tree for handling a missing value: drop, fill, or flag</title>
+  <desc id="dtreeDesc">Starting from "a value is missing in a column," the first question is whether the whole row is unusable. If yes, drop the row. If no, the next question is whether a typical value would be a safe, low-stakes stand-in. If yes, fill it in with a mean, median, mode, or sentinel value. If no, flag it by keeping the row and adding a boolean column marking that it was missing.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="190" y="15" width="340" height="46" rx="12" fill="#FFF6E4" stroke="#83671C" stroke-width="2.5"/>
+    <text x="360" y="43" text-anchor="middle" font-size="14.5" font-weight="700" fill="#261F1D">A value is missing in a column</text>
+
+    <line x1="360" y1="61" x2="360" y2="88" stroke="#264326" stroke-width="3"/>
+    <polygon points="352,88 368,88 360,100" fill="#264326"/>
+
+    <rect x="170" y="92" width="380" height="78" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="360" y="122" text-anchor="middle" font-size="14.5" font-weight="700" fill="#261F1D">Is the whole row unusable?</text>
+    <text x="360" y="145" text-anchor="middle" font-size="12.5" fill="#261F1D">(e.g., a blank test entry)</text>
+
+    <line x1="550" y1="131" x2="596" y2="131" stroke="#264326" stroke-width="3"/>
+    <polygon points="596,123 596,139 608,131" fill="#264326"/>
+    <text x="573" y="118" text-anchor="middle" font-size="12.5" font-weight="700" fill="#264326">YES</text>
+
+    <rect x="612" y="98" width="200" height="66" rx="12" fill="#F7DFDF" stroke="#C92929" stroke-width="3"/>
+    <text x="712" y="126" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">DROP the row</text>
+    <text x="712" y="148" text-anchor="middle" font-size="12.5" fill="#261F1D">remove it entirely</text>
+
+    <line x1="360" y1="170" x2="360" y2="210" stroke="#264326" stroke-width="3"/>
+    <polygon points="352,210 368,210 360,222" fill="#264326"/>
+    <text x="380" y="196" text-anchor="start" font-size="12.5" font-weight="700" fill="#264326">NO</text>
+
+    <rect x="150" y="214" width="420" height="78" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="360" y="244" text-anchor="middle" font-size="14.5" font-weight="700" fill="#261F1D">Would a typical value be a safe,</text>
+    <text x="360" y="267" text-anchor="middle" font-size="14.5" font-weight="700" fill="#261F1D">low-stakes stand-in here?</text>
+
+    <line x1="570" y1="253" x2="616" y2="253" stroke="#264326" stroke-width="3"/>
+    <polygon points="616,245 616,261 628,253" fill="#264326"/>
+    <text x="593" y="240" text-anchor="middle" font-size="12.5" font-weight="700" fill="#264326">YES</text>
+
+    <rect x="632" y="216" width="188" height="74" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="726" y="245" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">FILL it in</text>
+    <text x="726" y="266" text-anchor="middle" font-size="11.5" fill="#261F1D">mean, median, mode,</text>
+    <text x="726" y="281" text-anchor="middle" font-size="11.5" fill="#261F1D">or a sentinel value</text>
+
+    <line x1="360" y1="292" x2="360" y2="332" stroke="#264326" stroke-width="3"/>
+    <polygon points="352,332 368,332 360,344" fill="#264326"/>
+    <text x="380" y="318" text-anchor="start" font-size="12.5" font-weight="700" fill="#264326">NO</text>
+
+    <rect x="170" y="336" width="380" height="94" rx="14" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+    <text x="360" y="362" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">FLAG it: keep the row,</text>
+    <text x="360" y="384" text-anchor="middle" font-size="13" fill="#261F1D">add a boolean column marking</text>
+    <text x="360" y="404" text-anchor="middle" font-size="13" fill="#261F1D">it was missing, don't guess</text>
+  </g>
+</svg>
+
+<div class="mlrk-code"><div class="mlrk-screen"># Drop the rows that are entirely blank
+df = df.dropna(how="all")
+
+# Fill a numeric gap with the column's median
+median_bp = df["systolic_bp"].median()
+df["systolic_bp"] = df["systolic_bp"].fillna(median_bp)
+
+# Flag a gap instead of guessing, before it gets filled
+df["insurance_missing"] = df["insurance_type"].isna()
+df["insurance_type"] = df["insurance_type"].fillna("Unknown")</div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> "how do you handle missing data" is one of the most common data-analyst interview questions there is, and it's graded on judgment, not on knowing that <code>.dropna()</code> and <code>.fillna()</code> exist. Outside the interview, a careless fill or drop quietly distorts a report before anyone notices, since a mean built from filled-in guesses looks exactly as confident on a chart as one built from real numbers.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to filter, group, and build derived columns on data that's already clean. This reading is about the judgment call that comes before any of that reliably works: deciding what a specific gap in a specific column should become. Once that decision gets made correctly, column after column, the next real problem is doing it without retyping the same fix by hand every time, which is exactly what a reusable cleaning function solves.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before drop, fill, or flag</h2>
+<p class="mlrk-small">A few earlier pandas skills get reused heavily below: filtering with a boolean mask, building a derived column, and grouping. Test each one before moving on.</p>
+
+<div class="mlrk-card" id="card-recall-filter"><p><strong>Scenario check:</strong> an analyst runs <code>df[df["wait_time_minutes"] > 30]</code>. What does this return?</p>
+<button type="button" class="mlrk-choice" data-a="filtered">A new DataFrame containing only the rows where wait_time_minutes is greater than 30</button>
+<button type="button" class="mlrk-choice" data-a="max">The single largest wait time in the whole column</button>
+<button type="button" class="mlrk-choice" data-a="sorted">The original DataFrame, sorted by wait_time_minutes</button>
+<div id="recallfilterfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-derived" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">df["wait_hours"] = df["wait_time_minutes"] / 60</div></div>
+<p><strong>For a row where wait_time_minutes is 90, what value lands in wait_hours?</strong></p>
+<button type="button" class="mlrk-choice" data-a="1.5">1.5</button>
+<button type="button" class="mlrk-choice" data-a="90">90</button>
+<button type="button" class="mlrk-choice" data-a="60">60</button>
+<div id="recallderivedfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-groupby" style="margin-top:.8rem"><p><strong>Scenario check:</strong> <code>df.groupby("insurance_type")["wait_time_minutes"].mean()</code> computes...</p>
+<button type="button" class="mlrk-choice" data-a="pergroup">The average wait time separately for each insurance_type group</button>
+<button type="button" class="mlrk-choice" data-a="overall">A single overall average wait time across every visit</button>
+<button type="button" class="mlrk-choice" data-a="count">The number of visits recorded for each insurance_type</button>
+<div id="recallgroupbyfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">None of this changes once missing values enter the picture. Filtering, grouping, and derived columns all still work exactly like this, they just have to run on data where the gaps have already been dealt with on purpose.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>missing value / NaN</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Missing value (NaN)</strong><br>Pandas' placeholder for "no data recorded here." NaN stands for Not a Number, but pandas uses it for any missing value, not just numeric ones.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>drop</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Drop</strong><br>Remove a row or column entirely with <code>.dropna()</code>. The right call when what's left can't be trusted or used.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>imputation</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Imputation</strong><br>Replacing a missing value with a computed stand-in, most often a column's mean, median, or mode.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>sentinel value</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Sentinel value</strong><br>A placeholder like "Unknown" or -1 used to explicitly mark a gap, instead of guessing a real answer.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>flag column</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Flag column</strong><br>A new boolean column recording which rows originally had a missing value, built with <code>.isna()</code> before that value gets filled or dropped.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>mode</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Mode</strong><br>The most frequently occurring value in a column. A common imputation choice for categorical columns, which have no mean or median.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Decide: drop, fill, or flag</h2>
+<p>You're building this month's operations report for Riverside's clinic manager: an aggregate summary of wait times, vitals, and visit volume by insurance type, not any single patient's chart. Four real gaps turned up in the intake log. For each one, decide, and be ready to justify it.</p>
+
+<div class="mlrk-card" id="card-s1"><p><strong>Scenario 1:</strong> about 12 of the 4,000 logged visits are rows where every single field, including the automatically generated timestamp, came back blank. It's a known tablet glitch during syncing. What should you do with these 12 rows?</p>
+<button type="button" class="mlrk-choice" data-a="drop">Drop them. A row with nothing real in any column carries zero usable information, and there's nothing left to fill or flag.</button>
+<button type="button" class="mlrk-choice" data-a="fill">Fill them. A typical value in every column would let the report include all 4,000 rows.</button>
+<button type="button" class="mlrk-choice" data-a="flag">Flag them. Add a boolean column noting they're incomplete, but keep the rows in the report.</button>
+<div id="s1fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-s2" style="margin-top:.8rem"><p><strong>Scenario 2:</strong> systolic_bp is missing for 40 of the 4,000 visits, because a nurse occasionally skips vitals during a rush. The recorded values cluster tightly around a typical range with no major outliers.</p>
+<button type="button" class="mlrk-choice" data-a="fill">Fill the 40 gaps with the column's mean or median. The rest of each row is still real, and a symmetric distribution means the average is a fair stand-in for a report at this level.</button>
+<button type="button" class="mlrk-choice" data-a="drop">Drop all 40 rows, since blood pressure was never actually recorded for them.</button>
+<button type="button" class="mlrk-choice" data-a="flag">Flag the 40 rows and leave systolic_bp blank in the report.</button>
+<div id="s2fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-s3" style="margin-top:.8rem"><p><strong>Scenario 3:</strong> insurance_type is missing for about 300 of the 4,000 visits, concentrated heavily on Saturdays, when the clinic runs with a skeleton front desk. The report needs a breakdown of visit counts by insurance type.</p>
+<button type="button" class="mlrk-choice" data-a="flag">Add a boolean column marking these 300 rows, and keep insurance_type as a distinct "not recorded" category instead of guessing a specific type.</button>
+<button type="button" class="mlrk-choice" data-a="fill">Fill the 300 gaps with the most common insurance type overall.</button>
+<button type="button" class="mlrk-choice" data-a="drop">Drop all 300 rows from the report.</button>
+<div id="s3fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-s4" style="margin-top:.8rem"><p><strong>Scenario 4:</strong> follow_up_phone has always been an optional field on the intake form, and it's missing for about 1,800 of the 4,000 visits.</p>
+<button type="button" class="mlrk-choice" data-a="flag">Leave the column as-is. If a later step needs to know who can be reached, add a boolean column like has_followup_phone rather than inventing a number.</button>
+<button type="button" class="mlrk-choice" data-a="fill">Fill the blanks with a placeholder phone number so the column has no gaps.</button>
+<button type="button" class="mlrk-choice" data-a="drop">Drop all 1,800 rows, since a phone number wasn't provided.</button>
+<div id="s4fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<label for="justify" style="display:block;margin-top:1rem"><strong>Document your reasoning:</strong> pick one of the four scenarios above and write the one-sentence justification you'd want in a code comment explaining your decision, the same way you'd document it for a teammate or your future self.</label>
+<textarea id="justify" class="mlrk-response" data-save placeholder="Try starting with: I filled/dropped/flagged this column because..."></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Predict, then run</h2>
+<p>This browser activity simulates small pandas snippets rather than executing real Python, so you can focus on what each method actually does to the data.</p>
+
+<div class="mlrk-card" id="card-predict"><p><strong>Predict first:</strong> df has 4,000 rows. 12 of them are the entirely-blank rows from Scenario 1. After running <code>df = df.dropna(how="all")</code>, how many rows remain?</p>
+<button type="button" class="mlrk-choice" data-a="3988">3,988</button>
+<button type="button" class="mlrk-choice" data-a="4000">4,000, dropna() doesn't remove anything until you tell it which column</button>
+<button type="button" class="mlrk-choice" data-a="3960">3,960</button>
+<div id="predictfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-code" style="margin-top:1rem"><div id="simScreen" class="mlrk-screen">Choose a snippet below to see what actually happens.</div>
+<div class="mlrk-actions">
+  <button type="button" data-sim="drop" class="mlrk-btn">Run: dropna(how="all")</button>
+  <button type="button" data-sim="fill" class="mlrk-btn">Run: fillna(median)</button>
+  <button type="button" data-sim="flag" class="mlrk-btn">Run: flag column with isna()</button>
+</div></div>
+<p id="simfb" class="mlrk-small" aria-live="polite"></p>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Fill in the blank</h2>
+<p>Riverside's 12 entirely-blank rows need to go before anything else runs.</p>
+<div class="mlrk-code"><div class="mlrk-screen">df = df.____(how="all")</div></div>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Type the missing method name:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about handling missing data in pandas.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> isna() returns True for a missing value and False for a real one.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> By default, dropna() only removes a row when every single value in that row is missing.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Creating a flag column with isna() before filling lets you keep track of which rows were originally missing, even after fillna() replaces the gap.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Calling df["col"].fillna(value) permanently updates the original DataFrame immediately, with no further steps needed.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Sort by outcome</h2>
+<p>Drag each technique into the situation it fits, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">Drop</span>
+  <span id="chip2" class="mlrk-draggable">Fill</span>
+  <span id="chip3" class="mlrk-draggable">Flag</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>A row or column with nothing real left to work with</strong></p><div class="mlrk-dropzone" id="zoneDrop"></div></div>
+  <div><p class="mlrk-small"><strong>A low-stakes numeric gap where a typical value is a safe, defensible stand-in</strong></p><div class="mlrk-dropzone" id="zoneFill"></div></div>
+  <div><p class="mlrk-small"><strong>A gap that might mean something on its own, or where guessing would misrepresent the data</strong></p><div class="mlrk-dropzone" id="zoneFlag"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Order the steps</h2>
+<p>Click steps, in order, to build the sequence you should follow before touching any missing value. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="count"><span class="mlrk-order-num"></span> Count how many values are missing in each column, and where those gaps fall.</li>
+  <li class="mlrk-orderitem" data-step="understand"><span class="mlrk-order-num"></span> Ask what a missing value in that specific column actually means, and whether the gap looks random or patterned.</li>
+  <li class="mlrk-orderitem" data-step="decide"><span class="mlrk-order-num"></span> Decide: drop, fill, or flag, based on that reasoning, not a default habit.</li>
+  <li class="mlrk-orderitem" data-step="apply"><span class="mlrk-order-num"></span> Apply the matching method: dropna(), fillna(), or a new boolean column built from isna().</li>
+  <li class="mlrk-orderitem" data-step="verify"><span class="mlrk-order-num"></span> Verify the result, for example by checking isna().sum() again or confirming the flag column exists.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Watch: choosing between drop, fill, and flag</h2>
+<p>As you watch, notice how the video frames the choice between dropping and filling, and whether it ties any fill strategy back to what the missing value actually represents, the same reasoning practiced in Section 4 above.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=bD9-mdF8Lbo" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching:</strong> did the video's approach to choosing a fill strategy match how you were already thinking about Scenario 2 above? What, if anything, changed?</p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"How do you handle missing data?" is one of the most reliable data-analyst interview questions there is, precisely because a vague answer is such a clean red flag. "I just drop the nulls" or "I fill everything with 0" both signal that missing data gets a reflex instead of a decision. A strong answer names the actual reasoning: how much is missing, whether the gap looks random or patterned, and what a wrong guess would cost in that specific column.</p>
+<p>Interviewers often follow up with a scenario instead of stopping at the general question: "this column is missing 40% of its values, what do you do?" The strongest response usually starts with a question back, what does this column represent, and what happens downstream if the fill is wrong, rather than reaching for one blanket rule for every column in the dataset.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> an interviewer asks you to walk through how you'd handle missing data in a dataset. Which answer is strongest?</p>
+<button type="button" class="mlrk-choice" data-a="depends">It depends on the column: I'd check how much is missing and why, then decide whether dropping, filling, or flagging fits that specific column, and explain why.</button>
+<button type="button" class="mlrk-choice" data-a="alwaysdrop">I always just drop any row with a null value. It's the safest option.</button>
+<button type="button" class="mlrk-choice" data-a="alwayszero">I always fill every missing value with 0, so the dataset has no gaps.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>You write:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">df["systolic_bp"] = df["systolic_bp"].fillna(df["systolic_bp"].median())
+df["bp_missing"] = df["systolic_bp"].isna()</div></div>
+<p><strong>After running both lines, bp_missing is False for every single row, even the ones that were originally missing. What went wrong?</strong></p>
+<button type="button" class="mlrk-choice" data-a="order">isna() ran after fillna() already replaced every gap, so by the time it checked, there were no missing values left to find.</button>
+<button type="button" class="mlrk-choice" data-a="numeric">isna() only works on numeric columns, and systolic_bp is numeric, so something else must have caused this.</button>
+<button type="button" class="mlrk-choice" data-a="cannot">fillna() and isna() can never be used on the same column.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Summary &amp; critical thinking</h2>
+<p>One question carried this whole reading: for this specific gap, in this specific column, is there nothing worth keeping (drop), a safe typical value (fill), or a gap that shouldn't be guessed at (flag)? Getting to the right answer means asking what the column represents and what's actually missing, not reaching for the same fix every time.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a small nonprofit's volunteer sign-up sheet has a phone_number column empty for 15% of entries (never required on the form), and a shift_hours column empty for 3% of entries where a volunteer forgot to log their hours after a real shift. Which column is the stronger candidate to fill with a typical value?</p>
+<button type="button" class="mlrk-choice" data-a="shift">shift_hours, since a real shift happened and a typical shift length is a reasonable, low-stakes stand-in for a forgotten log.</button>
+<button type="button" class="mlrk-choice" data-a="phone">phone_number, since a missing digit or two could be guessed from nearby entries.</button>
+<button type="button" class="mlrk-choice" data-a="both">Both columns should be filled the same way, since they're both just missing data.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what question would you ask first when a column has missing values, before deciding to drop, fill, or flag it?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Thinking ahead</h2>
+<p>Once a drop, fill, or flag decision gets made correctly for one column, in one file, the more common problem is doing that same fix reliably across many columns, or the same messy file arriving again next month, without copy-pasting the same lines over and over. Turning a one-off fix into a real, reusable function that takes a DataFrame and a column name as arguments is the natural next skill once these decisions stop being one-time judgment calls and start being something worth writing once and trusting every time after.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add missing-data-reading1.json
+git commit -m "Complete drop fill or flag reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://pandas.pydata.org/docs/user_guide/missing_data.html" target="_blank" rel="noopener">pandas docs: Working with missing data</a> — the official reference for isna(), dropna(), and fillna().</li>
+<li><a href="https://www.w3schools.com/python/pandas/pandas_cleaning_empty_cells.asp" target="_blank" rel="noopener">W3Schools: Pandas Cleaning Empty Cells</a> — more worked examples of dropping and filling.</li>
+<li><a href="https://www.geeksforgeeks.org/python/working-with-missing-data-in-pandas/" target="_blank" rel="noopener">GeeksforGeeks: Working with Missing Data in Pandas</a> — additional fill strategies, including forward and backward fill.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "missing-data-reading1-dropfillorflag";
+  const TITLE = "Drop, Fill, or Flag — Handling Missing Data in Pandas";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-recall-filter", buttonSelector:"#card-recall-filter .mlrk-choice", feedbackSelector:"#recallfilterfb", correct:"filtered",
+    feedback:{filtered:"A boolean mask like wait_time_minutes > 30 keeps only the rows where that condition is true, returned as a new DataFrame.",
+              max:"This doesn't compute a single maximum. It filters rows using the condition.",
+              sorted:"Filtering with a condition doesn't sort anything. It keeps only the rows that match."}});
+
+  K.quiz({id:"q-recall-derived", buttonSelector:"#card-recall-derived .mlrk-choice", feedbackSelector:"#recallderivedfb", correct:"1.5",
+    feedback:{"1.5":"90 minutes divided by 60 is 1.5 hours, assigned into the new wait_hours column.",
+              "90":"The line divides by 60 before assigning, so the new column doesn't just copy the original value.",
+              "60":"60 is the divisor here, not the result. 90 / 60 is 1.5."}});
+
+  K.quiz({id:"q-recall-groupby", buttonSelector:"#card-recall-groupby .mlrk-choice", feedbackSelector:"#recallgroupbyfb", correct:"pergroup",
+    feedback:{pergroup:"groupby(\"insurance_type\") splits the rows into groups first, so .mean() is computed separately within each group.",
+              overall:"Grouping first means the average isn't collapsed across every row, it's kept separate per group.",
+              count:".mean() computes an average, not a count. .count() would be the count version."}});
+
+  K.quiz({id:"q-s1", buttonSelector:"#card-s1 .mlrk-choice", feedbackSelector:"#s1fb", correct:"drop",
+    feedback:{drop:"Nothing in these 12 rows is usable, not even which patient visited, so there's nothing to fill or flag, only to remove.",
+              fill:"There is nothing in these rows to base a typical value on. Filling here means inventing an entire fake visit, not estimating one real value.",
+              flag:"Flagging preserves rows that still hold some real information alongside a gap. These 12 rows hold none at all, so there's nothing left worth keeping."}});
+
+  K.quiz({id:"q-s2", buttonSelector:"#card-s2 .mlrk-choice", feedbackSelector:"#s2fb", correct:"fill",
+    feedback:{fill:"The rest of each row is still real and usable, and a roughly symmetric distribution means the average is a fair stand-in for a report at this level.",
+              drop:"That throws away 40 rows of real wait-time and insurance data over one missing measurement, more loss than this small, fairly random gap justifies.",
+              flag:"For a single aggregate figure, leaving 40 real gaps unfilled just shrinks the sample. Flagging matters more when the absence itself might mean something, which a rushed skip mostly doesn't."}});
+
+  K.quiz({id:"q-s3", buttonSelector:"#card-s3 .mlrk-choice", feedbackSelector:"#s3fb", correct:"flag",
+    feedback:{flag:"Keeping insurance_type as an honest \"not recorded\" category, plus a flag column, avoids putting words in the data's mouth about coverage it never actually reported.",
+              fill:"The gap isn't random, it clusters on a specific day. Guessing the overall most common type would likely misrepresent whoever actually visits on a short-staffed Saturday, and that guess changes the report's insurance breakdown.",
+              drop:"300 rows is too much of the month's data to discard, and the pattern in when insurance_type goes unrecorded is itself worth reporting, not just noise to remove."}});
+
+  K.quiz({id:"q-s4", buttonSelector:"#card-s4 .mlrk-choice", feedbackSelector:"#s4fb", correct:"flag",
+    feedback:{flag:"A phone number isn't something the rest of the row can estimate, so the honest move is to leave the gap and, if needed, mark it rather than invent one.",
+              fill:"A placeholder phone number would look like real contact information without being one, which is worse than an honest gap.",
+              drop:"That would throw out nearly half the month's visits over one field that was never required in the first place."}});
+
+  K.quiz({id:"q-predict", buttonSelector:"#card-predict .mlrk-choice", feedbackSelector:"#predictfb", correct:"3988",
+    feedback:{"3988":"4,000 minus the 12 entirely-blank rows leaves 3,988. dropna(how=\"all\") only removes rows where every value is missing.",
+              "4000":"dropna(how=\"all\") does remove rows, just only the ones where every single value is missing, which describes exactly these 12.",
+              "3960":"That would be a much larger removal than 12 rows. how=\"all\" is narrow: it only catches rows with nothing in them at all."},
+    onDone(){}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"isna() returns True for a missing value and False for a real one.", correct:true,
+      hint:"Think back to the flag-column simulator above. What did summing an isna() column actually count?",
+      explain:"isna() checks each value and returns True exactly where a value is missing, which is what let the flag simulator count them by summing."},
+    {value:"b", label:"By default, dropna() only removes a row when every single value in that row is missing.", correct:false,
+      hint:"The simulator's code explicitly passed how=\"all\". Would that be necessary if \"all\" were already the default?",
+      explain:"dropna()'s default is how=\"any\": it removes a row if even one value is missing, unless how=\"all\" is passed to narrow that down."},
+    {value:"c", label:"Creating a flag column with isna() before filling lets you keep track of which rows were originally missing, even after fillna() replaces the gap.", correct:true,
+      hint:"Revisit the debugging scenario later in this reading. What went wrong when isna() ran after fillna() instead of before?",
+      explain:"Running isna() before fillna() captures the gap while it still exists. Running it after, as the debugging scenario shows, finds nothing missing left to flag."},
+    {value:"d", label:"Calling df[\"col\"].fillna(value) permanently updates the original DataFrame immediately, with no further steps needed.", correct:false,
+      hint:"Look at how fillna() was used in the concept overview and simulator above. Was the result used directly, or assigned back to something?",
+      explain:"fillna() returns a new Series by default. The original column only changes once that result is reassigned back, or inplace=True is passed."}
+  ]});
+
+  K.dragDrop("#dragarea", "act-drag-outcome");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneDrop", label:"Drop", expectedLabel:"A row or column with nothing real left to work with"},
+    chip2:{expectedId:"zoneFill", label:"Fill", expectedLabel:"A low-stakes numeric gap where a typical value is a safe, defensible stand-in"},
+    chip3:{expectedId:"zoneFlag", label:"Flag", expectedLabel:"A gap that might mean something on its own, or where guessing would misrepresent the data"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["count","understand","decide","apply","verify"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"bD9-mdF8Lbo"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-justify", selector:"#justify", minWords:12});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:8});
+
+  const SIM_OUTPUT = {
+    drop: {code:'df.shape\n# (4000, 5)\ndf = df.dropna(how="all")\ndf.shape\n\n[Output]\n(4000, 5)\n(3988, 5)',
+      note:"dropna(how=\"all\") only removes rows where every column is missing. The 12 fully blank rows disappear; nothing else does."},
+    fill: {code:'df["systolic_bp"].isna().sum()\n# 40\nmedian_bp = df["systolic_bp"].median()\ndf["systolic_bp"] = df["systolic_bp"].fillna(median_bp)\ndf["systolic_bp"].isna().sum()\n\n[Output]\n40\n0',
+      note:"fillna() replaces every remaining NaN in that column with the median. The gap count drops from 40 to 0."},
+    flag: {code:'df["insurance_missing"] = df["insurance_type"].isna()\ndf["insurance_missing"].sum()\n\n[Output]\n300',
+      note:"isna() returns True for each missing insurance_type, so summing the new boolean column counts exactly the 300 originally-missing rows, even after insurance_type itself gets filled later."}
+  };
+  const simSeen = {drop:false, fill:false, flag:false};
+  const markSim = K.activity("act-sim-run", () => Object.values(simSeen).every(Boolean));
+  document.querySelectorAll("[data-sim]").forEach(btn => btn.addEventListener("click", () => {
+    const key = btn.dataset.sim;
+    const info = SIM_OUTPUT[key];
+    $("#simScreen").textContent = info.code;
+    $("#simfb").textContent = info.note;
+    simSeen[key] = true;
+    markSim();
+  }));
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"depends",
+    feedback:{depends:"Naming the actual reasoning, how much is missing, whether it's patterned, what a wrong guess would cost, is what separates a real answer from a reflex.",
+              alwaysdrop:"A blanket \"always drop\" answer is exactly the reflex interviewers are listening for, and Scenario 3 above shows why it can throw away good, useful data.",
+              alwayszero:"Filling everything with 0 treats every column the same regardless of what it means, which Scenario 2 versus Scenario 3 above shows is rarely true."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"order",
+    feedback:{order:"By the time isna() runs on the second line, fillna() has already replaced every gap on the line above it, so there's nothing left for isna() to find.",
+              numeric:"isna() works on any column type, numeric or not. The bug here is about order of operations, not column type.",
+              cannot:"fillna() and isna() are used together constantly, just in the order that captures the gap before it gets filled, not after."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"shift",
+    feedback:{shift:"A real shift happened and just wasn't logged, so a typical shift length is a reasonable, low-stakes estimate, the same reasoning as Scenario 2's blood pressure fill.",
+              phone:"A phone number isn't something nearby rows can estimate, the same reasoning that ruled out filling follow_up_phone in Scenario 4.",
+              both:"Treating every missing column the same way is exactly the reflex this whole reading has been arguing against."}});
+
+  const AI_PROMPTS = [
+    "Think about a form you've filled out where one field felt optional and another felt required. Which one would you trust a computer to guess for you, and which one absolutely not?",
+    "If you had to explain the difference between \"fill\" and \"flag\" to a friend using something from daily life, like a survey with a skipped question, what would you compare it to?",
+    "Where have you seen a real report or app quietly guess at missing information? Did that guess feel trustworthy, or did it make you question the whole result?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const ok = $("#blankinput").value.trim().toLowerCase()==="dropna";
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> dropna(how=\"all\") removes only the rows where every value is missing.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing method is <code>dropna</code>.";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["eda-statistics"],
+      skills:["data-cleaning-imputation"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

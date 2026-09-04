@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Loudest Number in the Room — Descriptive Statistics &amp; Reading Distributions</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:12rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>The Loudest Number in the Room</h1>
+<p class="mlrk-lead">You're the assistant director of development at a small nonprofit literacy program. The annual fundraising gala just wrapped, and eleven donors gave gifts ranging from $40 to a single $5,000 corporate sponsorship. Your executive director asks one question: "What's a typical gift size, so we can set next year's goal?" The honest answer depends entirely on which single number you reach for first.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~55–60 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Statistical Analysis</strong> — Interpreting summary statistics like mean, median, and standard deviation against what they actually mean for a real business or real-world question.</p>
+    <p><strong>Data Distributions &amp; Shape</strong> — Reading the shape of a real distribution (skew, outliers, spread) across multiple variables and matching it to the right chart or summary.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Here are all eleven gala gifts, already sorted from smallest to largest: $40, $45, $50, $50, $50, $55, $60, $65, $70, $75, and $5,000. Add every gift together and divide by eleven donors, and you get the <strong>mean</strong>: about $505. That's the arithmetic average, the number most people reach for the instant they hear the word "average."</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 680 210" role="img" aria-labelledby="giftsTitle giftsDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="giftsTitle">Ten gala gifts clustered together, with an eleventh gift far outside that range</title>
+  <desc id="giftsDesc">A dot plot shows ten gifts between about $40 and $75 sitting close together on a number line, with three overlapping dots at $50. A separate dashed box off to the right marks one additional $5,000 gift, shown apart because it would be far off this scale.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="265" y="26" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Ten gifts cluster together</text>
+    <line x1="70" y1="150" x2="460" y2="150" stroke="#264326" stroke-width="3"/>
+    <line x1="113.3" y1="145" x2="113.3" y2="155" stroke="#264326" stroke-width="2"/>
+    <line x1="416.7" y1="145" x2="416.7" y2="155" stroke="#264326" stroke-width="2"/>
+    <text x="113.3" y="172" text-anchor="middle" font-size="13" font-weight="600" fill="#261F1D">~$40</text>
+    <text x="416.7" y="172" text-anchor="middle" font-size="13" font-weight="600" fill="#261F1D">~$75</text>
+    <g fill="#A6C2B4" stroke="#264326" stroke-width="2.5">
+      <circle cx="113.3" cy="150" r="8"/>
+      <circle cx="156.7" cy="150" r="8"/>
+      <circle cx="200" cy="150" r="8"/>
+      <circle cx="200" cy="132" r="8"/>
+      <circle cx="200" cy="114" r="8"/>
+      <circle cx="243.3" cy="150" r="8"/>
+      <circle cx="286.7" cy="150" r="8"/>
+      <circle cx="330" cy="150" r="8"/>
+      <circle cx="373.3" cy="150" r="8"/>
+      <circle cx="416.7" cy="150" r="8"/>
+    </g>
+    <line x1="460" y1="150" x2="498" y2="118" stroke="#264326" stroke-width="2.5" stroke-dasharray="6 5"/>
+    <polygon points="498,118 486,120 493,128" fill="#264326"/>
+    <rect x="500" y="75" width="150" height="80" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="3" stroke-dasharray="6 5"/>
+    <text x="575" y="98" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">+1 gift</text>
+    <text x="575" y="122" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">$5,000</text>
+    <text x="575" y="142" text-anchor="middle" font-size="13" fill="#261F1D">corporate sponsor</text>
+  </g>
+</svg>
+
+<p>Now look at the same eleven donors a different way. Ten of them gave somewhere between $40 and $75. One gave $5,000. The mean of $505 doesn't describe a single one of those eleven people; it only exists once you average in a gift twelve times larger than anyone else's. The <strong>median</strong> asks a different question: once the gifts are sorted, what's the value sitting exactly in the middle? With eleven values, that's the 6th one, which is $55. Half the donors gave more than $55, half gave less, and the $5,000 gift barely moves that number at all.</p>
+<p>One more measure rounds out the picture. The <strong>mode</strong> is simply whichever value shows up most often, here, $50 appears three times, more than any other amount. A dataset can have one mode, several, or none at all, and for a spread-out numeric variable like this one it's less useful than mean or median, but for clustered or categorical data it's often the fastest read on what's typical.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> picking the wrong "typical" number isn't just a stats-class technicality. If this executive director sets next year's fundraising goal around $505 per donor, expecting eleven more gifts anywhere near that size, the campaign will fall far short, because ten of the eleven real donors gave nowhere close to that. Reporting a mean without ever checking whether an outlier is inflating it is one of the most common real mistakes in business reporting, and one of the fastest ways to lose a stakeholder's trust once they see the real numbers underneath it.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to write a function that processes a list of numbers, and how <code>sum()</code> and <code>len()</code> work. This reading uses those same building blocks to ask a new kind of question: not "what does this one row say," but "what does this whole column of numbers say about itself." Once mean, median, mode, spread, and shape feel automatic by hand on a small dataset like this one, the next skill is recognizing those exact same numbers the instant a data tool prints them out automatically for an entire real dataset at once.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before descriptive statistics</h2>
+<p class="mlrk-small">A few foundational skills get reused heavily later in this reading: how <code>sum()</code> and <code>len()</code> work together, what sorting a list accomplishes, comparison operators, and how a function's parameter makes it reusable. Test each one below before moving on.</p>
+
+<div class="mlrk-card" id="card-recall-sumlen"><p><strong>A list called <code>amounts</code> holds five donation values. What does <code>sum(amounts) / len(amounts)</code> compute?</strong></p>
+<button type="button" class="mlrk-choice" data-a="mean">The mean (average) of the five amounts</button>
+<button type="button" class="mlrk-choice" data-a="max">The largest amount in the list</button>
+<button type="button" class="mlrk-choice" data-a="doubled">The number of donations, doubled</button>
+<div id="recsumlenfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-sort" style="margin-top:.8rem"><p><strong>Before you can find the median of a list of numbers by hand, what has to happen first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="sort">The list has to be sorted from smallest to largest</button>
+<button type="button" class="mlrk-choice" data-a="square">Every value has to be squared</button>
+<button type="button" class="mlrk-choice" data-a="dedupe">Duplicate values have to be removed</button>
+<div id="recsortfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-compare" style="margin-top:.8rem"><p><strong>Coding check:</strong> two donations come in, $45 and $50. Which comparison evaluates to <code>True</code>?</p>
+<button type="button" class="mlrk-choice" data-a="lt">45 &lt; 50</button>
+<button type="button" class="mlrk-choice" data-a="gt">45 &gt; 50</button>
+<button type="button" class="mlrk-choice" data-a="eq">45 == 50</button>
+<div id="reccomparefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-function" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> you write a function called <code>average(numbers)</code> so it works on any list handed to it later, not just today's donations. What should its parameter, <code>numbers</code>, represent?</p>
+<button type="button" class="mlrk-choice" data-a="param">Whatever list of values gets passed in when the function is called</button>
+<button type="button" class="mlrk-choice" data-a="hardcode">The exact eleven donation amounts from today, hard-coded inside the function</button>
+<button type="button" class="mlrk-choice" data-a="none">Nothing — a general function shouldn't take any parameters</button>
+<div id="recfunctionfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">None of this changes once real datasets get bigger: <code>sum()</code>/<code>len()</code>, sorting, comparisons, and reusable functions all work exactly the same way whether a list has 5 values or 5,000. Get each one solid here first.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the practice sections below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>mean</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Mean</strong><br>The sum of all values divided by how many values there are. Pulled toward unusually large or small values.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>median</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Median</strong><br>The middle value once a dataset is sorted (or the average of the two middle values, for an even count). Barely moved by outliers.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>mode</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Mode</strong><br>The value that appears most often. A dataset can have one mode, several, or none at all.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>standard deviation</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Standard Deviation</strong><br>A typical distance between each value and the mean. Small means values sit close to the mean; large means they're spread out.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>quartile</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Quartile</strong><br>One of three values that split sorted data into four equal-sized groups. Q1 marks the bottom 25%, Q3 marks the top 25%.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>five-number summary</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Five-Number Summary</strong><br>Five values that describe a dataset at a glance: minimum, Q1, median, Q3, and maximum.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>skew</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Skew</strong><br>A lopsided distribution shape with a longer tail toward one side. A long right tail pulls the mean above the median; a long left tail pulls it below.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>outlier</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Outlier</strong><br>A value that sits unusually far from the rest of a dataset, capable of dragging the mean toward it even though it's just one value.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Compute it yourself: the gala gifts, worked</h2>
+<p>Here are the same eleven gala gifts from the introduction, already sorted.</p>
+<div class="mlrk-code"><div class="mlrk-screen">$40, $45, $50, $50, $50, $55, $60, $65, $70, $75, $5,000</div></div>
+<div class="mlrk-card" id="card-predict-median" style="margin-top:1rem"><p><strong>Before revealing the full computation below: with eleven values sorted like this, the median is the 6th one. What is it?</strong></p>
+<button type="button" class="mlrk-choice" data-a="55">$55</button>
+<button type="button" class="mlrk-choice" data-a="505">$505</button>
+<button type="button" class="mlrk-choice" data-a="50">$50</button>
+<div id="predictmedianfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-code" style="margin-top:1rem"><div id="computeScreen" class="mlrk-screen">Answer the question above to reveal the full computation.</div></div>
+<div class="mlrk-card" id="card-mean-median-judgment" style="margin-top:1rem"><p><strong>The executive director wants one number to describe a "typical" gift for next year's goal. Given a mean of about $505 and a median of $55, which should be cited, and why?</strong></p>
+<button type="button" class="mlrk-choice" data-a="median">The median, because the mean is being pulled far above what ten of the eleven real donors actually gave</button>
+<button type="button" class="mlrk-choice" data-a="mean">The mean, because averaging is always the more mathematically rigorous choice</button>
+<button type="button" class="mlrk-choice" data-a="neither">Neither number is usable once a dataset has an outlier</button>
+<div id="meanmedianjudgmentfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Predict, then check: how an outlier moves the mean and the median</h2>
+<p>A different program at the same nonprofit tracks monthly volunteer hours. This month, six volunteers logged 4, 5, 5, 6, 6, and 7 hours. Both the mean and the median of those six numbers come out to exactly 5.5 hours, evenly balanced, nothing dramatic.</p>
+<p>Then a seventh volunteer, a retired teacher with a lot of free time, logs 40 hours this month.</p>
+<div class="mlrk-fillblank">
+  <label for="meanguess">Type your prediction: what will the NEW MEAN be across all seven volunteers, to the nearest whole number?</label>
+  <input type="text" id="meanguess" autocomplete="off" inputmode="numeric">
+  <button type="button" id="meanguesscheck" class="mlrk-btn">Check my prediction</button>
+</div>
+<div id="meanguessfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-card" id="card-outlier-moved" style="margin-top:1rem"><p><strong>Compared to before (5.5 hours each), which measure moved more in absolute terms?</strong></p>
+<button type="button" class="mlrk-choice" data-a="mean">The mean, by about 5 hours; the median moved less than 1 hour</button>
+<button type="button" class="mlrk-choice" data-a="median">The median, by far</button>
+<button type="button" class="mlrk-choice" data-a="same">They moved by about the same amount</button>
+<div id="outliermovedfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Same average, different consistency: standard deviation</h2>
+<p>Two volunteer coordinators each average exactly 20 scheduled hours per week over the same five weeks. On paper, they look identical. Coordinator A logs 18, 19, 20, 21, and 22 hours. Coordinator B logs 5, 12, 20, 28, and 35 hours.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 700 240" role="img" aria-labelledby="sdTitle sdDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="sdTitle">Two coordinators with the same average weekly hours but very different spread</title>
+  <desc id="sdDesc">Two rows of five dots each sit on a shared 0 to 40 hour scale. Coordinator A's five dots sit tightly clustered around 20 hours. Coordinator B's five dots are spread widely from 5 to 35 hours. A dashed vertical line marks 20 hours, the shared mean, running through both rows.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="360" y="35" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">mean = 20 hrs (both)</text>
+    <line x1="360" y1="50" x2="360" y2="210" stroke="#83671C" stroke-width="2.5" stroke-dasharray="6 5"/>
+
+    <text x="65" y="75" font-weight="700" font-size="13" fill="#261F1D">Coordinator A</text>
+    <line x1="60" y1="90" x2="660" y2="90" stroke="#E1E3E0" stroke-width="2"/>
+    <g fill="#A6C2B4" stroke="#264326" stroke-width="2">
+      <circle cx="330" cy="90" r="5"/><circle cx="345" cy="90" r="5"/><circle cx="360" cy="90" r="5"/>
+      <circle cx="375" cy="90" r="5"/><circle cx="390" cy="90" r="5"/>
+    </g>
+
+    <text x="65" y="135" font-weight="700" font-size="13" fill="#261F1D">Coordinator B</text>
+    <line x1="60" y1="150" x2="660" y2="150" stroke="#E1E3E0" stroke-width="2"/>
+    <g fill="#DEEAF4" stroke="#2274B5" stroke-width="2">
+      <circle cx="135" cy="150" r="5"/><circle cx="240" cy="150" r="5"/><circle cx="360" cy="150" r="5"/>
+      <circle cx="480" cy="150" r="5"/><circle cx="585" cy="150" r="5"/>
+    </g>
+
+    <line x1="60" y1="210" x2="660" y2="210" stroke="#264326" stroke-width="2.5"/>
+    <g font-size="13" font-weight="600" fill="#261F1D" text-anchor="middle">
+      <text x="60" y="228">0</text><text x="210" y="228">10</text><text x="360" y="228">20</text>
+      <text x="510" y="228">30</text><text x="660" y="228">40</text>
+    </g>
+  </g>
+</svg>
+
+<p>Both average to 20 hours. But if you were building next month's staffing schedule, would you plan around these two coordinators the same way?</p>
+<div class="mlrk-card" id="card-sd-predict"><p><strong>Which coordinator's weekly hours would be easier to predict from week to week?</strong></p>
+<button type="button" class="mlrk-choice" data-a="a">Coordinator A</button>
+<button type="button" class="mlrk-choice" data-a="b">Coordinator B</button>
+<button type="button" class="mlrk-choice" data-a="equal">They're equally predictable, since the average is identical</button>
+<div id="sdpredictfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-sd-concept" style="margin-top:.8rem"><p><strong>What does standard deviation actually measure?</strong></p>
+<button type="button" class="mlrk-choice" data-a="distance">A typical distance between each value and the mean</button>
+<button type="button" class="mlrk-choice" data-a="middle">The middle value once the data is sorted</button>
+<button type="button" class="mlrk-choice" data-a="frequent">The single most frequent value</button>
+<div id="sdconceptfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Five-number summary: reading the whole shape at once</h2>
+<p>Go back to the eleven gala gifts. Splitting the sorted list into quarters gives a <strong>five-number summary</strong>: the minimum, the first quartile (Q1, the median of the bottom half), the overall median, the third quartile (Q3, the median of the top half), and the maximum. For these gifts, that works out to $40, $50, $55, $70, and $5,000.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 640 170" role="img" aria-labelledby="fnsTitle fnsDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="fnsTitle">Five-number summary of the gala gifts, drawn with even spacing rather than to scale</title>
+  <desc id="fnsDesc">Five evenly spaced tick marks are labeled, left to right: minimum $40, Q1 $50, median $55, Q3 $70, and maximum $5,000. The spacing is even for readability, not proportional to the real dollar gaps between them.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="310" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Five-number summary (not to scale)</text>
+    <line x1="70" y1="90" x2="550" y2="90" stroke="#264326" stroke-width="3"/>
+    <g stroke="#264326" stroke-width="2.5">
+      <line x1="70" y1="80" x2="70" y2="100"/>
+      <line x1="190" y1="80" x2="190" y2="100"/>
+      <line x1="310" y1="80" x2="310" y2="100"/>
+      <line x1="430" y1="80" x2="430" y2="100"/>
+      <line x1="550" y1="80" x2="550" y2="100"/>
+    </g>
+    <g font-size="14" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="70" y="65">$40</text><text x="190" y="65">$50</text><text x="310" y="65">$55</text>
+      <text x="430" y="65">$70</text><text x="550" y="65">$5,000</text>
+    </g>
+    <g font-size="13" font-weight="600" fill="#261F1D" text-anchor="middle">
+      <text x="70" y="120">Min</text><text x="190" y="120">Q1</text><text x="310" y="120">Median</text>
+      <text x="430" y="120">Q3</text><text x="550" y="120">Max</text>
+    </g>
+  </g>
+</svg>
+<p class="mlrk-small">The diagram above spaces all five numbers evenly so every label stays readable. On a true dollar scale, the first four numbers would sit almost on top of each other near zero, and the maximum would be far off the page: the real gap between $70 and $5,000 dwarfs the real gap between $40 and $70.</p>
+
+<div class="mlrk-card" id="card-iqr-skew" style="margin-top:1rem"><p><strong>The interquartile range (IQR) is Q3 minus Q1: $70 − $50 = $20, a tight span. Meanwhile the gap between Q3 ($70) and the maximum ($5,000) is enormous. What does that specific pattern usually signal?</strong></p>
+<button type="button" class="mlrk-choice" data-a="skew">A strong right skew, likely driven by one or more outliers on the high end</button>
+<button type="button" class="mlrk-choice" data-a="symmetric">A perfectly symmetric dataset</button>
+<button type="button" class="mlrk-choice" data-a="mistake">A data-entry mistake, since Q3 and the max should always be close together</button>
+<div id="iqrskewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-fraction-q1" style="margin-top:.8rem"><p><strong>Roughly what fraction of the eleven donations fall at or below Q1 ($50)?</strong></p>
+<button type="button" class="mlrk-choice" data-a="quarter">About one quarter (25%)</button>
+<button type="button" class="mlrk-choice" data-a="half">About half (50%)</button>
+<button type="button" class="mlrk-choice" data-a="all">All eleven donations</button>
+<div id="fractionq1fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Match the shape: histogram classification</h2>
+<p>Each histogram below shows the same kind of chart with a different shape. Classify each one using the same four options.</p>
+
+<div class="mlrk-card" id="card-hist-1"><p><strong>Histogram A</strong></p>
+<svg class="mlrk-illustration" style="max-width:340px" viewBox="0 0 300 150" role="img" aria-labelledby="histATitle histADesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="histATitle">Histogram A</title>
+  <desc id="histADesc">A histogram with ten bars. The tallest bars sit on the left side, and bar heights get shorter and shorter moving to the right, ending in a long low tail.</desc>
+  <g fill="#2274B5"><rect x="20" y="85" width="22" height="40"/><rect x="48" y="35" width="22" height="90"/><rect x="76" y="47" width="22" height="78"/><rect x="104" y="65" width="22" height="60"/><rect x="132" y="83" width="22" height="42"/><rect x="160" y="97" width="22" height="28"/><rect x="188" y="107" width="22" height="18"/><rect x="216" y="114" width="22" height="11"/><rect x="244" y="119" width="22" height="6"/><rect x="272" y="122" width="22" height="3"/></g>
+  <line x1="15" y1="125" x2="285" y2="125" stroke="#264326" stroke-width="2"/>
+</svg>
+<p><strong>What shape is this?</strong></p>
+<button type="button" class="mlrk-choice" data-a="right">Right-skewed (long tail stretching to the right)</button>
+<button type="button" class="mlrk-choice" data-a="left">Left-skewed (long tail stretching to the left)</button>
+<button type="button" class="mlrk-choice" data-a="symmetric">Roughly symmetric</button>
+<button type="button" class="mlrk-choice" data-a="bimodal">Bimodal (two separate peaks)</button>
+<div id="hist1fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-hist-2" style="margin-top:1rem"><p><strong>Histogram B</strong></p>
+<svg class="mlrk-illustration" style="max-width:340px" viewBox="0 0 300 150" role="img" aria-labelledby="histBTitle histBDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="histBTitle">Histogram B</title>
+  <desc id="histBDesc">A histogram with ten bars. The tallest bars sit on the right side, with the shortest bars on the left, forming a long low tail extending to the left.</desc>
+  <g fill="#2274B5"><rect x="20" y="122" width="22" height="3"/><rect x="48" y="119" width="22" height="6"/><rect x="76" y="114" width="22" height="11"/><rect x="104" y="107" width="22" height="18"/><rect x="132" y="97" width="22" height="28"/><rect x="160" y="83" width="22" height="42"/><rect x="188" y="65" width="22" height="60"/><rect x="216" y="35" width="22" height="90"/><rect x="244" y="47" width="22" height="78"/><rect x="272" y="85" width="22" height="40"/></g>
+  <line x1="15" y1="125" x2="285" y2="125" stroke="#264326" stroke-width="2"/>
+</svg>
+<p><strong>What shape is this?</strong></p>
+<button type="button" class="mlrk-choice" data-a="right">Right-skewed (long tail stretching to the right)</button>
+<button type="button" class="mlrk-choice" data-a="left">Left-skewed (long tail stretching to the left)</button>
+<button type="button" class="mlrk-choice" data-a="symmetric">Roughly symmetric</button>
+<button type="button" class="mlrk-choice" data-a="bimodal">Bimodal (two separate peaks)</button>
+<div id="hist2fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-hist-3" style="margin-top:1rem"><p><strong>Histogram C</strong></p>
+<svg class="mlrk-illustration" style="max-width:340px" viewBox="0 0 300 150" role="img" aria-labelledby="histCTitle histCDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="histCTitle">Histogram C</title>
+  <desc id="histCDesc">A histogram with ten bars, short on both ends and tallest in the middle two bars, roughly mirroring itself from left to right.</desc>
+  <g fill="#2274B5"><rect x="20" y="117" width="22" height="8"/><rect x="48" y="105" width="22" height="20"/><rect x="76" y="87" width="22" height="38"/><rect x="104" y="67" width="22" height="58"/><rect x="132" y="53" width="22" height="72"/><rect x="160" y="53" width="22" height="72"/><rect x="188" y="67" width="22" height="58"/><rect x="216" y="87" width="22" height="38"/><rect x="244" y="105" width="22" height="20"/><rect x="272" y="117" width="22" height="8"/></g>
+  <line x1="15" y1="125" x2="285" y2="125" stroke="#264326" stroke-width="2"/>
+</svg>
+<p><strong>What shape is this?</strong></p>
+<button type="button" class="mlrk-choice" data-a="right">Right-skewed (long tail stretching to the right)</button>
+<button type="button" class="mlrk-choice" data-a="left">Left-skewed (long tail stretching to the left)</button>
+<button type="button" class="mlrk-choice" data-a="symmetric">Roughly symmetric</button>
+<button type="button" class="mlrk-choice" data-a="bimodal">Bimodal (two separate peaks)</button>
+<div id="hist3fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-hist-4" style="margin-top:1rem"><p><strong>Histogram D</strong></p>
+<svg class="mlrk-illustration" style="max-width:340px" viewBox="0 0 300 150" role="img" aria-labelledby="histDTitle histDDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="histDTitle">Histogram D</title>
+  <desc id="histDDesc">A histogram with ten bars showing two separate tall peaks with a shorter dip in bar heights between them.</desc>
+  <g fill="#2274B5"><rect x="20" y="98" width="22" height="27"/><rect x="48" y="58" width="22" height="67"/><rect x="76" y="34" width="22" height="91"/><rect x="104" y="72" width="22" height="53"/><rect x="132" y="98" width="22" height="27"/><rect x="160" y="98" width="22" height="27"/><rect x="188" y="72" width="22" height="53"/><rect x="216" y="34" width="22" height="91"/><rect x="244" y="58" width="22" height="67"/><rect x="272" y="98" width="22" height="27"/></g>
+  <line x1="15" y1="125" x2="285" y2="125" stroke="#264326" stroke-width="2"/>
+</svg>
+<p><strong>What shape is this?</strong></p>
+<button type="button" class="mlrk-choice" data-a="right">Right-skewed (long tail stretching to the right)</button>
+<button type="button" class="mlrk-choice" data-a="left">Left-skewed (long tail stretching to the left)</button>
+<button type="button" class="mlrk-choice" data-a="symmetric">Roughly symmetric</button>
+<button type="button" class="mlrk-choice" data-a="bimodal">Bimodal (two separate peaks)</button>
+<div id="hist4fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Verify before you trust it: an AI describes a chart</h2>
+<p>Picture a simplified histogram of the ten smaller gala gifts, grouped into $5 buckets from $40 to $79. The eleventh gift, $5,000, falls completely off this chart's scale.</p>
+
+<svg class="mlrk-illustration" style="max-width:500px" viewBox="0 0 500 180" role="img" aria-labelledby="aihistTitle aihistDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="aihistTitle">Histogram of the ten smaller gala gifts, with the $5,000 gift noted separately</title>
+  <desc id="aihistDesc">A histogram with eight bars covering $40 to $79 in $5 buckets. Most bars hold one gift each, except one bar in the middle holding three gifts. A dashed box off to the right notes one additional $5,000 gift that falls outside this chart entirely.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <g fill="#2274B5">
+      <rect x="30" y="115" width="40" height="25"/>
+      <rect x="78" y="115" width="40" height="25"/>
+      <rect x="126" y="65" width="40" height="75"/>
+      <rect x="174" y="115" width="40" height="25"/>
+      <rect x="222" y="115" width="40" height="25"/>
+      <rect x="270" y="115" width="40" height="25"/>
+      <rect x="318" y="115" width="40" height="25"/>
+      <rect x="366" y="115" width="40" height="25"/>
+    </g>
+    <line x1="25" y1="140" x2="410" y2="140" stroke="#264326" stroke-width="2.5"/>
+    <g font-size="13" font-weight="600" fill="#261F1D" text-anchor="middle">
+      <text x="50" y="158">$40s</text><text x="146" y="158">$50s</text><text x="290" y="158">$60s</text><text x="386" y="158">$70s</text>
+    </g>
+    <line x1="410" y1="140" x2="440" y2="105" stroke="#264326" stroke-width="2.5" stroke-dasharray="6 5"/>
+    <polygon points="440,105 428,108 435,116" fill="#264326"/>
+    <rect x="420" y="55" width="70" height="55" rx="10" fill="#FECC5B" stroke="#83671C" stroke-width="3" stroke-dasharray="6 5"/>
+    <text x="455" y="78" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">$5,000</text>
+    <text x="455" y="96" text-anchor="middle" font-size="13" fill="#261F1D">off chart</text>
+  </g>
+</svg>
+
+<p>You upload that chart to an AI assistant and ask it to describe the shape. It responds: "The gala donations look roughly symmetric, clustered tightly around $58."</p>
+<div class="mlrk-card" id="card-ai-critique"><p><strong>Is the AI's description trustworthy as a full description of this dataset?</strong></p>
+<button type="button" class="mlrk-choice" data-a="incomplete">No, it's describing the visible bars reasonably well, but it never mentions the $5,000 gift, which the mean still absorbs completely</button>
+<button type="button" class="mlrk-choice" data-a="accurate">Yes, that's a completely accurate description</button>
+<button type="button" class="mlrk-choice" data-a="madeup">No, because $58 is a made-up number with no relationship to the data</button>
+<div id="aicritiquefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<label for="aicritiquereflect" style="display:block;margin-top:1rem"><strong>In 1–2 sentences:</strong> what specific question would you ask before repeating an AI's chart description to your executive director?</label>
+<textarea id="aicritiquereflect" class="mlrk-response" data-save placeholder="Try starting with: Before repeating this, I'd check whether..."></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about descriptive statistics and distribution shape.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> If a distribution is right-skewed, the mean typically sits higher than the median.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Standard deviation can come out as a negative number when a dataset has a lot of small values.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> The median is generally more resistant to a single extreme value than the mean is.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Building a five-number summary requires calculating each value's distance from the mean.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Sort by role: measures of center vs. measures of spread</h2>
+<p>Drag each term into the zone that describes what it measures, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">mean</span>
+  <span id="chip2" class="mlrk-draggable">median</span>
+  <span id="chip3" class="mlrk-draggable">mode</span>
+  <span id="chip4" class="mlrk-draggable">standard deviation</span>
+  <span id="chip5" class="mlrk-draggable">interquartile range (IQR)</span>
+  <span id="chip6" class="mlrk-draggable">range</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Measure of center</strong></p><div class="mlrk-dropzone" id="zoneCenter"></div></div>
+  <div><p class="mlrk-small"><strong>Measure of spread</strong></p><div class="mlrk-dropzone" id="zoneSpread"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Order the steps: building a five-number summary</h2>
+<p>Click steps, in order, to build the sequence for computing a five-number summary from a raw list of numbers. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="sort"><span class="mlrk-order-num"></span> Sort the data from smallest to largest.</li>
+  <li class="mlrk-orderitem" data-step="minmax"><span class="mlrk-order-num"></span> Read off the minimum (first value) and maximum (last value).</li>
+  <li class="mlrk-orderitem" data-step="median"><span class="mlrk-order-num"></span> Find the median: the middle value of the whole sorted list.</li>
+  <li class="mlrk-orderitem" data-step="q1"><span class="mlrk-order-num"></span> Find Q1: the median of just the lower half, below the overall median.</li>
+  <li class="mlrk-orderitem" data-step="q3"><span class="mlrk-order-num"></span> Find Q3: the median of just the upper half, above the overall median.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Fill in the blank</h2>
+<p>For the gala gifts, Q1 = $50 and Q3 = $70. The span between them, the middle 50% of the sorted data, has its own name.</p>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Type the term for the span between Q1 and Q3:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Watch: descriptive statistics in one video</h2>
+<p>As you watch, notice two things: how the video treats variance and standard deviation as two closely related ways of measuring the same idea (spread), and how it describes skewness in terms of which direction the tail points, the same tail-direction language used throughout this reading.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=SplCk-t1BeA" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which measure from the video (mean, median, mode, variance, standard deviation, or skewness) clicked differently for you after already working through the gala gifts by hand?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>15. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"When would you use the median instead of the mean?" is one of the most common warm-up questions in a data-analyst technical screen. Interviewers are listening for the reasoning, an answer that names skew and outliers by name, not just "the median is safer sometimes." Being able to point at a specific pattern, a tight IQR next to a huge jump to the max, and say what it implies is exactly the signal that separates a strong answer from a memorized one.</p>
+<p>Standard deviation shows up as a follow-up almost every time: "if two groups have the same average, how would you tell them apart?" Naming spread, unprompted, and explaining what a small versus large standard deviation implies for reliability or risk, is a strong answer.</p>
+<p>Distribution shape comes up constantly once a role touches reporting or dashboards: "how would you describe this variable to a non-technical stakeholder?" The strongest answers describe shape before summarizing with a single number, exactly the order this reading practiced: look at the histogram or five-number summary first, then decide which statistic to lead with.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: a hiring manager says, "Our average customer order size is $340, but I don't fully trust that number." What's the strongest first response?</strong></p>
+<button type="button" class="mlrk-choice" data-a="median">Look at the median and the distribution's shape. If it's right-skewed, a few very large orders could be inflating the mean.</button>
+<button type="button" class="mlrk-choice" data-a="recompute">Recompute the same mean a second time to make sure the math is right.</button>
+<button type="button" class="mlrk-choice" data-a="trust">Assume the number is fine, since companies always report the mean.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Habit: question the number, then reflect</h2>
+<div class="mlrk-card" id="card-question"><p><strong>You're handed a one-line summary: "Average customer wait time: 42 minutes." What single follow-up question would tell you whether 42 minutes is a fair way to describe "typical"?</strong></p>
+<button type="button" class="mlrk-choice" data-a="shape">How does the median wait time compare to the mean, and is the distribution skewed?</button>
+<button type="button" class="mlrk-choice" data-a="decimals">How many decimal places was the average rounded to?</button>
+<button type="button" class="mlrk-choice" data-a="software">What software calculated the average?</button>
+<div id="questionfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy" style="display:block;margin-top:1rem"><strong>Your habit:</strong> in 1-2 sentences, describe the check you'd build into your own workflow to avoid repeating a misleading average.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: Before I report any average, I..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>17. Summary &amp; critical thinking</h2>
+<p>Two habits carried this whole reading: choosing mean, median, or mode based on which one actually resists a dataset's outliers and shape, and reading a five-number summary or histogram before ever trusting a single reported average.</p>
+<div class="mlrk-card" id="card-critical"><p><strong>New situation:</strong> a small clinic reports patient wait times for nine visits this week: 8, 9, 10, 10, 11, 12, 12, 13, and 65 minutes (one patient waited unusually long due to an emergency ahead of them). Which statistic should the clinic manager cite as the "typical" wait time?</p>
+<button type="button" class="mlrk-choice" data-a="median">The median, 11 minutes, since the mean would be pulled upward by the one 65-minute outlier</button>
+<button type="button" class="mlrk-choice" data-a="mean">The mean, since it uses every data point</button>
+<button type="button" class="mlrk-choice" data-a="mode">The mode, since 10 and 12 both repeat twice</button>
+<div id="criticalfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue" style="display:block;margin-top:1rem"><strong>In your own words:</strong> what question would you ask about a dataset before deciding whether the mean or the median more fairly represents it?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>18. Thinking ahead</h2>
+<p>The same numbers, mean, median, mode, standard deviation, and the five-number summary, keep reappearing every time a real dataset gets examined for the first time. A data tool like pandas can print all of them for an entire column at once with a single method call (commonly named <code>describe()</code>), but reading that printed table and knowing which number to trust for which question is exactly the skill practiced by hand in this reading. The same skew-detection habit also scales up directly to picking the right chart type for a variable, and to justifying a business recommendation with the statistic that actually fits the data's real shape rather than the one that's easiest to compute.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>19. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add descriptive-statistics-reading1.json
+git commit -m "Complete the loudest number in the room reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/mean-median-basics" target="_blank" rel="noopener">Khan Academy: Summarizing Quantitative Data</a> — more worked examples of mean, median, and mode.</li>
+<li><a href="https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/box-whisker-plots/e/analyzing-data-with-box-plots" target="_blank" rel="noopener">Khan Academy: Reading Box Plots (practice)</a> — more practice reading a five-number summary.</li>
+<li><a href="https://www.mathsisfun.com/data/standard-deviation.html" target="_blank" rel="noopener">Math Is Fun: Standard Deviation</a> — a step-by-step walkthrough of the calculation.</li>
+<li><a href="https://www.mathsisfun.com/data/skewness.html" target="_blank" rel="noopener">Math Is Fun: Skewness</a> — more visual examples of skewed distributions.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "descriptive-statistics-reading1";
+  const TITLE = "The Loudest Number in the Room — Descriptive Statistics & Reading Distributions";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-recall-sumlen", buttonSelector:"#card-recall-sumlen .mlrk-choice", feedbackSelector:"#recsumlenfb", correct:"mean",
+    feedback:{mean:"sum(amounts) adds every value together, and len(amounts) counts how many there are. Dividing the total by the count is exactly the definition of a mean.",
+              max:"sum()/len() has nothing to do with finding a maximum. It's adding everything up, then dividing by the count.",
+              doubled:"len(amounts) alone would give the count. Dividing the sum by it produces the mean, not a doubled count."}});
+
+  K.quiz({id:"q-recall-sort", buttonSelector:"#card-recall-sort .mlrk-choice", feedbackSelector:"#recsortfb", correct:"sort",
+    feedback:{sort:"The median is defined by position in a sorted order: the middle value once everything is arranged smallest to largest. An unsorted list has no reliable middle.",
+              square:"Squaring values doesn't help find a middle position. Sorting does.",
+              dedupe:"Removing duplicates would change the dataset itself. The median is about position after sorting, not about uniqueness."}});
+
+  K.quiz({id:"q-recall-compare", buttonSelector:"#card-recall-compare .mlrk-choice", feedbackSelector:"#reccomparefb", correct:"lt",
+    feedback:{lt:"$45 is less than $50, so this comparison is True.",
+              gt:"$45 is not greater than $50, so this comparison is False.",
+              eq:"$45 and $50 are different values, so this equality check is False."}});
+
+  K.quiz({id:"q-recall-function", buttonSelector:"#card-recall-function .mlrk-choice", feedbackSelector:"#recfunctionfb", correct:"param",
+    feedback:{param:"A parameter is a placeholder filled in by whatever gets passed at call time, exactly what makes the function reusable on next month's donations, or any other list.",
+              hardcode:"Hard-coding today's numbers would make the function only work once. A parameter keeps it general.",
+              none:"Without a parameter, the function would have no way to receive different data to work on."}});
+
+  const GIFTS = [40,45,50,50,50,55,60,65,70,75,5000];
+  function revealCompute(){
+    $("#computeScreen").textContent =
+`Sum: 40+45+50+50+50+55+60+65+70+75+5000 = 5,560
+Mean: 5,560 / 11 = $505.45
+
+Sorted, middle (6th of 11): $55 = Median
+Most frequent value: $50 appears 3 times = Mode`;
+  }
+  K.quiz({id:"q-predict-median", buttonSelector:"#card-predict-median .mlrk-choice", feedbackSelector:"#predictmedianfb", correct:"55",
+    feedback:{"55":"The 6th value in the sorted list of eleven is $55.",
+              "505":"$505 is close to the mean, not the median. The median just looks at position in the sorted list.",
+              "50":"$50 is the mode (it repeats three times) and part of the lower half, but the middle (6th) value is $55."},
+    onDone(){revealCompute()}});
+
+  K.quiz({id:"q-mean-median-judgment", buttonSelector:"#card-mean-median-judgment .mlrk-choice", feedbackSelector:"#meanmedianjudgmentfb", correct:"median",
+    feedback:{median:"The median describes the donor in the middle of the pack. The mean is correctly calculated, but it's being dragged upward by a single $5,000 gift that isn't representative of the other ten donors.",
+              mean:"Mathematical correctness isn't the same as representativeness. The mean is calculated correctly, but $505 doesn't describe any typical donor here.",
+              neither:"An outlier doesn't make every summary statistic useless. It just means picking the one that's actually resistant to it, and saying why."}});
+
+  K.Scoring.register("q-meanguess",1,"quiz");
+  let meanguessAttempts=0, meanguessDone=false;
+  const ACTUAL_MEAN = (4+5+5+6+6+7+40)/7;
+  $("#meanguesscheck").addEventListener("click",()=>{
+    if(meanguessDone) return;
+    meanguessAttempts++;
+    const raw = $("#meanguess").value.trim();
+    const val = parseFloat(raw);
+    const fb = $("#meanguessfb");
+    const close = !isNaN(val) && Math.abs(val - ACTUAL_MEAN) <= 2;
+    if(close){
+      K.Scoring.award("q-meanguess", meanguessAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Close.</strong> The actual new mean is (4+5+5+6+6+7+40) / 7 ≈ <strong>10.43 hours</strong>, up from 5.5. The new median (4th of 7 sorted values) is only <strong>6 hours</strong>, barely moved.";
+      meanguessDone=true;
+    } else if(meanguessAttempts>=2){
+      K.Scoring.award("q-meanguess",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer.</strong> The new mean is (4+5+5+6+6+7+40) / 7 ≈ <strong>10.43 hours</strong>, up from 5.5. The new median (4th of 7 sorted values) is only <strong>6 hours</strong>, barely moved.";
+      meanguessDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite that close.</strong> Try again: add the new value to the old sum, then divide by the new count of volunteers.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.quiz({id:"q-outlier-moved", buttonSelector:"#card-outlier-moved .mlrk-choice", feedbackSelector:"#outliermovedfb", correct:"mean",
+    feedback:{mean:"The mean jumped from 5.5 to about 10.43 hours (up ~4.9). The median only moved from 5.5 to 6 (up 0.5), since it only cares about position, not size.",
+              median:"It's the opposite: the median barely moved. The mean is the one that reacted strongly to the new 40-hour value.",
+              same:"They moved by very different amounts: about 4.9 hours for the mean versus 0.5 hours for the median."}});
+
+  K.quiz({id:"q-sd-predict", buttonSelector:"#card-sd-predict .mlrk-choice", feedbackSelector:"#sdpredictfb", correct:"a",
+    feedback:{a:"A's hours barely move away from 20 each week (18 to 22). B's swing from 5 to 35, a much bigger typical distance from the mean, even though both average to 20.",
+              b:"B's hours swing much more widely (5 to 35) than A's (18 to 22), so B is the less predictable one.",
+              equal:"An identical average doesn't mean identical predictability. A's values stay close to 20 every week; B's don't."}});
+
+  K.quiz({id:"q-sd-concept", buttonSelector:"#card-sd-concept .mlrk-choice", feedbackSelector:"#sdconceptfb", correct:"distance",
+    feedback:{distance:"Standard deviation summarizes spread: on average, how far does a typical value sit from the mean? Coordinator A's is small (about 1.4 hours); Coordinator B's is much larger (about 10.75 hours), for the exact same mean.",
+              middle:"That describes the median, a completely different measure.",
+              frequent:"That describes the mode. Standard deviation is about spread, not frequency."}});
+
+  K.quiz({id:"q-iqr-skew", buttonSelector:"#card-iqr-skew .mlrk-choice", feedbackSelector:"#iqrskewfb", correct:"skew",
+    feedback:{skew:"A tight middle 50% next to a huge jump up to the maximum is a classic right-skew fingerprint: most values cluster together, and one or more extreme values stretch the top of the range far out.",
+              symmetric:"A symmetric dataset wouldn't have such a dramatic size difference between the IQR and the gap up to the maximum.",
+              mistake:"A big gap between Q3 and the max isn't automatically an error. It's exactly what a real outlier, like the $5,000 gift, produces."}});
+
+  K.quiz({id:"q-fraction-q1", buttonSelector:"#card-fraction-q1 .mlrk-choice", feedbackSelector:"#fractionq1fb", correct:"quarter",
+    feedback:{quarter:"That's the definition of the first quartile: about 25% of sorted values sit at or below it, by construction.",
+              half:"50% at or below is what the median marks, not Q1.",
+              all:"Q1 only marks the boundary for the bottom quarter, not the entire dataset."}});
+
+  function histQuiz(id, cardSel, fbSel, correct, explain){
+    K.quiz({id, buttonSelector:cardSel+" .mlrk-choice", feedbackSelector:fbSel, correct,
+      feedback:{
+        right: correct==="right" ? explain : "Look again at where the tallest bars sit, and which side has the long, low tail.",
+        left: correct==="left" ? explain : "Look again at where the tallest bars sit, and which side has the long, low tail.",
+        symmetric: correct==="symmetric" ? explain : "A symmetric shape would mirror itself left to right. Check whether this one actually does.",
+        bimodal: correct==="bimodal" ? explain : "A bimodal shape has two separate tall peaks with a dip between them. Check whether this one actually has two peaks."
+      }});
+  }
+  histQuiz("q-hist-1","#card-hist-1","#hist1fb","right","The tallest bar sits near the left, and heights fall off steadily into a long, low tail stretching right, the definition of a right skew.");
+  histQuiz("q-hist-2","#card-hist-2","#hist2fb","left","The tallest bar sits near the right, and heights fall off steadily into a long, low tail stretching left, the definition of a left skew.");
+  histQuiz("q-hist-3","#card-hist-3","#hist3fb","symmetric","Heights rise to a peak in the middle two bars and fall off in a mirror-image pattern on both sides.");
+  histQuiz("q-hist-4","#card-hist-4","#hist4fb","bimodal","There are two separate tall peaks with a shorter dip in the middle, the signature of a bimodal shape.");
+
+  K.quiz({id:"q-ai-critique", buttonSelector:"#card-ai-critique .mlrk-choice", feedbackSelector:"#aicritiquefb", correct:"incomplete",
+    feedback:{incomplete:"An AI reading only the pixels of a chart can miss context sitting just outside the frame. The ten visible donations really do cluster near $58, but calling the whole dataset symmetric ignores the outlier entirely, exactly the kind of claim worth checking against the real numbers before repeating it to a stakeholder.",
+              accurate:"It's a reasonable read of the ten visible bars, but silent about the eleventh gift, a serious omission for a claim about the whole dataset's shape.",
+              madeup:"$58 is a reasonable estimate of where the ten smaller donations cluster. The real problem is what the description leaves out, not that number itself."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"If a distribution is right-skewed, the mean typically sits higher than the median.", correct:true,
+      hint:"Think back to the gala gifts: which measure sat closer to $505, and which sat closer to $55?",
+      explain:"A long right tail pulls the mean upward, past the median, exactly like the gala gifts in section 4."},
+    {value:"b", label:"Standard deviation can come out as a negative number when a dataset has a lot of small values.", correct:false,
+      hint:"Standard deviation is built from squared distances before anything is undone. Can a squared number end up negative?",
+      explain:"Standard deviation is always zero or positive. It measures distance, and distance doesn't come out negative."},
+    {value:"c", label:"The median is generally more resistant to a single extreme value than the mean is.", correct:true,
+      hint:"Revisit section 5's volunteer-hours example: which measure moved by half an hour, and which moved by almost 5?",
+      explain:"The median only looks at position in a sorted list, so one extreme value can only nudge it slightly, exactly what section 5's volunteer data showed."},
+    {value:"d", label:"Building a five-number summary requires calculating each value's distance from the mean.", correct:false,
+      hint:"A five-number summary is built entirely from sorting and position: min, Q1, median, Q3, max. Does distance from the mean show up anywhere in that list?",
+      explain:"A five-number summary only needs sorting and position. Distance from the mean is what standard deviation measures, a separate calculation."}
+  ]});
+
+  K.dragDrop("#dragarea", "act-drag-role");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneCenter", label:"mean", expectedLabel:"Measure of center"},
+    chip2:{expectedId:"zoneCenter", label:"median", expectedLabel:"Measure of center"},
+    chip3:{expectedId:"zoneCenter", label:"mode", expectedLabel:"Measure of center"},
+    chip4:{expectedId:"zoneSpread", label:"standard deviation", expectedLabel:"Measure of spread"},
+    chip5:{expectedId:"zoneSpread", label:"interquartile range (IQR)", expectedLabel:"Measure of spread"},
+    chip6:{expectedId:"zoneSpread", label:"range", expectedLabel:"Measure of spread"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-fivenum", correctOrder:["sort","minmax","median","q1","q3"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const val = $("#blankinput").value.trim().toLowerCase();
+    const ok = val==="interquartile range" || val==="iqr";
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> The span between Q1 and Q3 is the interquartile range (IQR): the middle 50% of the sorted data.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The term is the <strong>interquartile range</strong> (IQR).";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"SplCk-t1BeA"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-aicritiquereflect", selector:"#aicritiquereflect", minWords:8});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"median",
+    feedback:{median:"Naming skew and outliers directly, and offering to check the median and shape, is exactly the reasoning an interviewer wants to hear.",
+              recompute:"Recomputing the same formula again wouldn't catch the actual problem: whether the mean is a fair summary in the first place.",
+              trust:"Averages are common, but that doesn't make every reported mean trustworthy without checking shape first."}});
+
+  K.quiz({id:"q-question", buttonSelector:"#card-question .mlrk-choice", feedbackSelector:"#questionfb", correct:"shape",
+    feedback:{shape:"Comparing the mean and median (and checking skew) is the fastest way to tell whether an average is being distorted by a handful of extreme values.",
+              decimals:"Rounding precision has nothing to do with whether the average is a representative number.",
+              software:"Which tool did the math isn't relevant to whether the underlying number is representative."}});
+
+  K.quiz({id:"q-critical", buttonSelector:"#card-critical .mlrk-choice", feedbackSelector:"#criticalfb", correct:"median",
+    feedback:{median:"The median resists the 65-minute outlier. Sorted, the middle (5th of 9) value is 11 minutes, a fair read of a typical visit.",
+              mean:"Using every data point isn't the same as being representative. The mean here gets pulled well above what most patients actually experienced.",
+              mode:"10 and 12 both repeating twice does make this dataset technically bimodal, but mode is about frequency, not about resisting an outlier. The median is built specifically to ignore how extreme one value is."}});
+
+  const AI_PROMPTS = [
+    "Think of a time a headline or news report cited an average that felt off once you learned more about the underlying data. What got left out?",
+    "If you had to explain to a friend why one huge donation can distort an average, what everyday comparison would you use?",
+    "Where else in daily life might a typical number hide a skewed reality, like average home prices, average commute times, or average salaries?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["eda-statistics"],
+      skills:["statistical-analysis","data-distributions-shape"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>
