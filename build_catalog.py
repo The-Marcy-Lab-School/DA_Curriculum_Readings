@@ -32,6 +32,14 @@ def find_readings():
     return sorted(readings, key=lambda r: r.get("title", ""))
 
 
+def _escape_md_cell(text):
+    # A literal "|" inside a table cell splits it into an extra column for
+    # every Markdown renderer (GitHub included) — escape it so a title like
+    # "One Job at a Time | Writing a Second Function" can't silently shift
+    # every later column (Est. time, Audience, Link) over by one.
+    return str(text).replace("|", "\\|")
+
+
 def build_readme_table(readings, taxonomy):
     if not readings:
         return "_No readings published yet._"
@@ -40,8 +48,8 @@ def build_readme_table(readings, taxonomy):
     for r in readings:
         tags = ", ".join(taxonomy.get(t, {}).get("label", t) for t in r.get("tags", []))
         lines.append(
-            f"| {r['title']} | {tags} | {r.get('time_minutes','?')} min | "
-            f"{r.get('audience','data')} | [Open]({r['url']}) |"
+            f"| {_escape_md_cell(r['title'])} | {_escape_md_cell(tags)} | {r.get('time_minutes','?')} min | "
+            f"{_escape_md_cell(r.get('audience','data'))} | [Open]({r['url']}) |"
         )
     return "\n".join(lines)
 

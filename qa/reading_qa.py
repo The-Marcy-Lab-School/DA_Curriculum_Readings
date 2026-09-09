@@ -66,7 +66,11 @@ def check_banned_phrases(text):
     # in a trace/summary string). A real Python return-type annotation
     # ("def foo(x: int) -> str:") is the one legitimate use — skip only that shape.
     PY_RETURN_TYPE = re.compile(r"\)\s*->\s*[\w\[\], .\"']+\s*:")
-    for line in text.splitlines():
+    # HTML comment closers ("-->") trivially contain "->" as a substring — strip
+    # comments out first so an authoring note like "<!-- LEFT: ... -->" never
+    # false-positives here.
+    text_no_comments = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+    for line in text_no_comments.splitlines():
         if "->" not in line:
             continue
         if PY_RETURN_TYPE.search(line):
