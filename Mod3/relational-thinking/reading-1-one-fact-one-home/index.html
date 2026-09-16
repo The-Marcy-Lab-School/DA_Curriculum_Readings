@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>One Fact, One Home — Relational Thinking &amp; Normalization</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:640px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-table-wrap{overflow-x:auto;margin:1rem 0}
+.mlrk-flat-table{width:100%;border-collapse:collapse;font-size:0.9375rem;min-width:640px}
+.mlrk-flat-table caption{caption-side:top;text-align:left;font-weight:700;margin-bottom:.5rem;color:var(--mlrk-ink-900)}
+.mlrk-flat-table th,.mlrk-flat-table td{border:1px solid var(--mlrk-gray-400);padding:.5rem .6rem;text-align:left}
+.mlrk-flat-table th{background:var(--mlrk-bg-light-alt);font-weight:700}
+.mlrk-flat-table tbody tr:nth-child(even){background:var(--mlrk-gray-100)}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>One Fact, One Home</h1>
+<p class="mlrk-lead">A community library tracks every book loan in a single, growing spreadsheet: one row per checkout, with the patron's name, email, and phone typed in fresh every time they borrow something. That works fine for the first fifty rows. By row five thousand, changing one patron's phone number means hunting down every row that mentions them, and missing even one leaves the library with two different phone numbers for the same person. This reading is about the fix: designing tables where every fact lives in exactly one place.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~36–40 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No SQL setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Relational Databases</strong> — Designing correct primary/foreign keys that express real relationships, normalized appropriately, and identifying a genuine design flaw in an existing schema.</p>
+    <p><strong>Data Modeling</strong> — Mapping real business questions to a database schema before writing any code, with normalization and constraint choices you can explain and defend.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Picture the library's spreadsheet in full. Maria Chen borrows three books over a month: <em>The Hobbit</em>, <em>Dune</em>, and <em>Circe</em>. Each checkout is its own row, so her name, email, and phone number get typed out three separate times, once per row, identically, by whoever's at the front desk that day. James Okoro borrows <em>The Hobbit</em> too, so its title and author get typed out a second time as well, on a completely different row, for a completely different patron.</p>
+<p>Nothing about this is broken yet. The spreadsheet opens, the rows are readable, every column has a value in it. The problem only shows up the moment something changes: Maria moves and gets a new phone number, and now there are three rows to find and edit, in a spreadsheet with thousands of them. Miss one, and the library now has two different phone numbers on file for the same real person, with no way for the spreadsheet itself to notice the disagreement.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 640 260" role="img" aria-labelledby="introTitle introDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="introTitle">From one flat table to three related tables</title>
+  <desc id="introDesc">Left panel: a single loans table with Maria Chen's name repeated on three separate rows. A caption below reads Maria's info: retyped 3 times. Right panel: three small connected boxes labeled patrons, books, and loans, with a caption reading one fact, one home. A dashed connector labeled becomes sits between the two panels.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="10" y="30" width="250" height="180" rx="14" fill="#FFFCF7" stroke="#264326" stroke-width="3"/>
+    <rect x="10" y="30" width="250" height="30" rx="14" fill="#A6C2B4"/>
+    <rect x="10" y="45" width="250" height="15" fill="#A6C2B4"/>
+    <text x="135" y="50" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">loans (one flat table)</text>
+    <text x="24" y="79" font-size="13" fill="#261F1D">L1001 · Maria Chen · Hobbit</text>
+    <text x="24" y="107" font-size="13" fill="#261F1D">L1002 · Maria Chen · Dune</text>
+    <text x="24" y="135" font-size="13" fill="#261F1D">L1003 · Maria Chen · Circe</text>
+    <text x="24" y="163" font-size="13" fill="#261F1D">L1004 · James Okoro · Hobbit</text>
+    <text x="135" y="228" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Maria's info: retyped 3 times</text>
+
+    <line x1="270" y1="120" x2="370" y2="120" stroke="#83671C" stroke-width="3" stroke-dasharray="6 5"/>
+    <text x="320" y="110" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">becomes</text>
+
+    <rect x="390" y="40" width="110" height="50" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="445" y="70" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">patrons</text>
+
+    <rect x="510" y="40" width="110" height="50" rx="10" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="565" y="70" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">books</text>
+
+    <rect x="450" y="150" width="110" height="50" rx="10" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="505" y="180" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">loans</text>
+
+    <line x1="445" y1="90" x2="480" y2="150" stroke="#261F1D" stroke-width="2"/>
+    <line x1="565" y1="90" x2="530" y2="150" stroke="#261F1D" stroke-width="2"/>
+    <text x="505" y="228" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">one fact, one home</text>
+  </g>
+</svg>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> "why would you normalize this schema" and "what's a foreign key" are two of the most common questions in data and analytics interviews, often asked before a single line of SQL syntax comes up. And in any real data job, a dataset that arrives as one flat file, an export from a form tool, a CSV from another team, almost always needs to be reshaped into related tables before its numbers can be trusted.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to read a table's rows and columns. This reading is about what happens once a single flat table starts describing more than one kind of real-world thing at once, patrons and their loans and the books they borrowed, all crammed into one row. Once you can spot that mixing and split it apart, the same instinct carries into any dataset you're ever handed: what are the real, separate things here, before you write a single query against them.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before splitting tables</h2>
+<p class="mlrk-small">Two skills are prerequisites for this reading: reading a table's rows and columns, and noticing when two entries that look almost identical actually represent the same real-world thing. Test each below before moving on.</p>
+<div class="mlrk-card" id="card-recall-rowcol"><p><strong>A table has 6 rows and 4 columns. How many individual values does it hold?</strong></p>
+<button type="button" class="mlrk-choice" data-a="10">10</button>
+<button type="button" class="mlrk-choice" data-a="24">24</button>
+<button type="button" class="mlrk-choice" data-a="4">4</button>
+<div id="recallrowcolfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-duplicate" style="margin-top:.8rem"><p><strong>Scenario check:</strong> two rows list a patron as "Maria Chen" and "maria chen," and both rows share the exact same email address. What's the safest assumption?</p>
+<button type="button" class="mlrk-choice" data-a="same">Almost certainly the same person, entered with inconsistent capitalization.</button>
+<button type="button" class="mlrk-choice" data-a="different">Definitely two different patrons, since the names don't match exactly.</button>
+<button type="button" class="mlrk-choice" data-a="delete">Impossible to tell, so both rows should be deleted.</button>
+<div id="recalldupfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-callout mlrk-callout-blue">Spotting a repeated real-world fact, even when it's typed a little differently each time, is exactly the skill the rest of this reading builds on.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the practice sections below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>primary key</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Primary key</strong><br>A column (or set of columns) that uniquely identifies every row in a table. No two rows can ever share the same value in it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>foreign key</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Foreign key</strong><br>A column in one table that stores another table's primary key value, creating a real, enforceable link between two tables' rows.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>normalization</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Normalization</strong><br>Organizing a database's tables so each real-world fact lives in exactly one place, instead of being copied across many rows.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>redundancy</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Redundancy</strong><br>The same piece of information stored in more than one row, or more than one table, when it only needed to exist once.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>update anomaly</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Update anomaly</strong><br>A bug where changing one real-world fact means updating it in several places at once, and missing even one leaves the data contradicting itself.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>insert anomaly</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Insert anomaly</strong><br>A bug where you can't record a new fact at all until some unrelated fact is also available to fill out the row.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>delete anomaly</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Delete anomaly</strong><br>A bug where deleting one row accidentally erases a separate fact that had no real reason to disappear.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>one-to-many</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>One-to-many relationship</strong><br>One row in a table can relate to many rows in another table, but each of those rows relates back to only one row in the first.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>many-to-many</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Many-to-many relationship</strong><br>A row in either of two tables can relate to many rows in the other, usually implemented with a third table in between.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. One big table, several real problems</h2>
+<p>Here's a slice of the library's actual loans spreadsheet:</p>
+<div class="mlrk-table-wrap">
+<table class="mlrk-flat-table">
+<caption>loans (one flat table)</caption>
+<thead><tr><th>loan_id</th><th>patron_name</th><th>patron_email</th><th>patron_phone</th><th>book_title</th><th>book_author</th><th>checkout_date</th></tr></thead>
+<tbody>
+<tr><td>L1001</td><td>Maria Chen</td><td>maria.chen@mail.com</td><td>555-0142</td><td>The Hobbit</td><td>J.R.R. Tolkien</td><td>2026-08-01</td></tr>
+<tr><td>L1002</td><td>Maria Chen</td><td>maria.chen@mail.com</td><td>555-0142</td><td>Dune</td><td>Frank Herbert</td><td>2026-08-03</td></tr>
+<tr><td>L1003</td><td>Maria Chen</td><td>maria.chen@mail.com</td><td>555-0142</td><td>Circe</td><td>Madeline Miller</td><td>2026-08-10</td></tr>
+<tr><td>L1004</td><td>James Okoro</td><td>j.okoro@mail.com</td><td>555-0198</td><td>The Hobbit</td><td>J.R.R. Tolkien</td><td>2026-08-05</td></tr>
+<tr><td>L1005</td><td>Priya Nair</td><td>priya.n@mail.com</td><td>555-0177</td><td>Dune</td><td>Frank Herbert</td><td>2026-08-12</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="mlrk-card" id="card-update-count"><p><strong>If Maria Chen's phone number changes, how many rows in the table above need to be updated to keep her phone number consistent everywhere?</strong></p>
+<button type="button" class="mlrk-choice" data-a="1">1</button>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="5">5</button>
+<div id="updatecountfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1.2rem"><strong>Select every real problem this flat design actually causes.</strong></p>
+<div class="mlrk-card">
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> If Maria's phone number changes, every one of her loan rows has to be updated by hand, and it's easy to miss one.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> The library can't record that it owns a new book at all until some patron actually checks it out and creates a loan row for it.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> If loan L1004 is ever deleted, every fact this table stored about James Okoro disappears completely, not just that one loan.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> This design makes it mathematically impossible to ever sort the table by book title.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> Because the data is duplicated, the table will always disagree with itself the moment it's created, even before anyone edits anything.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. The fix: three related tables</h2>
+<p>The repeating group is patron information: name, email, and phone, copied onto every loan row for the same person. So pull it out. Give patrons their own table, with one row per real person instead of one row per loan. Do the same for books: one row per title instead of one row copied onto every loan for it. What's left in <code>loans</code> is exactly what a loan actually is, who borrowed what, and when, plus a pointer back to the right patron and the right book.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 640 460" role="img" aria-labelledby="erdTitle erdDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="erdTitle">Entity relationship diagram: patrons, loans, and books</title>
+  <desc id="erdDesc">Three tables. Patrons has a primary key patron_id, plus name, email, and phone. Books has a primary key book_id, plus title and author. Loans has a primary key loan_id, foreign keys patron_id and book_id, plus checkout_date and due_date. A line connects patrons to loans, labeled one near patrons and many near loans. Another line connects books to loans, labeled one near books and many near loans.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="20" y="20" width="190" height="150" rx="14" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="115" y="44" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">patrons</text>
+    <line x1="20" y1="54" x2="210" y2="54" stroke="#264326" stroke-width="1.5"/>
+    <text x="32" y="76" font-size="13" fill="#261F1D">PK  patron_id</text>
+    <text x="32" y="98" font-size="13" fill="#261F1D">name</text>
+    <text x="32" y="120" font-size="13" fill="#261F1D">email</text>
+    <text x="32" y="142" font-size="13" fill="#261F1D">phone</text>
+
+    <rect x="430" y="20" width="190" height="130" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="525" y="44" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">books</text>
+    <line x1="430" y1="54" x2="620" y2="54" stroke="#2274B5" stroke-width="1.5"/>
+    <text x="442" y="76" font-size="13" fill="#261F1D">PK  book_id</text>
+    <text x="442" y="98" font-size="13" fill="#261F1D">title</text>
+    <text x="442" y="120" font-size="13" fill="#261F1D">author</text>
+
+    <rect x="225" y="260" width="190" height="170" rx="14" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+    <text x="320" y="284" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">loans</text>
+    <line x1="225" y1="294" x2="415" y2="294" stroke="#83671C" stroke-width="1.5"/>
+    <text x="237" y="316" font-size="13" fill="#261F1D">PK  loan_id</text>
+    <text x="237" y="338" font-size="13" fill="#261F1D">FK  patron_id</text>
+    <text x="237" y="360" font-size="13" fill="#261F1D">FK  book_id</text>
+    <text x="237" y="382" font-size="13" fill="#261F1D">checkout_date</text>
+    <text x="237" y="404" font-size="13" fill="#261F1D">due_date</text>
+
+    <line x1="90" y1="170" x2="260" y2="260" stroke="#261F1D" stroke-width="2"/>
+    <text x="66" y="198" font-size="13" font-weight="700" fill="#261F1D">one</text>
+    <text x="268" y="240" font-size="13" font-weight="700" fill="#261F1D">many</text>
+
+    <line x1="560" y1="150" x2="380" y2="260" stroke="#261F1D" stroke-width="2"/>
+    <text x="583" y="178" font-size="13" font-weight="700" fill="#261F1D">one</text>
+    <text x="393" y="234" font-size="13" font-weight="700" fill="#261F1D">many</text>
+  </g>
+</svg>
+
+<p>Together: one patron can have many loans, and one book can have many loans. Reading that both ways at once, one patron can borrow many books, and one book can be borrowed by many patrons, over time, is exactly what makes patrons and books many-to-many with each other, through <code>loans</code> sitting in between.</p>
+
+<div class="mlrk-card" id="card-pk-patrons"><p><strong>The patrons table has these columns: <code>first_name</code>, <code>member_since</code>, <code>patron_id</code>. Which one should be the primary key?</strong></p>
+<button type="button" class="mlrk-choice" data-a="first_name"><code>first_name</code></button>
+<button type="button" class="mlrk-choice" data-a="member_since"><code>member_since</code></button>
+<button type="button" class="mlrk-choice" data-a="patron_id"><code>patron_id</code></button>
+<div id="pkpatronsfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-pk-books" style="margin-top:.8rem"><p><strong>The books table has these columns: <code>title</code>, <code>author</code>, <code>book_id</code>. Which one should be the primary key?</strong></p>
+<button type="button" class="mlrk-choice" data-a="title"><code>title</code></button>
+<button type="button" class="mlrk-choice" data-a="author"><code>author</code></button>
+<button type="button" class="mlrk-choice" data-a="book_id"><code>book_id</code></button>
+<div id="pkbooksfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Foreign keys, up close</h2>
+<p>The <code>loans</code> table doesn't repeat a patron's name or a book's title anymore. Instead, each loan row stores two foreign keys: a value that points at exactly one row in <code>patrons</code>, and a value that points at exactly one row in <code>books</code>. Nothing about a patron or a book is copied, only a reference to where the real, single copy of that fact already lives.</p>
+<div class="mlrk-fillblank">
+  <label for="blankinput-patron">Column that links each loan back to the patron who borrowed it:</label>
+  <input type="text" id="blankinput-patron" autocomplete="off">
+  <button type="button" id="blankcheck-patron" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb-patron" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-fillblank" style="margin-top:1rem">
+  <label for="blankinput-book">Column that links each loan back to the book that was borrowed:</label>
+  <input type="text" id="blankinput-book" autocomplete="off">
+  <button type="button" id="blankcheck-book" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb-book" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. One-to-many or many-to-many?</h2>
+<p>Drag each real-world relationship into the zone that describes its shape, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">One customer places many orders, but each order belongs to exactly one customer.</span>
+  <span id="chip2" class="mlrk-draggable">One student enrolls in many classes, and each class holds many students.</span>
+  <span id="chip3" class="mlrk-draggable">One department has many employees, but each employee belongs to only one department.</span>
+  <span id="chip4" class="mlrk-draggable">One song can appear on many playlists, and each playlist holds many songs.</span>
+  <span id="chip5" class="mlrk-draggable">One doctor treats many patients at this clinic, but each patient sees only that one doctor.</span>
+  <span id="chip6" class="mlrk-draggable">One recipe uses many ingredients, and each ingredient appears in many different recipes.</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>One-to-many</strong></p><div class="mlrk-dropzone" id="zoneOneMany"></div></div>
+  <div><p class="mlrk-small"><strong>Many-to-many</strong></p><div class="mlrk-dropzone" id="zoneManyMany"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Turning a flat table into related ones</h2>
+<p>Click steps, in order, to build the sequence for splitting a flat table like the library's loans sheet. Click a step again to remove it if you change your mind, then press "Check my order" when you're ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="spot"><span class="mlrk-order-num"></span> Spot a group of columns that keeps repeating together, like a patron's name, email, and phone on every one of their loan rows.</li>
+  <li class="mlrk-orderitem" data-step="pull"><span class="mlrk-order-num"></span> Pull that repeating group into its own table, with one row per real-world patron instead of one row per loan.</li>
+  <li class="mlrk-orderitem" data-step="key"><span class="mlrk-order-num"></span> Give the new table a primary key that uniquely identifies each row in it.</li>
+  <li class="mlrk-orderitem" data-step="link"><span class="mlrk-order-num"></span> Add that primary key as a foreign key back in the original table, replacing the repeated columns.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Watch: primary and foreign keys</h2>
+<p>As you watch, notice how the video draws the line between a table's own primary key and the foreign key that points at someone else's.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=B5r8CcTUs5Y" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one detail from the video that matched, or added to, how you were already picturing patrons, loans, and books connecting?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"What's the difference between a primary key and a foreign key?" and "why would you normalize this table?" are two of the most common warm-up questions in data and analytics interviews, often asked before a single line of SQL gets written. Interviewers are listening for whether you can point at a real consequence, an update anomaly, a table that can end up disagreeing with itself, rather than reciting a textbook definition.</p>
+<p>A second common version hands you a messy, flat dataset and asks how you'd design tables for it. The habit this reading practiced, looking for a group of columns that keeps repeating together, is exactly the first move that question is testing for.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style: you're shown a spreadsheet where every row is a customer's product review, and the customer's full shipping address is repeated on every review they've ever left. What's the strongest first thing to name?</strong></p>
+<button type="button" class="mlrk-choice" data-a="split">The shipping address is a repeating fact that belongs in its own customers table, linked back by a foreign key.</button>
+<button type="button" class="mlrk-choice" data-a="sort">The table needs to be sorted by customer name to make it easier to read.</button>
+<button type="button" class="mlrk-choice" data-a="fine">Nothing is wrong, since every row still has a complete address.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. A design habit, and a reflection</h2>
+<div class="mlrk-card" id="card-constraint"><p><strong>A coworker says: "our foreign keys aren't really necessary, the app already checks that a patron ID exists before saving." What's the strongest response?</strong></p>
+<button type="button" class="mlrk-choice" data-a="agree">They're probably right. If the app already validates it, the database check is redundant.</button>
+<button type="button" class="mlrk-choice" data-a="protect">A foreign key protects the data even when the app is bypassed, like a bad script or a direct database edit; application-side validation alone can't guarantee that.</button>
+<button type="button" class="mlrk-choice" data-a="speed">Foreign keys are only useful for speeding up queries, not for protecting data.</button>
+<div id="constraintfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="reasoning"><strong>Your reasoning:</strong> in 1-2 sentences, explain why a database-level constraint is worth having even when application code already checks the same rule.</label>
+<textarea id="reasoning" class="mlrk-response" data-save placeholder="Try starting with: Even if the app is careful..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Summary &amp; critical thinking</h2>
+<p>Two ideas carried this whole reading: a flat table that mixes more than one real-world thing together almost always ends up repeating data, and repeated data is exactly what makes a table contradict itself the moment someone updates only part of it. Splitting a flat table into related tables, connected by primary and foreign keys, is how a database keeps each fact in exactly one place.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a gym's sign-in sheet has one row per class attendance, with the member's name, membership plan, and phone number repeated on every row they ever sign in. What would you do first?</p>
+<button type="button" class="mlrk-choice" data-a="split">Pull member name, plan, and phone into their own members table, and give each sign-in row a foreign key pointing back to the right member.</button>
+<button type="button" class="mlrk-choice" data-a="leave">Leave the sheet as one table, since sign-in sheets are simple enough not to need splitting.</button>
+<button type="button" class="mlrk-choice" data-a="deletecol">Delete the phone number column entirely, since it's the only piece of information repeating.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> what's one clue in a spreadsheet that tells you it's time to split it into more than one table?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Thinking ahead</h2>
+<p>A schema like the one sketched in this reading, patrons, books, and loans, linked by real keys, is still just a design on paper. The real next step is making it real: creating actual tables in a database that enforce these same rules automatically, so a bad insert gets rejected instead of quietly corrupting the data. That's genuinely different work: everything here has been about reasoning through a design, and building the actual thing is its own separate skill, worth its own real practice.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add one-fact-one-home-reading.json
+git commit -m "Complete relational thinking and normalization reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong> — this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://www.w3schools.com/sql/sql_primarykey.asp" target="_blank" rel="noopener">W3Schools: SQL PRIMARY KEY Constraint</a> — a quick reference on primary keys.</li>
+<li><a href="https://www.w3schools.com/sql/sql_foreignkey.asp" target="_blank" rel="noopener">W3Schools: SQL FOREIGN KEY Constraint</a> — the same, for foreign keys.</li>
+<li><a href="https://www.ibm.com/topics/entity-relationship-diagram" target="_blank" rel="noopener">IBM: Entity Relationship Diagrams</a> — a written guide to reading and drawing ERDs.</li>
+<li><a href="https://dbdiagram.io/home" target="_blank" rel="noopener">dbdiagram.io</a> — a free tool for sketching your own ERD from scratch.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "one-fact-one-home-reading";
+  const TITLE = "One Fact, One Home";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-recall-rowcol", buttonSelector:"#card-recall-rowcol .mlrk-choice", feedbackSelector:"#recallrowcolfb", correct:"24",
+    feedback:{10:"10 is 6 plus 4. A table's total values come from multiplying rows by columns, not adding them.",
+              24:"6 rows times 4 columns is 24 individual values, one in each cell.",
+              4:"4 only counts the columns. Every one of the 6 rows has its own value in each of those columns."}});
+
+  K.quiz({id:"q-recall-duplicate", buttonSelector:"#card-recall-duplicate .mlrk-choice", feedbackSelector:"#recalldupfb", correct:"same",
+    feedback:{same:"Matching emails are a strong real-world signal that this is one person, just typed with inconsistent capitalization across two rows.",
+              different:"Capitalization differences almost never mean two different people, especially when the email address matches exactly.",
+              delete:"Deleting real data because it's inconsistently formatted throws away information you can actually reconcile."}});
+
+  K.quiz({id:"q-update-count", buttonSelector:"#card-update-count .mlrk-choice", feedbackSelector:"#updatecountfb", correct:"3",
+    feedback:{1:"Maria appears on more than one row in this table. Updating just one leaves the others holding her old number.",
+              3:"Maria's phone number is copied onto all three of her loan rows, L1001, L1002, and L1003, so all three need to change together.",
+              5:"Only Maria's own rows store her phone number. James's and Priya's rows store their own, different numbers."}});
+
+  K.quiz({id:"q-pk-patrons", buttonSelector:"#card-pk-patrons .mlrk-choice", feedbackSelector:"#pkpatronsfb", correct:"patron_id",
+    feedback:{first_name:"Two different patrons can easily share the same first name, so this column can't guarantee uniqueness on its own.",
+              member_since:"A join date isn't designed to identify a person. Multiple patrons could join on the exact same day.",
+              patron_id:"patron_id is assigned once and never reused, so it's guaranteed different for every patron. That guaranteed uniqueness, not its data type or where it sits in the table, is what makes it the primary key."}});
+
+  K.quiz({id:"q-pk-books", buttonSelector:"#card-pk-books .mlrk-choice", feedbackSelector:"#pkbooksfb", correct:"book_id",
+    feedback:{title:"A library can easily own two different books that share a title, or several copies of the same book. Title alone can't guarantee uniqueness.",
+              author:"One author writes many books, so this column repeats constantly and can never uniquely identify a single book.",
+              book_id:"book_id is assigned once per book and never reused, so it's guaranteed unique, exactly what a primary key needs to be."}});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"split",
+    feedback:{split:"Naming the repeating fact and the fix, a separate table plus a foreign key, shows you can turn the problem into an actual schema decision, not just notice that something looks messy.",
+              sort:"Sorting doesn't touch the actual problem: the same address is still typed out separately on every row, and still just as easy to update inconsistently.",
+              fine:"Every row being complete right now doesn't protect against what happens the next time that address changes. The risk is about the next edit, not what the data looks like today."}});
+
+  K.quiz({id:"q-constraint", buttonSelector:"#card-constraint .mlrk-choice", feedbackSelector:"#constraintfb", correct:"protect",
+    feedback:{agree:"Application code can be skipped by a bug, bypassed by a script that talks to the database directly, or simply never called. A rule that only lives in the app isn't a rule the database itself ever enforces.",
+              protect:"Exactly right: a foreign key keeps enforcing the relationship no matter what wrote the row, app, script, or a person editing data directly.",
+              speed:"Speeding up lookups is a real side benefit in some databases, but it isn't the main reason a foreign key exists. Its main job is protecting data integrity."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"split",
+    feedback:{split:"Name, plan, and phone are exactly the kind of repeating group this reading practiced spotting: information about one real person, copied onto every row about something they did.",
+              leave:"The sheet is small today, but the same anomalies from this reading, an update that misses a row, a member's info stuck to one class visit, apply the moment it grows.",
+              deletecol:"Removing the phone number doesn't fix anything: the name and membership plan are still repeated on every row, and now a genuinely useful piece of information is just gone."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"If Maria's phone number changes, every one of her loan rows has to be updated by hand, and it's easy to miss one.", correct:true,
+      hint:"Think about how many rows currently store Maria's phone number, and what happens if only some of them get updated.",
+      explain:"Her phone number is copied onto all three of her loan rows, so a single real-world change means three separate edits, with no way for the table to catch a missed one."},
+    {value:"b", label:"The library can't record that it owns a new book at all until some patron actually checks it out and creates a loan row for it.", correct:true,
+      hint:"Look at what a book's title and author are attached to in this table. Is there any row that describes a book without also describing a loan?",
+      explain:"Book details only ever appear as part of a loan row, so a book with zero loans so far has nowhere to live in this table yet."},
+    {value:"c", label:"If loan L1004 is ever deleted, every fact this table stored about James Okoro disappears completely, not just that one loan.", correct:true,
+      hint:"Check whether James Okoro's name and contact info appear anywhere in this table besides his one loan row.",
+      explain:"James only appears on one row, so deleting that single loan deletes him from the table entirely, even though he's a real patron who should still exist."},
+    {value:"d", label:"This design makes it mathematically impossible to ever sort the table by book title.", correct:false,
+      hint:"Sorting is about column values, not about how many tables the data is split across. Would sorting this table by its book_title column actually fail?",
+      explain:"A flat table can be sorted or filtered by any of its columns just fine. Sorting was never the problem here; repeated, contradiction-prone data is."},
+    {value:"e", label:"Because the data is duplicated, the table will always disagree with itself the moment it's created, even before anyone edits anything.", correct:false,
+      hint:"Look again at the table above. Right now, do Maria's three rows actually disagree with each other about her phone number?",
+      explain:"Freshly duplicated data can start out perfectly consistent. The real risk shows up later, the moment one copy gets updated and the others don't."}
+  ]});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.dragDrop("#dragarea", "act-drag-relationships");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneOneMany", label:"One customer, many orders", expectedLabel:"One-to-many"},
+    chip2:{expectedId:"zoneManyMany", label:"Students and classes", expectedLabel:"Many-to-many"},
+    chip3:{expectedId:"zoneOneMany", label:"One department, many employees", expectedLabel:"One-to-many"},
+    chip4:{expectedId:"zoneManyMany", label:"Songs and playlists", expectedLabel:"Many-to-many"},
+    chip5:{expectedId:"zoneOneMany", label:"One doctor, many patients", expectedLabel:"One-to-many"},
+    chip6:{expectedId:"zoneManyMany", label:"Recipes and ingredients", expectedLabel:"Many-to-many"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-normalize", correctOrder:["spot","pull","key","link"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"B5r8CcTUs5Y"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-reasoning", selector:"#reasoning", minWords:10});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:8});
+
+  K.Scoring.register("q-blank-patron",1,"quiz");
+  let blankPatronAttempts=0, blankPatronDone=false;
+  $("#blankcheck-patron").addEventListener("click",()=>{
+    if(blankPatronDone) return;
+    blankPatronAttempts++;
+    const ok = $("#blankinput-patron").value.trim().toLowerCase()==="patron_id";
+    const fb=$("#blankfb-patron");
+    if(ok){
+      K.Scoring.award("q-blank-patron", blankPatronAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> patron_id in loans points back to the matching row in patrons.";
+      blankPatronDone=true;
+    } else if(blankPatronAttempts>=2){
+      K.Scoring.award("q-blank-patron",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The column is <code>patron_id</code>.";
+      blankPatronDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.Scoring.register("q-blank-book",1,"quiz");
+  let blankBookAttempts=0, blankBookDone=false;
+  $("#blankcheck-book").addEventListener("click",()=>{
+    if(blankBookDone) return;
+    blankBookAttempts++;
+    const ok = $("#blankinput-book").value.trim().toLowerCase()==="book_id";
+    const fb=$("#blankfb-book");
+    if(ok){
+      K.Scoring.award("q-blank-book", blankBookAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> book_id in loans points back to the matching row in books.";
+      blankBookDone=true;
+    } else if(blankBookAttempts>=2){
+      K.Scoring.award("q-blank-book",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The column is <code>book_id</code>.";
+      blankBookDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think of a form or spreadsheet you've filled out more than once, like a sign-up sheet or a repeated survey. What information about you got retyped every single time?",
+    "If you were designing a database for your own contacts app, what would the repeating group be if you stored every phone call as one row with the caller's full details on it?",
+    "Where have you seen the same fact stored in two different places and later disagree with itself, a nickname in one app and a legal name in another, a shipping address that's slightly different across two receipts?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["sql-relational"],
+      skills:["relational-databases","data-modeling"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

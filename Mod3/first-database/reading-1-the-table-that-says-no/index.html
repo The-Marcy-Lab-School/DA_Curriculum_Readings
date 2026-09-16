@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Table That Says No — Creating a PostgreSQL Database with psql</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:740px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+.mlrk-fillblank input.mlrk-wide{width:24rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>The Table That Says No</h1>
+<p class="mlrk-lead">Deja runs volunteer operations for Neighborhood Tool Share, a lending library where neighbors borrow drills, ladders, and pressure washers instead of buying tools they will use twice a year. For two years the whole operation lived in one shared spreadsheet: a member's name retyped by hand on every checkout row, a borrowed tool with no real link back to who actually has it, dates typed as plain text that sort however the spreadsheet feels like sorting them. This reading is about leaving that spreadsheet behind for real: creating an actual PostgreSQL database from a terminal, building tables with types and constraints that genuinely refuse bad data, and asking that data real questions with a first SELECT query.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~42-45 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No local Postgres install needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>SQL</strong> — Writing correct, verified SQL against a real database: joins, GROUP BY/HAVING, CTEs, window functions, and reading a query's real execution plan. Today is the very first, most basic rep of that: a table that actually exists, and a SELECT query run against it.</p>
+    <p><strong>Database Administration</strong> — Creating a real database and tables from the command line with correct types and constraints, including setting up and testing access permissions.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Here is what actually broke, over and over, in Deja's spreadsheet: two rows for "Deja Okafor" and "Deja O." that a report quietly counted as two different members. A checkout row with a tool name but a totally blank member column, because someone was in a hurry. A "date returned" column where one volunteer typed <code>3/8</code> and another typed <code>March 8</code>, so nothing sorted correctly. None of these were typos anyone caught in time. A spreadsheet has no opinion about what belongs in a cell; it will hold whatever gets typed into it.</p>
+
+<p>A real database can have an opinion, and enforce it. <strong>psql</strong> is PostgreSQL's own command-line client: a terminal program that connects directly to a running database and lets you type real SQL against it, no spreadsheet and no separate graphical tool in between. Inside psql, a <strong>database</strong> is the whole named container Deja's tool-share data lives in. A <strong>table</strong> is one structured grid inside that database, with fixed, named columns. And every column gets a <strong>data type</strong>, a rule about exactly what kind of value it's allowed to hold, decided once, at creation time, not re-guessed every time someone types something into it.</p>
+
+<p>On top of a data type, a column can carry a <strong>constraint</strong>: an extra rule PostgreSQL actively checks on every single row, every single time, forever, whether or not anyone remembers it's there. <code>NOT NULL</code> refuses a row with that field left blank. <code>PRIMARY KEY</code> refuses a duplicate value in that column, guaranteeing every row can be told apart from every other row. <code>FOREIGN KEY</code> refuses a value that doesn't already exist as a real row somewhere else, which is exactly the rule that would have caught a checkout pointing at a member who was never actually entered. Before writing a full <code>CREATE TABLE</code> statement, here is what each piece of one real column definition is actually doing:</p>
+
+<div class="mlrk-illustration-wrap">
+<svg class="mlrk-illustration" viewBox="0 0 700 296" role="img" aria-labelledby="anatomyTitle anatomyDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="anatomyTitle">Two column definitions from a CREATE TABLE statement, taken apart piece by piece</title>
+  <desc id="anatomyDesc">The first row shows the checkout_id column split into three labeled chunks: checkout_id labeled column name, SERIAL labeled data type auto-numbered, and PRIMARY KEY labeled uniquely identifies this row. The second row shows the member_id column split into four labeled chunks: member_id labeled column name, INTEGER labeled data type, NOT NULL labeled must have a value, and REFERENCES members open parenthesis member_id close parenthesis labeled must match a real row in members.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="350" y="22" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Two real column definitions, taken apart</text>
+
+    <text x="40" y="50" font-weight="700" font-size="13" fill="#264326">checkout_id&#8217;s column definition:</text>
+    <rect x="40" y="60" width="118" height="32" rx="8" fill="#DEEAF4" stroke="#264326" stroke-width="1.5"/>
+    <text x="99" y="80" text-anchor="middle" font-family="monospace" font-size="13" font-weight="700" fill="#261F1D">checkout_id</text>
+    <rect x="172" y="60" width="80" height="32" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="1.5"/>
+    <text x="212" y="80" text-anchor="middle" font-family="monospace" font-size="13" font-weight="700" fill="#261F1D">SERIAL</text>
+    <rect x="266" y="60" width="118" height="32" rx="8" fill="#FECC5B" stroke="#264326" stroke-width="1.5"/>
+    <text x="325" y="80" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#261F1D">PRIMARY KEY</text>
+
+    <text x="99" y="112" text-anchor="middle" font-size="11" fill="#261F1D">column name</text>
+    <text x="212" y="112" text-anchor="middle" font-size="11" fill="#261F1D">data type</text>
+    <text x="212" y="125" text-anchor="middle" font-size="11" fill="#261F1D">(auto-numbered)</text>
+    <text x="325" y="112" text-anchor="middle" font-size="11" fill="#261F1D">uniquely identifies</text>
+    <text x="325" y="125" text-anchor="middle" font-size="11" fill="#261F1D">this row</text>
+
+    <text x="40" y="170" font-weight="700" font-size="13" fill="#264326">member_id&#8217;s column definition:</text>
+    <rect x="40" y="180" width="100" height="32" rx="8" fill="#DEEAF4" stroke="#264326" stroke-width="1.5"/>
+    <text x="90" y="200" text-anchor="middle" font-family="monospace" font-size="13" font-weight="700" fill="#261F1D">member_id</text>
+    <rect x="154" y="180" width="85" height="32" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="1.5"/>
+    <text x="196" y="200" text-anchor="middle" font-family="monospace" font-size="13" font-weight="700" fill="#261F1D">INTEGER</text>
+    <rect x="253" y="180" width="95" height="32" rx="8" fill="#FECC5B" stroke="#264326" stroke-width="1.5"/>
+    <text x="300" y="200" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#261F1D">NOT NULL</text>
+    <rect x="362" y="180" width="300" height="32" rx="8" fill="#F8BAC9" stroke="#264326" stroke-width="1.5"/>
+    <text x="512" y="200" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#261F1D">REFERENCES members(member_id)</text>
+
+    <text x="90" y="232" text-anchor="middle" font-size="11" fill="#261F1D">column name</text>
+    <text x="196" y="232" text-anchor="middle" font-size="11" fill="#261F1D">data type</text>
+    <text x="300" y="232" text-anchor="middle" font-size="11" fill="#261F1D">must have</text>
+    <text x="300" y="245" text-anchor="middle" font-size="11" fill="#261F1D">a value</text>
+    <text x="512" y="232" text-anchor="middle" font-size="11" fill="#261F1D">must match a real</text>
+    <text x="512" y="245" text-anchor="middle" font-size="11" fill="#261F1D">row in members</text>
+
+    <text x="350" y="278" text-anchor="middle" font-size="12" font-style="italic" fill="#327A5F">Every column definition follows this same shape: a name, then a type, then whatever constraints apply.</text>
+  </g>
+</svg>
+</div>
+
+<p>Two of psql's own habits are worth naming before typing anything: many commands that succeed print back nothing at all (silence means it worked, not that nothing happened), and a command that actually creates something usually echoes its own name back as confirmation, like <code>CREATE TABLE</code> printed after a successful <code>CREATE TABLE</code> statement.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> a data-role technical screen will very often put you in front of a real terminal and ask you to create a small schema on the spot, not a diagram of one. Getting the column list, types, and constraints right the first time, from a blank prompt, is treated as baseline fluency, the same way basic pandas syntax is assumed baseline for an analyst role. On the job, this is also frequently the literal first command typed against a brand-new project: before any analysis happens, something has to exist to hold the data.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know, in plain language, what a primary key and a foreign key are supposed to do and why splitting data into related tables beats one flat spreadsheet. This reading is about typing that exact idea as real, enforced syntax for the first time. Once creating a table and asking it a first question with SELECT feels automatic, the natural next step is asking one question that needs facts from two related tables at the same time, matching rows across them instead of reading each table on its own.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before typing anything</h2>
+<p class="mlrk-small">A few skills this reading leans on are worth confirming first: comfort moving around a terminal, and the plain-language idea of a primary key and a foreign key. Test each one below.</p>
+
+<div class="mlrk-card" id="card-recall-ls"><p><strong>Recall:</strong> which single terminal command lists the files and folders inside your current location?</p>
+<button type="button" class="mlrk-choice" data-a="ls">ls</button>
+<button type="button" class="mlrk-choice" data-a="cd">cd</button>
+<button type="button" class="mlrk-choice" data-a="pwd">pwd</button>
+<div id="recallfb1" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-pk" style="margin-top:.8rem"><p><strong>Scenario:</strong> an orders spreadsheet has a customer's full name retyped fresh on every single order row, sometimes misspelled slightly differently each time. Which idea fixes the root problem instead of just cleaning up the typos this once?</p>
+<button type="button" class="mlrk-choice" data-a="split">Give customers their own table with a primary key, and have every order row reference that key instead of retyping the name.</button>
+<button type="button" class="mlrk-choice" data-a="widen">Make the customer name column wider so long names never get cut off.</button>
+<button type="button" class="mlrk-choice" data-a="sort">Sort the spreadsheet alphabetically by customer name before anyone enters new orders.</button>
+<div id="recallfb2" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-fk" style="margin-top:.8rem"><p><strong>Scenario:</strong> Deja's checkouts should never reference a member who doesn't exist in the members table. Which idea, applied to the checkouts table, is built specifically to enforce that?</p>
+<button type="button" class="mlrk-choice" data-a="fk">A foreign key on the column that stores which member checked the tool out.</button>
+<button type="button" class="mlrk-choice" data-a="widen2">A wider text column so any member name fits, however it's typed.</button>
+<button type="button" class="mlrk-choice" data-a="alpha">Sorting checkouts alphabetically by member name.</button>
+<div id="recallfb3" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>psql</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>psql</strong><br>PostgreSQL's own command-line client: a terminal program for typing real SQL directly against a running database.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>database</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Database</strong><br>A named container holding a related set of tables, created once with a command like <code>createdb</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>table</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Table</strong><br>One structured grid inside a database, with fixed, named columns shared by every row.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>schema</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Schema</strong><br>The overall design of a database: which tables exist, their columns, and how they reference each other.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>data type</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Data type</strong><br>The rule, set once per column, for exactly what kind of value it can hold: INTEGER, TEXT, DATE, BOOLEAN, and more.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>constraint</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Constraint</strong><br>A rule PostgreSQL actively enforces on every row, not documentation anyone could choose to skip.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>NOT NULL</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>NOT NULL</strong><br>A constraint that refuses any row where this column is left blank.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>PRIMARY KEY</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>PRIMARY KEY</strong><br>A constraint guaranteeing this column's value is unique and never blank, so every row can be told apart.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>FOREIGN KEY</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>FOREIGN KEY</strong><br>A constraint requiring this column's value to already exist as a real row in another table's column.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Order the setup, before you type it</h2>
+<p>Before opening the terminal below, put these steps in the order a brand-new two-table database actually has to happen in. Click a step to add it to your sequence; click it again to remove it.</p>
+<div id="ordersteps">
+  <div class="mlrk-orderitem" data-step="createdb"><span class="mlrk-order-num"></span> Create the empty database itself, with <code>createdb</code>.</div>
+  <div class="mlrk-orderitem" data-step="psql"><span class="mlrk-order-num"></span> Connect to that database with <code>psql</code>.</div>
+  <div class="mlrk-orderitem" data-step="createparent"><span class="mlrk-order-num"></span> Create the <code>members</code> table, which has its own primary key and nothing to reference yet.</div>
+  <div class="mlrk-orderitem" data-step="createchild"><span class="mlrk-order-num"></span> Create the <code>checkouts</code> table, whose foreign key points back to <code>members</code>.</div>
+  <div class="mlrk-orderitem" data-step="insertrows"><span class="mlrk-order-num"></span> Insert real rows into both tables.</div>
+  <div class="mlrk-orderitem" data-step="selectback"><span class="mlrk-order-num"></span> Query the data back out with a SELECT statement.</div>
+</div>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order (2 tries before the answer shows)</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+<details class="mlrk-hint" style="margin-top:.6rem"><summary>Need a hint?</summary>
+<p>A foreign key has to point at something that's already there. Whatever <code>checkouts</code> references has to exist before <code>checkouts</code> itself does.</p>
+</details>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Practice in a simulated psql session</h2>
+<p>This is a simulated database, not a real one, standing in for Deja's actual terminal. It already recognizes the exact commands below (and will explain itself if you try something it doesn't). Type each one, in order, and press Enter after each line.</p>
+
+<div class="mlrk-code"><div class="mlrk-screen">1.  pwd
+2.  ls
+3.  createdb toolshare
+4.  psql toolshare
+5.  CREATE TABLE members (member_id SERIAL PRIMARY KEY, full_name TEXT NOT NULL, email TEXT NOT NULL, joined_on DATE NOT NULL);
+6.  CREATE TABLE checkouts (checkout_id SERIAL PRIMARY KEY, member_id INTEGER NOT NULL REFERENCES members(member_id), tool_name TEXT NOT NULL, checkout_date DATE NOT NULL, returned_date DATE);
+7.  INSERT INTO members (full_name, email, joined_on) VALUES ('Deja Okafor', 'deja@example.org', '2026-01-14'), ('Marcus Lin', 'marcus@example.org', '2026-02-02'), ('Priya Shah', 'priya@example.org', '2026-02-20');
+8.  INSERT INTO checkouts (member_id, tool_name, checkout_date, returned_date) VALUES (1, 'Cordless Drill', '2026-03-01', '2026-03-08'), (2, 'Extension Ladder', '2026-03-03', NULL), (1, 'Tile Saw', '2026-03-10', NULL), (3, 'Pressure Washer', '2026-02-25', '2026-03-02');
+9.  SELECT tool_name, checkout_date FROM checkouts WHERE member_id = 1 ORDER BY checkout_date;
+10. SELECT tool_name, checkout_date FROM checkouts WHERE checkout_date > '2026-03-01' ORDER BY checkout_date DESC;
+11. \dt</div></div>
+
+<div class="mlrk-terminal" id="psqlterminal">
+  <div class="mlrk-terminal-log" aria-live="polite">Welcome, Deja. This simulated terminal starts in your project folder, nothing created yet.
+Try pwd or ls to get your bearings, then work through the numbered lines above, one at a time.</div>
+  <div class="mlrk-terminal-row">
+    <span class="mlrk-terminal-prompt" aria-hidden="true">$</span>
+    <input type="text" class="mlrk-terminal-input" id="psqlinput" aria-label="Terminal command input" autocomplete="off" spellcheck="false">
+  </div>
+</div>
+<details class="mlrk-hint" style="margin-top:.8rem"><summary>Need a nudge?</summary>
+<p>Copy each line exactly, including the punctuation, and press Enter after each one. If line 6 fails, check that line 5 actually succeeded first: <code>checkouts</code> references <code>members</code>, so <code>members</code> has to exist before it can. Both SELECT queries only look at two columns on purpose, so line up your prediction against <code>tool_name</code> and <code>checkout_date</code>.</p>
+</details>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Predict, then read the real error</h2>
+<p>These two INSERT attempts are deliberately broken, the same two ways real data most often breaks a running table. Predict what happens before picking your answer.</p>
+
+<div class="mlrk-card" id="card-predict-null"><p><strong>This INSERT leaves out <code>tool_name</code> entirely:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">INSERT INTO checkouts (member_id, checkout_date) VALUES (1, '2026-03-05');</div></div>
+<p><strong>What actually happens when this runs?</strong></p>
+<button type="button" class="mlrk-choice" data-a="reject">PostgreSQL rejects it: ERROR: null value in column "tool_name" of relation "checkouts" violates not-null constraint.</button>
+<button type="button" class="mlrk-choice" data-a="blank">It succeeds, and tool_name is silently stored as an empty string.</button>
+<button type="button" class="mlrk-choice" data-a="guess">It succeeds, and PostgreSQL guesses a placeholder value for tool_name.</button>
+<div id="predictnullfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-predict-fk" style="margin-top:.8rem"><p><strong>This INSERT points at a member_id that was never created:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">INSERT INTO checkouts (member_id, tool_name, checkout_date) VALUES (12, 'Leaf Blower', '2026-03-06');</div></div>
+<p><strong>What actually happens when this runs?</strong></p>
+<button type="button" class="mlrk-choice" data-a="reject">PostgreSQL rejects it: ERROR: insert or update on table "checkouts" violates foreign key constraint "checkouts_member_id_fkey", DETAIL: Key (member_id)=(12) is not present in table "members".</button>
+<button type="button" class="mlrk-choice" data-a="autocreate">It succeeds, and PostgreSQL automatically creates a new member with id 12.</button>
+<button type="button" class="mlrk-choice" data-a="null2">It succeeds, and member_id is silently stored as NULL instead of 12.</button>
+<div id="predictfkfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Fill in the constraints yourself</h2>
+<p>Two words are missing from this real <code>CREATE TABLE</code> statement. Type what belongs in each blank.</p>
+<div class="mlrk-code"><div class="mlrk-screen">CREATE TABLE members (
+  member_id SERIAL __BLANK_1__,
+  full_name TEXT __BLANK_2__,
+  email TEXT NOT NULL,
+  joined_on DATE NOT NULL
+);</div></div>
+<div class="mlrk-fillblank">
+  <label for="blank1input">Blank 1 (after SERIAL):</label>
+  <input type="text" id="blank1input" autocomplete="off" placeholder="e.g. PRIMARY KEY">
+</div>
+<div class="mlrk-fillblank">
+  <label for="blank2input">Blank 2 (after TEXT):</label>
+  <input type="text" id="blank2input" autocomplete="off" placeholder="e.g. NOT NULL">
+</div>
+<p><button type="button" id="blankcheck" class="mlrk-btn">Check my answers</button></p>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+<p><code>member_id</code> is the column every other row will need to reference later, so it needs the constraint that guarantees uniqueness. <code>full_name</code> just needs to never be left blank.</p>
+</details>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about constraints and psql.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A PRIMARY KEY column can hold the exact same value in two different rows, as long as neither is NULL.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A FOREIGN KEY value has to already exist as a real value in the column it references.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> NOT NULL and PRIMARY KEY mean exactly the same thing.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A psql command that succeeds often prints nothing back at all.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Write your own SELECT</h2>
+<p>Using the <code>checkouts</code> table from section 5, write a single query that returns every checkout for <code>member_id 2</code>, ordered by <code>checkout_date</code>.</p>
+<div class="mlrk-fillblank">
+  <label for="selectinput">Type the full query:</label>
+  <input type="text" id="selectinput" class="mlrk-wide" autocomplete="off" placeholder="SELECT * FROM checkouts WHERE ... ORDER BY ...">
+  <button type="button" id="selectcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="selectfb" class="mlrk-feedback" tabindex="-1"></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+<p>Start from every column with <code>SELECT *</code>, name the table after <code>FROM</code>, filter with <code>WHERE member_id = 2</code>, and finish with <code>ORDER BY</code> the date column.</p>
+</details>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Watch: creating a table for real</h2>
+<p>As you watch, notice how much of this is typed the exact same way it was practiced above: a real <code>CREATE TABLE</code> statement, column by column, with a type and any constraints named right after each column's name.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=QC61CKXgxkU" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one part of typing this against a real psql prompt that felt different from just reading about it?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>Being able to sit down at a real <code>psql</code> prompt, with no GUI in between, and create a working schema from a plain-language description is a genuine, common signal in a data-role technical screen. It's less about memorizing exact syntax and more about whether reaching for the terminal feels normal instead of intimidating.</p>
+<p>A frequent live-coding moment is being handed two related entities in plain English and asked to sketch the <code>CREATE TABLE</code> statements for both, out loud, including which column is the primary key and which is a foreign key. Interviewers are listening for the parent-before-child ordering from section 4 without being told to think about it, and for naming NOT NULL on any column that genuinely shouldn't ever be blank.</p>
+<p>A sharper follow-up question tests exactly what section 6 practiced: "what happens if this INSERT is missing a required field, or points at a foreign key that doesn't exist?" Naming the real, specific error PostgreSQL raises, rather than a vague "it would fail," is a strong, concrete answer that a guess can't produce.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> an INSERT into <code>checkouts</code> fails with <code>ERROR: insert or update on table "checkouts" violates foreign key constraint "checkouts_member_id_fkey", DETAIL: Key (member_id)=(12) is not present in table "members".</code> What does this actually tell you?</p>
+<button type="button" class="mlrk-choice" data-a="fkmeaning">The row being inserted referenced a member_id that doesn't exist yet as a real row in members.</button>
+<button type="button" class="mlrk-choice" data-a="storage">The database ran out of storage space for new rows.</button>
+<button type="button" class="mlrk-choice" data-a="typo">There's a spelling typo somewhere in the column name member_id.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>A teammate's INSERT fails with:</strong> <code>ERROR: null value in column "tool_name" of relation "checkouts" violates not-null constraint</code>. <strong>What's the actual fix?</strong></p>
+<button type="button" class="mlrk-choice" data-a="addvalue">Add a real value for tool_name to that INSERT's column list and VALUES.</button>
+<button type="button" class="mlrk-choice" data-a="removeconstraint">Remove the NOT NULL constraint from tool_name so the insert goes through.</button>
+<button type="button" class="mlrk-choice" data-a="rerun">Run the exact same INSERT again; it's a one-time glitch.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Reflection:</strong> a fellow volunteer says constraints just slow down data entry and wants to skip them to save setup time. In 2-3 sentences, what would you tell them, using something concrete from this reading?</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: the spreadsheet already showed what happens when..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Summary &amp; critical thinking</h2>
+<p>Three ideas carried this whole reading: a column's data type and constraints are decided once, at creation time, and enforced by PostgreSQL every time after that, without exception; a foreign key has to point at something that already exists, which is exactly why a parent table gets created before the child table that references it; and a first SELECT with WHERE and ORDER BY is really two separate jobs, filtering down to the rows that matter and then choosing what order to read them in.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a community garden tracks gardeners and the plots they've been assigned. Which <code>CREATE TABLE</code> statement for <code>plot_assignments</code> correctly uses a real foreign key back to a <code>gardeners</code> table?</p>
+<button type="button" class="mlrk-choice" data-a="right"><code>CREATE TABLE plot_assignments (assignment_id SERIAL PRIMARY KEY, gardener_id INTEGER NOT NULL REFERENCES gardeners(gardener_id), plot_number TEXT NOT NULL);</code></button>
+<button type="button" class="mlrk-choice" data-a="bareint"><code>CREATE TABLE plot_assignments (assignment_id SERIAL PRIMARY KEY, gardener_id INTEGER, plot_number TEXT);</code></button>
+<button type="button" class="mlrk-choice" data-a="retype"><code>CREATE TABLE plot_assignments (assignment_id SERIAL PRIMARY KEY, gardener_name TEXT NOT NULL, plot_number TEXT NOT NULL);</code></button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> the third option above stores a gardener's name directly on every plot assignment instead of a real foreign key. Both technically "work" the first time. Why is the foreign key version still the better design?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Thinking ahead</h2>
+<p>Every query practiced here pulled from exactly one table at a time. The natural next step is a single question that genuinely needs facts from <code>members</code> and <code>checkouts</code> at the same time, like a member's name shown next to a tool they currently have out, which means matching rows across two tables in one query instead of reading each one separately and lining the answers up by hand.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add the-table-that-says-no-reading1.json
+git commit -m "Complete the-table-that-says-no reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://www.postgresql.org/docs/current/sql-createtable.html" target="_blank" rel="noopener">PostgreSQL docs: CREATE TABLE</a> — the official, authoritative reference for every constraint and data type covered here.</li>
+<li><a href="https://www.postgresql.org/docs/current/app-psql.html" target="_blank" rel="noopener">PostgreSQL docs: psql</a> — the full reference for the command-line client itself, including meta-commands like <code>\dt</code>.</li>
+<li><a href="https://www.postgresql.org/docs/current/tutorial-select.html" target="_blank" rel="noopener">PostgreSQL docs: The SQL Language, Queries</a> — the official walkthrough of SELECT, WHERE, and ORDER BY.</li>
+<li><a href="https://sqlbolt.com/" target="_blank" rel="noopener">SQLBolt</a> — free, bite-sized interactive SQL lessons to practice these same commands further.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "the-table-that-says-no-reading1";
+  const TITLE = "The Table That Says No — Creating a PostgreSQL Database with psql";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-recall-ls", buttonSelector:"#card-recall-ls .mlrk-choice", feedbackSelector:"#recallfb1", correct:"ls", maxAttempts:1,
+    feedback:{ls:"ls lists what's inside your current folder.",
+              cd:"cd moves you into a different folder; it doesn't list what's already here.",
+              pwd:"pwd only prints where you currently are, not what's inside that location."}});
+
+  K.quiz({id:"q-recall-pk", buttonSelector:"#card-recall-pk .mlrk-choice", feedbackSelector:"#recallfb2", correct:"split",
+    feedback:{split:"A dedicated customers table with its own primary key means the customer's real identity is stored once, and every order just references it.",
+              widen:"A wider column still lets the same customer get typed in slightly differently on every row; the retyping itself is the actual problem.",
+              sort:"Sorting doesn't stop the same customer from being retyped inconsistently in the first place."}});
+
+  K.quiz({id:"q-recall-fk", buttonSelector:"#card-recall-fk .mlrk-choice", feedbackSelector:"#recallfb3", correct:"fk",
+    feedback:{fk:"A foreign key is built specifically to require that the referenced row already exists, which is exactly this rule.",
+              widen2:"A wider text column has no way to check whether a member with that name was ever actually entered.",
+              alpha:"Sorting doesn't check whether the member referenced on a row is real; it only changes display order."}});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.orderSteps("#ordersteps", {id:"act-order-setup", correctOrder:["createdb","psql","createparent","createchild","insertrows","selectback"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+
+  /* ---------- simulated psql session ---------- */
+  function pad(str, width){ str = String(str); return str.length >= width ? str : str + " ".repeat(width - str.length); }
+  function formatCheckoutRows(rows){
+    if(rows.length === 0) return "(0 rows)";
+    const w1 = 18, w2 = 14;
+    let out = " " + pad("tool_name", w1) + "| checkout_date\n";
+    out += "-".repeat(w1+1) + "+" + "-".repeat(w2) + "\n";
+    rows.forEach(r => { out += " " + pad(r.tool_name, w1) + "| " + r.checkout_date + "\n"; });
+    out += "(" + rows.length + (rows.length===1?" row)":" rows)");
+    return out;
+  }
+  const Q1_ROWS = [{tool_name:"Cordless Drill", checkout_date:"2026-03-01"}, {tool_name:"Tile Saw", checkout_date:"2026-03-10"}];
+  const Q2_ROWS_DESC = [{tool_name:"Tile Saw", checkout_date:"2026-03-10"}, {tool_name:"Extension Ladder", checkout_date:"2026-03-03"}];
+  const Q2_ROWS_ASC = [{tool_name:"Extension Ladder", checkout_date:"2026-03-03"}, {tool_name:"Tile Saw", checkout_date:"2026-03-10"}];
+
+  function createHandler(args, state){
+    const rest = args.join(" ");
+    const restLower = rest.toLowerCase();
+    if(!restLower.startsWith("table")) return 'ERROR:  syntax error at or near "' + (args[0]||"") + '"';
+    if(restLower.includes("table members")){
+      state.membersCreated = true;
+      return "CREATE TABLE";
+    }
+    if(restLower.includes("table checkouts")){
+      if(!state.membersCreated) return 'ERROR:  relation "members" does not exist';
+      state.checkoutsCreated = true;
+      return "CREATE TABLE";
+    }
+    return "ERROR:  this simulator only recognizes CREATE TABLE members or CREATE TABLE checkouts here, matching section 5 above.";
+  }
+  function insertHandler(args, state){
+    const rest = args.join(" ");
+    const restLower = rest.toLowerCase();
+    const valuesIdx = restLower.indexOf("values");
+    if(valuesIdx === -1) return 'ERROR:  syntax error near "INSERT"';
+    const valuesPart = rest.slice(valuesIdx + 6);
+    const tupleCount = (valuesPart.match(/\)\s*,\s*\(/g) || []).length + 1;
+    if(restLower.startsWith("into members")){
+      if(!state.membersCreated) return 'ERROR:  relation "members" does not exist';
+      state.membersRows = tupleCount;
+      return "INSERT 0 " + tupleCount;
+    }
+    if(restLower.startsWith("into checkouts")){
+      if(!state.checkoutsCreated) return 'ERROR:  relation "checkouts" does not exist';
+      const validIds = Array.from({length: state.membersRows || 0}, (_, i) => i + 1);
+      const leadingNums = [...valuesPart.matchAll(/\(\s*(\d+)/g)].map(m => parseInt(m[1], 10));
+      const bad = leadingNums.find(n => !validIds.includes(n));
+      if(bad !== undefined){
+        return 'ERROR:  insert or update on table "checkouts" violates foreign key constraint "checkouts_member_id_fkey"\nDETAIL:  Key (member_id)=(' + bad + ') is not present in table "members".';
+      }
+      state.checkoutsRows = tupleCount;
+      return "INSERT 0 " + tupleCount;
+    }
+    return 'ERROR:  this simulator only recognizes INSERT INTO members or INSERT INTO checkouts here, matching section 5 above.';
+  }
+  function selectHandler(args, state){
+    const rest = args.join(" ");
+    const restLower = rest.toLowerCase();
+    if(!restLower.includes("from checkouts")) return "ERROR:  this simulator's SELECT practice only queries the checkouts table, matching section 5 above.";
+    if(!state.checkoutsCreated) return 'ERROR:  relation "checkouts" does not exist';
+    if(restLower.includes("member_id = 1") || restLower.includes("member_id=1")){
+      return formatCheckoutRows(Q1_ROWS);
+    }
+    if(restLower.includes("checkout_date > '2026-03-01'") || restLower.includes("checkout_date>'2026-03-01'")){
+      const desc = restLower.includes("desc");
+      return formatCheckoutRows(desc ? Q2_ROWS_DESC : Q2_ROWS_ASC);
+    }
+    return "ERROR:  try one of the two exact SELECT queries from section 5, or double-check your WHERE and ORDER BY spelling against them.";
+  }
+
+  K.terminal("#psqlterminal", {
+    id: "act-psql-terminal",
+    minCommands: 8,
+    startPath: "/home/deja/toolshare-project",
+    filesystem: {
+      "/home/deja/toolshare-project": {type:"dir", children:["notes.txt"]},
+      "/home/deja/toolshare-project/notes.txt": {type:"file", contents:"Members and checkouts have lived in one shared spreadsheet for two years. Time to build a real database."}
+    },
+    commands: {
+      createdb(args){ return ""; },
+      psql(args){
+        const dbname = args[0] || "toolshare";
+        return 'psql (16.4)\nType "help" for help.\n\n' + dbname + "=#";
+      },
+      CREATE: createHandler, create: createHandler,
+      INSERT: insertHandler, insert: insertHandler,
+      SELECT: selectHandler, select: selectHandler,
+      "\\dt"(args, state){
+        if(!state.membersCreated && !state.checkoutsCreated) return "Did not find any relations.";
+        const rows = [];
+        if(state.checkoutsCreated) rows.push(" public | checkouts | table | deja");
+        if(state.membersCreated) rows.push(" public | members   | table | deja");
+        return "        List of relations\n Schema |   Name    | Type  | Owner\n--------+-----------+-------+-------\n" + rows.join("\n") + "\n(" + rows.length + (rows.length===1?" row)":" rows)");
+      }
+    }
+  });
+
+  K.quiz({id:"q-predict-null", buttonSelector:"#card-predict-null .mlrk-choice", feedbackSelector:"#predictnullfb", correct:"reject",
+    feedback:{reject:"tool_name is NOT NULL and this INSERT never gave it a value, so PostgreSQL refuses the whole row with exactly this error.",
+              blank:"NOT NULL means genuinely missing, not merely empty. PostgreSQL rejects the row instead of inventing an empty string.",
+              guess:"PostgreSQL never guesses a value on your behalf. A required column with nothing supplied is a rejected row, not a filled-in one."}});
+
+  K.quiz({id:"q-predict-fk", buttonSelector:"#card-predict-fk .mlrk-choice", feedbackSelector:"#predictfkfb", correct:"reject",
+    feedback:{reject:"member_id 12 was never inserted into members, so the foreign key constraint refuses this row and names the exact missing value.",
+              autocreate:"A foreign key only checks that a match already exists; it never creates a new row anywhere to make itself true.",
+              null2:"The value 12 was typed in explicitly. PostgreSQL doesn't silently swap a typed value for NULL; it rejects the row instead."}});
+
+  K.Scoring.register("q-blanks", 1, "quiz");
+  let blankAttempts = 0, blankDone = false;
+  function normWord(s){ return (s||"").trim().toUpperCase().replace(/\s+/g, " "); }
+  $("#blankcheck").addEventListener("click", () => {
+    if(blankDone) return;
+    blankAttempts++;
+    const ok = normWord($("#blank1input").value) === "PRIMARY KEY" && normWord($("#blank2input").value) === "NOT NULL";
+    const fb = $("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blanks", blankAttempts===1?1:0.5);
+      fb.className = "mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML = "<strong>Correct.</strong> member_id needs PRIMARY KEY, since it's what every future foreign key will point back to. full_name just needs NOT NULL.";
+      blankDone = true;
+    } else if(blankAttempts >= 2){
+      K.Scoring.award("q-blanks", 0);
+      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML = "<strong>Here are the answers. You'll get it next time.</strong> Blank 1 is PRIMARY KEY, blank 2 is NOT NULL.";
+      blankDone = true;
+    } else {
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>Not quite yet.</strong> Think about which column needs to be unique, and which one just needs to never be blank. One more try.";
+    }
+    fb.setAttribute("tabindex","-1"); fb.focus();
+  });
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"A PRIMARY KEY column can hold the exact same value in two different rows, as long as neither is NULL.", correct:false,
+      hint:"Revisit the flip card for PRIMARY KEY in section 3. What does it guarantee about every value in that column?",
+      explain:"PRIMARY KEY guarantees uniqueness across every row, with no exception for non-NULL duplicates."},
+    {value:"b", label:"A FOREIGN KEY value has to already exist as a real value in the column it references.", correct:true,
+      hint:"Think back to section 6's second prediction. What made member_id 12 get rejected?",
+      explain:"That's exactly what a foreign key checks, and exactly why member_id 12 was rejected in section 6."},
+    {value:"c", label:"NOT NULL and PRIMARY KEY mean exactly the same thing.", correct:false,
+      hint:"Look at the members table from section 5. full_name is NOT NULL but isn't a primary key. What's the difference?",
+      explain:"PRIMARY KEY implies NOT NULL plus uniqueness. Plenty of NOT NULL columns, like full_name, aren't primary keys at all."},
+    {value:"d", label:"A psql command that succeeds often prints nothing back at all.", correct:true,
+      hint:"Think back to createdb in section 5. What did it print when it worked?",
+      explain:"createdb is the clearest example: real, honest silence on success, exactly as section 1 described."}
+  ]});
+
+  K.Scoring.register("q-writeselect", 1, "quiz");
+  let selectAttempts = 0, selectDone = false;
+  function normSQL(s){ return (s||"").trim().toLowerCase().replace(/;\s*$/,"").replace(/\s+/g," "); }
+  const SELECT_TARGETS = [
+    "select * from checkouts where member_id = 2 order by checkout_date",
+    "select * from checkouts where member_id = 2 order by checkout_date asc"
+  ];
+  $("#selectcheck").addEventListener("click", () => {
+    if(selectDone) return;
+    selectAttempts++;
+    const ok = SELECT_TARGETS.includes(normSQL($("#selectinput").value));
+    const fb = $("#selectfb");
+    if(ok){
+      K.Scoring.award("q-writeselect", selectAttempts===1?1:0.5);
+      fb.className = "mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML = "<strong>Correct.</strong> SELECT * FROM checkouts WHERE member_id = 2 ORDER BY checkout_date returns every row for member 2, oldest checkout first.";
+      selectDone = true;
+    } else if(selectAttempts >= 2){
+      K.Scoring.award("q-writeselect", 0);
+      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML = "<strong>Here's the answer. You'll get it next time.</strong> SELECT * FROM checkouts WHERE member_id = 2 ORDER BY checkout_date;";
+      selectDone = true;
+    } else {
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>Not quite.</strong> Check the table name after FROM, the column and value after WHERE, and which column comes after ORDER BY. One more try.";
+    }
+    fb.setAttribute("tabindex","-1"); fb.focus();
+  });
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"QC61CKXgxkU"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:10});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:8});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"fkmeaning",
+    feedback:{fkmeaning:"That's exactly what this error means: the row tried to reference a member_id that isn't a real row in members yet.",
+              storage:"This error is about a referenced value being missing, not about running out of space.",
+              typo:"The column name itself is spelled correctly here; the problem is the value 12, not the column's name."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"addvalue",
+    feedback:{addvalue:"The constraint caught a real gap in the data. Supplying the missing tool_name is the actual fix.",
+              removeconstraint:"Removing the constraint doesn't fix the missing data; it just lets future rows go missing without ever being caught again.",
+              rerun:"This isn't a temporary glitch. The exact same INSERT will fail the exact same way every time until tool_name is supplied."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"right",
+    feedback:{right:"gardener_id is a real INTEGER column with NOT NULL and a REFERENCES clause back to gardeners, exactly the shape practiced in section 5.",
+              bareint:"gardener_id here is a plain integer with no REFERENCES clause at all, so PostgreSQL never checks it against a real gardener.",
+              retype:"Storing gardener_name directly repeats the same retyping problem from section 2's recall question, instead of referencing a real row."}});
+
+  const AI_PROMPTS = [
+    "Think of a real system that refuses an incomplete request, like a form that won't submit without a required field. Where else have you run into something that enforces 'you can't skip this' the same way a NOT NULL constraint does?",
+    "If you had to explain to a non-technical volunteer why a member ID can't be reused for two different people, what everyday comparison would you reach for?",
+    "Where in your own life does something only count if it correctly points back to something else that already exists, similar to how a foreign key has to match a real row?"
+  ];
+  $("#aiprompt").addEventListener("click", () => {
+    const box = $("#aipromptbox");
+    box.style.display = "block";
+    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb = $("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["sql-relational"],
+      skills:["sql","database-administration"], onDone(status,message){
+      fb.textContent = message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

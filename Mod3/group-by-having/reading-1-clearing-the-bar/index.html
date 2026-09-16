@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clearing the Bar — GROUP BY &amp; HAVING</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:920px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+.mlrk-querybox{display:flex;flex-direction:column;gap:.5rem;margin-top:.6rem}
+.mlrk-queryline{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.mlrk-queryline input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.3rem .5rem;width:9rem;font-family:inherit;font-weight:700}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Clearing the Bar</h1>
+<p class="mlrk-lead">A three-person design collective called Bright Path keeps one long table of every project it has ever billed: which client hired them, what kind of project it was, how many hours it took, and what the invoice came to. The founders want two different answers out of that same table: which clients keep coming back, and which of those repeat clients are actually worth prioritizing because their total business clears a real revenue bar. The first question means collapsing many project rows into one row per client. The second means throwing out some of those collapsed rows, based on a number that doesn't even exist until the collapsing already happened. This reading is about both moves.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~40&ndash;43 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No SQL setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>SQL</strong> — Writing correct, verified SQL against a real database: joins, GROUP BY/HAVING, CTEs, window functions, and reading a query's real execution plan.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Concept overview</h2>
+<p>Here's a slice of Bright Path's <code>projects</code> table, six rows in:</p>
+<div class="mlrk-code"><div class="mlrk-screen">client_name             project_type       hours_billed  invoice_amount  year
+Harbor Realty Group     logo design        10            1200            2025
+Pinewood Dental         website design     26            3100            2025
+Union Grain Bakery      brand refresh      22            2600            2025
+Harbor Realty Group     packaging design   14            1700            2026
+Union Grain Bakery      packaging design   18            2200            2026
+Union Grain Bakery      logo design         9            1100            2025</div></div>
+<p>Three real clients, six rows, in whatever order the projects actually shipped. "How much total revenue has each client brought in?" can't be answered by reading any single row: the answer for Union Grain Bakery is scattered across rows 3, 5, and 6. <code>GROUP BY</code> is SQL's answer. It gathers every row that shares the same value in one column, one client here, into its own group, runs an aggregate function separately inside each group, and returns exactly one output row per group:</p>
+<div class="mlrk-code"><div class="mlrk-screen">SELECT client_name, SUM(invoice_amount) AS total_revenue
+FROM projects
+GROUP BY client_name;
+
+[Output]
+client_name             total_revenue
+Harbor Realty Group     2900
+Pinewood Dental         3100
+Union Grain Bakery      5900</div></div>
+
+<svg class="mlrk-illustration" viewBox="0 0 920 260" role="img" aria-labelledby="gbTitle gbDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="gbTitle">Six project rows splitting into three client groups, then combining into one total-revenue row per client</title>
+  <desc id="gbDesc">Six colored rows on the left, two Harbor Realty Group rows in sage green, one Pinewood Dental row in gold, three Union Grain Bakery rows in blue, split into three grouped boxes in the middle showing each group's member invoice amounts, then combine on the right into one output row per client showing SUM of invoice_amount.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="95" y="18" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Every project = one row</text>
+    <g stroke-width="2.5" font-size="11" font-weight="600" fill="#261F1D">
+      <rect x="10" y="30" width="170" height="20" rx="6" fill="#A6C2B4" stroke="#264326"/>
+      <text x="95" y="44" text-anchor="middle">Harbor Realty</text>
+      <rect x="10" y="54" width="170" height="20" rx="6" fill="#FECC5B" stroke="#83671C"/>
+      <text x="95" y="68" text-anchor="middle">Pinewood Dental</text>
+      <rect x="10" y="78" width="170" height="20" rx="6" fill="#DEEAF4" stroke="#2274B5"/>
+      <text x="95" y="92" text-anchor="middle">Union Grain Bakery</text>
+      <rect x="10" y="102" width="170" height="20" rx="6" fill="#A6C2B4" stroke="#264326"/>
+      <text x="95" y="116" text-anchor="middle">Harbor Realty</text>
+      <rect x="10" y="126" width="170" height="20" rx="6" fill="#DEEAF4" stroke="#2274B5"/>
+      <text x="95" y="140" text-anchor="middle">Union Grain Bakery</text>
+      <rect x="10" y="150" width="170" height="20" rx="6" fill="#DEEAF4" stroke="#2274B5"/>
+      <text x="95" y="164" text-anchor="middle">Union Grain Bakery</text>
+    </g>
+
+    <g font-size="13" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="222" y="100">SPLIT</text>
+      <text x="222" y="115">by client_name</text>
+    </g>
+    <line x1="184" y1="130" x2="266" y2="130" stroke="#264326" stroke-width="3"/>
+    <polygon points="266,122 266,138 280,130" fill="#264326"/>
+
+    <text x="425" y="18" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Grouped by client</text>
+    <rect x="284" y="30" width="290" height="60" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="429" y="54" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Harbor Realty Group</text>
+    <text x="429" y="75" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">2 rows: 1200 and 1700</text>
+
+    <rect x="284" y="98" width="290" height="60" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="429" y="122" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Pinewood Dental</text>
+    <text x="429" y="143" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">1 row: 3100</text>
+
+    <rect x="284" y="166" width="290" height="60" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="429" y="190" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Union Grain Bakery</text>
+    <text x="429" y="211" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">3 rows: 2600, 2200, 1100</text>
+
+    <g font-size="13" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="628" y="100">APPLY SUM() +</text>
+      <text x="628" y="115">COMBINE</text>
+    </g>
+    <line x1="578" y1="130" x2="660" y2="130" stroke="#264326" stroke-width="3"/>
+    <polygon points="660,122 660,138 674,130" fill="#264326"/>
+
+    <text x="795" y="18" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">One row per group</text>
+    <rect x="678" y="30" width="234" height="60" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="795" y="54" text-anchor="middle" font-weight="700" font-size="12" fill="#261F1D">Harbor Realty Group</text>
+    <text x="795" y="75" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">total_revenue: 2900</text>
+
+    <rect x="678" y="98" width="234" height="60" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="795" y="122" text-anchor="middle" font-weight="700" font-size="12" fill="#261F1D">Pinewood Dental</text>
+    <text x="795" y="143" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">total_revenue: 3100</text>
+
+    <rect x="678" y="166" width="234" height="60" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="795" y="190" text-anchor="middle" font-weight="700" font-size="12" fill="#261F1D">Union Grain Bakery</text>
+    <text x="795" y="211" text-anchor="middle" font-weight="600" font-size="12" fill="#261F1D">total_revenue: 5900</text>
+  </g>
+</svg>
+
+<p>Now the founders ask the second question: "which of our repeat clients are worth prioritizing?" Repeat means <code>COUNT(*) &gt; 1</code>, a number that only exists <em>after</em> grouping happens. <code>WHERE</code> can't help here: <code>WHERE</code> throws out individual rows before any grouping ever starts, so at the moment it runs, there's no group and no count for it to check yet. <code>HAVING</code> is the clause built for exactly this: it runs after the groups are already formed and the aggregate already calculated, and it decides which whole groups survive into the final result.</p>
+<div class="mlrk-code"><div class="mlrk-screen">SELECT client_name, COUNT(*) AS project_count
+FROM projects
+GROUP BY client_name
+HAVING COUNT(*) > 1;
+
+[Output]
+client_name             project_count
+Harbor Realty Group     2
+Union Grain Bakery      3</div></div>
+
+<svg class="mlrk-illustration" viewBox="0 0 900 190" role="img" aria-labelledby="whTitle whDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="whTitle">WHERE filters individual rows before grouping; HAVING filters whole groups after grouping</title>
+  <desc id="whDesc">A four-stage left to right pipeline: raw rows, then rows that passed WHERE, then groups with aggregates computed, then groups that passed HAVING. The WHERE arrow sits before the GROUP BY box; the HAVING arrow sits after it.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="6" y="55" width="170" height="80" rx="12" fill="#FFFCF7" stroke="#261F1D" stroke-width="2.5"/>
+    <text x="91" y="90" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Raw rows</text>
+    <text x="91" y="110" text-anchor="middle" font-size="11" fill="#261F1D">every project,</text>
+    <text x="91" y="124" text-anchor="middle" font-size="11" fill="#261F1D">every client</text>
+
+    <line x1="176" y1="95" x2="234" y2="95" stroke="#2274B5" stroke-width="3"/>
+    <polygon points="234,87 234,103 248,95" fill="#2274B5"/>
+    <text x="205" y="70" text-anchor="middle" font-weight="700" font-size="12" fill="#2274B5">WHERE</text>
+    <text x="205" y="140" text-anchor="middle" font-size="11" fill="#2F5A8B">filters ROWS,</text>
+    <text x="205" y="153" text-anchor="middle" font-size="11" fill="#2F5A8B">before grouping</text>
+
+    <rect x="252" y="55" width="170" height="80" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="337" y="90" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Surviving rows</text>
+    <text x="337" y="110" text-anchor="middle" font-size="11" fill="#261F1D">not yet</text>
+    <text x="337" y="124" text-anchor="middle" font-size="11" fill="#261F1D">grouped</text>
+
+    <line x1="422" y1="95" x2="480" y2="95" stroke="#264326" stroke-width="3"/>
+    <polygon points="480,87 480,103 494,95" fill="#264326"/>
+    <text x="451" y="70" text-anchor="middle" font-weight="700" font-size="11" fill="#264326">GROUP BY</text>
+
+    <rect x="498" y="45" width="190" height="100" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="593" y="72" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Groups formed</text>
+    <text x="593" y="92" text-anchor="middle" font-size="11" fill="#261F1D">one per client,</text>
+    <text x="593" y="106" text-anchor="middle" font-size="11" fill="#261F1D">aggregate values</text>
+    <text x="593" y="120" text-anchor="middle" font-size="11" fill="#261F1D">now computed</text>
+
+    <line x1="688" y1="95" x2="742" y2="95" stroke="#83671C" stroke-width="3"/>
+    <polygon points="742,87 742,103 756,95" fill="#83671C"/>
+    <text x="715" y="70" text-anchor="middle" font-weight="700" font-size="12" fill="#83671C">HAVING</text>
+    <text x="715" y="140" text-anchor="middle" font-size="11" fill="#83671C">filters GROUPS,</text>
+    <text x="715" y="153" text-anchor="middle" font-size="11" fill="#83671C">after aggregation</text>
+
+    <rect x="760" y="55" width="134" height="80" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="827" y="90" text-anchor="middle" font-weight="700" font-size="12" fill="#261F1D">Final result</text>
+    <text x="827" y="110" text-anchor="middle" font-size="11" fill="#261F1D">groups that</text>
+    <text x="827" y="124" text-anchor="middle" font-size="11" fill="#261F1D">cleared the bar</text>
+  </g>
+</svg>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> "which of these clients/customers/accounts actually clears some threshold" is one of the most common real questions in a data role, whether the threshold is "more than 3 orders," "over $10,000 in total spend," or "at least 5 support tickets this month." <code>GROUP BY</code> plus <code>HAVING</code> is the two-step pattern behind almost every one of those questions, and mixing up which clause does which job is one of the most common, most visible SQL mistakes there is.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to join tables and filter individual rows with <code>WHERE</code>. This reading is about summarizing many rows into one row per real-world thing, and then filtering on a number that only exists after that summarizing happens. Once both clauses feel automatic, the natural next step is wrapping a query like this one inside a name of its own, so a bigger question can build on top of it without repeating the whole thing.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before grouping</h2>
+<p class="mlrk-small">A few skills from earlier get reused heavily below. Test each one before moving on.</p>
+
+<div class="mlrk-card" id="card-where"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">SELECT * FROM projects WHERE year = 2026;</div></div>
+<p><strong>Using the six-row table from section 1, how many rows does this return?</strong></p>
+<button type="button" class="mlrk-choice" data-a="2">2</button>
+<button type="button" class="mlrk-choice" data-a="6">6</button>
+<button type="button" class="mlrk-choice" data-a="4">4</button>
+<div id="wherefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-compare" style="margin-top:.8rem"><p><strong>Coding check:</strong> a project has <code>hours_billed = 18</code>. What does <code>hours_billed &gt;= 20</code> evaluate to?</p>
+<button type="button" class="mlrk-choice" data-a="false">FALSE</button>
+<button type="button" class="mlrk-choice" data-a="true">TRUE</button>
+<div id="comparefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-join" style="margin-top:.8rem"><p><strong>Scenario check:</strong> Bright Path also keeps a <code>project_contacts</code> table, listing every contact person on each project. Harbor Realty Group's website design project has 2 listed contacts. If <code>projects</code> is INNER JOINed to <code>project_contacts</code> on the project, how many result rows does that one project produce?</p>
+<button type="button" class="mlrk-choice" data-a="2">2 rows, one per contact, both describing the same real project</button>
+<button type="button" class="mlrk-choice" data-a="1">Exactly 1 row, since it's still one project</button>
+<button type="button" class="mlrk-choice" data-a="error">The join raises an error, since one project can't have two contacts</button>
+<div id="joinfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-repeat" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> after that join, if someone ran <code>COUNT(*)</code> on the joined result to answer "how many projects has Harbor Realty Group had," what would go wrong?</p>
+<button type="button" class="mlrk-choice" data-a="right">It would overcount: that one project appears twice in the joined rows, once per contact, so COUNT(*) counts contact-rows, not real projects.</button>
+<button type="button" class="mlrk-choice" data-a="fine">Nothing. COUNT(*) always counts real-world entities correctly, regardless of joins.</button>
+<button type="button" class="mlrk-choice" data-a="under">It would undercount, since a join always drops duplicate-looking rows automatically.</button>
+<div id="repeatfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">That last question is exactly the trap <code>GROUP BY</code> exists to fix: collapsing rows back down to one per real thing, <em>before</em> trusting a count. Keep it in mind, it comes back later in this reading.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Technical vocabulary</h2>
+<p>Flip each card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>GROUP BY</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>GROUP BY</strong><br>A clause that gathers rows sharing the same value in one or more columns into separate groups, so an aggregate function can run once per group instead of once for the whole table.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>aggregate function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Aggregate function</strong><br>A function like COUNT(), SUM(), AVG(), MIN(), or MAX() that collapses many values down to one summary number.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>HAVING</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>HAVING</strong><br>A clause that filters out whole groups after GROUP BY and its aggregate functions have already run. The only clause allowed to test a condition like COUNT(*) &gt; 1.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>WHERE vs. HAVING</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>WHERE vs. HAVING</strong><br>WHERE filters individual rows before any grouping happens, and can never reference an aggregate function. HAVING filters whole groups after grouping and aggregation, and is built specifically to reference aggregate functions.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>group key</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Group key</strong><br>The column (or columns) named in GROUP BY that decides how rows get sorted into groups. Rows with the same key value land in the same group.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>logical query order</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Logical query order</strong><br>The order a database actually evaluates a query's clauses in, which is not the order you type them in: roughly FROM, then WHERE, then GROUP BY, then HAVING, then SELECT, then ORDER BY.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Write the query: repeat clients only</h2>
+<p>The founders want each client's name and how many projects they've hired Bright Path for, but only for clients who have hired them more than once. Fill in the two missing clauses:</p>
+<div class="mlrk-querybox">
+<div class="mlrk-queryline">SELECT client_name, COUNT(*) AS project_count</div>
+<div class="mlrk-queryline">FROM projects</div>
+<div class="mlrk-queryline"><input type="text" id="blank1" autocomplete="off" placeholder="clause"> client_name</div>
+<div class="mlrk-queryline"><input type="text" id="blank2" autocomplete="off" placeholder="clause"> COUNT(*) &gt; 1;</div>
+</div>
+<div class="mlrk-fillblank"><button type="button" id="querycheck" class="mlrk-btn">Check my query</button></div>
+<div id="queryfb" class="mlrk-feedback" tabindex="-1"></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+<p>The first blank has to run before COUNT(*) can even exist. The second blank has to run after it, since it tests the result of COUNT(*) directly.</p>
+</details>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Predict the count, then trace the groups</h2>
+<div class="mlrk-card" id="card-predict"><p><strong>Predict first:</strong> what will <code>SELECT client_name, COUNT(*) FROM projects GROUP BY client_name;</code> show for Union Grain Bakery?</p>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="5900">5900</button>
+<button type="button" class="mlrk-choice" data-a="1">1</button>
+<div id="predictfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1.2rem">This is easier to hold in your head one step at a time. Click through the split, apply, and combine steps yourself below.</p>
+<div id="tracestep"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Sort into WHERE or HAVING</h2>
+<p>Each chip below is a real condition someone might want to add to a query against the <code>projects</code> table. Drag each one into the clause it actually belongs in, then use the self-check button to confirm your matches.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable"><code>year = 2026</code></span>
+  <span id="chip2" class="mlrk-draggable"><code>COUNT(*) &gt; 1</code></span>
+  <span id="chip3" class="mlrk-draggable"><code>project_type = 'logo design'</code></span>
+  <span id="chip4" class="mlrk-draggable"><code>SUM(invoice_amount) &gt; 5000</code></span>
+  <span id="chip5" class="mlrk-draggable"><code>hours_billed &gt; 10</code></span>
+  <span id="chip6" class="mlrk-draggable"><code>AVG(hours_billed) &gt; 15</code></span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>WHERE (row-level, before grouping)</strong></p><div class="mlrk-dropzone" id="zoneWhere"></div></div>
+  <div><p class="mlrk-small"><strong>HAVING (group-level, after aggregation)</strong></p><div class="mlrk-dropzone" id="zoneHaving"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Order the steps: how a grouped, filtered query actually runs</h2>
+<p>Click steps, in order, to build the sequence this query actually follows when it runs, not the order it's typed in:</p>
+<div class="mlrk-code"><div class="mlrk-screen">SELECT client_name, COUNT(*) AS project_count
+FROM projects
+WHERE year = 2025
+GROUP BY client_name
+HAVING COUNT(*) > 1
+ORDER BY project_count DESC;</div></div>
+<p>Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="from"><span class="mlrk-order-num"></span> FROM identifies which table the rows come from.</li>
+  <li class="mlrk-orderitem" data-step="where"><span class="mlrk-order-num"></span> WHERE filters out individual rows, before any grouping happens.</li>
+  <li class="mlrk-orderitem" data-step="groupby"><span class="mlrk-order-num"></span> GROUP BY gathers the surviving rows into groups sharing the same client_name.</li>
+  <li class="mlrk-orderitem" data-step="having"><span class="mlrk-order-num"></span> HAVING filters out whole groups, based on the now-computed COUNT(*).</li>
+  <li class="mlrk-orderitem" data-step="select"><span class="mlrk-order-num"></span> SELECT decides which columns and expressions appear in the output.</li>
+  <li class="mlrk-orderitem" data-step="orderby"><span class="mlrk-order-num"></span> ORDER BY sorts the final rows for display.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about GROUP BY and HAVING.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> GROUP BY permanently deletes the ungrouped rows from the underlying table.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> HAVING can filter using an aggregate function like COUNT() or SUM(), but WHERE cannot.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A single query can use WHERE and HAVING together, each doing a different job.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Every query that includes GROUP BY is required to also include a HAVING clause.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Watch: GROUP BY and HAVING in action</h2>
+<p>As you watch, notice how the video introduces HAVING as the direct answer to a limitation of WHERE, the exact same limitation from section 1's revenue example, rather than as an unrelated new clause.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=VQf0V6Wwbf4" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: in your own words, what's the one-sentence reason WHERE can't do HAVING's job?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"Find all customers who have placed more than 3 orders" (or its cousins: accounts over a spend threshold, users with more than N logins) is one of the most common take-home and live-coding SQL prompts in a data-role interview. It's a GROUP BY plus HAVING query almost every time, and interviewers are listening for whether you reach for HAVING immediately, or fumble through a WHERE clause first and have to self-correct.</p>
+<p>That self-correction moment is worth naming: writing <code>WHERE COUNT(*) &gt; 3</code> by instinct and then catching yourself is one of the most common, most visible mistakes in a live SQL interview. Catching it out loud, "wait, that has to be HAVING, since COUNT(*) doesn't exist yet at the WHERE stage," reads as real understanding, not a lucky guess.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>An interviewer asks: "Find all clients who have hired us for more than 3 projects." Which clause does the "&gt; 3" condition belong in?</strong></p>
+<button type="button" class="mlrk-choice" data-a="having">HAVING, since it's testing an aggregated COUNT(*) value.</button>
+<button type="button" class="mlrk-choice" data-a="where">WHERE, since it's a filtering condition.</button>
+<button type="button" class="mlrk-choice" data-a="orderby">ORDER BY, since it involves a number.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Debugging habit + reflection</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>This query raises an error:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">SELECT client_name, COUNT(*) AS project_count
+FROM projects
+WHERE COUNT(*) > 1
+GROUP BY client_name;</div></div>
+<p><strong>What's actually wrong?</strong></p>
+<button type="button" class="mlrk-choice" data-a="right">COUNT(*) is an aggregate result. WHERE runs before GROUP BY forms any groups, so no aggregated value exists yet for it to check.</button>
+<button type="button" class="mlrk-choice" data-a="spelling">client_name is spelled incorrectly somewhere in the query.</button>
+<button type="button" class="mlrk-choice" data-a="semicolon">WHERE needs its own semicolon before GROUP BY starts.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="strategy"><strong>Your debugging strategy:</strong> in 1-2 sentences, describe how you'd explain this fix to a teammate who just hit the same error.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: The problem is that..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Summary &amp; critical thinking</h2>
+<p>Two moves carried this whole reading: collapsing many rows into one summary row per group with GROUP BY, and filtering which of those summary rows survive with HAVING, a clause that only makes sense once an aggregate value already exists to test.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a community lending library logs every checkout: <code>member_id</code>, <code>book_title</code>, <code>checkout_date</code>. A branch manager wants to know which members have checked out more than 5 books this year. Which combination actually answers that?</p>
+<button type="button" class="mlrk-choice" data-a="right">GROUP BY member_id, then HAVING COUNT(*) &gt; 5.</button>
+<button type="button" class="mlrk-choice" data-a="whereonly">WHERE COUNT(*) &gt; 5, with no GROUP BY at all.</button>
+<button type="button" class="mlrk-choice" data-a="orderonly">ORDER BY member_id DESC, then read down the list.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<label for="clue"><strong>In your own words:</strong> why can't a condition like COUNT(*) &gt; 5 go directly in WHERE?</label>
+<textarea id="clue" class="mlrk-response" data-save></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Thinking ahead</h2>
+<p>A query that groups and filters like this one is often just the first half of a bigger question. Naming a query like this one, and letting a second query build on top of its result instead of repeating the whole GROUP BY and HAVING pattern inline, is the natural next step once both clauses feel automatic. The same skill of deciding "does this condition belong before or after aggregation" also comes back the moment ranking or per-group comparisons enter the picture.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> after downloading the JSON above, in your own project folder:</p>
+    <pre class="mlrk-code">git add group-by-having-reading1.json
+git commit -m "Complete clearing the bar reading"
+git push</pre>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 2 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own private copy.</li>
+        <li>Keep it <strong>Private</strong>, this should already be the default.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Come back here, enter your GitHub username and your repo's name below (the default "reading-submissions" is right if you didn't rename it), then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://www.w3schools.com/sql/sql_having.asp" target="_blank" rel="noopener">W3Schools: SQL HAVING Clause</a> — short, example-driven reference.</li>
+<li><a href="https://www.postgresql.org/docs/current/tutorial-agg.html" target="_blank" rel="noopener">PostgreSQL Tutorial: Aggregate Functions</a> — the official reference on GROUP BY and aggregation.</li>
+<li><a href="https://sqlbolt.com/lesson/select_queries_with_aggregates" target="_blank" rel="noopener">SQLBolt: Queries with Aggregates</a> — free interactive practice writing GROUP BY/HAVING queries.</li>
+<li><a href="https://mode.com/sql-tutorial/sql-having/" target="_blank" rel="noopener">Mode: SQL HAVING</a> — more worked examples on filtering aggregated results.</li>
+</ul>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "group-by-having-reading1";
+  const TITLE = "Clearing the Bar — GROUP BY & HAVING";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-where", buttonSelector:"#card-where .mlrk-choice", feedbackSelector:"#wherefb", correct:"2",
+    feedback:{2:"Only two rows have year = 2026: Harbor Realty Group's packaging design row and Union Grain Bakery's packaging design row.",
+              6:"That's every row in the table, but four of the six rows have year = 2025, not 2026.",
+              4:"That's the count for year = 2025, not 2026. Recheck the year column for each row."}});
+
+  K.quiz({id:"q-compare", buttonSelector:"#card-compare .mlrk-choice", feedbackSelector:"#comparefb", correct:"false", maxAttempts:1,
+    feedback:{false:"18 is not greater than or equal to 20, so this comparison evaluates to FALSE.",
+              true:"18 is less than 20, so this comparison is FALSE, not TRUE."}});
+
+  K.quiz({id:"q-join", buttonSelector:"#card-join .mlrk-choice", feedbackSelector:"#joinfb", correct:"2",
+    feedback:{2:"An INNER JOIN pairs the one project row with each of its two contact rows, producing 2 result rows for what is still a single real project.",
+              1:"A join that matches one project to two contacts produces one result row per match, so this project appears twice, not once.",
+              error:"Joins don't raise errors over a one-to-many relationship like this. They produce one row per matching pair."}});
+
+  K.quiz({id:"q-repeat", buttonSelector:"#card-repeat .mlrk-choice", feedbackSelector:"#repeatfb", correct:"right",
+    feedback:{right:"Exactly. The join legitimately produced 2 rows for 1 real project, so counting those raw rows overstates how many projects actually happened.",
+              fine:"COUNT(*) counts rows, not real-world entities. A join that legitimately multiplies rows will make COUNT(*) overcount unless something collapses the rows back down first.",
+              under:"Joins don't drop rows to correct for this. Both contact rows are real, correct output, which is exactly why counting them directly is misleading."}});
+
+  K.quiz({id:"q-predict", buttonSelector:"#card-predict .mlrk-choice", feedbackSelector:"#predictfb", correct:"3",
+    feedback:{3:"Union Grain Bakery appears in 3 rows in the six-row table, so COUNT(*) for that group is 3.",
+              5900:"5900 is Union Grain Bakery's SUM(invoice_amount) from section 1's example, not its COUNT(*).",
+              1:"Union Grain Bakery is the client with the most rows here, not the fewest. Recount rows 3, 5, and 6."},
+    onDone(){}});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"having",
+    feedback:{having:"COUNT(*) only exists after grouping, and HAVING is the one clause built to filter on it.",
+              where:"WHERE only ever sees individual rows. At the point WHERE runs, COUNT(*) hasn't been computed yet.",
+              orderby:"ORDER BY only controls display order. It can't remove any rows or groups from the result at all."}});
+
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"right",
+    feedback:{right:"Exactly the section 1 rule: WHERE is evaluated before GROUP BY builds any groups, so COUNT(*) has no value yet for WHERE to compare against.",
+              spelling:"client_name is spelled the same, correctly, everywhere it appears in this query.",
+              semicolon:"SQL clauses don't each need their own semicolon. One semicolon ends the whole statement, at the very end."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"right",
+    feedback:{right:"Grouping by member_id first, then filtering with HAVING COUNT(*) > 5, is exactly this reading's two-step pattern applied to a new table.",
+              whereonly:"COUNT(*) doesn't exist yet at the point WHERE runs, and there's no GROUP BY here to even create per-member groups in the first place.",
+              orderonly:"Sorting by member_id doesn't count or compare anything. It just changes the order rows are displayed in."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"GROUP BY permanently deletes the ungrouped rows from the underlying table.", correct:false,
+      hint:"Look back at section 1. After running the GROUP BY query, is the original six-row projects table itself changed in any way?",
+      explain:"GROUP BY only changes how a query's result is organized. The underlying projects table keeps every one of its original rows."},
+    {value:"b", label:"HAVING can filter using an aggregate function like COUNT() or SUM(), but WHERE cannot.", correct:true,
+      hint:"Revisit section 1's revenue example. Which clause was the one built specifically to test COUNT(*) or SUM()?",
+      explain:"This is the core distinction from section 1: HAVING is built to test aggregate results; WHERE only ever sees individual rows."},
+    {value:"c", label:"A single query can use WHERE and HAVING together, each doing a different job.", correct:true,
+      hint:"Look at section 7's full example query. Does it use both WHERE and HAVING in the same statement?",
+      explain:"Section 7's example used WHERE (filtering rows by year) and HAVING (filtering groups by COUNT) in the very same query."},
+    {value:"d", label:"Every query that includes GROUP BY is required to also include a HAVING clause.", correct:false,
+      hint:"Look back at section 1's very first GROUP BY example. Did that query have a HAVING clause at all?",
+      explain:"Section 1's first GROUP BY query had no HAVING clause and ran fine. HAVING is only needed when you actually want to filter the groups."}
+  ]});
+
+  K.dragDrop("#dragarea", "act-drag-whereorhaving");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneWhere", label:"year = 2026", expectedLabel:"WHERE (row-level, before grouping)"},
+    chip2:{expectedId:"zoneHaving", label:"COUNT(*) > 1", expectedLabel:"HAVING (group-level, after aggregation)"},
+    chip3:{expectedId:"zoneWhere", label:"project_type = 'logo design'", expectedLabel:"WHERE (row-level, before grouping)"},
+    chip4:{expectedId:"zoneHaving", label:"SUM(invoice_amount) > 5000", expectedLabel:"HAVING (group-level, after aggregation)"},
+    chip5:{expectedId:"zoneWhere", label:"hours_billed > 10", expectedLabel:"WHERE (row-level, before grouping)"},
+    chip6:{expectedId:"zoneHaving", label:"AVG(hours_billed) > 15", expectedLabel:"HAVING (group-level, after aggregation)"}
+  }});
+  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["from","where","groupby","having","select","orderby"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.traceStepper("#tracestep", {steps:[
+    {cell:"Harbor Realty Group: rows 1, 4", line:"Harbor Realty Group group, COUNT(*) so far = 2"},
+    {cell:"Pinewood Dental: row 2", line:"Pinewood Dental group, COUNT(*) so far = 1"},
+    {cell:"Union Grain Bakery: rows 3, 5, 6", line:"Union Grain Bakery group, COUNT(*) so far = 3"},
+    {cell:"Apply COUNT(*) per group", line:"Harbor Realty Group: 2 | Pinewood Dental: 1 | Union Grain Bakery: 3"},
+    {cell:"Combine into one row per group", line:"client_name\nHarbor Realty Group    2\nPinewood Dental        1\nUnion Grain Bakery     3"}
+  ]});
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"VQf0V6Wwbf4"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
+
+  K.Scoring.register("q-query",1,"quiz");
+  let queryAttempts=0, queryDone=false;
+  $("#querycheck").addEventListener("click",()=>{
+    if(queryDone) return;
+    queryAttempts++;
+    const b1 = $("#blank1").value.trim().toUpperCase().replace(/\s+/g," ");
+    const b2 = $("#blank2").value.trim().toUpperCase().replace(/\s+/g," ");
+    const ok = b1==="GROUP BY" && b2==="HAVING";
+    const fb=$("#queryfb");
+    if(ok){
+      K.Scoring.award("q-query", queryAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> GROUP BY forms the per-client groups first, then HAVING keeps only the ones where COUNT(*) is over 1.";
+      queryDone=true;
+    } else if(queryAttempts>=2){
+      K.Scoring.award("q-query",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The first blank is <code>GROUP BY</code>, the second is <code>HAVING</code>.";
+      queryDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> One more try. Think about which clause has to run before COUNT(*) exists, and which one has to run after.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think about a loyalty program that only rewards customers with more than 5 purchases. If every purchase were its own row, what would grouping by customer and counting actually show you?",
+    "If you had to explain \"WHERE happens before grouping, HAVING happens after\" to a friend using something from daily life, like sorting mail into bins before deciding which bins are full enough to mail out, what would you compare it to?",
+    "Where have you already seen a report or dashboard filtered by a threshold, like \"only show categories with over 10 items\"? That's almost certainly a HAVING clause running behind the scenes."
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["sql-relational"],
+      skills:["sql"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>
