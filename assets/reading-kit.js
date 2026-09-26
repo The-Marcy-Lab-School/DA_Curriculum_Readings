@@ -589,15 +589,16 @@
     // "opened" (a new tab was launched to GitHub's pre-filled issue form;
     // the student still has to click "Submit new issue" themselves there —
     // that's GitHub's own UI, not something this function can see the
-    // result of) or "attempt-limit" (client already used both local
+    // result of) or "attempt-limit" (client already used all local
     // attempts). `message` is a ready-to-display, persona-included string —
     // readings should show it as-is rather than writing their own, so the
     // persona touch stays consistent everywhere without per-reading upkeep.
+    const MAX_ATTEMPTS=4;
     const p=Persona.get();
     const attemptsKey="mlrk:attempts:"+opts.readingId;
     const attempts=parseInt(localStorage.getItem(attemptsKey)||"0",10);
-    if(attempts>=2){
-      if(opts.onDone) opts.onDone("attempt-limit",p.emoji+" "+p.name+", you've already used both submission attempts for this reading.");
+    if(attempts>=MAX_ATTEMPTS){
+      if(opts.onDone) opts.onDone("attempt-limit",p.emoji+" "+p.name+", you've already used all "+MAX_ATTEMPTS+" submission attempts for this reading.");
       return;
     }
     localStorage.setItem(attemptsKey,String(attempts+1));

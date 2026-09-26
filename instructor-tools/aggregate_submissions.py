@@ -21,13 +21,14 @@ Usage:
     python3 instructor-tools/aggregate_submissions.py instructor-tools/roster.json
 
 Output: two files next to the roster (also gitignored) —
-    gradebook.csv   — one row per student, per reading, best-of-2 score
+    gradebook.csv   — one row per student, per reading, best-of-4 score
     skill_summary.csv — average class performance per skill tag
 
-The "best of 2 attempts" cap is enforced HERE, at aggregation time, not
+The "best of 4 attempts" cap is enforced HERE, at aggregation time, not
 client-side — a student's browser can't be trusted to cap itself, so this
 script sorts each student's issues for a reading by when they were opened
-and only ever counts the first two, taking whichever scored higher.
+and only ever counts the first four (MAX_ATTEMPTS below — keep this in sync
+with reading-kit.js's submitForCredit()), taking whichever scored highest.
 """
 import csv
 import json
@@ -40,6 +41,7 @@ import urllib.error
 
 DEFAULT_REPO_NAME = "reading-submissions"
 API_BASE = "https://api.github.com"
+MAX_ATTEMPTS = 4  # keep in sync with reading-kit.js's submitForCredit()
 
 
 def api_get(path, token):
@@ -136,14 +138,14 @@ def main():
 
     for (username, reading_id), attempts in per_reading_attempts.items():
         attempts.sort(key=lambda a: a["created_at"])
-        first_two = attempts[:2]
-        best = max(first_two, key=lambda a: a["pct"])
-        extra = len(attempts) - len(first_two)
+        counted = attempts[:MAX_ATTEMPTS]
+        best = max(counted, key=lambda a: a["pct"])
+        extra = len(attempts) - len(counted)
         gradebook_rows.append({
             "username": username,
             "reading_id": reading_id,
             "attempts_made": len(attempts),
-            "attempts_counted": len(first_two),
+            "attempts_counted": len(counted),
             "extra_ignored": extra,
             "best_earned": best["earned"],
             "best_possible": best["possible"],
