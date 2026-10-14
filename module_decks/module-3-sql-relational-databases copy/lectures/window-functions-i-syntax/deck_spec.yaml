@@ -1,0 +1,475 @@
+meta:
+  title: "Window Functions I: Syntax"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 7
+  date: "Day 7"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Explain how a window function differs from GROUP BY - every row stays, and a computed value is added beside it"
+    - "Write a window function using RANK() or ROW_NUMBER() with an OVER (ORDER BY ...) clause"
+  tools:
+    - "PostgreSQL / psql"
+  exercise:
+    type: bullets
+    url_or_text: "No new exercise today - your project's own window-function question needs exactly this syntax, on your own schema's real numbers."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Yesterday: Chaining multiple CTEs together in one WITH clause"
+    - "Earlier this module: ORDER BY, and GROUP BY aggregation"
+  interview_topics:
+    - "Clarifying an ambiguous 'top N' request before writing a ranking query, and choosing RANK() vs. ROW_NUMBER() based on how ties should be handled"
+  final_project:
+    "The project's own window-function question needs a real RANK()/ROW_NUMBER()
+    ranking query, spot-checked against known values - exactly today's syntax,
+    applied to the schema you design yourself."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: guided
+  scenario: >
+    Real syntax, one more layer: Yesterday you chained two CTEs to total up
+    each restaurant's violations. Today you'll rank those same totals -
+    written here as one simpler CTE, since chaining isn't today's focus -
+    with RANK() and ROW_NUMBER(), your first real window functions, without
+    losing a single row along the way.
+  glossary:
+    - term: "window function"
+      definition: "A calculation across a set of rows that keeps every row separate, instead of collapsing them the way GROUP BY does"
+    - term: "OVER clause"
+      definition: "The part of a window function's syntax that defines which rows it looks across, e.g. OVER (ORDER BY tv DESC)"
+    - term: "RANK()"
+      definition: "A window function that numbers rows by order, giving tied rows the same number and skipping ahead after the tie"
+    - term: "ROW_NUMBER()"
+      definition: "A window function that gives every row a unique, sequential number, even when values tie"
+
+slides:
+  - type: title
+    title: "Window Functions I"
+    subtitle: "RANK() and ROW_NUMBER(), as Real Syntax"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 7"
+    notes: >
+      [SCRIPT] Frame this as the module's next real syntax upgrade, the same
+      way yesterday's chained CTEs were. Name explicitly that today stays at
+      the syntax level - no PARTITION BY yet, that's next class, once
+      ranking within groups actually needs it.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Explain a window function vs. GROUP BY"
+        icon: "sql"
+      - text: "Write RANK() and ROW_NUMBER()"
+        icon: "award"
+    notes: >
+      [SCRIPT] Read both out loud. Name explicitly: this closes a real gap -
+      the project's own window-function question has been sitting there
+      unaddressed since the module started.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "Window Function"
+        icon: "sql"
+      - text: "RANK()"
+        icon: "award"
+      - text: "ROW_NUMBER()"
+        icon: "list"
+    notes: >
+      [SCRIPT] Just names for now - the actual difference between RANK() and
+      ROW_NUMBER() is worth waiting for, once there's a real tie to look at.
+
+  - type: transition
+    from_label: "Yesterday's Chained CTEs"
+    to_label: "Why Window Functions Exist"
+    note: "ORDER BY sorts rows - it never actually labels each one's place."
+    objective_index: 1
+    notes: >
+      [SCRIPT] [~2 min mark] Keep this brisk - the real payoff is the code
+      in a few minutes.
+
+  - type: check_understanding
+    prompt: "Quick recall: Does `ORDER BY` change how many rows come back, or just their sequence?"
+    mode: poll
+    topic: "Warm-Up: What ORDER BY Actually Does"
+    bloom_level: remember
+    question_style: conceptual
+    options:
+      - "Changes the row count"
+      - "Only changes their order"
+      - "Both"
+    answer:
+      correct: "Only changes their order"
+      explanation: "ORDER BY resequences whatever rows already qualified - it never adds or removes any. That's exactly the gap a window function fills: a real way to label each row's position, not just reorder them."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: quick show of hands. Online: drop a letter in
+      chat.
+
+
+      [SCRIPT] Confirm the answer, then pivot straight into the actual gap:
+      "so how would you ever say which row is #1?"
+
+  - type: content
+    title: "GROUP BY Collapses Rows - a Window Function Doesn't"
+    bullets:
+      - "GROUP BY: One row per group"
+      - "Window function: Every row stays"
+      - "A rank slides in beside each one"
+    icon_hero:
+      icon: "award"
+      style: "gold"
+    analogy:
+      domain: "sports"
+      mapping: "GROUP BY reports just the team's final score - one number, every player's row gone. A window function posts the season standings instead: each player keeps their own row, with a rank written beside it."
+      backups:
+        - domain: "gaming"
+          mapping: "GROUP BY is a leaderboard screen showing only the top score. A window function keeps every player's row, each one tagged with its own placement."
+        - domain: "fashion"
+          mapping: "GROUP BY reports just the season's total sales. A window function keeps every design on the rack, each tagged with its own sales rank."
+    notes: >
+      [SCRIPT] Name the mechanism, not just the analogy: GROUP BY genuinely
+      deletes the individual rows once it aggregates them. A window
+      function computes its value the same way, but keeps every original
+      row intact - the rank just gets added as a new column alongside it.
+
+
+      [MISCONCEPTIONS] Fellows often assume a window function must
+      "shrink" the result the way GROUP BY does. The whole point is that it
+      doesn't - the row count going in equals the row count coming out.
+
+  - type: transition
+    from_label: "The Idea"
+    to_label: "Code Along: Writing RANK() and ROW_NUMBER()"
+    note: "Same totals as yesterday's chain, now with a real rank attached."
+    objective_index: 2
+    style: "panel_preview"
+    preview_items:
+      - text: "Plain ORDER BY"
+        icon: "sql"
+      - text: "Add RANK/ROW_NUMBER"
+        icon: "award"
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "Sorted, But Not Numbered"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH totals AS (
+        SELECT r.dba, COUNT(v.violation_id) tv
+        FROM restaurants r
+        LEFT JOIN inspections i USING (camis)
+        LEFT JOIN violations v USING (inspection_id)
+        GROUP BY r.dba
+      )
+      SELECT dba, tv FROM totals ORDER BY tv DESC;
+    starter_code: |
+      -- TODO: rebuild yesterday's totals CTE (violations per restaurant),
+      -- TODO:   then SELECT dba, tv, ordered by tv DESC
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Same LEFT JOIN + USING pattern from yesterday, condensed into one CTE here since chaining itself isn't today's topic."
+    notes: >
+      [SCRIPT] Run it and let the sorted list print. Point at the top row,
+      then ask: "which number is this restaurant's actual rank?" There's no
+      column for it - ORDER BY only moved rows around, it never labeled
+      them.
+
+
+      [MISCONCEPTIONS] Fellows sometimes assume the row's position on
+      screen already counts as its rank. That position isn't real data -
+      it's just how the terminal happens to print the result.
+
+  - type: code
+    title: "Same Query, Now With RANK() and ROW_NUMBER()"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH totals AS (
+        SELECT r.dba, COUNT(v.violation_id) tv
+        FROM restaurants r
+        LEFT JOIN inspections i USING (camis)
+        LEFT JOIN violations v USING (inspection_id)
+        GROUP BY r.dba
+      )
+      SELECT dba, tv,
+        RANK() OVER (ORDER BY tv DESC) AS rnk,
+        ROW_NUMBER() OVER (ORDER BY tv DESC) AS rn
+      FROM totals;
+    starter_code: |
+      -- TODO: same totals CTE as the last slide
+      -- TODO: add RANK() OVER (ORDER BY tv DESC) AS rnk
+      -- TODO: add ROW_NUMBER() OVER (ORDER BY tv DESC) AS rn
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Both window functions share the same OVER (ORDER BY tv DESC) - same ordering, two different ways of counting position."
+    notes: >
+      [SCRIPT] Name the new piece first: `OVER (ORDER BY tv DESC)` is what
+      tells `RANK()`/`ROW_NUMBER()` which rows to look across and in what
+      order - without it, neither function would know how to number
+      anything.
+
+
+      [SCRIPT] Run it and read the tied rows out loud together: Corner
+      Bistro is rank 1, Green Leaf Cafe is rank 2, then three restaurants
+      tie at 0 violations. Watch what rnk and rn do differently on those
+      tied rows.
+
+
+      [SCRIPT] Name the real rule for RANK(): tied rows share one number,
+      and the count picks back up after however many rows tied - so a
+      3-way tie at rank 3 means the next distinct value would jump to rank
+      6, not 4. ROW_NUMBER() never repeats or skips, tie or no tie.
+
+
+      [MISCONCEPTIONS] A common assumption: RANK() and ROW_NUMBER() always
+      return the same numbers. They only diverge the moment a real tie
+      shows up - which is exactly why this query's data was built to have
+      one.
+
+  - type: check_understanding
+    prompt: "Predict it: After running this, how many restaurants actually share `rnk = 3`?"
+    mode: poll
+    topic: "Predicting a Real Tie"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "1"
+      - "2"
+      - "3"
+    answer:
+      correct: "3"
+      explanation: "Sunset Diner, Harbor Grill, and New Spot NYC all show 0 violations - a genuine 3-way tie, so RANK() gives all three the exact same rank."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] Confirm out loud, then connect back to ROW_NUMBER(): those
+      same three rows get 3, 4, and 5 instead - three different numbers for
+      three genuinely identical totals.
+
+  - type: check_understanding
+    prompt: "Predict it: A 3-way tie all shares `rnk = 3`. If one more restaurant existed with a lower total, what rank would RANK() give it?"
+    mode: poll
+    topic: "The Gap RANK() Leaves After a Tie"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "4"
+      - "5"
+      - "6"
+    answer:
+      correct: "6"
+      explanation: "RANK() picks back up counting after however many rows tied. Three rows shared rank 3, so the next distinct value jumps straight to rank 6, skipping 4 and 5 entirely."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] This is the real behavior worth naming out loud: RANK()
+      isn't "1, 2, 3, 4..." no matter what - it's genuinely counting rows,
+      tie or no tie. ROW_NUMBER() would give that same next restaurant a 6
+      too, but only because it never repeats a number in the first place -
+      a coincidence here, not the same reason.
+
+  - type: compare_contrast
+    title: "RANK() vs. ROW_NUMBER(): Same Order, Different Ties"
+    left_label: "RANK()"
+    left_icon: "award"
+    left_points:
+      - "Ties share the same rank"
+      - "A gap follows the tie"
+      - "Good for real standings"
+    right_label: "ROW_NUMBER()"
+    right_icon: "list"
+    right_points:
+      - "Every row gets a unique number"
+      - "No ties, ever"
+      - "Good for picking exactly N rows"
+    similarities:
+      - "Both need an OVER (ORDER BY ...)"
+      - "Both compute a value without collapsing rows"
+    notes: >
+      [SCRIPT] Name the real tradeoff: RANK() tells the truth about a tie,
+      ROW_NUMBER() forces a decision even when the data didn't hand you
+      one. Neither is "more correct" - they answer genuinely different
+      questions.
+
+  - type: check_understanding
+    prompt: "Quick-fire: Which function guarantees unique row numbers 1 through N, tie or no tie?"
+    mode: game
+    topic: "Quick-Fire: Guaranteed Unique Numbers"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "RANK()"
+      - "ROW_NUMBER()"
+    answer:
+      correct: "ROW_NUMBER()"
+      explanation: "ROW_NUMBER() never repeats or skips a number, tie or no tie - it's the only one of the two that guarantees a clean 1-through-N sequence."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] Quick-fire, participation over correctness - a fast show
+      of hands or a one-word chat drop, then move straight on.
+
+
+      [SCRIPT] Confirm and move fast - this is a warm-up for the harder
+      tradeoff question right after it.
+
+  - type: check_understanding
+    prompt: "Would you rather use `RANK()` or `ROW_NUMBER()` for a report that must always return exactly 3 rows, tie or no tie?"
+    mode: would_you_rather
+    topic: "Choosing the Right One Under a Tie"
+    bloom_level: evaluate
+    question_style: business_thinking
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: move to a side of the room. Online: drop RANK
+      or ROW_NUMBER in chat, then unmute 1-2 Fellows to defend it.
+
+
+      [SCRIPT] Target idea: ROW_NUMBER() guarantees exactly 3 rows, always,
+      since it never repeats a number - RANK() can quietly hand back more
+      than 3 whenever a tie lands right at the cutoff. A report that
+      promises "exactly 3" has a real, defensible reason to reach for
+      ROW_NUMBER() here.
+
+  - type: check_understanding
+    prompt: "Interview-style: You're talking to someone who already knows `GROUP BY`. How would you explain what a window function does differently?"
+    mode: discussion
+    topic: "Window Function vs. GROUP BY, in Your Own Words"
+    bloom_level: understand
+    question_style: interview
+    technique: "Teach-Back"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: 30 seconds to think alone, then cold-call one
+      Fellow. Online: type your explanation in chat first, then unmute
+      1-2 Fellows.
+
+
+      [TECHNIQUE] Use Teach-Back - Audience, Simplify, Analogy, Check. The
+      audience here already knows GROUP BY, so a strong answer builds on
+      that instead of restating a generic textbook definition from
+      scratch.
+
+
+      [SCRIPT] Target idea: GROUP BY collapses matching rows into one row
+      per group; a window function computes a value across a set of rows
+      but keeps every row separate. Listen for whether the explanation
+      would actually land with a real interviewer, not just whether it's
+      technically correct.
+
+  - type: quote
+    quote: "A tie in the data isn't a dead end. It just means someone has to pick a tie-breaking rule on purpose, not by accident."
+    attribution: "This lesson's own framing, not an external citation"
+    notes: >
+      [SCRIPT] Let this sit for a second before moving to interview prep -
+      it's the actual thread connecting everything today: RANK() vs.
+      ROW_NUMBER() is really a question about who decides the tie-breaking
+      rule, and when.
+
+  - type: interview_prep
+    topics:
+      - question: "Your manager asks for 'the top 3 restaurants by violations' - how would you make sure your query actually returns exactly 3 rows, tie or no tie?"
+        short_answer: "Clarify what 'top 3' really means before writing anything - does the manager want exactly 3 rows no matter what, or every restaurant that qualifies for 3rd place? If a tie could land right at the cutoff, RANK() might quietly return more than 3 rows, while ROW_NUMBER() always returns exactly 3, but only once you've decided how ties should actually be broken. State that assumption out loud before running the query, not after."
+        technique: "QAR"
+        icon: "award"
+    notes: >
+      [TECHNIQUE] Use QAR - Question, Assumption, Risk. "Top 3" is
+      genuinely ambiguous the moment a tie is possible; naming that
+      ambiguity before writing SQL is the real skill being tested here, not
+      memorizing which function name to type.
+
+
+      [SCRIPT] Have a Fellow attempt this cold first - listen for whether
+      they ask the clarifying question before jumping straight to a
+      function name.
+
+  - type: content
+    title: "Why This Matters for Your Project"
+    bullets:
+      - "Your window-function question needs this exact syntax"
+      - "Real ties, spot-checked against known values"
+      - "Next class: Ranking within groups"
+    icon_hero:
+      icon: "goal"
+      style: "blue"
+    notes: >
+      [SCRIPT] Name explicitly: your project's own window-function question
+      grades exactly this - a correct RANK()/ROW_NUMBER() ranking query,
+      checked against real numbers you already know by hand.
+
+
+      [SCOPE] Everything today ranked every restaurant against every other
+      one, overall. Next class adds PARTITION BY - ranking within groups
+      instead of across the whole table. Today's OVER (ORDER BY ...) is the
+      exact same clause that upgrade builds on, not a different mechanism.
+
+  - type: table
+    title: "Key Terms - Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "Window Function"
+        - "Computes a value per row, keeps every row"
+      - - "OVER Clause"
+        - "Defines which rows a window function sees"
+      - - "RANK()"
+        - "Ties share a rank; a gap follows"
+      - - "ROW_NUMBER()"
+        - "Always unique, even under a tie"
+    notes: >
+      [SCRIPT] Quick round-trip through all four terms - this is exactly
+      the vocabulary your project's own window-function question expects
+      you to use correctly.
+
+  - type: bridge
+    title: "So Far, We've Covered..."
+    bullets:
+      - "Why a window function keeps every row"
+      - "RANK() and ROW_NUMBER(), on a real tie"
+      - "Your first OVER (ORDER BY ...) clause"
+    notes: >
+      [SCRIPT] Close by naming the shift ahead: next class keeps this exact
+      OVER (ORDER BY ...) clause and adds PARTITION BY, ranking within
+      groups instead of across the whole table. Name the project tie
+      explicitly: your own project's window-function question will ask for
+      exactly today's syntax, on your own schema's real numbers.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "No new exercise today"
+      - "Next class: Ranking within groups"
+      - "Keep your database running"
+    notes: >
+      [SCRIPT] Give a specific heads-up: next class's demo builds on
+      today's own totals query - don't drop the nyc_restaurants database.
+
+  - type: further_resources
+    resources:
+      - title: "PostgreSQL Tutorial: Window Functions"
+        url: "https://www.postgresql.org/docs/current/tutorial-window.html"
+        kind: documentation
+        time_estimate: "~10 min read"
+        description: "The official reference, straight from the source"
+        attribution: "PostgreSQL Global Development Group"
+      - title: "SQL Ranking Window Functions With Examples"
+        url: "https://datalemur.com/sql-tutorial/sql-rank-dense_rank-row_number-window-function"
+        kind: reading
+        time_estimate: "~10 min read"
+        description: "RANK/DENSE_RANK/ROW_NUMBER, tied to real interview questions"
+        attribution: "DataLemur"
+      - title: "SQL Window Functions Tutorial"
+        url: "https://www.thoughtspot.com/sql-tutorial/sql-window-functions"
+        kind: practice
+        time_estimate: "~15 min hands-on"
+        description: "A live in-browser editor - write real ranking queries"
+        attribution: "ThoughtSpot (formerly Mode Analytics)"
+    notes: >
+      [SCRIPT] Point out the ThoughtSpot link specifically if anyone wants
+      more reps before next class's PARTITION BY upgrade - it's a real
+      editor, not just reading.

@@ -1,0 +1,450 @@
+meta:
+  title: "CTEs II: Decomposing a Multi-Table Question, With a Peer"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 6
+  date: "Day 6"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "With a peer, decompose a multi-table business question into a decomposition plan spanning 3+ tables"
+    - "Chain multiple CTEs in one query, each building on the one before it"
+  tools:
+    - "PostgreSQL / psql"
+  exercise:
+    type: bullets
+    url_or_text: "No new exercise today — the project's own fourth given business question, for every domain, is exactly this kind of multi-table decomposition."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Yesterday: WITH syntax, and rewriting a subquery as a single CTE"
+    - "Earlier this module: INNER JOIN, LEFT JOIN, GROUP BY, HAVING"
+  interview_topics:
+    - "How would you approach a business question that needs data from 3 or more tables?"
+  final_project:
+    "The project's rubric grades whether a CTE \"genuinely improves
+    readability\" — the real test of that isn't a single-table rewrite,
+    it's exactly today's kind of question: one that touches 3+ tables and
+    would be genuinely unreadable as one dense, nested statement."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: collaborative
+  scenario: >
+    Real syntax, day five: A third table joins `nyc_restaurants` —
+    `violations`, one level deeper than inspections. With a partner,
+    you'll plan a real query spanning all 3 tables before writing a
+    single line of SQL, then chain two CTEs together to answer it.
+  glossary:
+    - term: "chained CTE"
+      definition: "Two or more CTEs defined in one WITH clause, separated by commas, where a later one can reference an earlier one"
+    - term: "decomposition plan"
+      definition: "A sketched-out sequence of steps for answering a question with SQL, decided before writing the actual query"
+
+slides:
+  - type: title
+    title: "CTEs II"
+    subtitle: "Decomposing a Multi-Table Question, With a Peer"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 6"
+    notes: >
+      [SCRIPT] Frame this as the real payoff of yesterday's single-CTE
+      day — today's question genuinely needs more than one, and genuinely
+      needs a partner to plan before typing.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Plan a 3-table query with a partner"
+        icon: "join"
+      - text: "Chain two CTEs in one query"
+        icon: "sql"
+    notes: >
+      [SCRIPT] Read both out loud. Name explicitly: this is the project's
+      own Q4 at full strength — a real multi-table question, not a
+      single-table warm-up.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "Chained CTE"
+        icon: "sql"
+      - text: "Decomposition plan"
+        icon: "checklist"
+    notes: >
+      [SCRIPT] Just names for now — a real 3-table question, and a real
+      partner, are both coming up in a few minutes.
+
+  - type: transition
+    from_label: "Yesterday's One CTE"
+    to_label: "One Quick Check"
+    note: "A fast recall check before today's question needs two."
+    objective_index: 1
+    notes: >
+      [SCRIPT] [~1 min mark] Keep this brisk.
+
+  - type: check_understanding
+    prompt: "Quick recall: What's the actual difference between a subquery and a CTE — in terms of what each one computes?"
+    mode: discussion
+    topic: "Warm-Up: Subquery vs. CTE"
+    bloom_level: remember
+    question_style: conceptual
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: a couple of quick shout-outs. Online: drop
+      one sentence in chat.
+
+
+      [SCRIPT] Target idea: nothing. Same logic, same answer, both
+      compute the identical result. A CTE only changes where that
+      reasoning lives on the page.
+
+  - type: transition
+    from_label: "Still Solid"
+    to_label: "Code Along: A Third Table Joins the Database"
+    note: "One level deeper than inspections — real violations, per inspection."
+    style: "icon_hero"
+    icon: "join"
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "A Third Table: Violations, Per Inspection"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      CREATE TABLE violations (
+        violation_id INT PRIMARY KEY,
+        inspection_id INT REFERENCES inspections(inspection_id),
+        violation_code TEXT NOT NULL,
+        violation_description TEXT NOT NULL
+      );
+    starter_code: |
+      -- TODO: create violations (id PK, inspection_id FK to inspections,
+      -- TODO:   code + description NOT NULL)
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`inspection_id` is a real foreign key — same enforced pattern as `camis` in `inspections`, one level deeper."
+    notes: >
+      [SCRIPT] Name explicitly: this is the exact same 3-table shape the
+      real NYC dataset actually has — restaurants, their inspections, and
+      each inspection's own recorded violations.
+
+  - type: code
+    title: "Adding Real Violation Records"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      INSERT INTO violations (violation_id, inspection_id, violation_code, violation_description) VALUES
+        (1, 1, '04L', 'Evidence of mice'),
+        (2, 1, '02G', 'Cold food held above 41F'),
+        (3, 2, '08A', 'Facility not vermin proof'),
+        (4, 3, '10F', 'Non-food surface improperly built');
+    starter_code: |
+      -- TODO: insert all 4 violation rows shown on this slide
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Inspection 1 (Corner Bistro's first) has 2 violations; inspection 4 (Corner Bistro's most recent) has none — a real, clean re-inspection."
+    notes: >
+      [SCRIPT] Run it and confirm `INSERT 0 4`. Don't total anything up
+      yet — that's the actual question coming next.
+
+  - type: content
+    title: "For Each Restaurant: Inspections AND Violations"
+    bullets:
+      - "Spans all 3 tables at once"
+      - "Two counts, two different levels"
+      - "A real question, not a drill"
+    icon_hero:
+      icon: "join"
+      style: "gold"
+    notes: >
+      [SCRIPT] State the actual question out loud: "for each restaurant,
+      how many inspections has it had, and how many total violations
+      across all of them?" Name explicitly why this is genuinely harder
+      than yesterday — it needs counts at two different grains, joined
+      across three tables.
+
+
+      [MISCONCEPTIONS] Fellows sometimes assume more tables just means
+      more JOINs bolted onto one query. The real skill here is deciding
+      what to compute *first*, before deciding how to join it to
+      everything else.
+
+  - type: check_understanding
+    prompt: "With a partner: Sketch a decomposition plan (a plain-language, step-by-step approach, decided before writing any SQL) for \"each restaurant's total inspections and total violations.\" Name each CTE you'd use and what it computes."
+    mode: whiteboard
+    topic: "Planning a 3-Table Decomposition"
+    bloom_level: analyze
+    question_style: conceptual
+    skill_tags: ["sql", "relational-databases"]
+    notes: >
+      [ACTIVITY] In person: pairs work on paper or a shared whiteboard,
+      5 minutes. Online: pairs in breakout rooms, sketching in a shared
+      doc or Jamboard, same 5 minutes.
+
+
+      [SCRIPT] Circulate and listen for the real fork in approaches: some
+      pairs will try to do it in one CTE, some will naturally split it
+      into "violations per inspection" and "totals per restaurant." Both
+      are worth surfacing before the reveal.
+
+
+      [MISCONCEPTIONS] A pair that reaches for a single CTE joining all 3
+      tables at once will likely hit the same overcounting trap from
+      earlier this module — violations and inspections both multiplying
+      the row count if grouped together carelessly. Let them discover
+      this, don't preempt it.
+
+  - type: content
+    title: "Chaining CTEs: One WITH, Two Names"
+    bullets:
+      - "WITH a AS (...), b AS (...)"
+      - "b can reference a"
+      - "Each one builds on the last"
+    icon_hero:
+      icon: "sql"
+      style: "blue"
+    analogy:
+      domain: "travel"
+      mapping: "Like planning a trip in stages — book the flight first, then the hotel that depends on your arrival date. Each stage can lean on the one before it, instead of solving the whole trip in one tangled step."
+      backups:
+        - domain: "music"
+          mapping: "Like building a song in layers — lay down the drum track first, then a bassline that follows it. Each layer builds on the one before, instead of recording everything live in one take."
+    notes: >
+      [SCRIPT] Name explicitly: this is the exact syntax upgrade from
+      yesterday's single CTE. The comma between CTE definitions is doing
+      the real work — it's what lets the second one reference the first.
+
+  - type: transition
+    from_label: "The Plan"
+    to_label: "Code Along: The Real, Chained Solution"
+    note: "Compare this to what your pair sketched."
+    objective_index: 2
+    style: "panel_preview"
+    preview_items:
+      - text: "Violations Per Inspection"
+        icon: "sql"
+      - text: "Totals Per Restaurant"
+        icon: "join"
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "Step 1: Violations Per Inspection"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH violation_counts AS (
+        SELECT i.inspection_id, i.camis,
+          COUNT(v.violation_id) AS nv
+        FROM inspections i
+        LEFT JOIN violations v USING (inspection_id)
+        GROUP BY i.inspection_id, i.camis
+      )
+      SELECT * FROM violation_counts;
+    starter_code: |
+      -- TODO: WITH violation_counts AS (
+      -- TODO:   count violations per inspection (as nv)
+      -- TODO:   joining inspections + violations
+      -- TODO: )
+      -- TODO: SELECT * FROM violation_counts;
+    code_along: true
+    domain: "public_sector"
+    domain_note: "The first CTE alone, run by itself — this is exactly what a pair's own first planning step should compute."
+    notes: >
+      [SCRIPT] Run it: 4 rows, one per inspection, each with its own
+      violation count. Name explicitly: this alone is real, valid SQL —
+      the next slide references it by name instead of retyping it.
+
+
+      [SCRIPT] Two syntax notes worth naming out loud. First: it's
+      `COUNT(violation_id)`, not `COUNT(*)`. Under a LEFT JOIN, `COUNT(*)`
+      would count 1 even for an inspection with zero violations, since the
+      join still produces a row. Second: `USING (inspection_id)` is
+      shorthand for `ON i.inspection_id = v.inspection_id`, and it works
+      whenever both tables share the same column name.
+
+  - type: code
+    title: "Step 2: Chaining the Second CTE"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH violation_counts AS (
+        SELECT inspection_id, camis, COUNT(violation_id) nv
+        FROM inspections
+        LEFT JOIN violations USING (inspection_id)
+        GROUP BY inspection_id, camis
+      ), totals AS (SELECT dba, COUNT(inspection_id) ni,
+          COALESCE(SUM(nv), 0) tv
+        FROM restaurants
+        LEFT JOIN violation_counts USING (camis)
+        GROUP BY dba)
+      SELECT * FROM totals ORDER BY tv DESC;
+    code_along: false
+    domain: "public_sector"
+    domain_note: "`totals` references `violation_counts` by name, same CTE as the last slide — the whole reason a chained CTE exists."
+    notes: >
+      [SCRIPT] Walk it top to bottom, matching each CTE to what a pair
+      likely sketched: `violation_counts` answers "how many violations
+      per inspection," `totals` answers the real question by rolling that
+      up per restaurant. Run it and let the real numbers print — Corner
+      Bistro leads with 3 violations across 3 inspections.
+
+
+      [SCRIPT] Two more syntax notes. `COALESCE(SUM(nv), 0)` just means "if
+      this would be NULL, use 0 instead." Without it, a restaurant with
+      zero inspections would show a blank total instead of 0.
+      [SCOPE] `COALESCE` gets its own proper treatment later this module;
+      treat this as a preview. Also, `AS` before an alias is optional in
+      Postgres, so `COUNT(...) ni` and `COUNT(...) AS ni` do the same
+      thing.
+
+  - type: check_understanding
+    prompt: "Predict it: How many total violations does Green Leaf Cafe actually have?"
+    mode: poll
+    topic: "Predicting the Chained Result"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "1"
+      - "0"
+      - "3"
+    answer:
+      correct: "1"
+      explanation: "Green Leaf Cafe has exactly 1 inspection, and that inspection has exactly 1 recorded violation — `08A`, facility not vermin proof."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] Confirm out loud, then connect back explicitly to the
+      pairs' own sketches — however different their plan looked, a
+      correct one lands on this exact same number.
+
+  - type: compare_contrast
+    title: "One Big CTE vs. Two Chained CTEs"
+    left_label: "One Big CTE"
+    left_icon: "warning"
+    left_points:
+      - "Joins all 3 tables at once"
+      - "Real risk of overcounting again"
+      - "Harder to check partway through"
+    right_label: "Two Chained CTEs"
+    right_icon: "sql"
+    right_points:
+      - "Each step, one clear job"
+      - "Verifiable one step at a time"
+      - "Matches how a pair actually plans"
+    similarities:
+      - "Both can reach the same correct answer"
+    notes: >
+      [SCRIPT] Name the real tradeoff: a single dense CTE isn't wrong,
+      it's just harder to trust while writing it. Chaining gives you a
+      real checkpoint — you can run `violation_counts` alone and verify
+      it before ever writing the second step.
+
+  - type: check_understanding
+    prompt: "Evaluate it: Did you really need two CTEs? Would one big CTE, joining all 3 tables, have worked just as well?"
+    mode: discussion
+    topic: "Was Chaining Actually Necessary?"
+    bloom_level: evaluate
+    question_style: critical_thinking
+    skill_tags: ["sql", "data-modeling"]
+    notes: >
+      [ACTIVITY] In person: turn and talk, 60 seconds. Online: drop a
+      take in chat.
+
+
+      [SCRIPT] Target idea: a single CTE joining all 3 tables at once
+      would genuinely risk the same overcounting trap from earlier this
+      module — violations and inspections multiplying together if grouped
+      carelessly. Chaining isn't just a style preference here; it's what
+      keeps each aggregation step honest before the next one runs.
+
+  - type: content
+    title: "Why This Matters for Your Project"
+    bullets:
+      - "Q4 rewards a CTE you truly needed"
+      - "That only shows up with 3+ tables"
+      - "Plan first, with a partner"
+    icon_hero:
+      icon: "goal"
+      style: "blue"
+    notes: >
+      [SCRIPT] Name explicitly: the project's own rubric grades whether a
+      CTE "genuinely improves readability" — today's whole lesson is
+      proof that the real test of that claim only shows up once a
+      question actually spans multiple tables, not on a single-table
+      warm-up.
+
+  - type: interview_prep
+    topics:
+      - question: "How would you approach a business question that needs data from 3 or more tables?"
+        short_answer: "Understand the business question first — clarify exactly what's being asked before touching SQL. Plan the approach in plain language: which tables are involved, and what does each intermediate step actually compute? Write the query as a sequence of named CTEs, one per logical step, rather than one dense nested statement. Explain each CTE's purpose as you go. Validate the final result against a small, hand-checked sample before trusting it."
+        technique: "Query Walkthrough Method"
+        icon: "sql"
+    notes: >
+      [TECHNIQUE] Use Query Walkthrough Method — Understand, Plan, Write,
+      Explain, Validate. This is explicitly a live/whiteboard-style SQL
+      question, the exact scenario this framework is built for.
+
+
+      [SCRIPT] Have a Fellow attempt this cold first — the goal is
+      naming the actual *process*, not describing CTEs in the abstract.
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "Chained CTE"
+        - "Multiple CTEs, one referencing another"
+      - - "Decomposition plan"
+        - "A sketched approach, before real SQL"
+    notes: >
+      [SCRIPT] Quick round-trip through both terms — this is exactly the
+      vocabulary the project's own Q4 expects you to use correctly, on a
+      real multi-table question of your own.
+
+  - type: bridge
+    title: "So Far, We've Covered..."
+    bullets:
+      - "A real 3-table business question"
+      - "Two CTEs, chained together"
+      - "Plan first, with a partner, then type"
+    notes: >
+      [SCRIPT] Close by naming the shift ahead: next class covers window
+      functions, the module's next real syntax upgrade. Name the project
+      tie explicitly: your own project's Q4 will ask you to do exactly
+      today's kind of planning, alone, on a schema you design yourself.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "No new exercise today"
+      - "Next class: Window functions"
+      - "Keep your database running"
+    notes: >
+      [SCRIPT] Give a specific heads-up: next class's window-function demo
+      builds on today's own `violations` table — don't drop `nyc_restaurants`.
+
+  - type: further_resources
+    resources:
+      - title: "PostgreSQL Tutorial: WITH Queries (CTEs)"
+        url: "https://www.postgresql.org/docs/current/queries-with.html"
+        kind: documentation
+        time_estimate: "~10 min read"
+        description: "The same official reference from yesterday"
+        attribution: "PostgreSQL Global Development Group"
+      - title: "CTE in SQL"
+        url: "https://www.geeksforgeeks.org/sql/cte-in-sql/"
+        kind: reading
+        time_estimate: "~8 min read"
+        description: "Includes real multi-CTE, chained examples"
+        attribution: "GeeksforGeeks"
+      - title: "SQLBolt"
+        url: "https://sqlbolt.com/"
+        kind: practice
+        time_estimate: "~15 min hands-on"
+        description: "The same free interactive lessons from earlier"
+        attribution: "SQLBolt"
+    notes: >
+      [SCRIPT] Point out the GeeksforGeeks link specifically — it covers
+      real multi-CTE chaining beyond today's 2-CTE example.

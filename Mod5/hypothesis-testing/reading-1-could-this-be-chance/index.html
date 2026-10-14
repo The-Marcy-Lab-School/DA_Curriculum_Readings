@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Could This Just Be Chance? — Hypothesis Testing, p-values, and Sample Size</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:860px;height:auto;margin:1.1rem 0;display:block}
+.bt-wrap{overflow-x:auto;margin:1rem 0}
+.bt-table{border-collapse:collapse;min-width:300px;font-size:.98rem}
+.bt-table caption{caption-side:top;text-align:left;font-family:var(--mlrk-font-body);font-weight:700;
+  margin-bottom:.4rem;color:var(--mlrk-ink-900)}
+.bt-table th,.bt-table td{border:1px solid var(--mlrk-divider-on-light);padding:.45rem .8rem;text-align:left}
+.bt-table th{background:var(--mlrk-bg-light-alt);font-weight:700}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:13rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Could This Just Be Chance?</h1>
+<p class="mlrk-lead">A job-training nonprofit ran two versions of its resume workshop. The graduates of version B got more callbacks from employers. The gap looks like good news. Before anyone rewrites the program, there is one question to settle: did version B actually work better, or did that gap show up by chance in these particular groups of people?</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~49&ndash;54 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Hypothesis Testing</strong> &mdash; Stating a null and alternative hypothesis for a real question, running the right test for the data you have, and reading a p-value and confidence interval honestly.</p>
+    <p><strong>Experimental Design</strong> &mdash; Setting up a comparison so its result means something: choosing a sample size that can actually detect the effect you care about, and spotting a hidden variable driving a group difference.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Introduction</h2>
+<p>Bridgeway Skills Collective is a job-training nonprofit. A nonprofit is an organization paid for by donations and grants instead of by selling something, and this one teaches free classes in job skills to adults who are looking for work. One of its most popular classes is a one-day resume workshop.</p>
+<p>Last spring the staff tried something. Half the incoming students got the usual workshop, which they called <strong>version A</strong>. The other half got <strong>version B</strong>, which added a practice round at the end where a volunteer from a hiring team reads your resume out loud and says what stood out.</p>
+<p>Six months later the staff counted callbacks. A <strong>callback</strong> is when an employer gets back in touch after an application, usually to set up an interview. Here is what they found.</p>
+<ol class="mlrk-steplist">
+  <li>Version A: 120 graduates, 42 of them got at least one callback. That is 35.0%.</li>
+  <li>Version B: 118 graduates, 52 of them got at least one callback. That is 44.1%.</li>
+</ol>
+<p>Version B is ahead by 9.1 <strong>percentage points</strong>, which is just the plain subtraction of one percentage from the other: 44.1 minus 35.0. Everyone in the room wants to celebrate. And it might really be worth celebrating. But a second explanation is sitting right next to the first one, and it has to be ruled out before anyone acts.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 860 400" role="img" aria-labelledby="introTitle introDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="introTitle">Two versions of a resume workshop and the gap between their callback rates</title>
+  <desc id="introDesc">Two panels sit side by side. The left panel, version A, is the usual workshop: 120 graduates, 42 of whom got a callback, a rate of 35.0 percent. The right panel, version B, added a practice round: 118 graduates, 52 of whom got a callback, a rate of 44.1 percent. Lines from both panels meet at a badge reading a gap of 9.1 points, and an arrow leads down to a box asking whether version B really worked better or whether the gap came from who happened to sign up for each one.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="430" y="30" text-anchor="middle" font-weight="700" font-size="20" fill="#261F1D">One workshop, two versions, one gap</text>
+
+    <rect x="40" y="52" width="340" height="36" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="210" y="77" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">Version A: the usual workshop</text>
+    <rect x="40" y="88" width="340" height="104" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+    <text x="210" y="118" text-anchor="middle" font-size="18" fill="#261F1D">120 graduates</text>
+    <text x="210" y="146" text-anchor="middle" font-size="18" fill="#261F1D">42 got a callback</text>
+    <text x="210" y="176" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">35.0%</text>
+
+    <rect x="480" y="52" width="340" height="36" rx="8" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="650" y="77" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">Version B: added practice</text>
+    <rect x="480" y="88" width="340" height="104" fill="#FFFCF7" stroke="#2274B5" stroke-width="2"/>
+    <text x="650" y="118" text-anchor="middle" font-size="18" fill="#261F1D">118 graduates</text>
+    <text x="650" y="146" text-anchor="middle" font-size="18" fill="#261F1D">52 got a callback</text>
+    <text x="650" y="176" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">44.1%</text>
+
+    <line x1="210" y1="192" x2="350" y2="222" stroke="#264326" stroke-width="2.5"/>
+    <line x1="650" y1="192" x2="510" y2="222" stroke="#2274B5" stroke-width="2.5"/>
+
+    <rect x="290" y="222" width="280" height="40" rx="20" fill="#FFEECA" stroke="#83671C" stroke-width="2.5"/>
+    <text x="430" y="249" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">a gap of 9.1 points</text>
+
+    <line x1="430" y1="262" x2="430" y2="286" stroke="#83671C" stroke-width="2.5"/>
+    <polygon points="430,296 422,283 438,283" fill="#83671C"/>
+
+    <rect x="40" y="302" width="780" height="82" rx="12" fill="#FFFCF7" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="430" y="333" text-anchor="middle" font-size="18" fill="#261F1D">Did version B really work better,</text>
+    <text x="430" y="363" text-anchor="middle" font-size="18" fill="#261F1D">or did this gap come from who happened to sign up for each one?</text>
+  </g>
+</svg>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> a real organization is about to spend real money on this answer. Version B costs more: longer sessions, volunteers to recruit and train, fewer students per class. If the 9.1-point gap is real, that cost buys people interviews. If the gap is just the luck of who signed up in which month, the nonprofit spends its budget on nothing and serves fewer people while doing it. Getting callbacks depends on plenty of things nobody in that room controls, like who is hiring that month and how many people applied to the same posting. The analyst's whole job here is to separate the part the program can claim from the part it cannot.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to describe one group of data, and how to put two groups' averages or percentages side by side and see which is higher. This reading adds the step that comes after that comparison: deciding whether the difference you just spotted is strong enough to act on. Once that logic is solid, the code that computes these numbers for you is a short step, and it will make sense instead of just printing digits.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before you start</h2>
+<p class="mlrk-small">Three things get used constantly below: turning counts into a percentage, describing a gap between two percentages correctly, and knowing the difference between the people you measured and the people you care about. Check each one before moving on.</p>
+
+<div class="mlrk-card" id="card-share"><p><strong>42 of the 120 version A graduates got a callback. What share is that?</strong></p>
+<button type="button" class="mlrk-choice" data-a="p35">35.0%</button>
+<button type="button" class="mlrk-choice" data-a="p42">42%</button>
+<button type="button" class="mlrk-choice" data-a="p29">2.86%</button>
+<div id="fb-share" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-points" style="margin-top:.8rem"><p><strong>Version A came in at 35.0% and version B at 44.1%. Which sentence describes that gap correctly?</strong></p>
+<button type="button" class="mlrk-choice" data-a="pp">Version B is 9.1 percentage points higher than version A.</button>
+<button type="button" class="mlrk-choice" data-a="pct">Version B is 9.1% higher than version A.</button>
+<button type="button" class="mlrk-choice" data-a="big">Version B is 44.1% higher than version A.</button>
+<div id="fb-points" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-pop" style="margin-top:.8rem"><p><strong>The staff measured 238 graduates in total. What are those 238 people, in statistics terms?</strong></p>
+<button type="button" class="mlrk-choice" data-a="samp">A sample: one particular group of people, whose results might not match the next group.</button>
+<button type="button" class="mlrk-choice" data-a="popn">The population: every person this program will ever serve.</button>
+<button type="button" class="mlrk-choice" data-a="cens">A census of everyone in the city who is looking for work.</button>
+<div id="fb-pop" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">Hold on to that last one. Every idea in this reading exists because a sample is not the whole story, and the people you measured are never exactly the people you want to make a decision about.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Two explanations for the same gap</h2>
+<p>Picture one big jar filled with marbles, some blue and some white, all mixed together. Now scoop that jar into two smaller jars at random. Count the blue marbles in each.</p>
+<p>They will not match. One jar will always have a slightly higher share of blue than the other, and if you scoop again you will get a different pair of numbers. That difference is completely real, in the sense that you can go count it. It also says nothing whatsoever about the marbles, because both jars came out of the same place.</p>
+<p>The 9.1-point gap at Bridgeway has exactly two possible explanations, and the marble jars are the second one.</p>
+<ol class="mlrk-steplist">
+  <li><strong>Version B really is better.</strong> The practice round genuinely helps people get callbacks, and the gap in the data reflects that.</li>
+  <li><strong>Both groups came out of the same jar.</strong> The two versions work equally well, and 238 people happened to split in a way that put a few more eventual callbacks on the B side. Scoop again next spring and it could tilt the other way.</li>
+</ol>
+<p>A hypothesis test exists to weigh explanation 2 before anyone commits to explanation 1. It starts by taking explanation 2 completely seriously, and giving it a name.</p>
+
+<div class="mlrk-callout mlrk-callout-gold">
+<p><strong>Null hypothesis:</strong> there is no real difference between the two versions, and any gap in this data is ordinary random variation, the marble-jar kind.</p>
+<p><strong>Alternative hypothesis:</strong> there is a real difference between the two versions.</p>
+</div>
+
+<p>Two things about that pair surprise most people the first time.</p>
+<p>First, you write both of them down <em>before</em> you look at any result. Written afterwards, a hypothesis is just a description of what you already saw, and it can be quietly reshaped to match. Written first, it is a real claim that the data can push back on.</p>
+<p>Second, the test only ever puts pressure on the null hypothesis. It can find evidence strong enough to reject the null, or it can fail to find that evidence. What it can never do is prove the null true. "We did not find enough evidence to rule out chance" is an honest sentence. "We proved the two versions are the same" is not, and the gap between those two sentences is where a lot of bad decisions get made.</p>
+
+<div class="mlrk-card" id="card-null"><p><strong>Which of these is a correctly stated null hypothesis for the Bridgeway comparison?</strong></p>
+<button type="button" class="mlrk-choice" data-a="none">There is no real difference in callback rate between version A and version B, and any gap in this data is random variation.</button>
+<button type="button" class="mlrk-choice" data-a="bgood">Version B produces a higher callback rate than version A.</button>
+<button type="button" class="mlrk-choice" data-a="fact">Version A and version B are the same workshop.</button>
+<div id="fb-null" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Technical vocabulary</h2>
+<p>Flip each card. Several of these come back in the practice sections below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>null hypothesis</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Null hypothesis</strong><br>The claim that there is no real difference, and that whatever gap you see is ordinary random variation from who ended up in which group.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>alternative hypothesis</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Alternative hypothesis</strong><br>The claim that a real difference does exist. It is what you are left with if the data gives you good reason to reject the null.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>p-value</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>p-value</strong><br>If there were really no difference at all, how often would you see a gap at least this big, purely from the luck of who ended up in which group? Small means chance is a poor explanation.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>confidence interval</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Confidence interval</strong><br>The range of values the data is consistent with. If that range includes "no difference," the result is not convincing.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>statistical significance</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Statistical significance</strong><br>A result unlikely enough under the null hypothesis that most teams stop calling it chance. It is a claim about chance only, never about size.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>practical significance</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Practical significance</strong><br>Whether the difference is big enough, in the real world, to be worth acting on. This one is a judgment call, not a number a test returns.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Type I error</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Type I error</strong><br>A false alarm. You call a difference real when nothing was actually there.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Type II error</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Type II error</strong><br>A miss. A real difference was there and your study failed to catch it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>minimum detectable effect</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Minimum detectable effect</strong><br>The smallest difference your sample is big enough to reliably catch. Anything smaller than this will usually slip past your study unnoticed.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. What the p-value actually said</h2>
+<p>The Bridgeway staff ran the comparison. The p-value came back as <strong>0.15</strong>.</p>
+<p>Here is what that number means, stated the long way, because the short ways people use are usually wrong:</p>
+<div class="mlrk-callout mlrk-callout-gold">
+<p><strong>If the two versions really worked equally well, a gap at least as big as 9.1 percentage points would turn up about 15 times in 100, just from the luck of who ended up in which group.</strong></p>
+</div>
+<p>Read that sentence twice. Every part of it is doing work.</p>
+<ol class="mlrk-steplist">
+  <li><strong>"If the two versions really worked equally well"</strong> is an assumption the calculation starts from, not something it concludes. A p-value always begins by pretending the null hypothesis is true.</li>
+  <li><strong>"a gap at least as big as"</strong> means the calculation counts this gap and every bigger one, not just this exact result.</li>
+  <li><strong>"about 15 times in 100"</strong> is how often that would happen across many reshuffles of the same kind of people.</li>
+</ol>
+<p>So 0.15 is a statement about how ordinary or unusual this data looks in a world where the null is true. That is the only thing it is.</p>
+
+<div class="mlrk-callout mlrk-callout-red">
+<p><strong>The two wrong versions, said out loud on purpose</strong>, because they sound almost identical to the right one and you will hear both of them at work.</p>
+<p>"There is a 15% chance the null hypothesis is true." No. The calculation <em>assumed</em> the null was true in order to produce 0.15 in the first place. It cannot then turn around and tell you the odds on that same assumption.</p>
+<p>"There is a 15% chance this result was a fluke." Also no, and this one is sneakier because it sounds humble. It still describes a probability about your conclusion, when 0.15 describes how often data like this appears under an assumption.</p>
+</div>
+
+<p>Most teams use 0.05 as the line where they stop calling something chance. At 0.15, Bridgeway is well above that line. The honest sentence is: this data does not give strong evidence that version B works better. Notice what that sentence does not say. It does not say version B is useless. It does not say the two versions are the same. It says the evidence here is not strong enough to rule chance out.</p>
+
+<div class="mlrk-card" id="card-pmean"><p><strong>The p-value is 0.15. Which sentence states what it measures?</strong></p>
+<button type="button" class="mlrk-choice" data-a="ifnull">How often a gap at least this big would show up if the two versions truly worked equally well.</button>
+<button type="button" class="mlrk-choice" data-a="probnull">The probability that the null hypothesis is true, which here would be 15%.</button>
+<button type="button" class="mlrk-choice" data-a="size">How big the real difference between the two versions is.</button>
+<div id="fb-pmean" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-notsig" style="margin-top:.8rem"><p><strong>A board member reads the result and says, "Great, so we have shown the practice round makes no difference." What is wrong with that?</strong></p>
+<button type="button" class="mlrk-choice" data-a="noevid">Failing to find strong evidence is not the same as showing there is nothing there. The study may simply have been too small to catch a real effect.</button>
+<button type="button" class="mlrk-choice" data-a="agree">Nothing is wrong. A p-value above 0.05 means the two versions are equally effective.</button>
+<button type="button" class="mlrk-choice" data-a="rerun">Nothing is wrong, as long as the staff rerun the test a few more times to be sure.</button>
+<div id="fb-notsig" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Which of these statements about this p-value are actually true?</h2>
+<p>This is the exercise that separates people who can use a p-value from people who can only say the words. Six statements about Bridgeway's p-value of 0.15. Some are true, some are the standard misreadings. Select every true one, then check.</p>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about a p-value of 0.15 in this study.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> There is a 15% chance that version B works no better than version A.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> If the two versions really worked equally well, a gap at least as big as 9.1 points would turn up about 15 times in 100.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> The result shows the two versions are equally effective.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> There is a 15% chance this result was a fluke.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> The data does not give strong enough evidence to rule out chance as the explanation.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="f"> A larger study could still find that version B genuinely helps.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="fb-selectall" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Write a null hypothesis yourself</h2>
+<p>New organization, same job. Harbor Reads is a nonprofit that runs free after-school tutoring. It tried two ways of pairing tutors with students: the usual way, where students are assigned to whoever is free, and a new way, where students pick from a short list of tutors. Last year 55% of students in the usual pairing moved up a reading level, compared with 61% of students in the pick-your-own pairing.</p>
+
+<label for="nullwrite" style="display:block;margin-top:.8rem"><strong>In your own words, write the null hypothesis for that comparison.</strong> One or two sentences. Aim for a sentence that starts from "no real difference" rather than one that states a fact about tutoring.</label>
+<textarea id="nullwrite" class="mlrk-response" data-save placeholder="Try starting with: There is no real difference in..."></textarea>
+<details class="mlrk-hint"><summary>Need a hint?</summary><p>A common near-miss is "the two pairing methods work the same." That states it as a fact about the world. A null hypothesis is the assumption a test starts from and might reject, so it also has to account for the gap you can already see in the data.</p></details>
+
+<div class="mlrk-card" id="card-alt" style="margin-top:1rem"><p><strong>And the matching alternative hypothesis for Harbor Reads is:</strong></p>
+<button type="button" class="mlrk-choice" data-a="real">There is a real difference in the share of students who move up a reading level between the two pairing methods.</button>
+<button type="button" class="mlrk-choice" data-a="sixpt">The pick-your-own pairing raises the share by exactly 6 percentage points.</button>
+<button type="button" class="mlrk-choice" data-a="noev">There is not enough evidence to tell the two pairing methods apart.</button>
+<div id="fb-alt" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. The confidence interval: the range the data is consistent with</h2>
+<p>A p-value answers one narrow question: is chance a believable explanation? It says nothing at all about how big the difference might be. For that you need the other number every test can give you.</p>
+<p>A <strong>confidence interval</strong> is the range of values the data is consistent with. For Bridgeway, the 95% confidence interval for the difference in callback rate runs from <strong>-3.3 percentage points to +21.4 percentage points</strong>, with 9.1 as the single best estimate in the middle.</p>
+<p>Read the two ends. The top end says version B might be worth a full 21 points, which would be a genuinely large win for the people in that class. The bottom end is negative, which means the data is also consistent with version B being slightly <em>worse</em>. And somewhere in between sits zero, which means "no difference at all" is still on the table.</p>
+<p>That is the whole story of a result that is not convincing. It is not that the answer is no. It is that this data is consistent with nearly everything, from a small loss to a large gain, and an answer that wide cannot guide a decision.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>A rule worth memorizing:</strong> if the confidence interval for a difference includes zero, the result is not convincing, no matter how encouraging the headline number looks. A 95% confidence interval that includes zero and a p-value above 0.05 are two views of the same fact.</p>
+</div>
+
+<p>The second study below has not been introduced yet, so read the top row first. It is Bridgeway's interval, drawn on a number line.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 860 400" role="img" aria-labelledby="ciTitle ciDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="ciTitle">Two confidence intervals on the same number line</title>
+  <desc id="ciDesc">A number line runs from negative 5 to positive 25 percentage points. The first study, with 238 graduates, has a wide band stretching from negative 3.3 to positive 21.4 with a best estimate of positive 9.1; that band crosses the dashed line at zero. The network study, with 120,000 graduates, has a band so narrow it is barely wider than the line itself, running from positive 0.06 to positive 1.14; it sits entirely to the right of zero and never touches it.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="430" y="28" text-anchor="middle" font-weight="700" font-size="20" fill="#261F1D">Two studies, two confidence intervals</text>
+    <text x="383" y="56" text-anchor="middle" font-weight="700" font-size="17" fill="#C92929">0 = no difference</text>
+    <line x1="383" y1="64" x2="383" y2="281" stroke="#C92929" stroke-width="2.5" stroke-dasharray="7 5"/>
+
+    <text x="40" y="82" font-weight="700" font-size="17" fill="#261F1D">First study</text>
+    <text x="40" y="104" font-size="17" fill="#261F1D">238 graduates</text>
+    <rect x="328" y="80" width="412" height="22" rx="6" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <line x1="328" y1="73" x2="328" y2="109" stroke="#264326" stroke-width="3"/>
+    <line x1="740" y1="73" x2="740" y2="109" stroke="#264326" stroke-width="3"/>
+    <circle cx="535" cy="91" r="7" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <g font-size="17" fill="#261F1D" text-anchor="middle">
+      <text x="328" y="130">-3.3</text>
+      <text x="535" y="130">+9.1</text>
+      <text x="740" y="130">+21.4</text>
+    </g>
+
+    <text x="40" y="200" font-weight="700" font-size="17" fill="#261F1D">Network study</text>
+    <text x="40" y="222" font-size="17" fill="#261F1D">120,000 graduates</text>
+    <rect x="384" y="198" width="18" height="22" rx="4" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <line x1="384" y1="191" x2="384" y2="227" stroke="#2274B5" stroke-width="3"/>
+    <line x1="402" y1="191" x2="402" y2="227" stroke="#2274B5" stroke-width="3"/>
+    <line x1="408" y1="209" x2="446" y2="209" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="454" y="215" font-weight="700" font-size="17" fill="#261F1D">+0.06 to +1.14</text>
+
+    <line x1="300" y1="270" x2="800" y2="270" stroke="#261F1D" stroke-width="3"/>
+    <g stroke="#261F1D" stroke-width="2.5">
+      <line x1="300" y1="263" x2="300" y2="277"/>
+      <line x1="383" y1="263" x2="383" y2="277"/>
+      <line x1="467" y1="263" x2="467" y2="277"/>
+      <line x1="550" y1="263" x2="550" y2="277"/>
+      <line x1="633" y1="263" x2="633" y2="277"/>
+      <line x1="717" y1="263" x2="717" y2="277"/>
+      <line x1="800" y1="263" x2="800" y2="277"/>
+    </g>
+    <g font-size="17" fill="#261F1D" text-anchor="middle">
+      <text x="300" y="296">-5</text>
+      <text x="383" y="296">0</text>
+      <text x="467" y="296">+5</text>
+      <text x="550" y="296">+10</text>
+      <text x="633" y="296">+15</text>
+      <text x="717" y="296">+20</text>
+      <text x="800" y="296">+25</text>
+    </g>
+    <text x="550" y="322" text-anchor="middle" font-size="17" fill="#261F1D">difference in callback rate (percentage points)</text>
+
+    <text x="40" y="356" font-size="17" fill="#261F1D">The first range includes 0, so the data cannot rule out no difference at all.</text>
+    <text x="40" y="382" font-size="17" fill="#261F1D">The second range never touches 0, and all of it sits below 1.2 points.</text>
+  </g>
+</svg>
+
+<div class="mlrk-card" id="card-ciread"><p><strong>Given a 95% confidence interval running from -3.3 to +21.4 percentage points, which sentence is the honest one to bring the board?</strong></p>
+<button type="button" class="mlrk-choice" data-a="wide">This data is consistent with anything from a small loss to a large gain, so it cannot tell us whether version B helps.</button>
+<button type="button" class="mlrk-choice" data-a="exact">Version B raises callbacks by exactly 9.1 percentage points.</button>
+<button type="button" class="mlrk-choice" data-a="proven">Version B has been shown to make no difference.</button>
+<div id="fb-ciread" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-ciwide" style="margin-top:.8rem"><p><strong>The staff want a narrower interval next time. What would actually narrow it?</strong></p>
+<button type="button" class="mlrk-choice" data-a="more">Measuring far more graduates, since a bigger sample gives a more precise estimate.</button>
+<button type="button" class="mlrk-choice" data-a="lower">Reporting a 99% interval instead of a 95% one.</button>
+<button type="button" class="mlrk-choice" data-a="drop">Dropping the graduates whose results look unusual.</button>
+<div id="fb-ciwide" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Two ways a conclusion can be wrong</h2>
+<p>Whatever Bridgeway decides, it could be wrong, and there are exactly two ways to be wrong. They have plain names and plainer consequences.</p>
+<ol class="mlrk-steplist">
+  <li><strong>Type I error, a false alarm.</strong> You call the difference real when nothing was actually there. Bridgeway rolls version B out everywhere, pays for the volunteers and the longer sessions, and callback rates never move.</li>
+  <li><strong>Type II error, a miss.</strong> A real difference was there and your study did not catch it. Bridgeway shelves version B, and a change that genuinely would have helped people get interviews quietly disappears.</li>
+</ol>
+<p>Neither error can be removed. Pushing hard against one tends to raise the other: demand very strong evidence before believing anything and you will miss more real effects, while accepting weak evidence gets you more false alarms. Choosing 0.05 as your cutoff is a statement about how much false-alarm risk you are willing to carry.</p>
+<p>It is tempting to treat a miss as the safer mistake, since at least nothing false got claimed. It is not safer for the person who would have gotten the interview.</p>
+
+<p>Drag each consequence into the error it describes, then use the self-check button.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">The nonprofit retrains every volunteer for version B and callback rates never change.</span>
+  <span id="chip2" class="mlrk-draggable">A change that genuinely helps gets shelved and never reaches anyone else.</span>
+  <span id="chip3" class="mlrk-draggable">A grant report announces a result that no later study can reproduce.</span>
+  <span id="chip4" class="mlrk-draggable">The study was too small, so a real gain was reported as "no evidence."</span>
+  <span id="chip5" class="mlrk-draggable">A gap caused by who happened to sign up gets written up as a program effect.</span>
+  <span id="chip6" class="mlrk-draggable">Funding moves away from a program that was actually working.</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Type I error (a false alarm)</strong></p><div class="mlrk-dropzone" id="zoneOne"></div></div>
+  <div><p class="mlrk-small"><strong>Type II error (a miss)</strong></p><div class="mlrk-dropzone" id="zoneTwo"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="fb-drag" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. How big does a sample have to be?</h2>
+<p>Here is the number that reframes Bridgeway's whole result. With about 120 people in each group, that study was only big enough to reliably catch a difference of roughly <strong>17 percentage points or more</strong>. That figure has a name: the <strong>minimum detectable effect</strong>, the smallest difference a study is actually sized to catch.</p>
+<p>The gap they were hoping to find was 9.1 points. The study was never built to detect a gap that size. It was, in a real sense, set up to come back inconclusive no matter what was true.</p>
+<p>To reliably catch a 9-point difference, the same comparison would need roughly <strong>460 graduates in each group</strong>, not 120. That is a very different study: a different timeline, a different budget, possibly a partnership with other sites.</p>
+
+<div class="mlrk-callout mlrk-callout-gold">
+<p><strong>Three things push the required sample size around.</strong></p>
+<p>A smaller difference you are trying to catch needs a bigger sample. A larger, more obvious difference needs a smaller one. And the more people naturally vary on the outcome you are measuring, the more of them you need, even at the same difference size.</p>
+<p>All of which means "how many people do we need?" has no answer on its own. It only becomes answerable once someone says how small a difference would still be worth acting on.</p>
+</div>
+
+<div class="mlrk-card" id="card-mde"><p><strong>A different nonprofit plans to test a small change it expects to raise job placements by about 3 percentage points, using 60 people in each group. What is the real risk?</strong></p>
+<button type="button" class="mlrk-choice" data-a="miss">The sample is far too small to catch a 3-point difference, so a real improvement would likely be reported as no evidence either way.</button>
+<button type="button" class="mlrk-choice" data-a="fine">No real risk. The test works the same at any sample size.</button>
+<button type="button" class="mlrk-choice" data-a="sig">The p-value will almost certainly come back below 0.05.</button>
+<div id="fb-mde" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1.2rem">Click the steps in the order you would actually do them when planning a comparison like this, then press the check button. Click a step again to remove it if you change your mind. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="worth"><span class="mlrk-order-num"></span> Name the smallest difference that would actually change what the program does.</li>
+  <li class="mlrk-orderitem" data-step="hyp"><span class="mlrk-order-num"></span> Write the null and alternative hypotheses down, before any data exists.</li>
+  <li class="mlrk-orderitem" data-step="size"><span class="mlrk-order-num"></span> Work out how many people each group needs to catch a difference that size.</li>
+  <li class="mlrk-orderitem" data-step="run"><span class="mlrk-order-num"></span> Run the comparison on the people you actually enrolled.</li>
+  <li class="mlrk-orderitem" data-step="report"><span class="mlrk-order-num"></span> Report the confidence interval alongside the p-value, never the p-value alone.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="fb-ordersteps" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. When a huge sample makes a tiny gap "significant"</h2>
+<p>Now run the problem the other direction. Bridgeway belongs to a national network of job-training nonprofits. The network pooled six years of results from hundreds of sites and ended up with 60,000 graduates on each version of the workshop. Same two versions, same callback question, vastly more people.</p>
+
+<div class="bt-wrap"><table class="bt-table"><caption>the same question, asked at two very different sizes</caption>
+<tr><th>&nbsp;</th><th>Bridgeway's own study</th><th>The network study</th></tr>
+<tr><th>Graduates per version</th><td>about 120</td><td>60,000</td></tr>
+<tr><th>Version A callback rate</th><td>35.0%</td><td>36.0%</td></tr>
+<tr><th>Version B callback rate</th><td>44.1%</td><td>36.6%</td></tr>
+<tr><th>Gap</th><td>9.1 points</td><td>0.6 points</td></tr>
+<tr><th>p-value</th><td>0.15</td><td>0.03</td></tr>
+<tr><th>95% confidence interval</th><td>-3.3 to +21.4 points</td><td>+0.06 to +1.14 points</td></tr>
+<tr><th>Statistically significant?</th><td>no</td><td>yes</td></tr>
+</table></div>
+
+<p>Look at that table for a second, because it is genuinely strange the first time. The study with the <em>bigger</em> gap came back not significant. The study with the tiny gap came back significant. Nothing went wrong in either one.</p>
+<p>Sample size is the reason. A huge sample makes an estimate very precise, and a very precise estimate can rule out zero even when the real difference is minuscule. Go back to the diagram above and look at the second band. The network study is confident: the real difference is somewhere between 0.06 and 1.14 percentage points, and it is not zero. It is also confident that the difference is almost nothing.</p>
+<p>Put that 0.6-point gap in human terms. Out of every 1,000 graduates, version B produces about 6 more people with a callback. That might be worth it, if version B is cheap. It is almost certainly not worth it if version B means recruiting a volunteer for every single class, everywhere, forever. That question is not a statistics question at all, and no p-value has an opinion on it.</p>
+<p>This is the difference between <strong>statistical significance</strong>, meaning chance is a poor explanation, and <strong>practical significance</strong>, meaning the difference is big enough to be worth acting on. A new bus route that gets you to work 8 seconds sooner is real, measurable, and repeatable. Nobody moves apartments over 8 seconds. Both things can be true at once, and a large enough study will hand you exactly that combination on a regular basis.</p>
+
+<div class="mlrk-card" id="card-tiny"><p><strong>The network study reports a significant 0.6-point gain. A director wants to make version B mandatory at every site. What is the most useful question to ask first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="worth">Is a 0.6-point gain worth what version B costs to run everywhere?</button>
+<button type="button" class="mlrk-choice" data-a="size">Was the sample big enough to trust this result?</button>
+<button type="button" class="mlrk-choice" data-a="pval">Was the p-value below 0.05?</button>
+<div id="fb-tiny" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-why" style="margin-top:.8rem"><p><strong>Why did the smaller study's larger 9.1-point gap come back not significant, while the huge study's 0.6-point gap did?</strong></p>
+<button type="button" class="mlrk-choice" data-a="precise">A bigger sample gives a much more precise estimate, so it can rule out zero even for a very small difference.</button>
+<button type="button" class="mlrk-choice" data-a="mistake">One of the two studies must have been calculated incorrectly.</button>
+<button type="button" class="mlrk-choice" data-a="bigger">A 0.6-point gap is more important than a 9.1-point gap.</button>
+<div id="fb-why" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-red">
+<p><strong>One thing a bigger sample will never fix.</strong> More people shrinks random, group-to-group variation. It does nothing at all to a problem baked into how the groups were formed. If version B was offered on evenings and weekends and version A during the workday, the two groups differ in who could attend, and every extra person you add carries that same tilt. A bigger sample then reports the wrong answer more precisely, which is worse than reporting it uncertainly.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Fill in the missing term</h2>
+<p>Three blanks, three terms from this reading. Type each one as a single lowercase word.</p>
+
+<p style="margin-top:1rem">The claim that a real difference does exist is called the ________ hypothesis.</p>
+<div class="mlrk-fillblank">
+  <label for="blank1">Blank 1</label>
+  <input type="text" id="blank1" autocomplete="off">
+  <button type="button" id="blank1check" class="mlrk-btn">Check</button>
+</div>
+<div id="fb-blank1" class="mlrk-feedback" tabindex="-1"></div>
+
+<p style="margin-top:1.2rem">The range of values the data is consistent with is called a ________ interval.</p>
+<div class="mlrk-fillblank">
+  <label for="blank2">Blank 2</label>
+  <input type="text" id="blank2" autocomplete="off">
+  <button type="button" id="blank2check" class="mlrk-btn">Check</button>
+</div>
+<div id="fb-blank2" class="mlrk-feedback" tabindex="-1"></div>
+
+<p style="margin-top:1.2rem">The smallest difference a study is big enough to reliably catch is called the minimum ________ effect.</p>
+<div class="mlrk-fillblank">
+  <label for="blank3">Blank 3</label>
+  <input type="text" id="blank3" autocomplete="off">
+  <button type="button" id="blank3check" class="mlrk-btn">Check</button>
+</div>
+<div id="fb-blank3" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Watch: what a confidence interval is showing you</h2>
+<p>Bridgeway's interval was wide and crossed zero. The network's was narrow and did not. As you watch, notice where that width comes from, and notice the careful way the video describes what "95%" refers to. It is a statement about how often the method works across many samples, not a 95% bet on the one range already sitting in front of you.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=TqOeMYtOc1w" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: in your own words, what would Bridgeway have to change about its study to end up with a much narrower interval next time?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Verify before you repeat it: an AI summarizes the result</h2>
+<p>You paste Bridgeway's numbers into an AI assistant and ask for a short summary for the board. It writes:</p>
+<div class="mlrk-callout mlrk-callout-gold">
+<p>"Version B boosted callback rates by 9.1 percentage points. The p-value of 0.15 means there is only a 15% chance this was luck, so we can be 85% confident version B works. We recommend rolling it out at every site."</p>
+</div>
+<div class="mlrk-card" id="card-ai"><p><strong>What is the most serious problem with that summary?</strong></p>
+<button type="button" class="mlrk-choice" data-a="flip">It flips the p-value into a confidence level it never measured, and it leaves out an interval that still includes zero and even includes version B being worse.</button>
+<button type="button" class="mlrk-choice" data-a="math">The arithmetic is wrong, since 44.1 minus 35.0 is not 9.1.</button>
+<button type="button" class="mlrk-choice" data-a="fine">Nothing is wrong. It restates the result accurately.</button>
+<div id="fb-ai" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<label for="airewrite" style="display:block;margin-top:1rem"><strong>Rewrite it:</strong> in two or three sentences, give the board the same findings without overselling them. Keep the interval in, and say what you would want before recommending anything.</label>
+<textarea id="airewrite" class="mlrk-response" data-save placeholder="Try starting with: Graduates of version B had a higher callback rate, but..."></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>15. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"Explain a p-value to someone who is not technical" is one of the most common data analyst interview questions there is, from first internship through senior roles. Interviewers keep asking it because the wrong answer is so easy to give fluently.</p>
+<p>A strong answer stays in plain words and keeps the assumption in front: "it is how surprising my result would be if there were really no difference at all." Then a concrete example, and then the part that actually earns the point: naming what it is not. "It is not the chance my conclusion is wrong, and it is not the chance the result was a fluke." Finish by saying you would report the confidence interval next to it, because the p-value alone never tells anyone how big the difference is.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> a hiring manager says, "Our last test came back with a p-value of 0.60, so we concluded the two versions perform the same and moved on." How do you respond?</p>
+<button type="button" class="mlrk-choice" data-a="noevid">A large p-value means the data did not give enough evidence to rule out chance. That is not the same as showing the two are the same, and the interval may still be wide enough to include a difference worth having.</button>
+<button type="button" class="mlrk-choice" data-a="agree">That is right. A p-value of 0.60 confirms the two versions perform the same.</button>
+<button type="button" class="mlrk-choice" data-a="rerun">I would rerun the test on new slices of the data until one of them comes back below 0.05.</button>
+<div id="fb-interview" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Summary and critical thinking</h2>
+<p>Three ideas carried this reading. First, any gap between two groups has two explanations, and the null hypothesis is the name for the boring one you have to rule out before claiming the interesting one. Second, a p-value only ever answers "how ordinary would this data look if there were no difference at all," while the confidence interval answers the separate and often more useful question of how big the difference plausibly is. Third, a sample can be too small to catch anything real, and it can also be so large that it certifies a difference far too small to act on. Both failures produce a perfectly normal-looking number on screen.</p>
+
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a nonprofit that runs free coding classes wants to know whether a new mentor-matching system raises the share of students who finish the course. It can enroll about 90 students in each group, and the director has said she would only change the program for a gain of at least 5 percentage points. What is the most useful thing to work out before the study starts?</p>
+<button type="button" class="mlrk-choice" data-a="mde">Whether 90 students per group is enough to reliably catch a 5-point gain, since a study too small for that will likely come back inconclusive either way.</button>
+<button type="button" class="mlrk-choice" data-a="pval">Which p-value the team is hoping to get.</button>
+<button type="button" class="mlrk-choice" data-a="ci">Whether to report a 95% or a 99% confidence interval once the data comes in.</button>
+<div id="fb-summary" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<label for="ownwords" style="display:block;margin-top:1rem"><strong>In your own words:</strong> think of a comparison people around you actually argue about, at work, at school, or at home. Write the null hypothesis for it in one sentence, then name the smallest difference that would genuinely change anyone's mind, and say whether you think you could ever collect enough data to detect a difference that small.</label>
+<textarea id="ownwords" class="mlrk-response" data-save placeholder="Try starting with: The argument is about whether..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>17. Thinking ahead</h2>
+<p>Everything here treated the comparison itself as settled: two groups, one outcome, one number to compare. Real questions rarely arrive that tidy. Sometimes the outcome is a dollar amount you can average, sometimes it is a yes or no you can only count, and sometimes there are three groups instead of two. The logic of the null hypothesis, the p-value, and the confidence interval stays exactly the same across all of those. What changes is the specific calculation underneath, and picking the right one is its own skill.</p>
+<p>The habit worth carrying forward is smaller and more useful than any single test: name the smallest difference that would change your mind before you look at the data, and report the interval next to the p-value every time. Do those two things and most of the mistakes in this reading stop being available to you.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>18. Go further</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://rpsychologist.com/d3/ci/" target="_blank" rel="noopener">Interpreting Confidence Intervals</a> &mdash; an interactive visualization by Kristoffer Magnusson. Drag the sample-size slider and watch intervals get narrower, and watch how often a given interval misses the true value.</li>
+<li><a href="https://www.evanmiller.org/ab-testing/sample-size.html" target="_blank" rel="noopener">Sample Size Calculator</a> &mdash; a small free tool by Evan Miller. Type in a baseline rate and the smallest difference you would want to catch, and it tells you how many people you need per group.</li>
+<li><a href="https://www.youtube.com/watch?v=Rsc5znwR5FA" target="_blank" rel="noopener">StatQuest: Statistical Power, Clearly Explained</a> &mdash; an 8-minute video on why a study can miss a real effect entirely, which is the Type II error side of this reading.</li>
+<li><a href="https://www.amstat.org/asa/files/pdfs/p-valuestatement.pdf" target="_blank" rel="noopener">The ASA Statement on p-values</a> &mdash; the American Statistical Association, the main professional body for statisticians in the United States, issued a formal correction on how p-values get misused. Short, readable, and the source behind most of section 5.</li>
+<li><a href="https://www.nature.com/articles/d41586-019-00857-9" target="_blank" rel="noopener">Scientists rise up against statistical significance</a> &mdash; an article in the journal Nature, signed by more than 800 researchers, arguing that "not significant" is routinely misreported as "no difference."</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>19. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> the Download JSON button above saves the file into your computer's <code>Downloads</code> folder. Here's how to move it into a repo of your own.</p>
+
+    <details class="mlrk-hint">
+      <summary>Step 1: Make a repo on your GitHub account (one time only — collapse this afterward)</summary>
+      <ol class="mlrk-steplist">
+        <li>On GitHub, click the <strong>+</strong> in the top-right corner, then <strong>New repository</strong>.</li>
+        <li>Give it a name (something like <code>data-analytics-readings</code>) and click <strong>Create repository</strong>.</li>
+        <li>On the new repo's page, click the green <strong>Code</strong> button and copy the <strong>HTTPS</strong> URL.</li>
+        <li>In your terminal, clone it to your computer, pasting in the URL you just copied:
+          <pre class="mlrk-code">git clone https://github.com/YOUR-USERNAME/YOUR-REPO.git</pre></li>
+      </ol>
+      <p class="mlrk-small">You only do this once. For every reading after this one, start at Step 2.</p>
+    </details>
+
+    <p style="margin-top:.9rem"><strong>Step 2: Save this reading's file into that repo</strong> (do this for every reading):</p>
+    <ol class="mlrk-steplist">
+      <li>Move into your repo folder:
+        <pre class="mlrk-code">cd YOUR-REPO</pre></li>
+      <li>Move the file you just downloaded out of <code>Downloads</code> and into that folder:
+        <pre class="mlrk-code">mv ~/Downloads/could-this-be-chance-reading.json .</pre></li>
+      <li>Save it to git and push it up to GitHub:
+        <pre class="mlrk-code">git add could-this-be-chance-reading.json
+git commit -m "Complete hypothesis testing and sample size reading"
+git push</pre></li>
+    </ol>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 4 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own copy.</li>
+        <li>On the create page, set the visibility to <strong>Private</strong>. It defaults to <strong>Public</strong>, so you have to change it yourself.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Copy your repo's name <strong>exactly</strong> as it appears in GitHub's URL, including any hyphens, underscores, and capitalization. Paste it into the "Your submissions repo name" box below, along with your GitHub username, then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+      <p class="mlrk-small"><strong>Getting a "404" page instead?</strong> Two usual causes: the repo name you typed doesn't exactly match the real one (check for a stray hyphen or different capitalization), or you're not signed in to GitHub as the account that owns the repo &mdash; a private repo looks like a 404 to anyone who isn't signed in to it.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "could-this-be-chance-reading";
+  const TITLE = "Could This Just Be Chance? — Hypothesis Testing, p-values, and Sample Size";
+  const TAGS = ["inferential-stats"];
+  const SKILLS = ["hypothesis-testing", "experimental-design"];
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  /* ---- section 2: recall ---- */
+  K.quiz({id:"q-share", buttonSelector:"#card-share .mlrk-choice", feedbackSelector:"#fb-share", correct:"p35",
+    feedback:{p35:"42 divided by 120 is 0.35, which is 35.0%. That is the number every later comparison starts from.",
+              p42:"42 is the count of people, not a share. It only becomes a percentage once you divide it by the 120 graduates.",
+              p29:"That is 120 divided by 42 turned into a percentage, which flips the two numbers. The count goes on top, the group size on the bottom."}});
+
+  K.quiz({id:"q-points", buttonSelector:"#card-points .mlrk-choice", feedbackSelector:"#fb-points", correct:"pp",
+    feedback:{pp:"Subtracting one percentage from another gives percentage points, and 44.1 minus 35.0 is 9.1 of them.",
+              pct:"\"9.1% higher\" is a different claim. Going from 35.0 to 44.1 is about a 26% increase relative to where it started, which is why the two phrasings need different words.",
+              big:"44.1% is version B's own rate, not the size of the gap between the two versions."}});
+
+  K.quiz({id:"q-pop", buttonSelector:"#card-pop .mlrk-choice", feedbackSelector:"#fb-pop", correct:"samp",
+    feedback:{samp:"A sample is one particular group you actually measured, and a different group could give different numbers. That gap is the reason this whole reading exists.",
+              popn:"The population would be everyone the program could ever serve, including people who have not enrolled yet. These 238 are the slice that happened to be measured.",
+              cens:"A census measures everyone. These 238 people all came through one nonprofit's workshop, which is a small slice of anyone's city."}});
+
+  K.quiz({id:"q-null", buttonSelector:"#card-null .mlrk-choice", feedbackSelector:"#fb-null", correct:"none",
+    feedback:{none:"Two required parts, both present: no real difference, and the gap you can see is chalked up to random variation.",
+              bgood:"That is the alternative hypothesis, the claim that a real difference exists. The null always takes the other side.",
+              fact:"That states something as a plain fact about the two workshops. A null hypothesis is an assumption a test starts from, and it has to account for the gap already visible in the data."}});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  /* ---- section 5 ---- */
+  K.quiz({id:"q-pmean", buttonSelector:"#card-pmean .mlrk-choice", feedbackSelector:"#fb-pmean", correct:"ifnull",
+    feedback:{ifnull:"Every p-value starts from \"if the null were true.\" It measures how ordinary or unusual this data looks under that assumption.",
+              probnull:"That is the single most common misreading. The calculation assumed the null was true to get 0.15, so it cannot also report the odds on that assumption.",
+              size:"Size is a separate question with a separate answer. The confidence interval speaks to size; the p-value never does."}});
+
+  K.quiz({id:"q-notsig", buttonSelector:"#card-notsig .mlrk-choice", feedbackSelector:"#fb-notsig", correct:"noevid",
+    feedback:{noevid:"\"Not enough evidence\" and \"no difference\" are different claims. With 120 people per group, a real effect could easily hide inside that result.",
+              agree:"A p-value above 0.05 never establishes that two things are the same. It only says chance has not been ruled out.",
+              rerun:"Running the same test repeatedly until one comes back small is how false alarms get manufactured. One planned comparison, honestly reported, is the standard."}});
+
+  /* ---- section 6: select all ---- */
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#fb-selectall", options:[
+    {value:"a", label:"There is a 15% chance that version B works no better than version A.", correct:false,
+      hint:"Look again at the statement that assigns a percentage to the null hypothesis itself, and ask what the calculation assumed before it started.",
+      explain:"The calculation assumed the two versions were equal in order to produce 0.15. It cannot then report the odds on that same assumption."},
+    {value:"b", label:"If the two versions really worked equally well, a gap at least as big as 9.1 points would turn up about 15 times in 100.", correct:true,
+      hint:"Compare this one word for word against the long definition in section 5.",
+      explain:"This is the definition, stated in full: an assumption, a gap at least this big, and how often it would appear."},
+    {value:"c", label:"The result shows the two versions are equally effective.", correct:false,
+      hint:"Check the statement that turns a lack of evidence into a positive finding about the two versions.",
+      explain:"A test can never establish that two things are the same. It can only fail to find evidence against the null."},
+    {value:"d", label:"There is a 15% chance this result was a fluke.", correct:false,
+      hint:"One statement sounds appropriately humble but still puts a probability on your conclusion rather than on the data.",
+      explain:"\"Chance this was a fluke\" is a probability about the conclusion. A p-value describes how often data like this appears under an assumption."},
+    {value:"e", label:"The data does not give strong enough evidence to rule out chance as the explanation.", correct:true,
+      hint:"Ask which statement describes what the evidence failed to do, rather than what it proved.",
+      explain:"That is exactly the honest reading of a p-value above the usual 0.05 line."},
+    {value:"f", label:"A larger study could still find that version B genuinely helps.", correct:true,
+      hint:"Think about the 120 people per group and what a study that size was sized to detect.",
+      explain:"Nothing here rules out a real effect. A study this small would often miss one even if it were there."}
+  ]});
+
+  /* ---- section 7 ---- */
+  K.freeResponse({id:"resp-nullwrite", selector:"#nullwrite", minWords:10});
+  K.quiz({id:"q-alt", buttonSelector:"#card-alt .mlrk-choice", feedbackSelector:"#fb-alt", correct:"real",
+    feedback:{real:"The alternative simply claims a real difference exists. It does not have to name a direction or a size.",
+              sixpt:"An alternative hypothesis does not commit to an exact number. 6 points is what this one sample showed, not a claim being tested.",
+              noev:"That is a possible conclusion from a test, not a hypothesis you state beforehand."}});
+
+  /* ---- section 8 ---- */
+  K.quiz({id:"q-ciread", buttonSelector:"#card-ciread .mlrk-choice", feedbackSelector:"#fb-ciread", correct:"wide",
+    feedback:{wide:"That sentence carries both ends of the interval and the honest conclusion that follows from them.",
+              exact:"9.1 is the single best estimate, but the interval exists precisely because the real value could sit anywhere from -3.3 to +21.4.",
+              proven:"The interval reaches all the way up to +21.4, so a large real benefit is still completely consistent with this data."}});
+
+  K.quiz({id:"q-ciwide", buttonSelector:"#card-ciwide .mlrk-choice", feedbackSelector:"#fb-ciwide", correct:"more",
+    feedback:{more:"More people means a more precise estimate, and a more precise estimate means a narrower interval. That is the whole mechanism.",
+              lower:"A 99% interval is wider, not narrower. Asking for more confidence from the same data costs you precision.",
+              drop:"Removing people whose results you dislike changes the answer rather than sharpening it. That is how a study stops meaning anything."}});
+
+  /* ---- section 9 ---- */
+  K.dragDrop("#dragarea", "act-drag-errors");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#fb-drag", mapping:{
+    chip1:{expectedId:"zoneOne", label:"Retraining every volunteer and callback rates never change", expectedLabel:"Type I error (a false alarm)"},
+    chip2:{expectedId:"zoneTwo", label:"A change that genuinely helps gets shelved", expectedLabel:"Type II error (a miss)"},
+    chip3:{expectedId:"zoneOne", label:"A result no later study can reproduce", expectedLabel:"Type I error (a false alarm)"},
+    chip4:{expectedId:"zoneTwo", label:"A real gain reported as \"no evidence\" because the study was too small", expectedLabel:"Type II error (a miss)"},
+    chip5:{expectedId:"zoneOne", label:"A gap caused by who signed up, written up as a program effect", expectedLabel:"Type I error (a false alarm)"},
+    chip6:{expectedId:"zoneTwo", label:"Funding moves away from a program that was working", expectedLabel:"Type II error (a miss)"}
+  }});
+
+  /* ---- section 10 ---- */
+  K.quiz({id:"q-mde", buttonSelector:"#card-mde .mlrk-choice", feedbackSelector:"#fb-mde", correct:"miss",
+    feedback:{miss:"A small expected difference and a small sample is the recipe for a miss. The study would very likely come back inconclusive whatever the truth is.",
+              fine:"Sample size changes how small a difference a study can catch. At 60 per group, a 3-point difference is well below what this study could detect.",
+              sig:"A small sample makes a significant result less likely, not more. Precision is what a bigger sample buys."}});
+
+  K.orderSteps("#ordersteps", {id:"act-order-plan", correctOrder:["worth","hyp","size","run","report"],
+    feedbackSelector:"#fb-ordersteps", checkSelector:"#orderscheck"});
+
+  /* ---- section 11 ---- */
+  K.quiz({id:"q-tiny", buttonSelector:"#card-tiny .mlrk-choice", feedbackSelector:"#fb-tiny", correct:"worth",
+    feedback:{worth:"That is the practical-significance question, and it is the only one still open. No statistic answers it; someone has to weigh the gain against the cost.",
+              size:"The sample was clearly big enough. That is exactly why a 0.6-point gap registered as significant at all.",
+              pval:"The p-value of 0.03 is already given in the table. Knowing it does not tell anyone whether 0.6 points is worth the cost."}});
+
+  K.quiz({id:"q-why", buttonSelector:"#card-why .mlrk-choice", feedbackSelector:"#fb-why", correct:"precise",
+    feedback:{precise:"Precision is the whole explanation. 60,000 people per group pins the estimate down tightly enough to rule out zero for a tiny difference.",
+              mistake:"Both numbers are correct. The pattern looks odd but it is exactly what different sample sizes produce.",
+              bigger:"Importance is not what a p-value measures. The 9.1-point gap would matter far more to real people if it turned out to be real."}});
+
+  /* ---- section 12: fill in the blanks ---- */
+  function fillBlank(id, inputSel, btnSel, fbSel, answer, correctNote, revealNote){
+    K.Scoring.register(id, 1, "quiz");
+    let attempts = 0, done = false;
+    $(btnSel).addEventListener("click", () => {
+      if(done) return;
+      attempts++;
+      const typed = $(inputSel).value.trim().toLowerCase();
+      const fb = $(fbSel);
+      if(typed === answer){
+        K.Scoring.award(id, attempts === 1 ? 1 : 0.5);
+        fb.className = "mlrk-feedback mlrk-show mlrk-good";
+        fb.innerHTML = "<strong>Correct.</strong> " + correctNote;
+        done = true;
+      } else if(attempts >= 2){
+        K.Scoring.award(id, 0);
+        fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+        fb.innerHTML = "<strong>Here's the answer. You'll get it next time.</strong> " + revealNote;
+        done = true;
+      } else {
+        fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+        fb.innerHTML = "<strong>Not quite.</strong> Check the wording against the vocabulary cards above, then try once more.";
+      }
+      fb.setAttribute("tabindex","-1"); fb.focus();
+    });
+  }
+  fillBlank("q-blank1", "#blank1", "#blank1check", "#fb-blank1", "alternative",
+    "The alternative hypothesis is the claim that a real difference exists, and it is what you are left with if the null gets rejected.",
+    "The word is <strong>alternative</strong>.");
+  fillBlank("q-blank2", "#blank2", "#blank2check", "#fb-blank2", "confidence",
+    "A confidence interval gives the range of values the data is consistent with, which a p-value alone never tells you.",
+    "The word is <strong>confidence</strong>.");
+  fillBlank("q-blank3", "#blank3", "#blank3check", "#fb-blank3", "detectable",
+    "The minimum detectable effect is the smallest difference your sample is big enough to reliably catch.",
+    "The word is <strong>detectable</strong>.");
+
+  /* ---- section 13: video ---- */
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"TqOeMYtOc1w"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:8});
+
+  /* ---- section 14: AI check ---- */
+  K.quiz({id:"q-ai", buttonSelector:"#card-ai .mlrk-choice", feedbackSelector:"#fb-ai", correct:"flip",
+    feedback:{flip:"Both errors in one paragraph: a p-value turned into a confidence level, and an interval that crosses zero left out entirely.",
+              math:"The arithmetic is fine. 44.1 minus 35.0 really is 9.1. The problem is what the summary claims about that number.",
+              fine:"\"85% confident version B works\" is not something a p-value of 0.15 supports, and the missing interval still includes zero."}});
+  K.freeResponse({id:"resp-airewrite", selector:"#airewrite", minWords:15});
+
+  /* ---- section 15: interview ---- */
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#fb-interview", correct:"noevid",
+    feedback:{noevid:"That answer corrects the claim and points at the interval, which is what a strong interview answer does in one breath.",
+              agree:"Agreeing repeats the error. A large p-value is a failure to find evidence, never a finding of sameness.",
+              rerun:"Testing repeatedly until something looks significant manufactures false alarms. Interviewers listen for exactly this."}});
+
+  /* ---- section 16: summary ---- */
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#fb-summary", correct:"mde",
+    feedback:{mde:"The director already named the smallest difference worth acting on, which is what makes the sample-size question answerable at all.",
+              pval:"Hoping for a particular p-value is not a plan. It also invites the temptation to keep testing until one appears.",
+              ci:"That choice barely moves the answer, and it can be made later. Whether the study can detect a 5-point gain has to be settled first."}});
+  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:20});
+
+  const AI_PROMPTS = [
+    "Describe a claim you have seen in an ad, a headline, or a grant report that a program 'worked.' What would you need to see before believing it, beyond the headline number?",
+    "Think of two groups you could actually compare in your own life. Write the null hypothesis, then guess how many people you would need before a small difference could show up at all.",
+    "Pick a decision a team you know keeps revisiting. What is the smallest difference that would settle it, and is anyone currently collecting enough data to detect one that small?"
+  ];
+  $("#aiprompt").addEventListener("click", () => {
+    const box = $("#aipromptbox");
+    box.style.display = "block";
+    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  /* ---- export / submit ---- */
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb = $("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:TAGS,
+      skills:SKILLS, onDone(status,message){
+      fb.textContent = message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

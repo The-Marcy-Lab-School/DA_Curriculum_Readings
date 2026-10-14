@@ -1,0 +1,479 @@
+meta:
+  title: "Your First Database: psql, Tables & Constraints"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 2
+  date: "Day 2"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Create a PostgreSQL database and a table with correct column types and constraints (NOT NULL, PRIMARY KEY, FOREIGN KEY) via psql, following a step-by-step template"
+    - "Write basic SELECT, WHERE, and ORDER BY queries against a real table"
+  tools:
+    - "PostgreSQL / psql"
+  exercise:
+    type: bullets
+    url_or_text: "No new exercise today — the same create/insert/query steps you just typed for real are exactly what the project's own sprint later asks you to do independently."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Yesterday: Primary keys, foreign keys, normalization (1NF, 2NF, 3NF)"
+    - "Terminal/command-line comfort (Modules 0-2)"
+  interview_topics:
+    - "Why enforce data rules with database constraints (NOT NULL, CHECK) instead of relying only on application code?"
+  final_project:
+    "Early in the project's own sprint, you'll confirm psql is running and
+    actually connecting, on your own machine, before anything else.
+    Shortly after, you'll write your own schema.sql with real
+    constraints. Today is the first real, typed rep of both, on a dataset
+    you'll never touch again once the project starts."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: guided
+  scenario: >
+    Real syntax, for the first time this module: A small NYC restaurant
+    inspection database, typed by hand at a real `psql` prompt. You'll
+    create a database, build two real tables with real constraints, load
+    a few rows, and query them back — the exact moves this module's
+    project will ask you to do on your own, unguided, in a few weeks.
+  glossary:
+    - term: "psql"
+      definition: "PostgreSQL's own command-line client — how you'll run every query this module"
+    - term: "constraint"
+      definition: "A rule attached to a column that the database itself enforces on every insert or update"
+    - term: "NOT NULL constraint"
+      definition: "Requires a column to always have a real value — never left blank"
+    - term: "CHECK constraint"
+      definition: "Restricts a column's values to a specific, allowed set or condition"
+
+slides:
+  - type: title
+    title: "Your First Database"
+    subtitle: "psql, Tables & Constraints"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 2"
+    notes: >
+      [SCRIPT] Frame this as the real tool day — yesterday was design
+      vocabulary on paper, today it becomes a real, running database.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Create a database and table, with constraints"
+        icon: "database"
+      - text: "Write SELECT, WHERE, ORDER BY queries"
+        icon: "sql"
+    notes: >
+      [SCRIPT] Read both out loud. Name explicitly: this is the exact
+      sequence the project's own sprint later asks you to run again,
+      unguided, in a few weeks.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "psql"
+        icon: "terminal"
+      - text: "Constraints: NOT NULL, CHECK"
+        icon: "checklist"
+    notes: >
+      [SCRIPT] Just names for now — real definitions and real typed
+      examples for every one of these are coming.
+
+  - type: transition
+    from_label: "Yesterday's Design"
+    to_label: "One Quick Check"
+    note: "A fast recall check on yesterday's vocabulary, before today's real syntax starts."
+    objective_index: 1
+    notes: >
+      [SCRIPT] [~1 min mark] Keep this brisk.
+
+  - type: check_understanding
+    prompt: "Quick recall: What's the difference between a primary key and a foreign key, in one sentence each?"
+    mode: discussion
+    topic: "Warm-Up: PK vs. FK"
+    bloom_level: remember
+    question_style: conceptual
+    skill_tags: ["relational-databases"]
+    notes: >
+      [ACTIVITY] In person: a few quick shout-outs. Online: drop one
+      sentence each in chat.
+
+
+      [SCRIPT] Quick-fire — confirming yesterday's vocabulary is solid
+      before typing it into a real table in a few minutes.
+
+  - type: transition
+    from_label: "Still Solid"
+    to_label: "Meet psql"
+    note: "Everything yesterday was on paper — today it becomes a real, running database."
+    style: "icon_hero"
+    icon: "terminal"
+    notes: >
+      [SCRIPT] Name explicitly: `psql` is brand new today, but the
+      terminal itself is not — same muscle memory from earlier modules,
+      pointed at a new tool.
+
+  - type: content
+    title: "psql: PostgreSQL's Own Command-Line Client"
+    bullets:
+      - "How you'll run every query this module"
+      - "This module's first real installed tool"
+      - "Setup itself isn't today's job"
+    icon_hero:
+      icon: "terminal"
+      style: "blue"
+    notes: >
+      [SCOPE] Installing PostgreSQL itself isn't covered today — that's
+      already handled by the project's own `GETTING_STARTED.md`. Today
+      assumes `psql` is already installed and can connect; if anyone's
+      setup isn't working, troubleshoot it 1-on-1, don't stall the room.
+
+
+      [SCRIPT] Name who actually uses this: every data analyst and
+      engineer who touches a real relational database runs raw SQL from
+      a terminal at some point, even when a GUI tool exists too.
+
+  - type: transition
+    from_label: "Tool, Introduced"
+    to_label: "Code Along: Creating Your Database"
+    note: "The first real command of the module."
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "One Command Creates a Real Database"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      CREATE DATABASE nyc_restaurants;
+      \c nyc_restaurants
+    starter_code: |
+      -- TODO: create a database called nyc_restaurants
+
+
+      -- TODO: connect to it (\c)
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`\\c` is a psql meta-command, not SQL itself — it switches which database your session is connected to."
+    notes: >
+      [SCRIPT] `\c` is a psql meta-command, not SQL itself — it switches
+      which database your session is connected to. Run it together — the
+      prompt itself changes from `postgres=#` to `nyc_restaurants=#` once
+      `\c` succeeds. That prompt change is the real confirmation, not
+      just "no error."
+
+  - type: code
+    title: "Your First Table, With Real Constraints"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      CREATE TABLE restaurants (
+          camis INT PRIMARY KEY,
+          dba TEXT NOT NULL,
+          boro TEXT NOT NULL
+      );
+    starter_code: |
+      CREATE TABLE restaurants (
+          camis INT ____,
+          dba TEXT ____,
+          boro TEXT ____
+      );
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`camis` is the real NYC restaurant-inspection dataset's own unique restaurant ID column — a real primary key, not an invented one."
+    notes: >
+      [SCRIPT] Name each constraint out loud as you type it: `PRIMARY
+      KEY` is yesterday's own concept, now real syntax. `NOT NULL` is
+      new today — a rule the database itself enforces on every insert,
+      not just a suggestion.
+
+
+      [MISCONCEPTIONS] A common assumption: constraints are optional
+      "best practice," skippable under time pressure. They're the
+      opposite — an active enforcement mechanism, not documentation.
+
+  - type: code
+    title: "One INSERT, Four Rows At Once"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      INSERT INTO restaurants (camis, dba, boro) VALUES
+          (1001, 'Corner Bistro', 'Manhattan'),
+          (1002, 'Green Leaf Cafe', 'Brooklyn'),
+          (1003, 'Sunset Diner', 'Queens'),
+          (1004, 'Harbor Grill', 'Brooklyn');
+    starter_code: |
+      -- TODO: insert all 4 rows below into restaurants
+      -- (camis, dba, boro)
+      -- 1001, 'Corner Bistro', 'Manhattan'
+      -- 1002, 'Green Leaf Cafe', 'Brooklyn'
+      -- 1003, 'Sunset Diner', 'Queens'
+      -- 1004, 'Harbor Grill', 'Brooklyn'
+    code_along: true
+    domain: "public_sector"
+    domain_note: "These 4 rows are hand-typed practice data, shaped like the real NYC dataset's own restaurants table — not a live pull from it."
+    notes: >
+      [SCRIPT] One `INSERT` statement, 4 rows at once — point out the
+      comma between each row's parentheses, a real, common typo spot.
+
+  - type: transition
+    from_label: "One Table, Built"
+    to_label: "Code Along: A Second Table, With a Foreign Key"
+    note: "Yesterday's FK definition, as real syntax for the first time."
+    style: "panel_preview"
+    preview_items:
+      - text: "A Real Foreign Key"
+        icon: "foreign_key"
+      - text: "A Real CHECK Constraint"
+        icon: "checklist"
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "A Second Table: Foreign Key + CHECK"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      CREATE TABLE inspections (
+          inspection_id INT PRIMARY KEY,
+          camis INT REFERENCES restaurants(camis),
+          inspection_date DATE NOT NULL,
+          critical_flag TEXT CHECK (critical_flag IN ('Critical', 'Not Critical'))
+      );
+    starter_code: |
+      CREATE TABLE inspections (
+          inspection_id INT ____,
+          camis INT ____ restaurants(camis),
+          inspection_date DATE ____,
+          critical_flag TEXT ____ (critical_flag IN ('Critical', 'Not Critical'))
+      );
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`REFERENCES restaurants(camis)` is a real foreign key — every `camis` in `inspections` must already exist in `restaurants`, or the insert fails."
+    analogy:
+      domain: "nightlife & venues"
+      mapping: "A CHECK constraint is like a bouncer with a strict guest list — even if your app already validated the value, the database checks it again before letting the row in."
+    notes: >
+      [SCRIPT] Name each constraint again, fast: `PRIMARY KEY` and
+      `REFERENCES` (a foreign key) are yesterday's own concepts as real
+      syntax; `CHECK` is brand new — an allowed-values list the database
+      itself enforces, same enforcement spirit as `NOT NULL`.
+
+  - type: code
+    title: "The Same INSERT Pattern, a Second Table"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      INSERT INTO inspections (inspection_id, camis, inspection_date, critical_flag) VALUES
+          (1, 1001, '2026-01-15', 'Critical'),
+          (2, 1002, '2026-01-20', 'Not Critical'),
+          (3, 1001, '2026-02-02', 'Not Critical');
+    starter_code: |
+      -- TODO: insert the 3 rows below into inspections
+      -- (inspection_id, camis, inspection_date, critical_flag)
+      -- 1, 1001, '2026-01-15', 'Critical'
+      -- 2, 1002, '2026-01-20', 'Not Critical'
+      -- 3, 1001, '2026-02-02', 'Not Critical'
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Every `camis` here (1001, 1002) already exists in `restaurants` — that's what the foreign key requires."
+    notes: >
+      [SCRIPT] Point out `camis 1001` appears twice — one restaurant,
+      two real inspections over time, exactly the one-to-many
+      relationship this dataset's own `data/SOURCE.md` documents.
+
+  - type: check_understanding
+    prompt: "What does `REFERENCES restaurants(camis)` actually create, and how would you explain it if asked live in an interview?"
+    mode: game
+    topic: "Foreign Key, as Real Syntax"
+    bloom_level: apply
+    question_style: interview
+    technique: "Query Walkthrough Method"
+    options:
+      - "A foreign key — camis must already exist in restaurants"
+      - "A copy of the restaurants table"
+      - "Just a comment — it doesn't do anything real"
+    answer:
+      correct: "A foreign key — camis must already exist in restaurants"
+      explanation: "This is yesterday's foreign key definition, as real, enforced syntax — try inserting an inspection for a `camis` that doesn't exist in `restaurants` and PostgreSQL rejects it outright."
+      source: "This module's own objective-2 definition, not an external citation"
+    skill_tags: ["relational-databases", "database-administration"]
+    notes: >
+      [TECHNIQUE] Use Query Walkthrough Method — a live SQL question
+      should be answered the way you'd actually reason through it out
+      loud, not just stated as a fact.
+
+
+      [SCRIPT] Tie back explicitly to yesterday's library-card analogy —
+      same idea, now the database itself enforces it instead of just
+      being a design convention.
+
+  - type: transition
+    from_label: "Two Tables, Built"
+    to_label: "Code Along: Reading It Back"
+    note: "SELECT, WHERE, and ORDER BY — the first real queries of the module."
+    objective_index: 2
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "Reading It Back: SELECT, WHERE, ORDER BY"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT * FROM restaurants;
+
+      SELECT dba, boro FROM restaurants WHERE boro = 'Brooklyn';
+
+      SELECT dba FROM restaurants ORDER BY dba;
+    starter_code: |
+      -- TODO: select every column, every row, from restaurants
+
+
+      -- TODO: select just dba and boro, only rows where boro is 'Brooklyn'
+
+
+      -- TODO: select dba, ordered alphabetically
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`WHERE` filters rows before they're returned; `ORDER BY` sorts what's left — two independent, combinable steps."
+    notes: >
+      [SCRIPT] Run all three in order — point out `WHERE` narrows the
+      4 rows down, and `ORDER BY` doesn't remove anything, only reorders.
+
+  - type: check_understanding
+    prompt: "Predict it: How many rows does the `WHERE` query above return?"
+    mode: poll
+    topic: "Predicting a WHERE Result"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "2"
+      - "4"
+      - "1"
+    answer:
+      correct: "2"
+      explanation: "Green Leaf Cafe and Harbor Grill are the only two rows with `boro = 'Brooklyn'` — Corner Bistro (Manhattan) and Sunset Diner (Queens) are filtered out."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] Genuine prediction before running — the same "predict,
+      then verify" habit from Module 2's own pandas filtering lesson,
+      now on real SQL.
+
+  - type: transition
+    from_label: "Reading, Solid"
+    to_label: "Code Along: Constraints Actually Protect You"
+    note: "The payoff — watching a constraint reject bad data in real time."
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "Constraints Actually Protect You"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      INSERT INTO restaurants (camis, boro) VALUES (1005, 'Manhattan');
+    expected_error: "NotNullViolation"
+    code_along: false
+    domain: "public_sector"
+    domain_note: "`dba` is missing from this INSERT entirely — and `dba` was declared `NOT NULL`."
+    notes: >
+      [SCRIPT] Run it and let the real error print in full:
+      `null value in column "dba" ... violates not-null constraint`. Name
+      explicitly: this is the exact class of problem yesterday's case
+      study was really about — a rule that catches bad data *on insert*,
+      not luck, not a later cleanup pass.
+
+  - type: check_understanding
+    prompt: "Would you rather validate required fields only in your app's code, or also add a NOT NULL constraint at the database level?"
+    mode: would_you_rather
+    topic: "Where Should Validation Actually Live?"
+    bloom_level: evaluate
+    question_style: critical_thinking
+    skill_tags: ["database-administration", "relational-databases"]
+    notes: >
+      [SCRIPT] No wrong answer up front, but land on the real point: app
+      code can be bypassed (a script, a different app, a direct terminal
+      fix) — a database-level constraint is enforced no matter how the
+      bad insert was attempted. This isn't either/or in practice, but the
+      database is the layer that can't be skipped.
+
+  - type: interview_prep
+    topics:
+      - question: "A stray script inserted a row with a NULL email directly into the database, bypassing your app's own validation. How would you explain what should have caught this?"
+        short_answer: "Observation: The bad row bypassed the app's validation entirely. Hypothesis: App-layer checks were the only defense, so anything writing directly to the database walks right past them. Evidence: This is exactly why `NOT NULL`/`CHECK` constraints exist at the database level, enforced on every insert no matter what wrote it. Recommendation: Add the constraint at the schema level so this failure mode becomes structurally impossible."
+        technique: "Investigation Framework"
+        icon: "database"
+    notes: >
+      [TECHNIQUE] Use Investigation Framework — this is a real "why did X
+      happen, and how do you diagnose/prevent it" question, not a
+      definition to recite.
+
+
+      [SCRIPT] Have a Fellow attempt this cold first — the goal is
+      naming *why* app-only validation has a real gap, not just that
+      constraints are "good practice."
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "psql"
+        - "PostgreSQL's command-line client"
+      - - "Constraint"
+        - "A rule the database itself enforces"
+      - - "NOT NULL"
+        - "Requires a real value, always"
+      - - "CHECK"
+        - "Restricts values to an allowed set"
+    notes: >
+      [SCRIPT] Quick round-trip through all four terms — this is the
+      exact vocabulary the project's own `schema.sql` and
+      `role_setup.md` expect you to use correctly.
+
+  - type: bridge
+    title: "So Far, We've Covered..."
+    bullets:
+      - "A real database, two real tables"
+      - "NOT NULL, CHECK — enforced, not suggested"
+      - "SELECT, WHERE, ORDER BY, for real"
+    notes: >
+      [SCRIPT] Close by naming the shift ahead: next class adds joins
+      across tables. Today built exactly the two tables that join will
+      connect. And name the project tie explicitly: this whole sequence,
+      create, constrain, insert, query, is precisely what the project's
+      own sprint later asks you to repeat on your own, unguided, on a
+      dataset you choose yourself.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "No new exercise today"
+      - "Next class: Joins, same two tables"
+      - "Keep your database running"
+    notes: >
+      [SCRIPT] Give a specific heads-up: don't drop today's database —
+      next class's join demo picks up exactly where this one left off.
+      Name the project tie once more before dismissing: the sprint asks
+      you to repeat this exact create-constrain-insert-query sequence on
+      your own, on a dataset you pick yourself.
+
+  - type: further_resources
+    resources:
+      - title: "PostgreSQL Tutorial: CREATE TABLE"
+        url: "https://www.postgresql.org/docs/current/sql-createtable.html"
+        kind: documentation
+        time_estimate: "~10 min read"
+        description: "The official, authoritative reference for every constraint type"
+        attribution: "PostgreSQL Global Development Group"
+      - title: "SQLBolt"
+        url: "https://sqlbolt.com/"
+        kind: practice
+        time_estimate: "~20 min hands-on"
+        description: "Free, bite-sized interactive SQL lessons and exercises"
+        attribution: "SQLBolt"
+    notes: >
+      [SCRIPT] Point out the official docs specifically — knowing where
+      to look up an exact constraint syntax is a real, permanent skill,
+      not something to memorize once and forget.

@@ -21,7 +21,7 @@ of work, not a rigid script.
 ## Hard constraints (do not skip any of these)
 
 1. **No module numbers, no "before lecture" language, anywhere in the reading's own text.** Folder paths can stay module-numbered for now (that's just current repo organization, checked by `qa/reading_qa.py`), but the page content must read as fully standalone — a reading may get moved between modules later.
-2. **Never reuse the lecture's analogies/examples/scenarios.** Read the target lecture's `module_decks/module-N-*/INSTRUCTOR_LECTURE_NOTES.md` (+ `PROJECT.md`/`DATASET.md`) first and pick something else — rotate real-world scenarios across finance / healthcare / public sector / nonprofit & social impact / business ops / professional services (see `pedagogy/pedagogy/PEDAGOGY_SUMMARY.md` §5).
+2. **Never reuse the lecture's analogies/examples/scenarios.** Read the target lecture's source first and pick something else. Older decks keep this in `module_decks/module-N-*/INSTRUCTOR_LECTURE_NOTES.md` (+ `PROJECT.md`/`DATASET.md`); **newer decks (Modules 3-5 as re-dropped 2026-09) instead have `module_decks/module-N-*/CALENDAR.md` (the day-by-day map) plus one folder per lesson under `lectures/<slug>/`, where `deck_spec.yaml` is the thing to read** — its `meta.scenario`, `meta.glossary`, `meta.learning_objectives`, and every slide's `analogy:` block are exactly the material a reading must not duplicate — rotate real-world scenarios across finance / healthcare / public sector / nonprofit & social impact / business ops / professional services (see `pedagogy/pedagogy/PEDAGOGY_SUMMARY.md` §5).
 3. **Required sections**: **Introduction** (see its own bullet below — this is not optional and not the same thing as "Concept Overview," though the two can flow directly into each other), Concept Overview (scenario-based — open inside a concrete situation, never "a loop is X, a conditional is Y" style dry definitions), Technical Vocabulary, Interactive Practice, "How This Shows Up in Interviews" (data-focused; +SWE angle for Python/OOP/SQL), Overall Summary/Critical Thinking Questions, Additional Resources. Optional but encouraged when genuinely relevant: a prereq-recall section (1-4 questions, mixing types — recall, coding-based/trace, scenario-based, critical-thinking — covering the *actual* prerequisite skills the reading leans on later, not just the one most obvious one; e.g. a nested-loops reading that later unpacks tuples needs a tuple-unpacking prereq question too, not just `range()`), and a "thinking ahead" section on where the concept resurfaces later.
 
 3a. **The Introduction must do four things, explicitly** — not just imply them:
@@ -42,6 +42,73 @@ of work, not a rigid script.
    ```
 10. **All links must resolve** — verified by `qa/reading_qa.py` before shipping.
 11. **The specific skills/objectives a reading covers must be visibly listed on the page**, not just recorded in `reading.meta.json`'s `skills` field — that field and the visible "Skills you'll practice" callout must always be written together, never one without the other. `qa/reading_qa.py` checks that a sibling `reading.meta.json` with a non-empty `skills` array has a matching visible callout in the HTML; a reading that fails this check is not done.
+
+
+## Language standard, quests, and the deck context (added 2026-10-14)
+
+Angelica asked for the SWE fellowship's language standard to be adopted here.
+**Read `prose-exemplars.md` next to this file before writing or revising any
+reading** — it carries the do/don't pairs, several of them rewrites of real
+passages from this repo.
+
+### Writing rules (from Ben's AI writing guide)
+These govern the *completeness of reasoning between sentences*, not sentence
+construction. **When they and plain English conflict, plain English wins.**
+1. **State the problem before the solution** — what goes wrong, and for whom.
+2. **Spell out the consequence, not the judgment** — never "confusing" without
+   saying what a person would wrongly believe or do.
+3. **Every "so"/"because"/"therefore" follows from a premise already on the
+   page.** If the justifying step is missing, write it.
+4. **State the rule, not only the result.**
+5. **Prefer positive statements** to "not X, but Y".
+6. **Make the subject the actual code element, with an active verb** — this one
+   is for sentences about code; in a sentence about a person it produces
+   nonsense.
+Plus, from Angelica's reviews: no gendered pronouns for people, US spelling,
+refer to code by name rather than by position, numbered lists for steps, real
+program output in an output block, and every word meaning something.
+
+### The GitBook is organised as quests, and reading URLs are fixed
+`https://marcylabschool-da.gitbook.io/marcylabschool_da-docs` groups days into
+**quests**. Each quest page lists a **Vocabulary Mission** (the terms a Fellow
+must be able to explain) and then **hardcodes the URLs of the readings** that
+teach them.
+
+- **Never rename a reading folder and never change a quest's reading count.**
+  A rename breaks the link the GitBook sends students to. Revise content only.
+- A reading owes its quest's Vocabulary Mission terms, counted across the
+  quest's readings as a whole. `curriculum/mod1-quests.json` is the mapping;
+  `qa/reading_qa.py`'s `check_quest_vocabulary` enforces it.
+- Four Mod 1 readings (hash-maps, linked-lists, recursion, trees) are linked
+  from no quest. They are held to the same standard and marked
+  `supplementary: true` in the manifest.
+
+### Deck context: what a reading should be built from
+The module's real teaching material lives in a separate local folder,
+`/Users/jellyspratley/Documents/Marcy/AI_DeckGeneration`:
+- `modules/<module-slug>/livelabs/<slug>/deck_spec.yaml` — the taught session
+  (a **LiveLab**), with its objectives, glossary, scenario and analogies. This
+  is the anti-duplication source: never reuse a LiveLab's scenario or analogy.
+- `modules/<module-slug>/data-challenges/<slug>.md` + `.yaml` + `RUBRIC.md` —
+  the 60-minute group block that follows each LiveLab. Its day span matches its
+  quest's, so a reading and its Data Challenge share vocabulary.
+- `module_sources/<module-slug>/` — `PROJECT.md` (the one graded project and
+  its `competency_assessments`), `DATASET.md`, `INSTRUCTOR_MODULE_SUMMARY.md`.
+- `modules/<module-slug>/CALENDAR.md` — the day-by-day flow.
+
+That folder is **not a git repo**, so `curriculum/mod1-quests.json` records a
+`content_pin`: a sha256 over the deck specs, data challenges and module
+sources. Recompute it before a build and compare. A changed pin means the
+module was rebuilt and the readings may be stale — this is the only drift
+signal available, and the equivalent pin on the SWE side is what caught a
+lesson reorder that would otherwise have gone unnoticed.
+
+### Videos
+About **10-12 minutes** is the guide here, not the SWE repo's 5-minute cap, since
+DA readings run 25-50 minutes. But every pick must be verified: real duration,
+English **audio** (the default caption track's `languageCode` — an English
+title proves nothing), and embeddable. Over 12 warns, over 20 fails, and the
+verified duration goes into the displayed time estimate.
 
 ## Points & gamification (build in via `assets/reading-kit.js`, do not reinvent)
 
@@ -87,7 +154,9 @@ Two separate, unrelated tiers, both from `assets/reading-kit.js`:
   - Student enters GitHub username + their submissions repo name (defaults to `reading-submissions` via `DEFAULT_SUBMISSIONS_REPO_NAME` in the kit — most students never need to type it).
   - **The submit block must include first-time setup directions, not just assume the repo already exists.** A student's first-ever reading is exactly when they don't have a submissions repo yet, and "ask your instructor" alone isn't self-service. Every reading's submit-for-credit callout needs a collapsed `<details class="mlrk-hint">` (summary: "First time submitting? Set up your private submission repo") containing: (1) a link to the `DA-Reading_Submissions` template with "click Use this template," (2) keep it Private, (3) Settings → Collaborators → Add people → add the instructor's GitHub username (don't hardcode a specific instructor's username in reading content — say "your instructor will share their GitHub username with you," since this varies by cohort/instructor), (4) come back and fill in the two fields below, (5) a note that clicking "Submit for credit" opens a new tab with a pre-filled Issue and they still need to click "Submit new issue" there themselves — the button doesn't finish it for them.
   - **`tags` AND `skills` must both be passed on every call**, matching that reading's `reading.meta.json` arrays exactly, so performance is trackable at both the broad-category and specific-objective level.
-  - No server-side code at all now, so no shared-secret gate and no server-enforced attempt cap — the 2-attempt limit is client-side (`localStorage`) only. Accepted trade-off; state this plainly if asked.
+  - **A student gets 4 attempts to submit a whole reading** (`MAX_ATTEMPTS` in `submitForCredit()`). Don't confuse this with the per-question 2-try limit in `selfCheck()`/`quiz()` — different number, different thing, both deliberate.
+  - No server-side code at all now, so no shared-secret gate and no server-enforced attempt cap — the 4-attempt limit is client-side (`localStorage`) only, and `instructor-tools/aggregate_submissions.py` re-enforces it at aggregation time with its own `MAX_ATTEMPTS`. Keep the two in sync. Accepted trade-off; state this plainly if asked.
+  - **The submit block also carries the student's own-repo git steps**: a collapsed one-time "make a repo on your GitHub account" `<details>`, then a numbered `<ol class="mlrk-steplist">` for every reading (`cd` into the repo, `mv ~/Downloads/<file> .`, then `git add`/`commit`/`push`). Copy this block verbatim from a recent reading rather than rewriting it — it was corrected in review and the wording matters (new repos default to **Public**, so the student has to change it themselves; the repo name must be copied exactly from the GitHub URL, hyphens and all).
   - Grading/aggregation is NOT automatic — there's no Action watching every student's repo. The instructor runs `instructor-tools/aggregate_submissions.py` (own GitHub token, own machine) periodically to pull scores across the whole roster. See that script's own header comment.
 - Alias/avatar for the leaderboard is `ReadingKit.Persona` — reroll generator (adjective + animal + emoji, paired list only, never independently-randomized name/emoji) plus a "type in your exact existing persona" option, never freeform-typed from scratch. Decoupled from the GitHub username used only as a gradebook label. Even though per-student private repos removed the original privacy reason for personas, keep them — they're worth having for a future leaderboard and for their own sake, as an engagement/fun touch.
 - **The persona should show up wherever it can add a fun, personal touch, not just once in the picker widget.** This is already wired into the shared kit — don't reinvent it per reading: `Scoring.renderChip()` prefixes the score with the emoji+name automatically, the restored-progress banner greets the student by persona ("Welcome back, 🦦 Turbo Otter!"), and `submitForCredit()`'s `onDone(status, message)` callback hands back a ready-made, persona-included message — a reading's `onDone` handler should just display `message` as-is (`fb.textContent = message`) rather than writing its own status text.
@@ -117,7 +186,7 @@ Two separate, unrelated tiers, both from `assets/reading-kit.js`:
 
 ## Pipeline
 
-1. **Anti-duplication check + skill lookup.** Read the target lecture's deck notes; note what to avoid. In the same pass, find which of that module's `skills.json` competencies this lesson feeds into — cross-reference `module_decks/<module>/INSTRUCTOR_MODULE_SUMMARY.md`'s day-by-day/objective table (which lesson maps to which objective number) against its "Skill | Rubric ceiling | Assessment method" table (which objective number maps to which `competency_assessments` slug from `PROJECT.md`). Usually one, sometimes two slugs per reading — don't over-tag. If the target deck is new, run `python3 extract_skills.py` first (writes `skills_raw.json`, a reference file) and hand-write the new slug's `name`/`definition` into `skills.json` yourself — this step is never fully automatic, see that script's header comment for why.
+1. **Anti-duplication check + skill lookup.** Read the target lecture's deck notes; note what to avoid. In the same pass, find which of that module's `skills.json` competencies this lesson feeds into — cross-reference `module_decks/<module>/INSTRUCTOR_MODULE_SUMMARY.md`'s day-by-day/objective table (which lesson maps to which objective number) against its "Skill | Rubric ceiling | Assessment method" table (which objective number maps to which `competency_assessments` slug from `PROJECT.md`). Usually one, sometimes two slugs per reading — don't over-tag. If the target deck is new, run `python3 extract_skills.py` first (writes `skills_raw.json`, a reference file) and hand-write the new slug's `name`/`definition` into `skills.json` yourself — this step is never fully automatic, see that script's header comment for why. **The newer deck drops have no `PROJECT.md` and no `INSTRUCTOR_MODULE_SUMMARY.md` at all**, so there's no `competency_assessments` list to extract from; for those, hand-write the slugs from the lessons' own `learning_objectives` across `lectures/*/deck_spec.yaml`, and reuse an existing slug wherever the competency genuinely recurs (adding the new module to that entry's `modules` array) rather than minting a near-duplicate. Add any genuinely new broad category to `taxonomy.json` in the same pass — a `reading.meta.json` tag that isn't in `taxonomy.json` silently falls out of the landing page's grouping.
 2. **Research** (dispatch to a research subagent with WebSearch/WebFetch): a real-world scenario distinct from the lecture's, a candidate video, 2-4 additional-resource links (w3schools/SQL-Bolt/TED/official docs/games) — the agent live-checks every link it returns.
 3. **Fill out the content brief** — copy `content-briefs/TEMPLATE.md`, fill it in. This is the fast-review artifact; if anything about the scenario/video/tags needs a sanity check with Angelica, do it here, before writing HTML.
 4. **Author `index.html`** using `assets/brand-tokens.css` + `assets/reading-kit.css` + `assets/reading-kit.js`. Near the top (after the persona widget, before section 1), add a visible "Skills you'll practice in this reading" callout — one `<p><strong>{skills.json name}</strong> — {skills.json definition}</p>` per matched slug, using that file's `name`/`definition` fields verbatim (they're already written for students, don't reword or shorten them). Write a sidecar `reading.meta.json` (`{title, tags: [taxonomy.json ids], skills: [skills.json competency slugs], audience, time_minutes}`) next to it. Pass both `tags` and `skills` into the `ReadingKit.submitForCredit({..., tags, skills})` call so instructor-side analytics can report at both the broad-category and the specific-competency level.

@@ -1,0 +1,1165 @@
+meta:
+  title: "psycopg2 vs SQLAlchemy, Real Tradeoffs"
+  module: "Module 4: Python Data Analysis"
+  module_number: 4
+  lesson_number: 3
+  date: "Day 3"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Explain what SQLAlchemy's abstraction layer sits on top of, and what that layer actually buys you"
+    - "Compare `psycopg2` and SQLAlchemy on pooling, portability, error messages, and learning curve, using running code as the evidence"
+    - "Recommend one library for a given script scenario and defend the choice in writing"
+  tools:
+    - "Python"
+  exercise:
+    type: bullets
+    url_or_text: "Run today's three notebook cells against the database you built in the SQL module, and print the server process id both ways. Then pick one script you have already written, answer the four framework questions for it, and write down which library you would use and why."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Opening a real `psycopg2` connection and a SQLAlchemy `engine`, and loading both into pandas (the lesson before this one)"
+    - "Keeping a credential in an environment variable and releasing a connection in a `finally` block (the lesson before this one)"
+    - "A pandas DataFrame's rows, columns, and `dtype`, and how they map onto a SQL table"
+    - "SQL `SELECT`, `COUNT`, and `GROUP BY`, and a real PostgreSQL database you built yourself (the SQL module)"
+    - "Python `for` loops and reading a small function (Modules 0-1)"
+  interview_topics:
+    - "How would you connect a Python script to Postgres, and what would make you reach for SQLAlchemy over the raw driver?"
+    - "Explain connection pooling to someone who does not write code."
+  final_project:
+    "The project's connect-and-compare sprint day asks for a real
+    `tradeoff_comparison.md`, reasoned from what you actually saw running both
+    libraries rather than copied from a definition. Today's three cells are
+    where that evidence gets generated, and today's four framework questions
+    are the outline you write it from. The project grades whether the
+    comparison is genuinely yours, so the numbers you print today are the ones
+    worth keeping."
+  module_plan_ref: "module_sources/module-4-python-data-analysis/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-4-python-data-analysis/DATASET.md"
+  scaffolding_level: guided
+  estimated_duration_min: 60
+  scenario: >
+    You are still on the city agency's data team, and the connection code from
+    last class works. Now a second ask lands: a script that runs every ten
+    minutes, all day, against the same `service_requests` table. Last class you
+    proved both libraries return the same DataFrame. Today you find out whether
+    that means the choice between them does not matter, by measuring what each
+    one actually does to the database server.
+  notebook_warmup:
+    prompt: "A script opens a database connection inside a loop that runs 500 times. The code is correct and it closes every single one. Is anything still wrong?"
+    hint: "Think about what the database server has to set up each time a brand-new connection arrives, not about what your Python code does."
+  glossary:
+    - term: "abstraction layer"
+      definition: "Code that hides messier detail behind a simpler surface you call instead"
+    - term: "connection pool"
+      definition: "A small set of open connections kept ready and handed out on request"
+    - term: "dialect"
+      definition: "SQLAlchemy's translation for one specific database and its driver"
+    - term: "ORM"
+      definition: "A tool that maps database tables onto Python classes and rows onto objects"
+
+slides:
+  - type: title
+    title: "`psycopg2` vs. SQLAlchemy: Pooling, Portability, Real Tradeoffs"
+    subtitle: "Two Libraries, One Database, and a Choice You Have to Defend"
+    module: "Module 4: Python Data Analysis"
+    date: "Day 3"
+    image_path: "modules/module-4-python-data-analysis/lectures/psycopg2-vs-sqlalchemy-real-tradeoffs/images/slide_01_two_toolboxes.png"
+    image_prompt: "Flat illustration: Analyst weighing two toolboxes over one database"
+    image_alt: "A data analyst holding two different toolboxes over a single database server, deciding which one to open rather than assuming one is better"
+    notes: >
+      [SCRIPT] Open by naming the exact question this lesson exists to answer.
+      Last class ended with an honest limit said out loud: both libraries work
+      and both agree, and nobody had any real basis for choosing between them.
+      Today is that basis, and it is built from numbers everyone prints
+      themselves, not from opinion.
+
+
+      [SCRIPT] Set the register early. This is a judgment lesson, not a syntax
+      lesson. The typing is short. The reasoning is the work, and the writing
+      that comes out of it is graded on the project.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Name what the layer buys"
+        icon: "package"
+      - text: "Compare the real tradeoffs"
+        icon: "checklist"
+      - text: "Recommend one, and defend it"
+        icon: "description"
+    notes: >
+      [SCRIPT] Read all three, then say the project tie out loud, because it is
+      unusually direct today. The project's connect-and-compare day asks for a
+      written tradeoff comparison reasoned from what you actually experienced
+      running both libraries. Everything on this slide exists to make that
+      document real instead of copied.
+
+
+      [SCRIPT] Be blunt about the third one. "Recommend" is the objective, not
+      "know." An answer that says one library is simply better is the answer
+      this lesson is built to take away from you.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "abstraction layer"
+        icon: "package"
+      - text: "connection pool"
+        icon: "cycle"
+      - text: "dialect"
+        icon: "language"
+      - text: "ORM"
+        icon: "data_object"
+    notes: >
+      [SCRIPT] Names only for now. Every one of these gets a real definition and
+      a real example before today is over, and all four come back with their
+      definitions right before the summary.
+
+
+      [MISCONCEPTIONS] Two of these get blurred together constantly. An
+      abstraction layer is the general idea of hiding detail behind a simpler
+      surface. An ORM is one specific, optional example of that idea. Flag now
+      that using SQLAlchemy does not mean using an ORM, because a lot of people
+      arrive assuming those are the same decision.
+
+  - type: check_understanding
+    prompt: "Last class both libraries handed back the same DataFrame. Name one thing that was genuinely different about the code you typed."
+    mode: discussion
+    topic: "Warm-Up: What Actually Differed"
+    bloom_level: remember
+    question_style: conceptual
+    skill_tags: ["python", "database-connection"]
+    notes: >
+      [ACTIVITY] In person: quick shout-outs, no hands, just call them out and
+      keep a running list on the board. Online: everyone drops one difference in
+      chat, then unmute two people to say theirs out loud. 90 seconds, and
+      collect four or five before moving on.
+
+
+      [SCRIPT] Fish for the concrete ones from the code they typed: one side
+      needed a cursor and the other did not, the column names had to be
+      recovered by hand on one side, closing was manual on one side and
+      automatic inside a `with` block on the other. All of those count.
+
+
+      [SCRIPT] Then say why this is today's warm-up rather than trivia. Every
+      difference the room just listed was a difference in what you type. Today
+      is about the differences you cannot see from the code at all, and those
+      are the ones that decide which library a real script should use.
+
+
+      [MISCONCEPTIONS] Someone will say one is "faster" or "better." Do not
+      settle it now. Write it on the board as an open claim and promise the room
+      it gets tested with real output before the hour is up.
+
+  - type: case_study
+    headliner: "One Setting Broke Sign-Ins for **Four Days**"
+    kicker: "IN THE NEWS"
+    summary_points:
+      - "An upgrade removed a hidden brake"
+      - "All the connections reset at once"
+      - "Sign-ins failed for days"
+    is_fictional: false
+    source_url: "https://clerk.com/blog/2025-09-18-database-incident-postmortem"
+    caption: "Clerk engineering postmortem, September 2025"
+    image_path: "modules/module-4-python-data-analysis/lectures/psycopg2-vs-sqlalchemy-real-tradeoffs/images/slide_05_case_study.png"
+    image_prompt: "Photo-realistic: Engineer watching spiking dashboards during a night incident"
+    image_alt: "An engineer at a monitor of spiking latency and error dashboards during a live incident, the kind of graph that appears when a database is being overwhelmed by connection requests"
+    hook_question: "Last class you opened one connection and closed it. Now picture five hundred copies of that script. What if they all did it at the same second?"
+    domain: "professional_services"
+    notes: >
+      [SCRIPT] Walk the mechanism, because it is genuinely surprising and it
+      frames the whole lesson. A company that sells sign-in infrastructure had
+      its database quietly upgraded by its cloud provider. The upgrade made
+      Postgres faster at accepting new connections. That sounds like good news
+      and it was the direct cause of a four-day incident.
+
+
+      [SCRIPT] Explain why, slowly, because this is the twist. The old, slower
+      behavior had been acting as an accidental brake, spacing out how fast new
+      connections could arrive. Their system was set to throw away and remake
+      every connection on a fixed fifteen-minute timer, and hundreds of copies
+      of their service were doing it in lockstep. With the brake gone, all of
+      those arrived at once, every fifteen minutes, and the database buckled.
+      Users could not sign in, on and off, for days.
+
+
+      [SCRIPT] Land the point this lesson actually needs. Nobody wrote that
+      fifteen-minute behavior by hand. It came from a setting inside the layer
+      that manages connections for you. Today's whole question is what a layer
+      like that does on your behalf, and whether you want it to.
+
+
+      [SCRIPT] Do not resolve the hook yet. Ask it, take a few answers, and say
+      the room will have run the smaller version of this themselves before the
+      hour is out.
+
+
+      [MISCONCEPTIONS] The obvious read is "so managing connections yourself is
+      safer." That is the wrong lesson and it will come up. The company had a
+      sophisticated setup. The point is not that the fancier option failed, it
+      is that a layer making decisions for you is still a decision, and one
+      somebody has to understand.
+
+
+      [ARTICLE SUMMARY] Clerk's cloud provider automatically applied a minor
+      PostgreSQL version upgrade on 14 September 2025, which removed an internal
+      inefficiency in how Postgres granted new connections. That inefficiency had
+      been accidentally acting as a rate limiter, spacing out how quickly new
+      connections could be created. Clerk's connection pooler was configured to
+      close and replace every connection after exactly 15 minutes, so with the
+      brake gone, hundreds of Cloud Run containers recreated their connections at
+      the same moment, producing a synchronized surge every 15 minutes. Customers
+      saw intermittent request failures, latency spikes, and windows where sign-up
+      and sign-in failed, from 15 to 18 September. The fix was to stagger
+      connection recycling randomly rather than on a fixed timer, which dropped
+      database load below where it had been before the incident.
+
+
+      [SOURCES] Clerk, "Database incident postmortem," clerk.com engineering blog,
+      2025-09-18,
+      clerk.com/blog/2025-09-18-database-incident-postmortem. Verified live. Two
+      verbatim lines worth having ready: the pooler was "configured with a static
+      maximum connection lifetime of 15 minutes, which causes each connection to
+      be closed and replaced every 15 minutes," and the failure was that "all
+      expired connections were recreated simultaneously, leading to synchronized
+      connection recycling." Domain tagged `professional_services` on the
+      Cybersecurity sub-area basis: the company sells authentication
+      infrastructure and the user-visible failure was failed sign-ins.
+
+  - type: transition
+    from_label: "A Setting Nobody Wrote by Hand"
+    to_label: "First, Find Out Which Layer Holds It"
+    note: "That fifteen-minute rule lived inside a library, not in anyone's script. Choosing between today's two libraries starts with knowing which one holds which decisions."
+    objective_index: 1
+    style: "icon_hero"
+    icon: "package"
+    notes: >
+      [SCRIPT] [~11 min mark] Short beat. Say plainly that the mental picture
+      most of the room is carrying about these two libraries is wrong, and that
+      fixing it is the whole first section.
+
+  - type: content
+    title: "An Abstraction **Hides Work** — and Hides Control"
+    bullets:
+      - "A simpler surface over messier detail"
+      - "You write less and read less"
+      - "You also steer less"
+      - "A layer is always a trade"
+    icon_hero:
+      icon: "package"
+      style: "gold"
+    analogy:
+      domain: "gaming"
+      mapping: "Auto-aim wins most fights faster, and blocks the one shot you wanted to place yourself."
+      backups:
+        - domain: "sports"
+          mapping: "A pitching machine gives perfect reps, and cannot throw the weird curveball you asked for."
+        - domain: "fashion"
+          mapping: "Off the rack fits most people fast. Tailoring is slower and fits exactly one."
+    notes: >
+      [SCRIPT] Name the analogy before the term. Auto-aim is doing something
+      real: it is placing your shot for you, and most of the time it places it
+      better and faster than you would. The cost only shows up on the one shot
+      you actually wanted to line up yourself. Then attach the word: an
+      abstraction layer is code that hides messier detail behind a simpler
+      surface you call instead.
+
+
+      [SCRIPT] Make the fourth bullet the one they leave with. Every layer is a
+      trade. It is never only a gain, and the interesting question is never
+      "which is better" but "what am I giving up, and do I need it here."
+
+
+      [MISCONCEPTIONS] People hear "abstraction" as a synonym for "advanced" or
+      "professional," so choosing the higher layer feels like the grown-up
+      answer. Push back directly: plenty of working analysts deliberately use
+      the lower layer, and being able to say why is what makes the choice look
+      senior, not the choice itself.
+
+
+      [OTHER EXAMPLES] Two backups are in the notebook if auto-aim does not
+      land: a pitching machine, and buying a suit off the rack versus getting
+      one tailored.
+
+
+      [SOURCES] The claim here is definitional rather than product-specific, so
+      it is deliberately stated about layers in general, not about SQLAlchemy
+      specifically. The SQLAlchemy-specific version arrives on the next slide,
+      where it can be sourced properly.
+
+  - type: workflow_linear
+    title: "SQLAlchemy Doesn't Replace `psycopg2` — It **Sits On It**"
+    steps:
+      - label: "Your Code"
+        detail: "The `sql` String"
+        icon: "code"
+      - label: "SQLAlchemy"
+        detail: "Engine and Pool"
+        icon: "settings"
+      - label: "psycopg2"
+        detail: "Speaks Postgres"
+        icon: "api"
+      - label: "Postgres"
+        detail: "Runs the Query"
+        icon: "database"
+    notes: >
+      [SCRIPT] Walk it left to right slowly, because this is the picture the
+      previous lesson deliberately left as words and saved for today. Your code
+      hands over a SQL string. SQLAlchemy takes it, decides which connection to
+      use, and passes it down. `psycopg2` is what actually speaks PostgreSQL's
+      own language. PostgreSQL is what runs the query. Then say the punchline:
+      when you use SQLAlchemy against Postgres, you are using `psycopg2` too.
+      You just are not typing it.
+
+
+      [SCRIPT] Now show them the other picture by removing a box out loud. A raw
+      `psycopg2` script is the same diagram with the second box taken out. Same
+      driver, same database, one less floor. That is the entire structural
+      difference between the two things this lesson compares.
+
+
+      [SCOPE] Resist going deeper on the middle box today. SQLAlchemy also has a
+      whole object layer above this, which gets exactly one slide later, and the
+      project treats it as an optional stretch goal, not a requirement.
+
+
+      [MISCONCEPTIONS] The dominant wrong picture is side by side: two separate
+      roads, pick a lane. Correct it explicitly by pointing at the diagram. They
+      are stacked, not parallel, and someone who says "we replaced psycopg2 with
+      SQLAlchemy" in an interview has just told the interviewer they do not know
+      what a driver is.
+
+
+      [MISCONCEPTIONS] The second wrong picture is that this stacking is
+      universal. It is not. Say the scoped version: for PostgreSQL, SQLAlchemy's
+      default driver is `psycopg2`. Point it at a different database and an
+      entirely different driver sits in that third box.
+
+
+      [SOURCES] SQLAlchemy's own engine documentation describes the `Engine` as
+      "'home base' for the actual database and its DBAPI, delivered to the
+      SQLAlchemy application through a connection pool and a Dialect," and
+      states that the PostgreSQL dialect uses psycopg2 as the default DBAPI
+      (docs.sqlalchemy.org/en/20/core/engines.html). Verified locally against
+      SQLAlchemy 2.0.52: an engine built from a plain `postgresql://` URL
+      reports `dialect.name` as `postgresql` and `dialect.driver` as `psycopg2`.
+
+  - type: check_understanding
+    prompt: "A raw `psycopg2` script skips the SQLAlchemy layer completely. So what does it skip along with it?"
+    mode: poll
+    topic: "What Skipping a Layer Costs"
+    bloom_level: understand
+    question_style: conceptual
+    options:
+      - "Everything that layer adds, like the one-call `pd.read_sql`"
+      - "The `psycopg2` driver itself"
+      - "Nothing, because SQLAlchemy only renames the same functions"
+    answer:
+      correct: "Everything that layer adds, like the one-call `pd.read_sql`"
+      explanation: "The layer is where the extras live, so skipping it means writing those extras yourself, including the cursor, the column names, and the connection handling this lesson is about to measure. It does not skip the driver, because `psycopg2` is the floor below SQLAlchemy, not the same floor. And it is not a rename, because the layer adds real machinery rather than new spellings for old calls."
+      source: "SQLAlchemy's own Engine documentation, plus the layer diagram this lesson just walked through"
+    skill_tags: ["python", "sqlalchemy"]
+    notes: >
+      [ACTIVITY] Poll: read all three options out loud, then everyone answers at
+      once. In person: call out A, B, or C together on a count of three. Online:
+      type A, B, or C in chat on the same count. Use the letters the slide
+      itself shows rather than numbers. 45 seconds.
+
+
+      [SCRIPT] Option B is the one worth spending time on, because whoever picks
+      it has the stack upside down, and that is the single most common way to
+      mis-picture this. Ask whoever chose it to say out loud which box sits
+      under which, and fix it against the diagram rather than just marking it
+      wrong.
+
+
+      [SCRIPT] Do not let the room settle on "so the layer is strictly better."
+      Say the next section exists to price the layer, not to praise it.
+
+  - type: transition
+    from_label: "You Can Draw the Stack"
+    to_label: "Now Price It: What the Layer Actually Costs"
+    note: "A layer you cannot see still has a bill. The next twenty minutes measure that bill with real output instead of arguing about it."
+    objective_index: 2
+    notes: >
+      [SCRIPT] [~18 min mark] Pivot into the measuring half. Say the standard
+      out loud: nothing in this section gets asserted, everything gets printed.
+
+  - type: content
+    title: "A Pool **Lends** Connections Instead of Making New Ones"
+    bullets:
+      - "The server pays real cost per connection"
+      - "A pool keeps a few open"
+      - "Your code borrows one, then returns it"
+      - "Same connection, many queries"
+    icon_hero:
+      icon: "cycle"
+      style: "green"
+    analogy:
+      domain: "sports"
+      mapping: "A gym's loaner rackets. Grab one, play, rack it back. The club buys them once."
+      backups:
+        - domain: "music"
+          mapping: "A rehearsal room's house amps. Plug in, play, leave them for the next band."
+        - domain: "community"
+          mapping: "A neighborhood tool library. Borrow the drill, return it, nobody buys twelve drills."
+    notes: >
+      [SCRIPT] Name the analogy before the term, then attach the term. Nobody at
+      a gym buys a racket for each game. There is a rack of them, you take one,
+      you put it back, and the next person gets that same racket. A connection
+      pool is that rack. Then the definition: a small set of open connections
+      kept ready and handed out on request.
+
+
+      [SCRIPT] Give the first bullet a real number so it is not vague. On
+      PostgreSQL, a connection is not a lookup, it is a whole operating-system
+      process the server starts for you, with its own memory. The default
+      ceiling on how many can exist at once is one hundred. That is why "just
+      open another one" has a limit, and the next two cells make the cost
+      visible.
+
+
+      [MISCONCEPTIONS] "Pool" sounds like a cache, so people expect it to store
+      query results. It does not store any data at all. It stores the open
+      connections themselves, and every query still goes to the database.
+
+
+      [MISCONCEPTIONS] The second one, and it matters for the honest version of
+      today's comparison: a pool is not free either. A held connection is a slot
+      nobody else can use for as long as you hold it. This comes back as a
+      real question in a few slides, so plant it now rather than selling pooling
+      as pure upside.
+
+
+      [SCOPE] Say this limit out loud, because it is what the case study was
+      actually about and it is easy to walk away with the wrong version. A pool
+      lives inside one running program. It reuses connections for that program.
+      It does not put a ceiling on how many connections your database gets in
+      total, because ten copies of your script each holding five connections is
+      fifty at the database, not five. That is exactly the shape of the incident
+      from the start of class: many separate copies, each managing connections
+      correctly on its own, all arriving together. Protecting a shared database
+      from many programs at once is a different tool and a different lesson.
+
+
+      [OTHER EXAMPLES] Two backups are in the notebook: a rehearsal room's house
+      amps, and a neighborhood tool library.
+
+
+      [SOURCES] PostgreSQL's own architecture documentation states the server
+      "starts ('forks') a new process for each connection"
+      (postgresql.org/docs/current/tutorial-arch.html), and its configuration
+      documentation gives `max_connections` a default of 100
+      (postgresql.org/docs/current/runtime-config-connection.html).
+
+  - type: transition
+    from_label: "You Know What a Pool Is"
+    to_label: "Code Along: Make the Difference Print Itself"
+    note: "Two cells, one number each. Postgres will tell you directly how many separate connections you actually opened."
+    style: "panel_preview"
+    preview_items:
+      - text: "Three fresh connections"
+        icon: "database"
+      - text: "One reused connection"
+        icon: "cycle"
+    notes: >
+      [SCRIPT] Everyone opens the notebook now and keeps it open through the
+      next three cells. Confirm out loud that `DATABASE_URL` is already set in
+      everyone's environment before typing starts.
+
+
+      [SCRIPT] Introduce the measuring tool in one sentence before the cell, so
+      it is not magic: PostgreSQL can tell you the id of the server process
+      handling your connection. Different number means a different connection.
+      Same number means the same connection came back.
+
+  - type: code
+    title: "Every Trip Through the Loop Opens a **New Connection**"
+    language: python
+    terminal_label: "tradeoffs"
+    code: |
+      import os
+      import psycopg2
+
+      url = os.environ["DATABASE_URL"]
+      for i in range(3):
+          conn = psycopg2.connect(url)
+          cur = conn.cursor()
+          cur.execute("SELECT pg_backend_pid()")
+          print("server process:", cur.fetchone()[0])
+          cur.close()
+          conn.close()
+    starter_code: |
+      import os
+      import psycopg2
+
+      url = os.environ["DATABASE_URL"]
+      for i in range(3):
+          # TODO: open a connection, then get a cursor
+          conn = ...
+          cur = ...
+          cur.execute("SELECT pg_backend_pid()")
+          print("server process:", cur.fetchone()[0])
+          # TODO: release the cursor, then the connection
+          ...
+          ...
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`pg_backend_pid()` is PostgreSQL's own way of reporting which server process is handling your connection right now."
+    doc_url: "https://www.postgresql.org/docs/current/functions-info.html"
+    skill_tags: ["python", "psycopg2", "connection-pooling"]
+    notes: >
+      [ACTIVITY] Everyone runs this cell and reads their three numbers out loud
+      or into chat. You want the room to notice, unprompted, that nobody's three
+      numbers match each other. Do not say it first.
+
+
+      [SCRIPT] Once the numbers are up, name what they mean. Three different
+      process ids means PostgreSQL started three separate server processes for
+      one loop that asked one question three times. The Python code is
+      completely correct. It closes everything. It is still doing three times
+      the setup work it needed to.
+
+
+      [SCRIPT] Scale it out loud, because three is not scary. A script that runs
+      every ten minutes all day does this a hundred and forty-four times a day.
+      A dashboard doing it per user request does it thousands of times. That is
+      the cost the next cell removes.
+
+
+      [MISCONCEPTIONS] Some people will read a different number as a bug or as
+      something they typed wrong. It is not. Different is the expected, correct
+      output here, and the point of the cell.
+
+
+      [MISCONCEPTIONS] Somebody will ask whether `psycopg2` can pool at all. It
+      can, and saying otherwise would be wrong: `psycopg2.pool` ships
+      `SimpleConnectionPool` and `ThreadedConnectionPool` in the library itself.
+      Two honest qualifications to have ready. You have to reach for it and wire
+      it up yourself, while the other library hands you one without being asked.
+      And psycopg2's own documentation calls that module "simple" and pure
+      Python, so treat it as a real option rather than as an equal to a
+      purpose-built pooler.
+
+
+      [SCOPE] Someone searching mid-class will find that `psycopg2` is no longer
+      the newest generation, so say it first rather than getting caught. Its
+      successor, psycopg version 3, exists and has a much stronger pool. This
+      module teaches `psycopg2` because it is what SQLAlchemy still reaches for
+      by default on a plain `postgresql://` URL, and because it is what the
+      project's own environment installs. Name it in one sentence and move on;
+      migrating between the two is not this lesson.
+
+
+      [SOURCES] Verified by running this exact code against a real PostgreSQL 16
+      table holding this module's own NYC 311 sample: three iterations printed
+      three different backend process ids. `pg_backend_pid()` is documented as
+      returning the process id of the server process attached to the current
+      session (postgresql.org/docs/current/functions-info.html). The
+      `psycopg2.pool` classes named above were confirmed present in psycopg2
+      2.9.12.
+
+  - type: code
+    title: "One `engine`, and the **Same Connection** Comes Back"
+    language: python
+    terminal_label: "tradeoffs"
+    code: |
+      from sqlalchemy import create_engine, text
+
+      engine = create_engine(url)
+      q = text("SELECT pg_backend_pid()")
+
+      for i in range(3):
+          with engine.connect() as conn:
+              print("server process:", conn.scalar(q))
+
+      print(engine.pool.status())
+    starter_code: |
+      from sqlalchemy import create_engine, text
+
+      # TODO: build one engine from the same url
+      engine = ...
+      q = text("SELECT pg_backend_pid()")
+
+      for i in range(3):
+          with engine.connect() as conn:
+              # TODO: run q and print the single value back
+              print("server process:", ...)
+
+      print(engine.pool.status())
+    code_along: true
+    domain: "public_sector"
+    doc_url: "https://docs.sqlalchemy.org/en/20/core/pooling.html"
+    skill_tags: ["python", "sqlalchemy", "connection-pooling"]
+    notes: >
+      [ACTIVITY] Run it, then ask the room to compare this cell's three numbers
+      against the previous cell's three. Wait for someone to say they are all
+      the same before you say it.
+
+
+      [SCRIPT] Explain what happened without hand-waving. The engine opened one
+      real connection, lent it to the first `with` block, took it back at the
+      end of the block, and lent the same one out again. Nothing was closed and
+      reopened. That is the pool doing its job, and nobody asked it to.
+
+
+      [SCRIPT] Read the last line together and translate it, because the wording
+      is confusing on purpose. `Pool size: 5` is the ceiling this engine will
+      keep. `Connections in pool: 1` is how many are actually sitting on the
+      rack right now, which is one because one question at a time never needed
+      a second. A negative overflow number just means the pool has not grown
+      past its own size, so read it as "no overflow," not as an error.
+
+
+      [SCRIPT] Say the honest scope of this win out loud, because it is the
+      difference between a memorized rule and real judgment. This engine saved
+      two connection setups across three queries. On a script that opens once
+      and exits, it saves nothing at all. Pooling pays off with repetition, and
+      repetition is a property of the script, not of the library.
+
+
+      [MISCONCEPTIONS] People assume the pool is something you configure before
+      it works. On a normal engine you do not: `create_engine` gives a Postgres
+      connection a pooling engine by default, and the default class is
+      `QueuePool`.
+
+
+      [MISCONCEPTIONS] A few will expect the `with` block to close the
+      connection, because a `with` block closed things last class. It returns
+      the connection to the pool instead of closing it, which is exactly why the
+      same process id comes back.
+
+
+      [MISCONCEPTIONS] The last one is worth knowing before a Fellow tries this
+      somewhere else and thinks they broke it. The same-number result holds for
+      a pool living inside your own program, which is what today's cell is. Put
+      a separate connection manager in between your code and the database, or
+      let the pool's own recycle timer fire, and the number can legitimately
+      change between queries. That is not a broken demo, it is a different setup.
+
+
+      [SOURCES] Verified by running this exact code against a real PostgreSQL 16
+      instance with SQLAlchemy 2.0.52: three iterations printed the identical
+      backend process id, and `engine.pool.status()` reported `Pool size: 5
+      Connections in pool: 1`. The default pool class for this engine was
+      confirmed to be `QueuePool` by inspecting `type(engine.pool)`. SQLAlchemy's
+      own pooling documentation states that "the Engine returned by the
+      create_engine() function in most cases has a QueuePool integrated,
+      pre-configured with reasonable pooling defaults," and that `QueuePool` is
+      used for every engine other than SQLite with an in-memory database, where
+      the default is `SingletonThreadPool` instead
+      (docs.sqlalchemy.org/en/20/core/pooling.html). The same page documents the
+      default `pool_size` of five, which is the number printed on this slide.
+
+  - type: check_understanding
+    prompt: "Would you rather open a fresh connection for each query, or hold one pooled connection open all day?"
+    mode: would_you_rather
+    topic: "Fresh Connections or a Held Pool"
+    bloom_level: analyze
+    question_style: critical_thinking
+    skill_tags: ["python", "connection-pooling"]
+    notes: >
+      [ACTIVITY] Force a pick before any discussion. In person: everyone stands
+      and moves to one side of the room, then two people from each side say why.
+      Online: everyone types "fresh" or "held" in chat at the same time, then
+      unmute one from each side. Say plainly that a spoken or typed answer
+      counts exactly the same as moving, so nobody is shut out by the format.
+      Four minutes total.
+
+
+      [SCRIPT] There is genuinely no right answer here, and that is the point.
+      Steer toward the real cost on each side. Fresh every time: the server does
+      full setup work over and over, and a busy script can eat through the
+      server's connection ceiling. Held all day: your script is sitting on a
+      slot nobody else can use, even during the twenty-three hours it is idle,
+      and a connection that has been open for hours can quietly go stale.
+
+
+      [SCRIPT] Land the transferable idea rather than a verdict. The right
+      answer depends on how often the script asks a question and how long it
+      lives. That is a fact about the script, not about the library, which is
+      exactly how the framework at the end of this lesson is built.
+
+
+      [MISCONCEPTIONS] Most of the room will pick pooled and stop thinking,
+      because the last cell made pooling look free. Push whoever picks it to
+      name one real cost, and do not accept "none."
+
+  - type: transition
+    from_label: "Pooling Is Priced"
+    to_label: "Code Along: Point the Same Code at Another Database"
+    note: "The second thing a layer buys is a translator. One line changes, and the code above it never finds out which database answered."
+    style: "icon_hero"
+    icon: "language"
+    notes: >
+      [SCRIPT] [~34 min mark] Last cell of the day, and it is a fill-in-the-blank,
+      so tell everyone to read it before typing rather than copying straight
+      through.
+
+
+      [SCRIPT] Give the reasoning before they fill anything in. Every database
+      speaks its own slightly different SQL and needs its own driver. So the
+      blank is asking: if the layer handles both of those for you, what is left
+      for you to change?
+
+  - type: code
+    title: "The Same Query, a **Different Database**"
+    language: python
+    terminal_label: "tradeoffs"
+    code: |
+      import pandas as pd
+
+      sql = "SELECT borough, status FROM service_requests"
+      with engine.connect() as conn:
+          pg_df = pd.read_sql(sql, conn)
+
+      lite = create_engine("sqlite://")
+      pg_df.to_sql("service_requests", lite, index=False)
+      lite_df = pd.read_sql(sql, lite)
+
+      print(lite.dialect.name, pg_df.equals(lite_df))
+    blanked_code: |
+      import pandas as pd
+
+      sql = "SELECT borough, status FROM service_requests"
+      with engine.connect() as conn:
+          pg_df = pd.read_sql(sql, conn)
+
+      lite = create_engine("____")
+      pg_df.to_sql("service_requests", lite, index=False)
+      lite_df = pd.read_sql(sql, lite)
+
+      print(lite.dialect.name, pg_df.equals(lite_df))
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`sqlite://` with nothing after it means a throwaway database that lives in memory and disappears when the notebook closes."
+    doc_url: "https://docs.sqlalchemy.org/en/20/core/engines.html"
+    skill_tags: ["python", "sqlalchemy", "dialect"]
+    notes: >
+      [ACTIVITY] Fill in the blank, 45 seconds, before advancing to the answer.
+      In person: someone says the missing string out loud. Online: everyone types
+      it in chat at the same time on a count of three. This is deliberately the
+      one cell with no separate notebook exercise, so the student notebook shows
+      the same single blank the slide does.
+
+
+      [SCRIPT] After the reveal, count what changed. One string. Not the query,
+      not `pd.read_sql`, not the `to_sql` call, not a single import. And SQLite
+      is not a variation on Postgres, it is a completely different database with
+      a different driver, which SQLAlchemy picked on its own from the URL.
+
+
+      [SCRIPT] Read the printed line together. The word `sqlite` is the dialect
+      SQLAlchemy chose, and that is the term itself arriving as output rather
+      than as a claim: a dialect is SQLAlchemy's translation for one specific
+      database and its driver. The `True` is `pg_df.equals(lite_df)`, which
+      compares shape, column names, and every column's type, so the two
+      databases really did hand back the same table.
+
+
+      [SCOPE] State the limit of this honestly and then stop, because this is
+      the easiest slide in the deck to overclaim from. What just moved was the
+      connection code. Your SQL did not become portable. This query is plain
+      enough to run anywhere, but date functions, data types, and plenty of
+      syntax genuinely differ between databases, and no layer makes that go
+      away. Say that sentence out loud rather than leaving it in notes.
+
+
+      [MISCONCEPTIONS] Someone will conclude they should always use SQLAlchemy
+      "in case we switch databases." Most teams never switch. The real everyday
+      version of this benefit is smaller and more useful: running the same code
+      against a throwaway local database for testing and against the real one in
+      production.
+
+
+      [MISCONCEPTIONS] A few will expect `psycopg2` to do this too. It cannot,
+      and that is not a flaw. It is a PostgreSQL adapter on purpose, and being
+      one specific database's driver is the whole reason it exists.
+
+
+      [SOURCES] Verified by running this exact code: the SQLite engine reported
+      `dialect.name` as `sqlite` with driver `pysqlite`, the Postgres engine
+      reported `postgresql` with driver `psycopg2`, and `pg_df.equals(lite_df)`
+      printed `True`. SQLAlchemy's engine documentation describes the database
+      URL as carrying the dialect and driver it selects
+      (docs.sqlalchemy.org/en/20/core/engines.html). The scope caveat above is
+      the important one: SQLAlchemy's own documentation is explicit that a
+      textual SQL string is passed through to the database essentially as
+      written, so dialect differences in the SQL itself remain the author's
+      problem.
+
+  - type: compare_contrast
+    title: "Neither One Is the **Better** One"
+    left_label: "`psycopg2`"
+    left_icon: "api"
+    left_points:
+      - "One layer, quickly learned"
+      - "You wire up any pooling yourself"
+      - "You rebuild the DataFrame by hand"
+      - "The raw Postgres error, unwrapped"
+      - "PostgreSQL only, by design"
+    right_label: "SQLAlchemy"
+    right_icon: "settings"
+    right_points:
+      - "Pools and reuses connections by default"
+      - "pandas reads it in one supported call"
+      - "Swap the URL, keep your code"
+      - "Your SQL itself is still not portable"
+      - "More to learn, plus an optional ORM"
+    notes: >
+      [SCRIPT] Do this as a recap of things the room already watched happen, not
+      as new information. Point at each row and name which cell proved it. The
+      pooling row is the two process-id cells. The DataFrame row is last class,
+      where the column names had to be recovered off the cursor on one side and
+      arrived attached on the other. The URL row is the cell they just filled
+      in. The error row is the one claim nobody ran, so state it as a claim and
+      say where it comes from.
+
+
+      [SCRIPT] On the error row, be concrete rather than vague about "better
+      errors." Ask `psycopg2` for a table that does not exist and it raises
+      `psycopg2.errors.UndefinedTable`, which is PostgreSQL's own complaint
+      handed straight back. Ask SQLAlchemy the same thing and it raises
+      `sqlalchemy.exc.ProgrammingError` instead, wrapping that same original
+      error and keeping it available underneath. Neither is better. One is
+      shorter to read, the other is consistent across every database the layer
+      supports, and which you want depends on whether you are debugging one
+      database or maintaining code across several.
+
+
+      [SCRIPT] The word "supported" in the second row on the right is doing real
+      work, so do not read past it. pandas' own documentation says its `con`
+      argument takes a SQLAlchemy connectable, a connection string, or a
+      `sqlite3` connection, and that if a raw driver object is passed, only
+      SQLite is supported. Handing `pd.read_sql` a bare `psycopg2` connection
+      does generally work, and it warns, and it is outside what pandas promises.
+      That is the most concrete, least hand-wavy reason to reach for the layer
+      that exists, and it is a better interview answer than anything about
+      portability.
+
+
+      [SCOPE] The ORM row gets one sentence and no more today. Tables become
+      Python classes and rows become objects, so you can query without writing a
+      SQL string. It is entirely optional, plenty of professional SQLAlchemy
+      code never uses it, and the project treats defining one as an optional
+      stretch goal rather than a requirement. Say the precise version out loud
+      while you are here, because the sloppy version is everywhere: SQLAlchemy
+      is not an ORM. It is a toolkit that contains one. Every cell run in this
+      room across both classes used the other half, and never touched the ORM.
+
+
+      [SCRIPT] Do not skip the third row on the right, because it is the honest
+      correction to the row directly above it and it is the only line on this
+      slide that qualifies a benefit rather than stating one. The connection
+      code moved to a different database; the query language did not. Also name
+      what both columns share, since the slide no longer says it: both send the
+      exact same SQL, both read the password out of the environment, and both
+      go through `psycopg2` when the database is Postgres.
+
+
+      [MISCONCEPTIONS] The belief this whole slide exists to break is that one
+      of these columns is the professional choice and the other is the beginner
+      choice. Say it plainly: working teams ship both, and an interviewer asking
+      this question is listening for whether you know what each column costs,
+      not which one you like.
+
+
+      [SOURCES] The error behavior was verified locally against PostgreSQL 16
+      with psycopg2 2.9.12 and SQLAlchemy 2.0.52: a missing-table query raised
+      `psycopg2.errors.UndefinedTable` through the driver, and
+      `sqlalchemy.exc.ProgrammingError` through the engine, with the original
+      `psycopg2.errors.UndefinedTable` still reachable on the wrapper's `orig`
+      attribute. psycopg2's own documentation describes it as a PostgreSQL
+      adapter implementing the Python DB API 2.0 specification (psycopg.org/docs).
+
+  - type: transition
+    from_label: "You Have the Evidence"
+    to_label: "Now Turn It Into a Recommendation"
+    note: "An interviewer will not accept a list of differences. They want a pick, and four questions are enough to get you to one."
+    objective_index: 3
+    notes: >
+      [SCRIPT] [~44 min mark] Last section. Say the shift out loud: everything
+      up to here was measurement, and everything after here is judgment.
+
+  - type: framework_columns
+    title: "Four Questions Before You **Pick a Library**"
+    anchor:
+      label: "The Question"
+      prompt: "\"Which one should this script use, and why that one?\""
+    panels:
+      - marker: "01"
+        label: "Lifespan"
+        prompt: "Runs once, or runs all day?"
+      - marker: "02"
+        label: "Control"
+        prompt: "Do you need the driver's exact behavior?"
+      - marker: "03"
+        label: "Reach"
+        prompt: "Could this ever point at another database?"
+      - marker: "04"
+        label: "Shape"
+        prompt: "Do you want rows, or Python objects?"
+    notes: >
+      [SCRIPT] Walk all four, and after each one say which part of today
+      answered it. Lifespan is the two process-id cells: repetition is what
+      makes a pool pay. Control is the error row: a raw driver hands you the
+      database's own complaint. Reach is the cell where one string changed.
+      Shape is the ORM row, which is the one most people have never had to think
+      about.
+
+
+      [SCRIPT] Point out what is deliberately missing from these four. There is
+      no question about which library is better, which is more professional, or
+      which is more popular. Every question is about the script. That is the
+      whole method.
+
+
+      [SCRIPT] Say the project tie explicitly and out loud, because this slide is
+      the deliverable in disguise. The project asks for a written tradeoff
+      comparison reasoned from what you actually experienced. These four
+      questions are its outline: one short paragraph each, answered for your own
+      script, and it is written.
+
+
+      [MISCONCEPTIONS] People will want a scoring rule, like "three out of four
+      means SQLAlchemy." Refuse it. Two of these can point in opposite
+      directions for the same script, and saying which one you weighted most and
+      why is the actual answer an interviewer is listening for.
+
+  - type: check_understanding
+    prompt: "A nightly script runs one query, prints one number, and exits. Which library, and what is the strongest reason?"
+    mode: game
+    topic: "Recommending for One Script"
+    bloom_level: evaluate
+    question_style: interview
+    technique: "PREP"
+    options:
+      - "`psycopg2`, since one query gains nothing from a pool"
+      - "SQLAlchemy, since pooling is always the safer default"
+      - "Either one, since the choice never matters at this size"
+    answer:
+      correct: "`psycopg2`, since one query gains nothing from a pool"
+      explanation: "A script that opens once, asks once, and exits has no second query to reuse a connection, so the pool that made the earlier cell impressive does nothing here. The strongest reason names the script's lifespan, not the library's reputation. The tempting wrong answer, that pooling is always the safer default, is the exact belief this lesson is built to break. Saying the choice never matters is wrong for a different reason, because it does have a consequence: whoever inherits this script has to learn whichever layer you left behind. Either library would run correctly here, which is precisely why the reasoning is what gets graded."
+      source: "This lesson's own four-question framework, applied to the script's lifespan"
+    skill_tags: ["python", "psycopg2", "sqlalchemy"]
+    notes: >
+      [TECHNIQUE] Use PREP, Point then Reason then Example then Point. A
+      recommendation question is exactly the shape PREP is for: state the pick
+      first, give the reason, give one concrete consequence, then restate the
+      pick. Coach whoever answers to open with the verdict rather than narrating
+      their thinking for thirty seconds and arriving at one. An interviewer is
+      listening for the pick up front.
+
+
+      [ACTIVITY] Quick-fire game: read all three, count down from three out
+      loud, then everyone calls out A, B, or C at the same time. Online:
+      everyone types A, B, or C in chat on the count of three so nobody copies
+      the first answer posted. Use the letters the slide shows, not numbers.
+      Then have one person deliver the full answer in PREP shape before you
+      reveal it.
+
+
+      [SCRIPT] Do not stop at the correct letter. Ask the room what would have
+      to change about this script to flip the answer, and take two responses.
+      Runs every ten minutes instead of nightly. Asks eight questions instead of
+      one. Might get pointed at a different database next quarter. Any of those
+      genuinely moves the recommendation, and being able to say so is the whole
+      objective.
+
+
+      [MISCONCEPTIONS] Some will read option A as "psycopg2 is better for small
+      things," which is a rule rather than reasoning. Correct it to the version
+      that survives an interview: nothing about the size is the point, only that
+      one query cannot reuse a connection there is no second question for.
+
+  - type: interview_prep
+    topics:
+      - question: "How would you connect a Python script to Postgres, and what would make you reach for SQLAlchemy over the raw driver?"
+        short_answer: "Question: Is this a one-off analysis script, or something that runs continuously? Assumption: I will assume a scheduled job against one Postgres database, with the credential read from the environment. Risk: If it turns out to be a long-running service, a raw driver opening a connection per request is exactly what runs a database out of slots, and that is the case where I reach for an engine and its pool."
+        technique: "QAR"
+        icon: "api"
+      - question: "Explain connection pooling to someone who does not write code."
+        short_answer: "Audience: Someone approving the work, not reading the code. Simplify: Opening a link to a database is slow, and the database only allows so many at once. Analogy: It is the rack of loaner rackets at a gym, taken and put back, instead of buying a new one every game. Check: So if I say we reuse a few links instead of making a new one every time, does that land?"
+        technique: "Teach-Back"
+        icon: "cycle"
+    notes: >
+      [TECHNIQUE] The first one uses QAR, Question then Assumption then Risk,
+      because it is genuinely underspecified as asked. The honest answer depends
+      on facts the interviewer has not given, so the strong move is to ask for
+      one of them, state the assumption you are running on, and name what breaks
+      if the assumption is wrong. Coach people to chain PREP after QAR once the
+      ambiguity is resolved: state the pick, the reason, the example, the pick
+      again.
+
+
+      [TECHNIQUE] The second uses Teach-Back, Audience then Simplify then
+      Analogy then Check. The step almost everyone drops is the last one.
+      Finishing with a real check, rather than trailing off, is what separates
+      explaining from lecturing, and interviewers notice it.
+
+
+      [SCRIPT] [~52 min mark] If you are already past 54 minutes, show the
+      answers and skip the cold attempt. Otherwise have someone attempt the
+      first one cold before advancing. Keep the register serious here even
+      though the rest of today is energetic.
+
+
+      [SCRIPT] Be honest about how these get asked, because overselling them
+      would be a disservice. Nobody is likely to ask a junior analyst to pick
+      between two Postgres drivers by name. What is genuinely common is the
+      shape underneath: how do you connect Python to a database safely, and what
+      would make you use SQLAlchemy rather than raw SQL. Say that out loud, and
+      say the same about the second one: "explain a technical concept to a
+      non-technical audience" is a very common data-analyst question, and
+      connection pooling is simply a hard thing to practise it on, not something
+      you should expect to be quizzed on directly.
+
+
+      [SOURCES] The first question's shape is verified in circulation:
+      interviewprep.org's SQLAlchemy question bank asks "What are the benefits
+      of using SQLAlchemy for database manipulation over raw SQL queries?", and
+      Datavidhya's 2026 Python-for-data-engineers list asks "How do you connect
+      Python to a SQL database safely?" with SQLAlchemy and psycopg2 named
+      together in its own model answer. The second question's wrapper is
+      verified on DataCamp's data-analyst interview guide, which lists "How do
+      you communicate technical concepts to a non-technical audience?" directly.
+      Connection pooling itself is a well-catalogued question in backend, DBA,
+      and system-design banks rather than analyst ones, which is exactly why the
+      script above frames it as practice material and not as a prediction.
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "abstraction layer"
+        - "A simpler surface over messier detail"
+      - - "connection pool"
+        - "Open connections lent out and returned"
+      - - "dialect"
+        - "The translation for one database"
+      - - "ORM"
+        - "Tables as classes, rows as objects"
+    notes: >
+      [SCRIPT] Fast round trip before the summary. Ask the room to supply
+      `connection pool` and `dialect` rather than reading every row yourself,
+      since those two are the ones today actually put numbers behind.
+
+
+      [MISCONCEPTIONS] Watch for anyone defining an ORM as "SQLAlchemy." An ORM
+      is one optional part of SQLAlchemy, and every cell run today used
+      SQLAlchemy without touching it.
+
+  - type: bridge
+    title: "So far, we've covered..."
+    bullets:
+      - "SQLAlchemy sits on top of `psycopg2`"
+      - "A pool reused one connection, measurably"
+      - "One changed string moved the same code"
+      - "A layer's default is still a decision"
+      - "Neither library is the better one"
+      - "Four questions decide it, not a rule"
+    notes: >
+      [SCRIPT] Resolve the case study first, since it is the frame the whole
+      lesson hangs on, and answer its hook question directly. Five hundred
+      copies of a correct script, each opening and closing connections properly,
+      can still take a database down by all doing it at the same instant. That
+      is what happened to the sign-in company, and the setting that made it
+      happen came from a layer nobody was thinking about. Point at the fourth
+      bullet as the sentence to leave with.
+
+
+      [SCRIPT] Then answer the notebook warm-up out loud one more time, because
+      it is the cleanest thing to leave with. Five hundred correct, properly
+      closed connections is still five hundred times the server started a
+      process it did not need to start. Everyone watched the smaller version of
+      that print itself today.
+
+
+      [SCRIPT] Tie forward to the project without naming a day. The project asks
+      for a written tradeoff comparison reasoned from what you actually
+      experienced running both libraries. Today produced that experience, and
+      the four questions are the outline. Tell people to keep the numbers their
+      own cells printed, because those numbers are the evidence that makes the
+      write-up genuinely theirs.
+
+
+      [SCRIPT] Name today's honest limit the same way the previous lesson did.
+      You can now defend a choice between two libraries. You still have not had
+      to judge code somebody else wrote, and that is what comes next.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "Run today's three cells on your database"
+      - "Print the server process id both ways"
+      - "Answer the four questions for one script"
+      - "Write down which library you would pick"
+    exercise:
+      type: bullets
+      url_or_text: "Run today's three notebook cells against the database you built in the SQL module, and print the server process id both ways. Then pick one script you have already written, answer the four framework questions for it, and write down which library you would use and why."
+      label: "Practice: The student notebook"
+    notes: >
+      [SCRIPT] Be specific about why the practice ask is what it is. Today
+      everyone measured a shared class database with a handful of rows. Your own
+      database has your own row counts and your own connection limit, and the
+      numbers coming back different from the room's is the interesting part, not
+      a mistake.
+
+
+      [SCRIPT] Push hardest on the last two bullets, because they are the ones
+      that look optional and are not. Four short paragraphs written tonight, on
+      a script you already understand, is a rehearsal for a graded document. Four
+      paragraphs written cold on project day, about code you wrote that morning,
+      is much harder.
+
+
+      [SCRIPT] Say what a weak version looks like so nobody hands one in.
+      "SQLAlchemy is more modern and has more features" is not a comparison. "My
+      script runs once a week, so pooling buys nothing, and I picked the raw
+      driver so the next person has one less library to learn" is.
+
+
+      [SCRIPT] Remind people how to reach office hours rather than naming a
+      time, and encourage anyone whose own database will not connect to bring
+      that in rather than quietly working around it.
+
+  - type: further_resources
+    resources:
+      - title: "Connection Pooling"
+        url: "https://docs.sqlalchemy.org/en/20/core/pooling.html"
+        kind: documentation
+        time_estimate: "~15 min skim"
+        description: "What an engine pools by default, from SQLAlchemy itself"
+        attribution: "SQLAlchemy project"
+      - title: "Understanding Connections and Pools"
+        url: "https://sudhir.io/understanding-connections-pools"
+        kind: reading
+        time_estimate: "~20 min read"
+        description: "Plain-language tour of what a connection really costs"
+        attribution: "Sudhir Jonathan"
+      - title: "Connection Pooling in PostgreSQL (Performance Numbers)"
+        url: "https://www.youtube.com/watch?v=GTeCtIoV2Tw"
+        kind: video
+        time_estimate: "~12 min video"
+        description: "Pooling's speedup measured live, not just asserted"
+        attribution: "Hussein Nasser"
+    notes: >
+      [SCRIPT] Point at the first one as the reference to keep open. It is the
+      page that actually answers "wait, is pooling on by default," and it names
+      the default pool size everyone saw printed today.
+
+
+      [SCRIPT] The middle one is the best read here and the one to recommend if
+      someone asks for just one. It is plain language, it is not tied to any
+      single library, and it explains what a connection genuinely costs a
+      server, which is the piece today only had time to demonstrate rather than
+      explain in depth.
+
+
+      [SCRIPT] Say the honest caveat on the video rather than letting people
+      discover it. It measures pooling's speedup with real before-and-after
+      numbers, which is exactly the persuasive part, but its demo is in
+      Node.js, not Python. Watch it for the numbers and the reasoning, not for
+      syntax. It is about twelve minutes.

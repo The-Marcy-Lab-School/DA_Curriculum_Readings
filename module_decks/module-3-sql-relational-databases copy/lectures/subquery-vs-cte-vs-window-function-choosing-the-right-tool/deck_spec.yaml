@@ -1,0 +1,963 @@
+meta:
+  title: "Subquery vs. CTE vs. Window Function: Choosing the Right Tool"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 10
+  date: "Day 10"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Answer one business question as a nested subquery and as a CTE, and name what each version actually costs you"
+    - "Recognize when a question needs every row kept, and reach for a window function instead of `GROUP BY`"
+    - "Run a four-check decision routine on a new business scenario with a peer, and justify your pick in one written sentence"
+  tools:
+    - "PostgreSQL / psql"
+  exercise:
+    type: lab_plan
+    url_or_text: "modules/module-3-sql-relational-databases/labs/independent-schema-critique-role-setup.md"
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Recently: `RANK()` and `ROW_NUMBER()` with `OVER (PARTITION BY ...)` - every row kept, a number added beside it"
+    - "Earlier this module: Rewriting a nested subquery as a `WITH` clause, and chaining CTEs together"
+  interview_topics:
+    - "Explaining the difference between a CTE and a subquery, and when each one is the right call"
+    - "Explaining a technical decision, such as a query rewrite, to a non-technical stakeholder"
+  final_project:
+    "Your project's given questions each demand a specific technique - one needs a CTE, one
+    needs a window function - and `business_questions_and_schema.md` asks you to map every
+    question against your own schema in writing before you write any SQL. Today is the
+    rehearsal for making that call and defending it."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: collaborative
+  estimated_duration_min: 55
+  scenario: >
+    The violations dashboard is live, and two follow-up questions land the same morning.
+    One asks which restaurants sit above the citywide average. The other asks for every
+    restaurant listed next to its own borough's average. Every tool you need is already
+    in your toolkit - nothing new gets installed today. What changes is that you now have
+    to choose between three tools that all return correct answers, and say out loud why
+    you picked the one you picked. The next person to open your query might not be you.
+  notebook_warmup:
+    prompt: "Two queries return the exact same rows, and one of them is four lines shorter. What else would you want to know before calling either one better?"
+    hint: "Think about who opens this file six months from now, and what they would need to be able to check on their own."
+  glossary:
+    - term: "scalar subquery"
+      definition: "A query inside another query that hands back exactly one value"
+    - term: "derived table"
+      definition: "A query inside a `FROM` clause, given a name and used like a table"
+    - term: "correlated subquery"
+      definition: "An inner query that refers to a column from the outer query, so its answer depends on which row is being looked at"
+
+slides:
+  - type: title
+    title: "Subquery, CTE, or Window Function: **Picking the Right Tool**"
+    subtitle: "Same answer, three shapes - and one real decision"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 10"
+    notes: >
+      [SCRIPT] Open by naming what today is not. There is no new keyword, no new
+      installation, no new syntax to memorise. Everything on today's slides has
+      already been taught. That usually gets a relieved laugh - follow it
+      immediately with the harder truth: knowing three tools is not the same as
+      knowing which one to reach for, and the second skill is the one that gets
+      tested in a code review and in an interview.
+
+
+      [SCRIPT] Say the day's shape out loud so nobody is waiting for new material.
+      First half is one business question written two ways. Second half is a
+      question that changes shape entirely. Last third is a decision routine you
+      run with a partner and then write down.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Answer one question two ways"
+        icon: "shuffle"
+      - text: "Spot when every row matters"
+        icon: "row"
+      - text: "Pick a tool and defend it"
+        icon: "checklist"
+    notes: >
+      [SCRIPT] Read all three, then tie the third one to the project explicitly.
+      The project hands over seven fixed business questions and asks for a written
+      mapping of each one against the schema before any SQL gets written. That
+      written justification is exactly the third objective, graded.
+
+
+      [SCRIPT] Set the depth expectation honestly. Nobody is being asked to write
+      faster SQL today. The skill being built is choosing and explaining, which is
+      why the closing activity is a partner conversation and a written sentence,
+      not another query.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "Scalar Subquery"
+        icon: "function"
+      - text: "Derived Table"
+        icon: "table"
+      - text: "Correlated Subquery"
+        icon: "cycle"
+    notes: >
+      [SCRIPT] Names only for now, and one honest framing: all three of these have
+      already been written in this room, they just have not been named yet. Point
+      out that "subquery" gets used as though it were one thing, when it is really
+      a family of three that behave quite differently.
+
+
+      [MISCONCEPTIONS] The word "correlated" is the one that sounds statistical and
+      is not. It just means the inner query refers to a column from the outer one,
+      so its answer changes depending on which row you are looking at. Say that
+      once now so the term is not a mystery when it arrives.
+
+  - type: check_understanding
+    prompt: "Quick recall: `GROUP BY` hands back one row per group. What does a window function do to your row count?"
+    mode: poll
+    topic: "Warm-Up: What a Window Function Keeps"
+    bloom_level: remember
+    question_style: conceptual
+    options:
+      - "Collapses it the same way"
+      - "Keeps every row, adds a column"
+      - "Keeps every row, drops a column"
+    answer:
+      correct: "Keeps every row, adds a column"
+      explanation: "A window function computes across a set of rows related to the current row, but it does not group them into a single output row - every input row survives, with a new value sitting beside it. That difference is not trivia today. It is the single sharpest test for whether a window function is even a candidate for the question in front of you."
+      source: "This module's own window-function lessons, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: show of hands for A, B, or C. Online: drop a letter in
+      chat, then confirm out loud before advancing. Thirty seconds, no discussion -
+      this is retrieval practice, not a debate.
+
+
+      [SCRIPT] This is not warm-up trivia. Say the connection out loud before
+      moving on: the whole second half of today turns on this one property. A
+      question that needs every row kept has exactly one natural tool, and a
+      question that wants rows collapsed has two others. Getting this recall wrong
+      is how somebody picks the wrong tool for the rest of the module.
+
+
+      [MISCONCEPTIONS] A few will answer A because both `GROUP BY` and a window
+      function use aggregate-looking words like `AVG` and `COUNT`. The word is the
+      same; what it does to the result set is opposite. Name that trap directly.
+
+  - type: transition
+    from_label: "One Business Question"
+    to_label: "Code Along: The Same Answer, Two Ways"
+    note: "Both queries return the identical two rows - what changes is how much the next person has to hold in their head."
+    objective_index: 1
+    style: "icon_hero"
+    icon: "shuffle"
+    notes: >
+      [SCRIPT] [~9 min mark] Keep this to one beat. Terminals open now, not in five
+      minutes - everything from here to the next section is typed along.
+
+
+      [SCRIPT] Give the question before the code: which restaurants have more total
+      violations than the citywide average? Ask the room to say, out loud, what the
+      query needs to do twice. Somebody will get there: it has to know each
+      restaurant's total, and it has to know the average of those totals.
+
+  - type: code
+    title: "Written Once, the Work Gets Done **Twice**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT dba, COUNT(violation_id) tv
+      FROM restaurants
+        LEFT JOIN inspections USING (camis)
+        LEFT JOIN violations USING (inspection_id)
+      GROUP BY dba
+      HAVING COUNT(violation_id) > (SELECT AVG(tv) FROM (
+        SELECT COUNT(violation_id) tv FROM restaurants
+          LEFT JOIN inspections USING (camis)
+          LEFT JOIN violations USING (inspection_id)
+        GROUP BY dba) sub);
+    starter_code: |
+      -- TODO: count violations per restaurant, keeping
+      -- TODO:   restaurants that have none
+
+
+      -- TODO: keep only the ones above the average of
+      -- TODO:   those same counts - which means writing
+      -- TODO:   the counting query a second time, inside
+      -- TODO:   the HAVING clause
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Open `psql` on the class database (`nyc_restaurants`) before the first query - nothing today creates or changes data, so every statement in this worksheet is safe to re-run. `tv` is the alias for total violations, the same short name used in earlier lessons on this database. `sub` is the name given to the inner result so the outer query can average it."
+    doc_url: "https://www.postgresql.org/docs/current/functions-subquery.html"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] Before running it, ask the room to predict the row count. In
+      person: fingers up. Online: a number in chat. Two rows come back - Corner
+      Bistro with 4 and Green Leaf Cafe with 1, because the citywide average across
+      all seven restaurants is about 0.71.
+
+
+      [SCRIPT] This query is correct. Say that clearly and early, because the
+      instinct in the room will be that something is wrong with it. Nothing is. It
+      returns the right answer and it is the version a lot of working SQL actually
+      looks like.
+
+
+      [SCRIPT] Then make the cost visible rather than asserting it. Ask somebody to
+      count how many times the three-table join appears. Twice, character for
+      character. Ask what happens the day a fourth table joins the picture: you now
+      have two places to edit, and one of them is buried five lines deep inside a
+      `HAVING`.
+
+
+      [MISCONCEPTIONS] Some will assume the repetition means the database really
+      does the work twice, and that the query is therefore slow. That is not a safe
+      claim - the planner is free to reorganise this, and on seven rows nothing is
+      measurable either way. Keep the argument where it actually holds: this is
+      about what a human has to maintain, not about speed.
+
+  - type: code
+    title: "Name the Step Once, Then **Use It Twice**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH totals AS (
+        SELECT dba, COUNT(violation_id) tv
+        FROM restaurants
+        LEFT JOIN inspections USING (camis)
+        LEFT JOIN violations USING (inspection_id)
+        GROUP BY dba)
+      SELECT dba, tv FROM totals
+      WHERE tv > (SELECT AVG(tv) FROM totals);
+    starter_code: |
+      -- TODO: name the counting step totals
+
+
+      -- TODO: read from totals, keeping only rows above
+      -- TODO:   the average of totals - referring to the
+      -- TODO:   named step instead of rewriting it
+    code_along: true
+    domain: "public_sector"
+    analogy:
+      domain: "music"
+      mapping: "A labelled loop in a beat can be soloed and listened to on its own. Bake the same sound straight into every bar and there is nothing left to solo."
+      backups:
+        - domain: "food"
+          mapping: "A recipe that says \"make the sauce, set it aside\" lets you taste it before you commit. One that says \"make the sauce again\" mid-step gives you no such moment."
+        - domain: "community"
+          mapping: "Giving the group chat's plan a name means everyone can point at it. Retyping the whole plan in every message means nobody is sure which copy is current."
+    domain_note: "The `WITH` clause names a step and makes it available to the rest of the query, including more than once. For a read-only `SELECT` like this one, the result is identical to the nested version - the same two rows, in the same order."
+    doc_url: "https://www.postgresql.org/docs/current/queries-with.html"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] Run it, then put both queries side by side on screen if you can.
+      Ask the room for one sentence describing what actually changed. In person:
+      call on two. Online: chat, then read two out loud.
+
+
+      [SCRIPT] Introduce the labelled-loop comparison before the formal wording.
+      The point is not that the CTE is shorter - it is that the counting step now
+      has a name, so it can be pointed at, checked on its own, and reused without
+      being retyped.
+
+
+      [SCRIPT] Demonstrate the checking part live, because it is the strongest
+      argument and it takes ten seconds. Replace the final `SELECT` with
+      `SELECT * FROM totals;` and run it. The middle step is now inspectable. There
+      is no equivalent move on the nested version without surgery on the query.
+
+
+      [SCRIPT] Tie it to the project's own spot-check requirement out loud. Every
+      query handed in has to be checked against known values. A query whose middle
+      step can be run by itself is a query that is genuinely checkable.
+
+
+      [MISCONCEPTIONS] The most repeated stale claim about CTEs is that they are
+      always computed and stored separately, and therefore always slower. In
+      PostgreSQL that was true through version 11 and changed in version 12: a CTE
+      that is non-recursive, side-effect-free and referenced only once is now
+      folded into the surrounding query by default. `MATERIALIZED` and
+      `NOT MATERIALIZED` are the keywords that override the decision either way.
+      Worth being precise about today's own example: `totals` is referenced twice,
+      so PostgreSQL still calculates it separately here - the version-12 change is
+      about the single-reference case, not a blanket reversal.
+
+
+      [MISCONCEPTIONS] Scope that claim to a named engine, always. It is not a fact
+      about SQL. SQL Server never materialises a CTE at all and re-runs the defined
+      query on every reference, and MySQL 8 merges them by default. "CTEs are slow"
+      is the kind of confident, unscoped claim that falls apart in an interview the
+      moment somebody asks which database.
+
+
+      [SOURCES] PostgreSQL 12 release notes: "Allow common table expressions (CTEs)
+      to be inlined into the outer query... Previously, CTEs were never inlined and
+      were always evaluated before the rest of the query." PostgreSQL "WITH Queries"
+      documentation: a side-effect-free non-recursive `WITH` query "can be folded
+      into the parent query," and "by default, this happens if the parent query
+      references the `WITH` query just once, but not if it references the `WITH`
+      query more than once." Microsoft Learn, "WITH common_table_expression":
+      "Query results from common table expressions aren't materialized. Each outer
+      reference to the named result set requires the defined query to be
+      re-executed." MySQL 8.4 manual: the optimizer "avoids unnecessary
+      materialization whenever possible."
+
+  - type: table
+    title: "You've Already Written **Two of These Three**"
+    headers:
+      - "Subquery Kind"
+      - "What It Hands Back"
+    rows:
+      - - "Scalar"
+        - "Exactly one single value"
+      - - "Derived table"
+        - "A whole table, inside `FROM`"
+      - - "Correlated"
+        - "One value, re-asked per row"
+    notes: >
+      [SCRIPT] Point at the previous slide's query while you walk this. The
+      `(SELECT AVG(tv) ...)` in the `HAVING` was a scalar subquery - one number.
+      The `(SELECT ...) sub` was a derived table - a whole result, given a name and
+      read like a table. Both were written in this room, neither was named until
+      now.
+
+
+      [SCRIPT] The correlated kind gets its definition here, but not its first
+      code yet - it is the one that has not shown up in a query yet, and it does
+      the moment a question stops collapsing rows. That is the next section.
+
+
+      [MISCONCEPTIONS] "Derived table" sounds like something stored in the
+      database. It is not - it exists only for the length of that one query, the
+      same way a CTE does. The difference between the two is that a derived table
+      is anonymous until you alias it and can only be used where it sits, while a
+      CTE is named at the top and usable anywhere below.
+
+
+      [SOURCES] PostgreSQL documentation, "Value Expressions": "A scalar subquery
+      is an ordinary `SELECT` query in parentheses that returns exactly one row
+      with one column." "Table Expressions": "Subqueries specifying a derived table
+      must be enclosed in parentheses. They may be assigned a table alias name."
+      One honest scoping note for anyone asked where these names come from: scalar
+      subquery and derived table are PostgreSQL's own words, while correlated
+      subquery is standard SQL vocabulary used across vendors and interviews but
+      not defined under that name in PostgreSQL's documentation.
+
+  - type: check_understanding
+    prompt: "Would you rather inherit the nested version or the CTE version from a teammate who has just left the company?"
+    mode: would_you_rather
+    topic: "Inheriting Somebody Else's Query"
+    bloom_level: evaluate
+    question_style: critical_thinking
+    options:
+      - "The nested subquery"
+      - "The CTE"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] Force the binary first, then get the reasoning. In person: stand
+      up and move to one side of the room. Online: react with one of two emoji, or
+      type A or B. Then ask two people who picked the CTE to say why in one
+      sentence - and, more importantly, ask whether anybody can name a real case
+      where the nested version is genuinely fine.
+
+
+      [SCRIPT] The honest answer to that follow-up is yes, and it is worth landing.
+      A one-off scalar subquery used exactly once, in a query nobody will ever
+      reopen, is not a problem. A CTE around it adds three lines and buys nothing.
+      The rule is not "CTE always" - the rule is that repetition and
+      uninspectability are the costs you are weighing.
+
+
+      [MISCONCEPTIONS] Expect somebody to argue the CTE is "more efficient." Push
+      back gently: efficiency is not what was demonstrated. What was demonstrated
+      is that one version can be checked a step at a time and the other cannot.
+      Making a claim the evidence does not support is exactly what gets picked
+      apart in a code review.
+
+  - type: transition
+    from_label: "Same Rows, Different Readability"
+    to_label: "When Collapsing Rows Is the Wrong Answer"
+    note: "Readability was the only thing separating those two - now the question itself changes shape."
+    objective_index: 2
+    style: "panel_preview"
+    preview_items:
+      - text: "Every row survives"
+        icon: "row"
+      - text: "A group number beside it"
+        icon: "column"
+    notes: >
+      [SCRIPT] [~24 min mark] Make the pivot explicit. So far both tools answered
+      the same question and the choice was about maintenance. The next question
+      cannot be answered by one of the three tools at all, and that is a different
+      kind of decision.
+
+  - type: content
+    title: "Some Questions **Collapse Rows**. Others Keep Them."
+    bullets:
+      - "`GROUP BY` returns one row per group"
+      - "A window function keeps every row"
+      - "Ask which shape the question needs"
+      - "The wrong shape means extra work later"
+    analogy:
+      domain: "sports"
+      mapping: "A final score is one number for the whole roster. A box score keeps every player's line and still shows the team average beside it."
+      backups:
+        - domain: "gaming"
+          mapping: "A leaderboard's top ten is a collapsed summary. A match-history screen keeps every game you played and shows your average next to each one."
+        - domain: "food"
+          mapping: "The total at the bottom of a bill is one number. An itemised receipt keeps every dish and can still print the average per person."
+    notes: >
+      [SCRIPT] Introduce the box-score comparison before the formal wording. Ask
+      the room which one a manager is asking for when they say "show me every
+      restaurant next to its borough's average." A final score cannot answer that,
+      because the individual lines are gone.
+
+
+      [SCRIPT] Give the one-sentence test they will use for the rest of the module
+      and in the project: read the business question and ask whether the answer has
+      one row per group, or one row per original record. If the words "each,"
+      "every," or "alongside" appear, the rows are probably meant to survive.
+
+
+      [SCRIPT] Name the cost of guessing wrong, since it is not obvious. Collapsing
+      first and then trying to get the detail back means joining the original table
+      in again, which is a second join and a second chance to duplicate rows - the
+      exact silent bug this module has already warned about twice.
+
+
+      [MISCONCEPTIONS] Fellows often assume a window function is an advanced or
+      fancier `GROUP BY`, so it must be the better tool. It is not better or worse.
+      It answers a differently shaped question, and using it where the answer really
+      should collapse produces a result with repeated values that somebody then has
+      to deduplicate by hand.
+
+  - type: transition
+    from_label: "Collapse or Keep"
+    to_label: "Code Along: Two Ways to Keep Every Row"
+    note: "A correlated subquery gets there honestly - it just re-asks the same question once for every single row."
+    style: "icon_hero"
+    icon: "row"
+    notes: >
+      [SCRIPT] Terminals open again. Warn the room that the first of these two
+      queries is deliberately the long way round, and that both return exactly the
+      same seven rows.
+
+  - type: code
+    title: "Right Answer, Asked **Once Per Row**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH totals AS (
+        SELECT dba, boro, COUNT(violation_id) tv
+        FROM restaurants
+        LEFT JOIN inspections USING (camis)
+        LEFT JOIN violations USING (inspection_id)
+        GROUP BY dba, boro
+      )
+      SELECT dba, boro, tv,
+        (SELECT ROUND(AVG(t2.tv), 2) FROM totals t2
+         WHERE t2.boro = totals.boro) AS b_avg
+      FROM totals ORDER BY boro, tv DESC;
+    starter_code: |
+      -- TODO: name the per-restaurant counting step totals,
+      -- TODO:   keeping boro this time
+
+
+      -- TODO: select each restaurant, its boro and its count
+
+
+      -- TODO: add a fourth column that reads totals a second
+      -- TODO:   time, filtered to this row's own boro, and
+      -- TODO:   averages it - call the column b_avg
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`b_avg` is the borough's average violation count. `t2` is a second name for the same `totals` step, which is what lets the inner query compare against the row the outer query is currently on."
+    doc_url: "https://www.postgresql.org/docs/current/sql-expressions.html"
+    skill_tags: ["sql", "correlated subquery", "explain analyze"]
+    notes: >
+      [SCRIPT] Run it and read the seven rows. Every restaurant is still listed,
+      and each one now carries its borough's average: Brooklyn 0.33, Manhattan
+      2.00, Queens 0.00. The rows survived, which is what the question asked for.
+
+
+      [SCRIPT] Now point at what makes this the correlated kind, since it is the
+      whole reason the term exists. The inner query mentions `totals.boro` - a
+      column belonging to the outer query. It cannot be run on its own; paste it
+      into `psql` by itself and it fails, because there is no outer row to point
+      at. That dependency is the definition.
+
+
+      [SCRIPT] Describe what that means in plain language rather than in
+      performance terms: this is written as "for each row, go and work out that
+      row's borough average." Conceptually it is one question asked seven times.
+
+
+      [MISCONCEPTIONS] Do not let the room conclude the database literally runs it
+      seven times. "Once per row" describes what the query *means*, not a measured
+      cost - modern planners routinely rewrite a correlated subquery into a join
+      instead. If somebody insists it must be slower, that is the perfect moment to
+      reach for the tool from the previous lesson and settle it with evidence
+      rather than opinion: put `EXPLAIN ANALYZE` in front of both versions and read
+      the two plans. Being careful about the difference between what a query means
+      and what it costs is itself the lesson.
+
+
+      [SOURCES] PostgreSQL documentation, "Value Expressions," on scalar subqueries:
+      the subquery "can refer to variables from the surrounding query, which will
+      act as constants during any one evaluation of the subquery." Note what that
+      does and does not say - it defines the per-evaluation semantics without
+      promising a fixed number of evaluations. "Correlated subquery" is standard SQL
+      terminology defined by other vendors' documentation; PostgreSQL's own docs
+      describe the behaviour without using that label.
+
+  - type: code
+    title: "One Line Replaces the **Whole Repeated Question**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH totals AS (
+        SELECT dba, boro, COUNT(violation_id) tv
+        FROM restaurants
+        LEFT JOIN inspections USING (camis)
+        LEFT JOIN violations USING (inspection_id)
+        GROUP BY dba, boro
+      )
+      SELECT dba, boro, tv,
+        ROUND(AVG(tv) OVER (PARTITION BY boro), 2) AS b_avg
+      FROM totals ORDER BY boro, tv DESC;
+    starter_code: |
+      -- TODO: reuse the same totals step as before
+
+
+      -- TODO: select each restaurant, its boro and its count
+
+
+      -- TODO: add b_avg again, this time as a window function
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`AVG` here is the same function as always. `OVER (PARTITION BY boro)` is what turns it into a window function: instead of collapsing the boroughs into three rows, it computes each borough's average and writes it beside every row in that borough."
+    doc_url: "https://www.postgresql.org/docs/current/tutorial-window.html"
+    skill_tags: ["sql", "window function"]
+    notes: >
+      [ACTIVITY] Before hitting enter, have the room predict `b_avg` for
+      Manhattan's two rows specifically - Corner Bistro has 4 violations and New
+      Spot NYC has 0. In person: call on two people, one per row. Online: both
+      answers in chat at once. The answer is 2.00 on both, and the surprise that
+      the same number repeats is the point.
+
+
+      [SCRIPT] Run it and put it next to the previous output. Identical seven rows,
+      identical numbers. The two-line correlated subquery collapsed into a single
+      expression, and the second read of `totals` disappeared entirely.
+
+
+      [SCRIPT] Say why the number repeats, because it looks like a bug the first
+      time. The average belongs to the partition, not to the row - every Manhattan
+      row shows Manhattan's average. Nothing has been duplicated; the value is just
+      shared.
+
+
+      [SCRIPT] Land the decision rule while both outputs are on screen: when the
+      answer needs every row kept *and* a group-level number sitting beside it, the
+      window function is not a fancier option, it is the one built for the shape.
+
+
+      [MISCONCEPTIONS] `PARTITION BY` reads like `GROUP BY` and does not behave like
+      it. `GROUP BY boro` would have returned three rows. `PARTITION BY boro`
+      returned all seven. Say both numbers out loud with both queries visible.
+
+
+      [SOURCES] PostgreSQL documentation, "Window Functions": "window functions do
+      not cause rows to become grouped into a single output row like non-window
+      aggregate calls would. Instead, the rows retain their separate identities."
+      This is standard SQL semantics, not a PostgreSQL-specific behaviour, so it is
+      safe to state generally.
+
+  - type: check_understanding
+    prompt: "Quick-fire: You try to keep only the rows above their borough average by adding a `WHERE` on that window value. What happens?"
+    mode: game
+    topic: "Filtering on a Window Value"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "Manhattan's two rows come back"
+      - "Nothing comes back at all"
+      - "Postgres refuses to run it"
+    answer:
+      correct: "Postgres refuses to run it"
+      explanation: "The real message is `window functions are not allowed in WHERE`. The reason is ordering: `WHERE` is applied before window functions are computed, so at the moment the filter runs the value does not exist yet. Referring to the output alias `b_avg` fails too, for the more ordinary reason that an alias is not visible in `WHERE` either. The fix is the same wrapper move used for top-N per group: put the window query in a CTE, then filter the CTE."
+      source: "Real PostgreSQL 16 output from this lesson's own database"
+    skill_tags: ["sql", "window function"]
+    notes: >
+      [ACTIVITY] Quick-fire round. In person: shout it out or hold up fingers for
+      A, B, or C. Online: everyone types a letter at once, then reveal. Then run
+      the failing query live so the actual error message lands.
+
+
+      [SCRIPT] This is the same shape of mistake as trying to filter a `COUNT` in a
+      `WHERE` clause earlier in this module, and it is worth naming the pattern
+      rather than the two instances. Anything computed later in the query's own
+      order of operations cannot be filtered earlier in it. The fix has been the
+      same both times: give the computed thing a name, then filter the named thing.
+
+
+      [SCRIPT] Point out that this is a real reason the tools combine rather than
+      compete. A window function that needs filtering *requires* a CTE or a
+      subquery around it. Choosing one tool rarely rules the others out.
+
+
+      [MISCONCEPTIONS] Option B keeps coming back because the room remembers a
+      query that ran and returned nothing. That was a comparison against an unknown
+      value. This one is different: it never runs at all, and the error names the
+      rule directly.
+
+
+      [SOURCES] PostgreSQL documentation, "Window Functions": "Window functions are
+      permitted only in the `SELECT` list and the `ORDER BY` clause of the query.
+      They are forbidden elsewhere, such as in `GROUP BY`, `HAVING` and `WHERE`
+      clauses. This is because they logically execute after the processing of those
+      clauses." The docs also give the fix directly: "If there is a need to filter
+      or group rows after the window calculations are performed, you can use a
+      sub-select." A CTE does the same job and reads better, which is exactly this
+      lesson's point.
+
+  - type: transition
+    from_label: "Three Tools That All Work"
+    to_label: "Choosing One, and Saying Why"
+    note: "Every version today returned correct rows - so correctness is not actually what the choice is about."
+    objective_index: 3
+    style: "icon_hero"
+    icon: "checklist"
+    notes: >
+      [SCRIPT] [~40 min mark] Name the shift. Up to now the instructor picked the
+      tool. For the rest of the lesson the room picks, and has to justify the pick
+      to somebody else. That is the graded skill.
+
+  - type: table
+    title: "Each Tool Answers a **Different Shape** of Question"
+    headers:
+      - "Tool"
+      - "Reach For It When"
+    rows:
+      - - "Subquery"
+        - "One value, needed once"
+      - - "CTE"
+        - "A step you name and reuse"
+      - - "Window function"
+        - "Every row stays, plus a number"
+    notes: >
+      [SCRIPT] Walk the three rows against what the room actually ran. The scalar
+      subquery in the `HAVING` was one value needed once, and it was fine there.
+      The CTE earned its place the moment the same step was needed twice and needed
+      checking. The window function was the only tool that could keep seven rows
+      and add a group number.
+
+
+      [SCRIPT] Say the honest limit of this table out loud. It is a starting point,
+      not a rule that decides every case - plenty of real questions could
+      reasonably go two ways, and an interviewer asking this is listening for
+      reasoning, not for a memorised row.
+
+
+      [MISCONCEPTIONS] Fellows read a table like this as mutually exclusive. It is
+      not. Today's own window-function query sat inside a CTE, and filtering it
+      would need a second one. The table names what each tool is *for*, not which
+      other tools it forbids.
+
+  - type: framework_columns
+    title: "Four Checks **Before You Pick a Tool**"
+    panels:
+      - marker: "01"
+        label: "Rows"
+        prompt: "Does every original row need to survive?"
+      - marker: "02"
+        label: "Reuse"
+        prompt: "Is the same result needed more than once?"
+      - marker: "03"
+        label: "Inspect"
+        prompt: "Do you need to check the middle step?"
+      - marker: "04"
+        label: "Reader"
+        prompt: "Who reads this query after you do?"
+    notes: >
+      [SCRIPT] Walk the four in order, and demonstrate them once on today's second
+      question before handing them over. Rows: yes, every restaurant had to stay,
+      so a window function is a candidate. Reuse: the totals step was needed twice,
+      so a CTE earned its place. Inspect: yes, the counting step is the part most
+      likely to be wrong. Reader: whoever picks this dashboard up next.
+
+
+      [SCRIPT] Be clear that these are not scored and do not add up to an answer.
+      They are prompts that make the reasoning sayable out loud, which is the
+      actual thing being assessed - in the project's written mapping, and in an
+      interview.
+
+
+      [SCRIPT] Say which check people skip. It is almost always the last one.
+      Rows, reuse and inspection are technical and get considered; who has to read
+      the query afterwards is the one that quietly decides whether a codebase stays
+      workable, and it is the one a working analyst is judged on.
+
+
+      [MISCONCEPTIONS] A first pass often treats check 01 as the only one that
+      matters, because it has the crispest answer. It is the strongest single
+      signal, but two of today's queries kept every row and only one of them was a
+      good idea - the other three checks are what separated them.
+
+  - type: check_understanding
+    prompt: "With your partner: Your manager wants only the three boroughs with the highest average violation count. Run the four checks out loud, then write one sentence naming your tool and why."
+    mode: whiteboard
+    topic: "Peer Check: Judging a New Scenario"
+    bloom_level: evaluate
+    question_style: business_thinking
+    skill_tags: ["sql", "relational-databases"]
+    notes: >
+      [ACTIVITY] Pairs, five minutes, on a shared board - a physical whiteboard, or
+      a Padlet or Jamboard column per pair if the cohort is remote. Each pair
+      writes exactly one sentence: the tool, and the check that decided it. Then
+      read three of them out loud and let the room push back. The sentence being
+      short is deliberate; the project asks for written justification, not an
+      essay.
+
+
+      [SCRIPT] The reasoning you are listening for: check 01 says the rows do *not*
+      need to survive - the manager wants one row per borough, not per restaurant.
+      That immediately makes a window function the wrong shape, even though the
+      words "average" and "highest" make it sound like a ranking problem. A CTE
+      that counts per restaurant, then averages per borough, then orders and limits
+      is the clean answer.
+
+
+      [SCRIPT] This is deliberately the opposite shape from the code-along, and
+      that is the trap being sprung. Expect several pairs to reach for a window
+      function out of momentum. When that happens, do not correct it directly - ask
+      them how many rows their answer returns, and let check 01 do the work.
+
+
+      [MISCONCEPTIONS] Some pairs will argue for a window function because "top
+      three" sounds like ranking. Ranking what, though? The boroughs, which do not
+      exist as rows until something collapses the restaurants first. That ordering
+      is the insight.
+
+  - type: check_understanding
+    prompt: "Interview-style: Your product manager asks why you rewrote a query that already worked. Explain the rewrite to them, not to another analyst."
+    mode: discussion
+    topic: "Explaining a Rewrite to a Manager"
+    bloom_level: analyze
+    question_style: interview
+    technique: "Teach-Back"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: sixty seconds silent, then sixty seconds in pairs with
+      one person playing the manager, then cold-call one pair to perform it.
+      Online: silent minute, then breakout pairs or chat, then unmute one pair. The
+      role-play matters - the failure mode only shows up when somebody is actually
+      listening as a non-technical person.
+
+
+      [TECHNIQUE] Use Teach-Back - Audience, Simplify, Analogy, Check. This is an
+      "explain it to a non-technical stakeholder" question wearing a SQL costume,
+      and the failure mode is answering it as though the manager were another
+      analyst. Nothing in a strong answer needs the words CTE, subquery or window
+      function at all.
+
+
+      [SCRIPT] Target shape. Audience: this person cares about whether the number
+      is trustworthy and whether the dashboard keeps working, not about syntax.
+      Simplify: the query still gives the same answer, it is just written so the
+      middle step can be checked on its own. Analogy: showing your working on a
+      calculation rather than only the final number. Check: offer a specific
+      follow-up, something like "happy to walk through the piece that changed if
+      that would help."
+
+
+      [SCRIPT] Coach one specific move: lead with the business reason, not the
+      technical one. "It gives the same answer, and now we can prove it" is a far
+      stronger opening than "it is more readable," because readability is a
+      developer value and provability is a manager's.
+
+
+      [MISCONCEPTIONS] The most common weak answer defines a CTE. That is answering
+      a different question - the manager did not ask what a CTE is, they asked why
+      time was spent on something that already worked.
+
+
+      [SOURCES] Be precise about what is verified here, because the honesty matters
+      more than the pitch. The *archetype* - "tell me about a time you explained a
+      complex analysis or a technical trade-off to a non-technical stakeholder" - is
+      one of the two best-attested behavioural questions in data-analyst interview
+      banks (loopcv's data-analyst behavioural guide names it as one of the two most
+      common; Dataquest covers the same competency in its presenting-to-leadership
+      and explaining-p-values questions). The specific query-rewrite scenario above
+      is a realistic instance built for today's content, not a quoted question. Say
+      it that way to the room: expect the question type, not this exact wording.
+
+  - type: interview_prep
+    topics:
+      - question: "What's the difference between a CTE and a subquery, and when would you use each?"
+        short_answer: "Both hold an intermediate result, so a read-only query returns the same rows either way - the difference is a CTE is named and can be reused and inspected, while a subquery is anonymous. That matters because the next person maintaining it has to check the middle step, not the final number. I once rewrote a query that repeated the same count twice, naming it once so it could run on its own. So: a subquery for one value needed once, a CTE once a step is reused or inspected."
+        technique: "PREP"
+        icon: "shuffle"
+    notes: >
+      [TECHNIQUE] Use PREP - Point, Reason, Example, Point. This is a definitional
+      question and the failure mode is reciting every fact a candidate knows about
+      both. State the difference in one sentence, say why it matters, ground it in
+      something actually built, then close on a decision rule an interviewer can
+      act on.
+
+
+      [SCRIPT] Have one Fellow attempt it cold. Listen for whether the Example step
+      is real. Everyone in the room genuinely has one after today, and using it is
+      what separates this from a memorised definition.
+
+
+      [SCRIPT] Name what the question is really testing, because it is not
+      vocabulary. Dataquest's own commentary on this exact question says
+      interviewers want to see code other people can understand, not just code that
+      works - so an answer that never mentions the next reader has missed the
+      point, however technically correct it is.
+
+
+      [MISCONCEPTIONS] Fellows sometimes answer with a performance claim - "CTEs
+      are slower" or "subqueries are faster." Coach them off it. If performance
+      genuinely comes up, the strong move is to name the engine and the version,
+      and to say you would check the plan rather than assert a rule.
+
+
+      [SOURCES] Verified as genuinely and commonly asked of data analysts
+      specifically: it is question 6 in Dataquest's "40+ Data Analyst Interview
+      Questions and Answers," appears verbatim as "When should one use a CTE over a
+      subquery?" in StrataScratch's SQL interview guide, and DataLemur maintains a
+      whole tutorial page plus a tagged practice bank on the comparison. Unlike the
+      view-versus-materialized-view question from the previous lesson, this one is
+      squarely analyst-facing, not analytics-engineer-leaning.
+
+  - type: table
+    title: "Key Terms - Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "Scalar subquery"
+        - "A query returning one single value"
+      - - "Derived table"
+        - "A named query inside `FROM`"
+      - - "Correlated subquery"
+        - "Inner query using an outer column"
+    notes: >
+      [SCRIPT] Quick pass through all three. Spend the extra beat on correlated,
+      since it is the one that names a real dependency rather than a shape - and it
+      is the one most likely to come up by name in an interview.
+
+
+      [SCRIPT] Ask the room which of the three appeared in today's very first
+      query. Two of them did. That callback is worth making explicit, because it
+      shows the vocabulary is describing things they were already writing.
+
+  - type: bridge
+    title: "So far, we've covered..."
+    card_items:
+      - text: "Same rows, different maintenance"
+        icon: "shuffle"
+      - text: "Collapse or keep every row"
+        icon: "row"
+      - text: "Four checks, then justify it"
+        icon: "checklist"
+      - text: "Say which database you mean"
+        icon: "database"
+    video_resource:
+      title: "Subquery vs CTE vs View vs Temp Table"
+      url: "https://www.youtube.com/watch?v=6RU6T8HKgYA"
+      approx_duration: "~10 min"
+      note: "Five ways to hold an intermediate result, compared side by side"
+    notes: >
+      [SCRIPT] Close on the through-line: all three tools were correct today.
+      Nothing was chosen because the others were broken. That is what makes this a
+      judgment lesson rather than a syntax lesson, and it is why the deliverable is
+      a written sentence rather than a query.
+
+
+      [SCRIPT] Name the project tie directly. The project's questions each demand a
+      specific technique, and the written mapping asks for each question to be
+      walked against the schema *before* any `CREATE TABLE`. Today's four checks
+      are exactly the routine to run while writing that document.
+
+
+      [SCRIPT] The last card needs a real explanation rather than a throwaway.
+      Several claims about these tools are true of one database and not another -
+      whether a CTE is folded into the surrounding query is the clearest example.
+      Naming the engine you mean is what separates a confident answer from an
+      overreaching one, in a code review and in an interview.
+
+
+      [MISCONCEPTIONS] Some will leave with "CTEs are the right answer" as the
+      takeaway, because the CTE won two comparisons out of three today. Say
+      plainly that it lost one - a scalar subquery used exactly once needs no
+      wrapper - and that the checks, not the winner, are what transfers.
+
+
+      [SCRIPT] The video is optional enrichment, not required viewing, and it needs
+      an honest caveat if you point at it. It compares five ways of holding an
+      intermediate result, which is genuinely today's shape of question - but it
+      stops short of window functions, and being engine-agnostic it says nothing
+      about the version-scoped inlining rule. Useful for the subquery-versus-CTE
+      half only.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "Today's practice lands in the project"
+      - "Next class: An independent schema critique lab"
+      - "Keep your database running"
+    exercise:
+      type: lab_plan
+      url_or_text: "modules/module-3-sql-relational-databases/labs/independent-schema-critique-role-setup.md"
+    notes: >
+      [SCRIPT] Say the topic shift out loud rather than letting it be a
+      surprise: next class's lab is a schema critique and read-only role
+      setup, not another round of subquery-versus-CTE-versus-window-function.
+      It circles back to this module's own earliest normalization and
+      `psql` skills at full independence, which is deliberate spacing, not
+      a detour.
+
+
+      [SCRIPT] Today's own practice isn't skipped, it's just not a separate
+      assignment - the four-check routine is exactly what the project's
+      written business-question mapping asks for, so that mapping document is
+      where today's skill actually gets exercised.
+
+  - type: further_resources
+    resources:
+      - title: "WITH Queries (Common Table Expressions)"
+        url: "https://www.postgresql.org/docs/current/queries-with.html"
+        kind: documentation
+        time_estimate: "~10 min read"
+        description: "The real rules on CTE inlining and `MATERIALIZED`"
+        attribution: "PostgreSQL"
+      - title: "CTE vs. Subquery"
+        url: "https://datalemur.com/sql-tutorial/sql-cte-subquery"
+        kind: reading
+        time_estimate: "~7 min read"
+        description: "Decision guidance plus a worked ranking example"
+        attribution: "DataLemur"
+      - title: "PostgreSQL Exercises: Aggregates"
+        url: "https://pgexercises.com/questions/aggregates/"
+        kind: practice
+        time_estimate: "~25 min hands-on"
+        description: "Browser-run drills mixing grouping and window functions"
+        attribution: "Alisdair Owens, pgexercises.com"
+    notes: >
+      [SCRIPT] All three are free and none needs an account. Point at the
+      PostgreSQL page for anybody who wants the primary source behind today's
+      version-scoped claim about CTEs, rather than taking it on trust from a slide.
+
+
+      [SCRIPT] The practice site is the strongest pick for anyone who wants reps
+      before the project. It runs real PostgreSQL in the browser, so the syntax
+      matches what has been typed all module. Point specifically at its
+      rolling-average and ranking questions, and at the one that deliberately asks
+      for a second solution to a question already solved another way - that is
+      exactly today's exercise shape, set by somebody else.
+
+
+      [SCRIPT] The DataLemur article is written for interview prep specifically, so
+      it pairs directly with today's interview-prep slide rather than repeating the
+      lecture.

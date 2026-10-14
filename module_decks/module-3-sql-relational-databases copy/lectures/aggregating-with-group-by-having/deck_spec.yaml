@@ -1,0 +1,500 @@
+meta:
+  title: "Aggregating with GROUP BY + HAVING"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 4
+  date: "Day 4"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Use GROUP BY to aggregate rows per real-world entity, instead of miscounting a joined result's raw rows"
+    - "Use HAVING to filter on an aggregated value, and explain why WHERE can't do the same thing"
+  tools:
+    - "PostgreSQL / psql"
+  exercise:
+    type: bullets
+    url_or_text: "No new exercise today — the project's own third given business question, for every domain, is exactly a GROUP BY + HAVING query."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Yesterday: INNER JOIN and LEFT JOIN, and why they can return different row counts"
+    - "Earlier this module: Creating tables, constraints, SELECT/WHERE/ORDER BY"
+  interview_topics:
+    - "What's the actual difference between WHERE and HAVING?"
+  final_project:
+    "Every domain's third given business question is a GROUP BY + HAVING
+    query — today's exact two-step pattern, on a schema you'll design
+    yourself. The overcounting trap this lesson opens with is also a
+    named risk in the rubric: a join that silently inflates a count is
+    graded as a real sql-skill failure, not a style nitpick."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: guided
+  scenario: >
+    Real syntax, day three: The same `nyc_restaurants` database, one more
+    real inspection added. You'll hit a genuine counting trap first — a
+    join can make one restaurant look like three — then fix it for real
+    with GROUP BY, and learn why HAVING exists at all.
+  glossary:
+    - term: "GROUP BY"
+      definition: "Collapses rows into one row per group, so an aggregate function can run per group"
+    - term: "aggregate function"
+      definition: "A function like COUNT, AVG, or SUM that computes one value from many rows"
+    - term: "HAVING"
+      definition: "Filters groups after aggregation — the WHERE clause for an aggregated value"
+
+slides:
+  - type: title
+    title: "Aggregating"
+    subtitle: "GROUP BY + HAVING"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 4"
+    notes: >
+      [SCRIPT] Frame this as the fix for a real problem the class is
+      about to hit on purpose — not an abstract new topic.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Aggregate rows correctly with GROUP BY"
+        icon: "join"
+      - text: "Filter an aggregate with HAVING"
+        icon: "checklist"
+    notes: >
+      [SCRIPT] Read both out loud. Name explicitly: this is the project's
+      own Q3, for every single domain, no exceptions.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "GROUP BY, aggregate function"
+        icon: "join"
+      - text: "HAVING"
+        icon: "filter"
+    notes: >
+      [SCRIPT] Just names for now — a real counting mistake, and its real
+      fix, are both coming up in a few minutes.
+
+  - type: transition
+    from_label: "Yesterday's Two Join Types"
+    to_label: "One Quick Check"
+    note: "A fast recall check before today's rows get grouped instead of just joined."
+    objective_index: 1
+    notes: >
+      [SCRIPT] [~1 min mark] Keep this brisk.
+
+  - type: check_understanding
+    prompt: "Quick recall: Why did yesterday's LEFT JOIN return 6 rows when INNER JOIN only returned 3?"
+    mode: discussion
+    topic: "Warm-Up: Why LEFT JOIN Returned More Rows"
+    bloom_level: remember
+    question_style: conceptual
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: a couple of quick shout-outs. Online: drop
+      one sentence in chat.
+
+
+      [SCRIPT] Target idea: LEFT JOIN kept every restaurant, even the 3
+      with zero inspections, filling in NULL where INNER JOIN would have
+      dropped them entirely. That exact behavior is what causes today's
+      whole problem.
+
+  - type: transition
+    from_label: "Still Solid"
+    to_label: "Code Along: One More Real Inspection"
+    note: "Picking up the same database, with one more real inspection added on purpose."
+    style: "icon_hero"
+    icon: "join"
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "Reconnecting, Then Adding One More Inspection"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      \c nyc_restaurants
+      INSERT INTO inspections (inspection_id, camis, inspection_date, critical_flag)
+      VALUES (4, 1001, '2026-02-10', 'Not Critical');
+    starter_code: |
+      -- TODO: reconnect (you know this one by now)
+
+
+      -- TODO: insert inspection_id 4, camis 1001, date '2026-02-10',
+      -- critical_flag 'Not Critical'
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Corner Bistro (camis 1001) now has 3 real inspections total — this is on purpose, for what's coming next."
+    notes: >
+      [SCRIPT] Run it and confirm `INSERT 0 1`. Don't explain why yet —
+      let the next slide's real number surprise the room first.
+
+  - type: transition
+    from_label: "One More Row Added"
+    to_label: "Code Along: How Many Restaurants Is That, Really?"
+    note: "A naive count, on the exact join from yesterday."
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "How Many Restaurants Is That, Really?"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT COUNT(*)
+      FROM restaurants r
+      LEFT JOIN inspections i ON r.camis = i.camis;
+    starter_code: |
+      -- TODO: COUNT(*) over the same LEFT JOIN from yesterday
+    code_along: true
+    domain: "public_sector"
+    domain_note: "There are only 5 real restaurants in this table — watch what this actually returns."
+    notes: >
+      [SCRIPT] Run it and let `7` print before saying anything. There are
+      5 real restaurants. This number is wrong, and the room should
+      genuinely notice that before you explain why.
+
+  - type: check_understanding
+    prompt: "Discuss it: There are 5 real restaurants, but this query says 7. What actually happened?"
+    mode: discussion
+    topic: "The Overcounting Trap"
+    bloom_level: analyze
+    question_style: critical_thinking
+    skill_tags: ["sql", "relational-databases"]
+    notes: >
+      [ACTIVITY] In person: turn and talk, 60 seconds. Online: drop a
+      guess in chat, then unmute 1-2 Fellows.
+
+
+      [SCRIPT] Target idea: Corner Bistro's row got repeated once per
+      inspection — 3 real inspections means 3 copies of the same
+      restaurant in the joined result. `COUNT(*)` counted rows, not
+      restaurants, and a one-to-many join makes those two things
+      genuinely different.
+
+  - type: content
+    title: "COUNT(*) Counts Rows, Not Real-World Things"
+    bullets:
+      - "COUNT is an aggregate function"
+      - "A one-to-many JOIN repeats Corner Bistro 3x"
+      - "COUNT(*) never knows the difference"
+    icon_hero:
+      icon: "warning"
+      style: "red"
+    analogy:
+      domain: "raffles & contests"
+      mapping: "It's like counting raffle ticket stubs instead of counting people — one person holding 3 tickets shows up 3 times in the stub pile, even though only one real person is in the room."
+      backups:
+        - domain: "food & delivery"
+          mapping: "Like counting delivery-app order confirmations instead of counting customers — one loyal customer who ordered 3 times shows up 3 times in the order log, not once."
+    notes: >
+      [SCRIPT] Name explicitly: this is the exact class of mistake the
+      project's own rubric grades as a real `sql`-skill failure, not a
+      style nitpick — a join that inflates a count silently, with no
+      error anywhere.
+
+
+      [MISCONCEPTIONS] Fellows often assume a JOIN "duplicates data" as a
+      bug. It doesn't — every one of those 3 rows is a real, correct
+      inspection record. The mistake isn't the join, it's counting its
+      raw rows as if they were counting restaurants.
+
+  - type: transition
+    from_label: "The Real Problem, Named"
+    to_label: "Code Along: GROUP BY, Fixing the Count"
+    note: "Collapsing rows back to one per restaurant, before counting."
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "GROUP BY: One Row Per Restaurant, For Real"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT r.dba, COUNT(i.inspection_id) AS num_inspections
+      FROM restaurants r
+      LEFT JOIN inspections i ON r.camis = i.camis
+      GROUP BY r.dba;
+    starter_code: |
+      -- TODO: select dba, and COUNT(i.inspection_id) as num_inspections
+      -- TODO: LEFT JOIN restaurants (as r) and inspections (as i)
+      -- TODO: GROUP BY r.dba
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`COUNT(i.inspection_id)` counts real inspection rows only — a restaurant with zero matches correctly shows `0`, not `NULL`."
+    notes: >
+      [SCRIPT] Run it: 5 rows, one per restaurant. Corner Bistro shows
+      `3`, Green Leaf Cafe shows `1`, the other 3 show `0`. The row count
+      that was wrong a minute ago is now genuinely correct.
+
+  - type: check_understanding
+    prompt: "Predict it: After GROUP BY, what does Corner Bistro's `num_inspections` column actually show?"
+    mode: poll
+    topic: "Predicting a GROUP BY Result"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "3"
+      - "1"
+      - "7"
+    answer:
+      correct: "3"
+      explanation: "Corner Bistro has exactly 3 real inspection rows (2 from earlier, 1 just added) — GROUP BY collapses them into one row, and COUNT(i.inspection_id) correctly counts all 3."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] Confirm out loud: this is the exact number `COUNT(*)`
+      couldn't give you correctly a few minutes ago.
+
+  - type: transition
+    from_label: "Correctly Counted"
+    to_label: "Now, Filtering the Aggregate"
+    note: "Which restaurants actually have 2 or more inspections?"
+    objective_index: 2
+    style: "panel_preview"
+    preview_items:
+      - text: "WHERE Can't See COUNT()"
+        icon: "warning"
+      - text: "HAVING Filters After"
+        icon: "filter"
+    notes: >
+      [SCRIPT] [~20 min mark] Name explicitly: the next question is a
+      real business question — "which restaurants have a real inspection
+      history" — and it needs a tool WHERE genuinely cannot provide.
+
+  - type: workflow_linear
+    title: "WHERE Runs Before Grouping, HAVING Runs After"
+    steps:
+      - label: "Rows"
+        detail: "Raw, Ungrouped"
+        icon: "table"
+      - label: "WHERE"
+        detail: "Filters Rows First"
+        icon: "warning"
+      - label: "GROUP BY"
+        detail: "Collapses Into Groups"
+        icon: "join"
+      - label: "HAVING"
+        detail: "Filters Groups Last"
+        icon: "filter"
+    analogy:
+      domain: "cooking"
+      mapping: "WHERE is picking which ingredients go in the pot before you cook. HAVING is tasting the finished dish and deciding if it's ready to serve — you can't taste a dish that hasn't been cooked yet."
+      backups:
+        - domain: "sports"
+          mapping: "WHERE is deciding who's even eligible to play before the season starts. HAVING is looking at final season stats and deciding who made the all-star team — you can't check a stat that doesn't exist until the season's been played."
+    notes: >
+      [SCRIPT] Walk the pipeline left to right: rows enter, WHERE filters
+      first, GROUP BY collapses what's left, HAVING filters last.
+      `COUNT(...)` doesn't exist yet at the point WHERE runs. There's
+      nothing for it to check.
+
+
+      [MISCONCEPTIONS] Believing WHERE can filter on an aggregated value
+      like `COUNT(*)` — that's exactly what HAVING is for, and it's about
+      to raise a real error to prove the point.
+
+
+      [SOURCES] PostgreSQL's own documented query-execution order (FROM/
+      JOIN → WHERE → GROUP BY → HAVING → SELECT → ORDER BY) — see the
+      official tutorial linked in this lesson's further_resources.
+
+  - type: transition
+    from_label: "The Real Order"
+    to_label: "Code Along: Breaking It on Purpose"
+    note: "Watching WHERE fail on an aggregate, for real."
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "WHERE Can't Filter an Aggregate — Watch It Fail"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT r.dba, COUNT(i.inspection_id) AS num_inspections
+      FROM restaurants r
+      LEFT JOIN inspections i ON r.camis = i.camis
+      WHERE COUNT(i.inspection_id) >= 2
+      GROUP BY r.dba;
+    expected_error: "GroupingError"
+    code_along: false
+    domain: "public_sector"
+    domain_note: "This is deliberately broken — `WHERE` can never reference an aggregate function, in any real SQL database."
+    notes: >
+      [SCRIPT] Run it and let the real error print in full:
+      `aggregate functions are not allowed in WHERE`. Name explicitly:
+      this isn't a typo-shaped error — it's PostgreSQL confirming WHERE
+      genuinely cannot do this, ever.
+
+  - type: transition
+    from_label: "The Error, Confirmed"
+    to_label: "Code Along: Fixing It With HAVING"
+    note: "The exact same condition, moved to the one clause that's allowed to use it."
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "HAVING: The Same Filter, In the Right Place"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT r.dba, COUNT(i.inspection_id) AS num_inspections
+      FROM restaurants r
+      LEFT JOIN inspections i ON r.camis = i.camis
+      GROUP BY r.dba
+      HAVING COUNT(i.inspection_id) >= 2;
+    starter_code: |
+      -- TODO: same SELECT/JOIN/GROUP BY as before
+      -- TODO: add HAVING COUNT(i.inspection_id) >= 2
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Only `HAVING` moved — same columns, same GROUP BY, one clause relocated to after aggregation."
+    notes: >
+      [SCRIPT] Run it: exactly one row, Corner Bistro, `3`. Name
+      explicitly: same condition as the broken query, just in the one
+      clause that's actually allowed to see an aggregate.
+
+  - type: check_understanding
+    prompt: "Predict it: How many rows does this HAVING query actually return?"
+    mode: poll
+    topic: "Predicting a HAVING Result"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "1"
+      - "5"
+      - "0"
+    answer:
+      correct: "1"
+      explanation: "Only Corner Bistro has `num_inspections >= 2` (it has 3) — Green Leaf Cafe has only 1, and the other 3 restaurants have 0, so HAVING filters all 4 of them out."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] This is the whole lesson's payoff moment: the exact filter
+      that raised a real error under WHERE now runs cleanly under HAVING.
+
+  - type: compare_contrast
+    title: "Same Condition, One Clause Apart"
+    left_label: "WHERE"
+    left_icon: "warning"
+    left_points:
+      - "Filters rows, before grouping"
+      - "Never sees an aggregate"
+      - "A real error on COUNT"
+    right_label: "HAVING"
+    right_icon: "filter"
+    right_points:
+      - "Filters groups, after aggregating"
+      - "Built to see an aggregate"
+      - "Runs clean on COUNT"
+    similarities:
+      - "Both narrow down which rows survive"
+    notes: >
+      [SCRIPT] Name the real takeaway: WHERE and HAVING aren't
+      interchangeable "filter" keywords — they run at genuinely different
+      points in the query, and that order is the whole reason both exist.
+
+  - type: check_understanding
+    prompt: "A stakeholder asks for \"a query with GROUP BY and HAVING\" on this data. How would you respond in an interview setting?"
+    mode: discussion
+    topic: "Is HAVING Always Required?"
+    bloom_level: evaluate
+    question_style: interview
+    technique: "QAR"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: turn and talk, 60 seconds. Online: drop a
+      take in chat.
+
+
+      [TECHNIQUE] Use QAR — the request as stated is genuinely
+      underspecified (it names two clauses, not a real business
+      question), the same shape as any vague "just add X" ask.
+
+
+      [SCRIPT] Target idea: HAVING is only needed when the business
+      question itself involves a threshold on the aggregate ("at least
+      2," "average above X"). A query that just reports every group's
+      count, with no filter on that count, is a completely valid
+      GROUP BY with no HAVING at all — the two aren't a required pair,
+      HAVING is opt-in based on what's actually being asked.
+
+  - type: interview_prep
+    topics:
+      - question: "What's the actual difference between WHERE and HAVING?"
+        short_answer: "Audience: A junior analyst who's only used WHERE. Simplify: WHERE filters rows before grouping; HAVING filters whole groups after aggregation. Analogy: WHERE is picking ingredients before cooking; HAVING is judging the finished dish — you can't judge a dish that isn't cooked yet. Check: Could WHERE filter on COUNT(*) directly? No — COUNT(*) doesn't exist until grouping happens, which is exactly why HAVING exists."
+        technique: "Teach-Back"
+        icon: "filter"
+    notes: >
+      [TECHNIQUE] Use Teach-Back — "what's the difference between X and
+      Y" is a classic explain-it-simply interview question, not a story
+      or an ambiguous ask.
+
+
+      [SCRIPT] Have a Fellow attempt this cold first — the goal is a
+      genuinely simple explanation, not a repeat of the formal definition.
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "GROUP BY"
+        - "One row per group, for aggregating"
+      - - "Aggregate function"
+        - "One value computed from many rows"
+      - - "HAVING"
+        - "Filters groups, after aggregation"
+    notes: >
+      [SCRIPT] Quick round-trip through all three terms — this is exactly
+      the vocabulary the project's own Q3 expects you to use correctly,
+      for whichever domain you choose.
+
+  - type: bridge
+    title: "So Far, We've Covered..."
+    bullets:
+      - "COUNT(*) on a join can overcount"
+      - "GROUP BY fixes it, for real"
+      - "HAVING filters what WHERE can't"
+    notes: >
+      [SCRIPT] Close by naming the shift ahead: next class adds CTEs on
+      top of exactly this GROUP BY pattern. And name the project tie
+      explicitly: every domain's Q3 is today's own two-step pattern, on a
+      schema you'll design yourself.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "No new exercise today"
+      - "Next class: CTEs, syntax and use"
+      - "Keep your database running"
+    notes: >
+      [SCRIPT] Give a specific heads-up: next class's CTE demo restructures
+      exactly today's own GROUP BY query — don't drop `nyc_restaurants`.
+      Name the project tie once more before dismissing: every domain's own
+      Q3 is exactly today's GROUP BY + HAVING pattern, on your own schema.
+
+  - type: further_resources
+    resources:
+      - title: "PostgreSQL Tutorial: Aggregate Functions"
+        url: "https://www.postgresql.org/docs/current/tutorial-agg.html"
+        kind: documentation
+        time_estimate: "~8 min read"
+        description: "The official reference on GROUP BY and HAVING"
+        attribution: "PostgreSQL Global Development Group"
+      - title: "SQL HAVING Clause Explained"
+        url: "https://www.w3schools.com/sql/sql_having.asp"
+        kind: reading
+        time_estimate: "~6 min read"
+        description: "Short, example-driven WHERE-vs-HAVING breakdown"
+        attribution: "W3Schools"
+      - title: "SQLBolt"
+        url: "https://sqlbolt.com/"
+        kind: practice
+        time_estimate: "~15 min hands-on"
+        description: "The same free interactive lessons from earlier"
+        attribution: "SQLBolt"
+    notes: >
+      [SCRIPT] Point out the W3Schools link specifically — its side-by-
+      side WHERE/HAVING examples are a fast way to cement today's exact
+      distinction before next class adds CTEs on top.

@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Two Questions, Two Tests — Running a t-test and a Chi-Square Test in Python</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:860px;height:auto;margin:1.1rem 0;display:block}
+.bt-wrap{overflow-x:auto;margin:1rem 0}
+.bt-table{border-collapse:collapse;min-width:300px;font-family:var(--mlrk-font-code);font-size:.95rem}
+.bt-table caption{caption-side:top;text-align:left;font-family:var(--mlrk-font-body);font-weight:700;
+  margin-bottom:.4rem;color:var(--mlrk-ink-900)}
+.bt-table th,.bt-table td{border:1px solid var(--mlrk-divider-on-light);padding:.45rem .8rem;text-align:left}
+.bt-table th{background:var(--mlrk-bg-light-alt);font-weight:700}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:13rem}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Two Questions, Two Tests</h1>
+<p class="mlrk-lead">A small bakery chain hung a new menu board in half its shops for one month and kept the old board in the other half. The owner comes back with two questions about the same pile of receipts: did people spend more, and did people order different things? Those are two different questions about two different kinds of data, and they need two different statistical tests.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~43–48 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No Python setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Hypothesis Testing</strong> — Stating a null and alternative hypothesis for a real question, running the right test for the data you have, and reading a p-value and confidence interval honestly.</p>
+    <p><strong>Statistical Analysis</strong> — Interpreting summary statistics like mean, median, and standard deviation against what they actually mean for a real business or real-world question.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Introduction</h2>
+<p>Rise &amp; Shine Bakehouse is a small chain of six neighborhood bakeries. A menu board is the big sign hanging above the counter that lists everything for sale. For one month, three of the shops kept the old board, which we'll call <strong>Layout A</strong>. The other three hung a new board, <strong>Layout B</strong>, which groups items by meal instead of by price.</p>
+<p>At the end of the month the owner has 985 receipts and two questions:</p>
+<ol class="mlrk-steplist">
+  <li>Did people spend more per order under the new board?</li>
+  <li>Did people order <em>different things</em> under the new board?</li>
+</ol>
+<p>Those look like one question asked twice. They are not. "How much did someone spend" is a number. "What did someone order" is a label: pastry, sandwich, or drink only. A number and a label are two different kinds of data, and the kind of data you have decides which test you are allowed to run.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 860 400" role="img" aria-labelledby="introTitle introDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="introTitle">One month of bakery receipts leading to two different questions</title>
+  <desc id="introDesc">Two menu-board panels sit at the top. Layout A, the current board, covers 480 orders with an average order of $9.42. Layout B, the new board, covers 505 orders with an average order of $10.01. Lines from both panels meet at a single band labeled one month of receipts. Two lines then split out of that band into two boxes. The left box asks whether the average order total differed, which is a number and calls for a t-test. The right box asks whether the mix of what was ordered differed, which is a category and calls for a chi-square test.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="430" y="30" text-anchor="middle" font-weight="700" font-size="20" fill="#261F1D">One month. Two boards. Two different questions.</text>
+
+    <rect x="60" y="50" width="300" height="36" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="210" y="75" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">Layout A (current board)</text>
+    <rect x="60" y="86" width="300" height="74" fill="#FFFCF7" stroke="#264326" stroke-width="2"/>
+    <text x="210" y="114" text-anchor="middle" font-size="18" fill="#261F1D">480 orders</text>
+    <text x="210" y="143" text-anchor="middle" font-size="18" fill="#261F1D">average order: $9.42</text>
+
+    <rect x="500" y="50" width="300" height="36" rx="8" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="650" y="75" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">Layout B (new board)</text>
+    <rect x="500" y="86" width="300" height="74" fill="#FFFCF7" stroke="#2274B5" stroke-width="2"/>
+    <text x="650" y="114" text-anchor="middle" font-size="18" fill="#261F1D">505 orders</text>
+    <text x="650" y="143" text-anchor="middle" font-size="18" fill="#261F1D">average order: $10.01</text>
+
+    <line x1="210" y1="160" x2="330" y2="185" stroke="#264326" stroke-width="2.5"/>
+    <line x1="650" y1="160" x2="530" y2="185" stroke="#2274B5" stroke-width="2.5"/>
+
+    <rect x="280" y="185" width="300" height="40" rx="20" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="430" y="212" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">one month of receipts</text>
+
+    <line x1="430" y1="225" x2="228" y2="249" stroke="#83671C" stroke-width="2.5"/>
+    <polygon points="223,250 238,244 239,254" fill="#83671C"/>
+    <line x1="430" y1="225" x2="632" y2="249" stroke="#2274B5" stroke-width="2.5"/>
+    <polygon points="637,250 622,244 621,254" fill="#2274B5"/>
+
+    <rect x="30" y="250" width="380" height="118" rx="12" fill="#FFEECA" stroke="#83671C" stroke-width="2.5"/>
+    <text x="220" y="283" text-anchor="middle" font-weight="700" font-size="19" fill="#261F1D">Question 1</text>
+    <text x="220" y="312" text-anchor="middle" font-size="17" fill="#261F1D">Did the average order total differ?</text>
+    <text x="220" y="342" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">It is a number, so: a t-test</text>
+
+    <rect x="450" y="250" width="380" height="118" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="640" y="283" text-anchor="middle" font-weight="700" font-size="19" fill="#261F1D">Question 2</text>
+    <text x="640" y="312" text-anchor="middle" font-size="17" fill="#261F1D">Did the mix of what was ordered differ?</text>
+    <text x="640" y="342" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">It is a category, so: chi-square</text>
+  </g>
+</svg>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> picking a test is not a formality you get graded on in a stats class. It is the step that decides whether the owner reprints six menu boards or leaves them alone. Run the wrong test and Python still hands you a p-value that looks completely normal. Nothing turns red. Nobody gets an error message. You just quietly report a conclusion the data never supported, and the chain spends real money on it. This is also the single most common statistics question in a data analyst interview: "how do you decide between a t-test and a chi-square test?"</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know what a null hypothesis claims, what a p-value measures, and what a confidence interval describes. This reading is about turning that vocabulary into three lines of real Python, on real data, and then reading what comes back without overselling it. Once running the test feels routine, the harder question waiting on the other side is how <em>big</em> a real difference has to be before anyone should act on it.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before running a test</h2>
+<p class="mlrk-small">Three things get reused constantly below: what a null hypothesis claims, how to read a large p-value honestly, and how to pull one group's rows out of a table of data in Python. Check each one before moving on.</p>
+
+<div class="mlrk-card" id="card-null"><p><strong>What does a null hypothesis claim?</strong></p>
+<button type="button" class="mlrk-choice" data-a="nodiff">That there is no real difference, and anything you see in the sample is just ordinary random variation.</button>
+<button type="button" class="mlrk-choice" data-a="bigdiff">That there is a large, important difference between the two groups.</button>
+<button type="button" class="mlrk-choice" data-a="proven">That your result has already been proven correct by previous research.</button>
+<div id="nullfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-pval" style="margin-top:.8rem"><p><strong>Scenario check:</strong> you run a test and get a p-value of 0.30. What is the honest conclusion?</p>
+<button type="button" class="mlrk-choice" data-a="noevidence">This data does not give strong evidence of a difference. That is not the same as showing there is no difference.</button>
+<button type="button" class="mlrk-choice" data-a="proved">The two groups have been proven identical.</button>
+<button type="button" class="mlrk-choice" data-a="broken">Something went wrong and the test needs to be run again.</button>
+<div id="pvalfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-filter" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>orders</code> is a table of data in Python with a column called <code>layout</code> holding the values <code>"A"</code> and <code>"B"</code>. What does <code>orders[orders["layout"] == "A"]</code> give you?</p>
+<button type="button" class="mlrk-choice" data-a="rowsA">Only the rows where the layout column equals "A".</button>
+<button type="button" class="mlrk-choice" data-a="count">A count of how many rows have layout "A".</button>
+<button type="button" class="mlrk-choice" data-a="column">The layout column by itself, with every row included.</button>
+<div id="filterfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">None of that changes below. A statistical test does not replace the null hypothesis, the p-value, or ordinary filtering. It just computes the numbers for you instead of making you do the arithmetic by hand.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Concept overview: one month of receipts, two kinds of data</h2>
+<p>Every receipt in the bakery's file carries the same handful of facts: which layout that shop had, what the order total was in dollars, and what kind of order it was. Here are the first few rows:</p>
+
+<div class="bt-wrap"><table class="bt-table"><caption>orders (first 4 of 985 rows)</caption>
+<tr><th>layout</th><th>order_total</th><th>order_type</th></tr>
+<tr><td>A</td><td>6.25</td><td>pastry</td></tr>
+<tr><td>A</td><td>12.80</td><td>sandwich</td></tr>
+<tr><td>B</td><td>3.50</td><td>drink-only</td></tr>
+<tr><td>B</td><td>11.40</td><td>sandwich</td></tr>
+</table></div>
+
+<p>Look at the two columns on the right. <code>order_total</code> holds dollar amounts. An amount can sit anywhere on a scale: $3.50, $6.25, $12.80, or anything between. A column like that holds a <strong>continuous variable</strong>, a measurement on a scale where the values are real numbers you can average.</p>
+<p><code>order_type</code> is different. Its values are names: pastry, sandwich, drink-only. You cannot average them. There is no such thing as the mean of "pastry." A column like that holds a <strong>categorical variable</strong>, a variable whose values are labels or groups rather than numbers on a scale.</p>
+<p>That one distinction decides everything that follows.</p>
+<ol class="mlrk-steplist">
+  <li>To compare an <strong>average number</strong> between two groups, you run a <strong>t-test</strong>. Here: is the average <code>order_total</code> different for Layout A than for Layout B?</li>
+  <li>To check whether two <strong>categories</strong> are related to each other, you run a <strong>chi-square test</strong>. Here: is <code>order_type</code> related to <code>layout</code>, or do the two layouts produce the same mix of orders?</li>
+</ol>
+<p>Both tests live in the same place: <strong>SciPy</strong>, a free Python library of scientific and statistical tools, and specifically its <code>scipy.stats</code> section. Both also need the data loaded first, which is <strong>pandas</strong>, the Python library for working with tables of data. Loading the file looks the same either way:</p>
+
+<pre class="mlrk-code">import pandas as pd
+from scipy import stats
+
+orders = pd.read_csv("bakehouse_orders.csv")
+print(orders.shape)</pre>
+<pre class="mlrk-code">(985, 3)</pre>
+<p><code>orders.shape</code> reports 985 rows and 3 columns, which matches the 985 receipts the owner handed over. That is worth checking every single time, before any test runs. A test cannot tell you that half your data failed to load.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Technical vocabulary</h2>
+<p>Flip each card before the practice sections below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>continuous variable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Continuous variable</strong><br>A measurement on a scale, where the values are real numbers you can add up and average. Order total in dollars, minutes waited, grams of flour.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>categorical variable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Categorical variable</strong><br>A variable whose values are names or labels instead of numbers on a scale. Order type, payment method, which board a shop hung.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>t-test</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>t-test</strong><br>A test that compares the average of a continuous variable between two groups, and reports how likely a gap that size would be if the two groups really had the same average.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>chi-square test</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Chi-square test</strong><br>A test that checks whether two categorical variables are related, by comparing the counts you actually observed against the counts you would expect if the two were unrelated.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>contingency table</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Contingency table</strong><br>A small table of counts: how many records fall into each combination of two categories. One category across the rows, the other across the columns.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>degrees of freedom</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Degrees of freedom</strong><br>Roughly, how many counts in the table were still free to change once all the row and column totals were fixed. The test needs this number to interpret its own result.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>null hypothesis</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Null hypothesis</strong><br>The claim that there is no real difference or no real relationship, and that whatever you see in the sample is ordinary random variation.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>p-value</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>p-value</strong><br>How likely a result at least this extreme would be if the null hypothesis were true. Small means "random noise is a poor explanation for this."</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>confidence interval</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Confidence interval</strong><br>A range of values the data is consistent with. A 95% interval for a difference tells you how small and how large that real difference plausibly is.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Question 1: did the average order total change?</h2>
+<p>Start by writing down the null hypothesis, in plain words, before any code runs: <em>the average order total is the same under both layouts, and the gap in this month's receipts is just ordinary random variation.</em> Writing it first matters. It is very easy to talk yourself into a story after you have already seen the answer.</p>
+<p>Now pull the two groups apart and hand them to SciPy.</p>
+
+<pre class="mlrk-code">layout_a = orders[orders["layout"] == "A"]["order_total"]
+layout_b = orders[orders["layout"] == "B"]["order_total"]
+
+print("Layout A mean:", round(layout_a.mean(), 2))
+print("Layout B mean:", round(layout_b.mean(), 2))
+
+result = stats.ttest_ind(layout_a, layout_b)
+print("t-statistic:", round(result.statistic, 2))
+print("p-value:", round(result.pvalue, 2))
+print("95% CI:", result.confidence_interval(confidence_level=0.95))</pre>
+<pre class="mlrk-code">Layout A mean: 9.42
+Layout B mean: 10.01
+t-statistic: -2.19
+p-value: 0.03
+95% CI: (-1.12, -0.06)</pre>
+
+<p><code>ttest_ind</code> is the two-sample t-test: "ind" is short for independent, meaning the two groups are made of different people, not the same people measured twice. It subtracts the second group's average from the first, so everything it reports is about <strong>Layout A minus Layout B</strong>. Layout A's average is lower, which is why the numbers come back negative.</p>
+<p>The p-value is 0.03. If the two boards really produced the same average order, a gap this big would show up about 3 times in 100 just by chance. That is small enough that most teams would stop calling it noise.</p>
+<p>The confidence interval is where the honest reading happens. <code>.confidence_interval()</code> is a real method on the object <code>ttest_ind</code> hands back, and it returns the 95% interval for that same difference.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 860 240" role="img" aria-labelledby="ciTitle ciDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="ciTitle">The 95% confidence interval for the difference in average order total</title>
+  <desc id="ciDesc">A number line runs from negative $1.50 to positive $0.50. A shaded band stretches from negative $1.12 to negative $0.06, with a dot at negative $0.59 marking the best single estimate. A dashed vertical line marks $0.00. The entire shaded band sits to the left of that line, meaning every value the data is consistent with points the same direction.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="430" y="30" text-anchor="middle" font-weight="700" font-size="19" fill="#261F1D">95% confidence interval: Layout A minus Layout B</text>
+
+    <text x="223" y="72" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">-$1.12</text>
+    <text x="408" y="72" text-anchor="middle" font-size="17" fill="#261F1D">-$0.59 best estimate</text>
+    <text x="590" y="72" text-anchor="end" font-weight="700" font-size="17" fill="#261F1D">-$0.06</text>
+
+    <rect x="223" y="85" width="371" height="22" rx="6" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <line x1="223" y1="78" x2="223" y2="114" stroke="#264326" stroke-width="3"/>
+    <line x1="594" y1="78" x2="594" y2="114" stroke="#264326" stroke-width="3"/>
+    <circle cx="408" cy="96" r="7" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+
+    <line x1="615" y1="66" x2="615" y2="152" stroke="#C92929" stroke-width="2.5" stroke-dasharray="7 5"/>
+
+    <line x1="90" y1="140" x2="790" y2="140" stroke="#264326" stroke-width="3"/>
+    <g stroke="#264326" stroke-width="2.5">
+      <line x1="90" y1="133" x2="90" y2="147"/>
+      <line x1="265" y1="133" x2="265" y2="147"/>
+      <line x1="440" y1="133" x2="440" y2="147"/>
+      <line x1="615" y1="133" x2="615" y2="147"/>
+      <line x1="790" y1="133" x2="790" y2="147"/>
+    </g>
+    <g font-size="17" fill="#261F1D" text-anchor="middle">
+      <text x="90" y="168">-$1.50</text>
+      <text x="265" y="168">-$1.00</text>
+      <text x="440" y="168">-$0.50</text>
+      <text x="615" y="168">$0.00</text>
+      <text x="790" y="168">+$0.50</text>
+    </g>
+    <text x="615" y="198" text-anchor="middle" font-weight="700" font-size="17" fill="#C92929">$0.00 means no difference at all</text>
+    <text x="430" y="228" text-anchor="middle" font-size="17" fill="#261F1D">The whole band sits left of zero, so Layout B's average order is the higher one.</text>
+  </g>
+</svg>
+
+<p>Read that band carefully, because it says two things at once. Every value inside it is negative, so the data is not consistent with Layout B being worse or with the two boards being identical. But the band runs from $1.12 all the way down to $0.06. The real gain per order might be a dollar and change, or it might be six cents. The p-value alone would never have told you that.</p>
+
+<div class="mlrk-card" id="card-ci-read"><p><strong>Given a 95% confidence interval of -$1.12 to -$0.06, which sentence is the honest one to bring the owner?</strong></p>
+<button type="button" class="mlrk-choice" data-a="range">Layout B brings in more per order, somewhere between about 6 cents and about $1.12.</button>
+<button type="button" class="mlrk-choice" data-a="exact">Layout B brings in exactly $0.59 more per order.</button>
+<button type="button" class="mlrk-choice" data-a="none">The two layouts might be identical, since the interval nearly reaches zero.</button>
+<div id="cireadfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-p-meaning" style="margin-top:.8rem"><p><strong>The p-value came back as 0.03. What does that number actually measure?</strong></p>
+<button type="button" class="mlrk-choice" data-a="ifnull">How likely a gap at least this big would be if the two layouts truly had the same average order.</button>
+<button type="button" class="mlrk-choice" data-a="probnull">The probability that the null hypothesis is true, which here would be 3%.</button>
+<button type="button" class="mlrk-choice" data-a="size">How big the difference between the two layouts is.</button>
+<div id="pmeaningfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Question 2: did the mix of orders change?</h2>
+<p>Second question, same receipts, completely different shape of data. Nobody is averaging anything now. The question is whether <code>order_type</code> and <code>layout</code> are related at all.</p>
+<p>The null hypothesis, written first again: <em>the two layouts produce the same mix of pastry, sandwich, and drink-only orders, and any difference in this month's counts is ordinary random variation.</em></p>
+<p>A chi-square test cannot read a long list of labels. It needs a <strong>contingency table</strong> first: a small table that counts how many orders fall into each combination of the two categories. One category runs down the rows, the other runs across the columns, and every cell holds a plain count. In pandas, <code>pd.crosstab</code> builds one in a single line.</p>
+
+<pre class="mlrk-code">table = pd.crosstab(orders["layout"], orders["order_type"])
+print(table)</pre>
+<pre class="mlrk-code">order_type  drink-only  pastry  sandwich
+layout
+A                  115     210       155
+B                   97     199       209</pre>
+
+<p>That is the whole month in six numbers. Layout A's 480 orders split 24% drink-only, 44% pastry, 32% sandwich. Layout B's 505 orders split 19% drink-only, 39% pastry, 41% sandwich. Fewer people walked out with just a drink, and more walked out with a sandwich. That is a plausible explanation for the higher average order total from the first test, since a sandwich costs more than a coffee.</p>
+<p>The eye can see a pattern there. The test decides whether the pattern is bigger than random variation would produce.</p>
+
+<pre class="mlrk-code">chi2, p, dof, expected = stats.chi2_contingency(table)
+
+print("chi-square statistic:", round(chi2, 2))
+print("p-value:", round(p, 2))
+print("degrees of freedom:", dof)
+print("expected counts:")
+print(expected.round(2))</pre>
+<pre class="mlrk-code">chi-square statistic: 9.21
+p-value: 0.01
+degrees of freedom: 2
+expected counts:
+[[103.31 199.31 177.38]
+ [108.69 209.69 186.62]]</pre>
+
+<p><code>chi2_contingency</code> hands back four things at once, so the four names on the left of the equals sign get filled in left to right. Take them one at a time.</p>
+<ol class="mlrk-steplist">
+  <li><strong>The chi-square statistic (9.21)</strong> measures total distance between what you counted and what you would have expected if the two categories were unrelated. Bigger means further from "unrelated."</li>
+  <li><strong>The p-value (0.01)</strong> says a gap this large would show up about 1 time in 100 if the layouts really produced the same mix. Random variation is a weak explanation here.</li>
+  <li><strong>Degrees of freedom (2)</strong> is the count of cells that were still free to change once the row and column totals were locked in. The table has 6 cells, but fill in 2 of them and every remaining cell is forced by the totals. The test needs that number to judge whether 9.21 is large.</li>
+  <li><strong>Expected counts</strong> is the table the test compared against: the counts you would see if layout had nothing to do with order type. Layout A "should" have had about 177 sandwiches and actually had 155. Layout B "should" have had about 187 and had 209.</li>
+</ol>
+
+<div class="bt-wrap"><table class="bt-table"><caption>observed counts next to expected counts</caption>
+<tr><th>layout</th><th>drink-only</th><th>pastry</th><th>sandwich</th></tr>
+<tr><td>A observed</td><td>115</td><td>210</td><td>155</td></tr>
+<tr><td>A expected</td><td>103.31</td><td>199.31</td><td>177.38</td></tr>
+<tr><td>B observed</td><td>97</td><td>199</td><td>209</td></tr>
+<tr><td>B expected</td><td>108.69</td><td>209.69</td><td>186.62</td></tr>
+</table></div>
+
+<p>Notice what the test does <em>not</em> say. It says layout and order type are related. It never says the board caused the change. Something else could have moved with the boards: the three shops that got Layout B might sit closer to offices, or the new board might have gone up the same week a sandwich supplier changed. Association is what a chi-square test measures, and association is all it measures.</p>
+
+<div class="mlrk-card" id="card-dof"><p><strong>The table has 6 cells but only 2 degrees of freedom. Why?</strong></p>
+<button type="button" class="mlrk-choice" data-a="fixed">Once every row total and column total is fixed, filling in 2 cells forces the value of all the rest.</button>
+<button type="button" class="mlrk-choice" data-a="rows">Because the table has 2 rows.</button>
+<button type="button" class="mlrk-choice" data-a="dropped">Because the test drops 4 of the 6 cells before computing anything.</button>
+<div id="doffb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-chi-read" style="margin-top:.8rem"><p><strong>The chi-square p-value is 0.01. In one plain sentence, what has the owner actually learned?</strong></p>
+<button type="button" class="mlrk-choice" data-a="related">The mix of what people order is related to which board they saw, though this test alone cannot say the board caused it.</button>
+<button type="button" class="mlrk-choice" data-a="caused">The new board caused customers to buy more sandwiches.</button>
+<button type="button" class="mlrk-choice" data-a="avg">The average order total is higher under the new board.</button>
+<div id="chireadfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Which test does this question need?</h2>
+<p>This is the whole skill in one drill. For each question below, ask yourself one thing first: is the thing being compared a <em>number</em> you could average, or a <em>label</em> you could only count?</p>
+
+<div class="mlrk-card" id="card-d1"><p><strong>Question A: do customers at the new-board shops spend more per order, on average, than customers at the old-board shops?</strong></p>
+<button type="button" class="mlrk-choice" data-a="t">A two-sample t-test</button>
+<button type="button" class="mlrk-choice" data-a="chi">A chi-square test</button>
+<div id="drill1fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-d2" style="margin-top:.8rem"><p><strong>Question B: is the split between pastry, sandwich, and drink-only orders different at the two kinds of shops?</strong></p>
+<button type="button" class="mlrk-choice" data-a="chi">A chi-square test</button>
+<button type="button" class="mlrk-choice" data-a="t">A two-sample t-test</button>
+<div id="drill2fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-d3" style="margin-top:.8rem"><p><strong>Question C: do morning shifts and evening shifts differ in the average number of minutes a customer waits in line?</strong></p>
+<button type="button" class="mlrk-choice" data-a="t">A two-sample t-test</button>
+<button type="button" class="mlrk-choice" data-a="chi">A chi-square test</button>
+<div id="drill3fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-d4" style="margin-top:.8rem"><p><strong>Question D: is the share of customers who sign up for the loyalty card (yes or no) different between the two kinds of shops?</strong></p>
+<button type="button" class="mlrk-choice" data-a="chi">A chi-square test</button>
+<button type="button" class="mlrk-choice" data-a="t">A two-sample t-test</button>
+<div id="drill4fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-d5" style="margin-top:.8rem"><p><strong>Question E: does the average order total differ across the chain's three neighborhoods: Downtown, Riverside, and Eastside?</strong></p>
+<details class="mlrk-hint"><summary>Need a hint?</summary><p>The outcome here is a dollar amount, so it is a number. Count the groups being compared, then re-read what the word "two" is doing in the phrase "two-sample t-test."</p></details>
+<button type="button" class="mlrk-choice" data-a="neither">Neither one as written, because three groups are being compared, not two.</button>
+<button type="button" class="mlrk-choice" data-a="t">A two-sample t-test</button>
+<button type="button" class="mlrk-choice" data-a="chi">A chi-square test</button>
+<div id="drill5fb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Fill in the missing SciPy call</h2>
+<p>Three blanks, three function names from this reading. Type each one exactly as it would appear in the code, with no parentheses.</p>
+
+<pre class="mlrk-code">result = stats.________(layout_a, layout_b)
+print(result.pvalue)</pre>
+<div class="mlrk-fillblank">
+  <label for="blank1">Blank 1: the function that compares two groups' averages</label>
+  <input type="text" id="blank1" autocomplete="off">
+  <button type="button" id="blank1check" class="mlrk-btn">Check</button>
+</div>
+<div id="blank1fb" class="mlrk-feedback" tabindex="-1"></div>
+
+<pre class="mlrk-code" style="margin-top:1.2rem">table = pd.________(orders["layout"], orders["order_type"])
+print(table)</pre>
+<div class="mlrk-fillblank">
+  <label for="blank2">Blank 2: the pandas function that builds a contingency table</label>
+  <input type="text" id="blank2" autocomplete="off">
+  <button type="button" id="blank2check" class="mlrk-btn">Check</button>
+</div>
+<div id="blank2fb" class="mlrk-feedback" tabindex="-1"></div>
+
+<pre class="mlrk-code" style="margin-top:1.2rem">chi2, p, dof, expected = stats.________(table)
+print(p)</pre>
+<div class="mlrk-fillblank">
+  <label for="blank3">Blank 3: the function that runs a chi-square test on that table</label>
+  <input type="text" id="blank3" autocomplete="off">
+  <button type="button" id="blank3check" class="mlrk-btn">Check</button>
+</div>
+<div id="blank3fb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Sort the variables: number or label?</h2>
+<p>Referring to the kinds of data the bakery collects, drag each column into the zone that describes it, then use the self-check button.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">order total in dollars</span>
+  <span id="chip2" class="mlrk-draggable">payment method (cash, card, app)</span>
+  <span id="chip3" class="mlrk-draggable">minutes waited in line</span>
+  <span id="chip4" class="mlrk-draggable">order type (pastry, sandwich, drink-only)</span>
+  <span id="chip5" class="mlrk-draggable">tip amount in dollars</span>
+  <span id="chip6" class="mlrk-draggable">which board the shop hung (A or B)</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Continuous variable (a number you can average)</strong></p><div class="mlrk-dropzone" id="zoneCont"></div></div>
+  <div><p class="mlrk-small"><strong>Categorical variable (a label you can only count)</strong></p><div class="mlrk-dropzone" id="zoneCat"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. What a result does and does not say</h2>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about the two results from this reading.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A p-value of 0.03 means there is a 3% chance the null hypothesis is true.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> The 95% confidence interval describes a range of differences the data is consistent with.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> The chi-square result says layout and order type are related, not that the board caused the change.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> If the data breaks what a test assumes, SciPy refuses to return a p-value.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Running a test in an order you can defend</h2>
+
+<div class="mlrk-callout mlrk-callout-red">
+<p><strong>The honest caveat, and it is a big one:</strong> both of these tests come with assumptions about the data, and neither one checks them for you. A t-test assumes the two groups are roughly bell-shaped with no wild outliers. A chi-square test assumes every expected count in the table is at least about 5, which is exactly why <code>chi2_contingency</code> hands back that <code>expected</code> table. Break either assumption and nothing visible goes wrong. SciPy still returns a number that looks like a perfectly ordinary p-value, formatted the same way, sitting in the same variable. It just does not mean what you think it means. The only protection is checking first, every time, because the output cannot warn you.</p>
+</div>
+
+<p>Click the steps in the order you would actually do them, then press the check button. Click a step again to remove it if you change your mind. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="type"><span class="mlrk-order-num"></span> Write down the question, and name which part is a number and which part is a label.</li>
+  <li class="mlrk-orderitem" data-step="null"><span class="mlrk-order-num"></span> State the null hypothesis in one plain sentence, before seeing any result.</li>
+  <li class="mlrk-orderitem" data-step="assume"><span class="mlrk-order-num"></span> Check that the data fits what your chosen test assumes.</li>
+  <li class="mlrk-orderitem" data-step="run"><span class="mlrk-order-num"></span> Run the test, then read the p-value and the confidence interval together.</li>
+  <li class="mlrk-orderitem" data-step="decide"><span class="mlrk-order-num"></span> Say in one sentence what this means for the decision someone has to make.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Watch: choosing the right version of a t-test</h2>
+<p>The bakery's two groups are made of different customers, which is why <code>ttest_ind</code> was the right call. As you watch, notice the one question that decides everything: were these the same people measured twice (which calls for a paired t-test), or two separate sets of people (which is what <code>ttest_ind</code> is for)? The video also recommends a version of the t-test that does not assume both groups have the same spread. That is one extra argument in SciPy, <code>stats.ttest_ind(layout_a, layout_b, equal_var=False)</code>, and it is a safe default when you are not sure.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=nnBJeb_I-q8" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: in your own words, what would have to be true about the bakery's receipts for a paired t-test to be the right choice instead?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Verify before you repeat it: an AI summarizes the result</h2>
+<p>You paste both sets of output into an AI assistant and ask for a one-paragraph summary for the owner. It writes:</p>
+<div class="mlrk-callout mlrk-callout-gold">
+<p>"The new menu board increased average order value by $0.59 per order, a proven 6% lift, and caused customers to shift from drinks to sandwiches. Rolling it out chain-wide will add roughly $0.59 to every future order."</p>
+</div>
+<div class="mlrk-card" id="card-ai"><p><strong>What is the most serious problem with that summary?</strong></p>
+<button type="button" class="mlrk-choice" data-a="overclaim">It reports one exact number as proven and calls the shift caused, when the interval ran from $0.06 to $1.12 and the chi-square test only showed an association.</button>
+<button type="button" class="mlrk-choice" data-a="math">The arithmetic is wrong, since $0.59 is not the difference between the two averages.</button>
+<button type="button" class="mlrk-choice" data-a="fine">Nothing is wrong. It restates both results accurately.</button>
+<div id="aifb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<label for="airewrite" style="display:block;margin-top:1rem"><strong>Rewrite it:</strong> in one or two sentences, give the owner the same findings without overselling them. Keep the range, and keep the word "caused" out of it.</label>
+<textarea id="airewrite" class="mlrk-response" data-save placeholder="Try starting with: Orders under the new board averaged..."></textarea>
+</section>
+
+<section class="mlrk-section">
+<h2>14. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"How do you decide between a t-test and a chi-square test?" is asked constantly in data analyst interviews, from first internship through senior roles. Interviewers like it because the answer separates someone who memorized two test names from someone who has actually had to pick one.</p>
+<p>A strong answer leads with the rule, not the test names: "it depends on the data type of what I am comparing." Then one concrete example of each. A t-test when the outcome is a number I can average, like order total in dollars across two groups. A chi-square test when both variables are labels, like order type against which menu board a shop had. Finish by naming the check you would run before trusting either result, and you have said everything the question was really asking.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> a hiring manager says, "We surveyed 400 riders. We want to know whether the share of riders choosing the monthly pass instead of pay-per-ride is different for riders under 30 versus 30 and over. Which test, and why?"</p>
+<button type="button" class="mlrk-choice" data-a="chi">Chi-square, because both pass type and age group are labels, so the data becomes a table of counts.</button>
+<button type="button" class="mlrk-choice" data-a="t">A t-test, because two groups are being compared.</button>
+<button type="button" class="mlrk-choice" data-a="none">Neither, because 400 responses is too small a sample for any test.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Summary and critical thinking</h2>
+<p>Two ideas carried this whole reading. First, the kind of data decides the test: a number you can average points at a t-test, two sets of labels point at a chi-square test built on a contingency table. Second, a test result is three numbers, not one. The p-value says whether random variation is a believable explanation. The confidence interval says how large the real difference plausibly is. Your own sentence says what any of it means for the decision in front of someone.</p>
+
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> an online bookstore ran two versions of its checkout page for three weeks. The team wants to know whether the share of visitors who finished checkout (finished or abandoned) differed between the two versions. Which test fits, and what is the null hypothesis?</p>
+<button type="button" class="mlrk-choice" data-a="chi">Chi-square, with a null hypothesis that finishing checkout is unrelated to which version a visitor saw.</button>
+<button type="button" class="mlrk-choice" data-a="t">A t-test, with a null hypothesis that the average checkout rate is the same for both versions.</button>
+<button type="button" class="mlrk-choice" data-a="either">Either test works, since both compare two groups.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<label for="ownwords" style="display:block;margin-top:1rem"><strong>In your own words:</strong> think of a decision someone in your life actually has to make, at work, at school, or at home. What would you measure, would that measurement be a number or a label, and which test would that force you into? Name one assumption you would want to check before believing the answer.</label>
+<textarea id="ownwords" class="mlrk-response" data-save placeholder="Try starting with: The decision is whether to..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>16. Thinking ahead</h2>
+<p>Both results here cleared the usual bar, and both left the same question wide open. The t-test said the gap in average order total is probably not zero. It never said the gap is worth acting on. Six cents an order and a dollar an order are both "probably not zero," and only one of them pays for reprinting six menu boards. The chi-square test has the same gap in it: the mix of orders is related to the board, but "related" covers everything from a barely visible shift to a total reversal.</p>
+<p>That missing piece has its own name and its own numbers, separate from the p-value entirely. Getting comfortable with the idea now, that "is it real" and "is it big" are two different questions with two different answers, makes the rest of statistical testing much easier to hold together.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>17. Go further</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://seeing-theory.brown.edu/frequentist-inference/index.html" target="_blank" rel="noopener">Seeing Theory: Frequentist Inference</a> — an interactive visual playground from Brown University where you drag sliders and watch p-values and confidence intervals move in real time.</li>
+<li><a href="https://www.youtube.com/watch?v=7_cs1YlZoug" target="_blank" rel="noopener">Crash Course Statistics: Chi-Square Tests</a> — an 11-minute video walking through what a chi-square test is doing underneath the code.</li>
+<li><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html" target="_blank" rel="noopener">SciPy reference: <code>ttest_ind</code></a> — the official documentation, including the <code>equal_var</code> option.</li>
+<li><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html" target="_blank" rel="noopener">SciPy reference: <code>chi2_contingency</code></a> — the official documentation, including what each of the four returned values holds.</li>
+<li><a href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html" target="_blank" rel="noopener">pandas reference: <code>crosstab</code></a> — more ways to build a contingency table, including percentages instead of raw counts.</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>18. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> the Download JSON button above saves the file into your computer's <code>Downloads</code> folder. Here's how to move it into a repo of your own.</p>
+
+    <details class="mlrk-hint">
+      <summary>Step 1: Make a repo on your GitHub account (one time only — collapse this afterward)</summary>
+      <ol class="mlrk-steplist">
+        <li>On GitHub, click the <strong>+</strong> in the top-right corner, then <strong>New repository</strong>.</li>
+        <li>Give it a name (something like <code>data-analytics-readings</code>) and click <strong>Create repository</strong>.</li>
+        <li>On the new repo's page, click the green <strong>Code</strong> button and copy the <strong>HTTPS</strong> URL.</li>
+        <li>In your terminal, clone it to your computer, pasting in the URL you just copied:
+          <pre class="mlrk-code">git clone https://github.com/YOUR-USERNAME/YOUR-REPO.git</pre></li>
+      </ol>
+      <p class="mlrk-small">You only do this once. For every reading after this one, start at Step 2.</p>
+    </details>
+
+    <p style="margin-top:.9rem"><strong>Step 2: Save this reading's file into that repo</strong> (do this for every reading):</p>
+    <ol class="mlrk-steplist">
+      <li>Move into your repo folder:
+        <pre class="mlrk-code">cd YOUR-REPO</pre></li>
+      <li>Move the file you just downloaded out of <code>Downloads</code> and into that folder:
+        <pre class="mlrk-code">mv ~/Downloads/two-questions-two-tests-reading.json .</pre></li>
+      <li>Save it to git and push it up to GitHub:
+        <pre class="mlrk-code">git add two-questions-two-tests-reading.json
+git commit -m "Complete t-test and chi-square in Python reading"
+git push</pre></li>
+    </ol>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 4 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own copy.</li>
+        <li>On the create page, set the visibility to <strong>Private</strong>. It defaults to <strong>Public</strong>, so you have to change it yourself.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Copy your repo's name <strong>exactly</strong> as it appears in GitHub's URL, including any hyphens, underscores, and capitalization. Paste it into the "Your submissions repo name" box below, along with your GitHub username, then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+      <p class="mlrk-small"><strong>Getting a "404" page instead?</strong> Two usual causes: the repo name you typed doesn't exactly match the real one (check for a stray hyphen or different capitalization), or you're not signed in to GitHub as the account that owns the repo &mdash; a private repo looks like a 404 to anyone who isn't signed in to it.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "two-questions-two-tests-reading";
+  const TITLE = "Two Questions, Two Tests — Running a t-test and a Chi-Square Test in Python";
+  const TAGS = ["inferential-stats"];
+  const SKILLS = ["hypothesis-testing", "statistical-analysis"];
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  /* ---- section 2: prereq recall ---- */
+  K.quiz({id:"q-null", buttonSelector:"#card-null .mlrk-choice", feedbackSelector:"#nullfb", correct:"nodiff",
+    feedback:{nodiff:"That's the claim every test starts from: no real difference, just ordinary random variation.",
+              bigdiff:"That's closer to the alternative hypothesis, which is the claim that a real difference does exist. The null always claims the boring outcome, so the data has something specific to argue against.",
+              proven:"A null hypothesis isn't about previous research at all. It's a starting claim about this data, which you either find evidence against or don't."}});
+
+  K.quiz({id:"q-pval", buttonSelector:"#card-pval .mlrk-choice", feedbackSelector:"#pvalfb", correct:"noevidence",
+    feedback:{noevidence:"Failing to find evidence is not the same as showing there's nothing there. A larger sample might still find a real difference.",
+              proved:"A test can never prove two groups identical. It can only fail to find evidence against the null hypothesis.",
+              broken:"A large p-value is a normal, valid result. Nothing failed. The data simply didn't give strong evidence of a difference."}});
+
+  K.quiz({id:"q-filter", buttonSelector:"#card-filter .mlrk-choice", feedbackSelector:"#filterfb", correct:"rowsA",
+    feedback:{rowsA:"The condition inside the brackets is True or False for each row, and only the True rows come back. That's how the two groups get separated below.",
+              count:"Nothing here counts anything. You'd need to add something like .shape or .count() to get a number back.",
+              column:"That would be orders[\"layout\"] on its own. The extra comparison inside the brackets filters rows instead of selecting a column."}});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  /* ---- section 5: t-test ---- */
+  K.quiz({id:"q-ci-read", buttonSelector:"#card-ci-read .mlrk-choice", feedbackSelector:"#cireadfb", correct:"range",
+    feedback:{range:"That sentence carries the direction and the uncertainty together, which is exactly what the interval says.",
+              exact:"$0.59 is the single best estimate, but the interval exists precisely because the real value could sit anywhere from about $0.06 to about $1.12.",
+              none:"The interval stops at -$0.06 and never reaches zero, so \"no difference\" is outside the range the data supports."}});
+
+  K.quiz({id:"q-p-meaning", buttonSelector:"#card-p-meaning .mlrk-choice", feedbackSelector:"#pmeaningfb", correct:"ifnull",
+    feedback:{ifnull:"A p-value always starts from \"if the null were true.\" It measures how surprising this data would be under that assumption.",
+              probnull:"That's the most common misreading of a p-value. It never gives the probability that the null is true, only how unusual this data looks if it were.",
+              size:"Size is a separate question with a separate answer. The confidence interval speaks to size; the p-value doesn't."}});
+
+  /* ---- section 6: chi-square ---- */
+  K.quiz({id:"q-dof", buttonSelector:"#card-dof .mlrk-choice", feedbackSelector:"#doffb", correct:"fixed",
+    feedback:{fixed:"With 480 and 505 as row totals and the three column totals locked in, only 2 cells can be chosen freely. Everything else is forced by subtraction.",
+              rows:"The row count alone doesn't decide it. A table with 2 rows and 5 columns would have 4 degrees of freedom, not 2.",
+              dropped:"Every cell is used in the calculation. Degrees of freedom is about how many were free to vary, not how many got counted."}});
+
+  K.quiz({id:"q-chi-read", buttonSelector:"#card-chi-read .mlrk-choice", feedbackSelector:"#chireadfb", correct:"related",
+    feedback:{related:"Related, plus an honest limit on the claim. That's the full, defensible sentence.",
+              caused:"A chi-square test measures association only. Something else moving alongside the boards could produce the same table.",
+              avg:"That was the t-test's answer. The chi-square test never looked at dollar amounts, only counts by category."}});
+
+  /* ---- section 7: which test drill (binary items get one attempt) ---- */
+  K.quiz({id:"q-d1", buttonSelector:"#card-d1 .mlrk-choice", feedbackSelector:"#drill1fb", correct:"t", maxAttempts:1,
+    feedback:{t:"Spend per order is a dollar amount, so it's a number you can average across two groups. That's a t-test.",
+              chi:"A chi-square test only counts labels. Dollars can be averaged, so this one belongs to the t-test."}});
+
+  K.quiz({id:"q-d2", buttonSelector:"#card-d2 .mlrk-choice", feedbackSelector:"#drill2fb", correct:"chi", maxAttempts:1,
+    feedback:{chi:"Pastry, sandwich, and drink-only are labels, crossed against which board a shop had. Two categories means a contingency table and a chi-square test.",
+              t:"There's no number to average here. You can't take the mean of \"sandwich,\" only count how many there were."}});
+
+  K.quiz({id:"q-d3", buttonSelector:"#card-d3 .mlrk-choice", feedbackSelector:"#drill3fb", correct:"t", maxAttempts:1,
+    feedback:{t:"Minutes waited is a measurement on a scale, compared between two groups. Same shape as the order-total question.",
+              chi:"Morning and evening are labels, but the thing being compared is minutes, and minutes can be averaged. The outcome decides the test."}});
+
+  K.quiz({id:"q-d4", buttonSelector:"#card-d4 .mlrk-choice", feedbackSelector:"#drill4fb", correct:"chi", maxAttempts:1,
+    feedback:{chi:"Signed up or not is a label with two values, crossed against which shop type. That's a two-by-two contingency table.",
+              t:"A share sounds like a number, but the underlying data is yes or no per customer. You count those, you don't average them."}});
+
+  K.quiz({id:"q-d5", buttonSelector:"#card-d5 .mlrk-choice", feedbackSelector:"#drill5fb", correct:"neither",
+    answerLabel:"Neither one as written, because three groups are being compared, not two",
+    feedback:{neither:"Order total is a number, so a t-test is the right family, but ttest_ind only handles two groups at a time. Three groups needs a different tool.",
+              t:"Close on the data type. The problem is the word \"two\" in two-sample t-test: Downtown, Riverside, and Eastside are three groups.",
+              chi:"Order total is a dollar amount, not a label, so a chi-square test has nothing to count here."}});
+
+  /* ---- section 8: fill in the blanks ---- */
+  function fillBlank(id, inputSel, btnSel, fbSel, answer, correctNote, revealNote){
+    K.Scoring.register(id, 1, "quiz");
+    let attempts = 0, done = false;
+    $(btnSel).addEventListener("click", () => {
+      if(done) return;
+      attempts++;
+      const typed = $(inputSel).value.trim().toLowerCase().replace(/\(\)$/, "");
+      const fb = $(fbSel);
+      if(typed === answer){
+        K.Scoring.award(id, attempts === 1 ? 1 : 0.5);
+        fb.className = "mlrk-feedback mlrk-show mlrk-good";
+        fb.innerHTML = "<strong>Correct.</strong> " + correctNote;
+        done = true;
+      } else if(attempts >= 2){
+        K.Scoring.award(id, 0);
+        fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+        fb.innerHTML = "<strong>Here's the answer. You'll get it next time.</strong> " + revealNote;
+        done = true;
+      } else {
+        fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+        fb.innerHTML = "<strong>Not quite.</strong> Check the spelling against the code earlier in this reading, then try once more.";
+      }
+      fb.setAttribute("tabindex","-1"); fb.focus();
+    });
+  }
+  fillBlank("q-blank1", "#blank1", "#blank1check", "#blank1fb", "ttest_ind",
+    "<code>stats.ttest_ind</code> runs the two-sample t-test, where \"ind\" means the two groups are independent of each other.",
+    "The function is <code>ttest_ind</code>, short for independent-samples t-test.");
+  fillBlank("q-blank2", "#blank2", "#blank2check", "#blank2fb", "crosstab",
+    "<code>pd.crosstab</code> builds the contingency table of counts the chi-square test needs.",
+    "The function is <code>crosstab</code>, short for cross-tabulation.");
+  fillBlank("q-blank3", "#blank3", "#blank3check", "#blank3fb", "chi2_contingency",
+    "<code>stats.chi2_contingency</code> takes the table and returns the statistic, p-value, degrees of freedom, and expected counts.",
+    "The function is <code>chi2_contingency</code>, spelled with the digit 2.");
+
+  /* ---- section 9: drag and drop ---- */
+  K.dragDrop("#dragarea", "act-drag-vartype");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneCont", label:"order total in dollars", expectedLabel:"Continuous variable"},
+    chip2:{expectedId:"zoneCat", label:"payment method (cash, card, app)", expectedLabel:"Categorical variable"},
+    chip3:{expectedId:"zoneCont", label:"minutes waited in line", expectedLabel:"Continuous variable"},
+    chip4:{expectedId:"zoneCat", label:"order type (pastry, sandwich, drink-only)", expectedLabel:"Categorical variable"},
+    chip5:{expectedId:"zoneCont", label:"tip amount in dollars", expectedLabel:"Continuous variable"},
+    chip6:{expectedId:"zoneCat", label:"which board the shop hung (A or B)", expectedLabel:"Categorical variable"}
+  }});
+
+  /* ---- section 10: select all ---- */
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"A p-value of 0.03 means there is a 3% chance the null hypothesis is true.", correct:false,
+      hint:"Re-read what a p-value assumes before it calculates anything.",
+      explain:"A p-value is calculated assuming the null is true. It never reports the probability that the null is true."},
+    {value:"b", label:"The 95% confidence interval describes a range of differences the data is consistent with.", correct:true,
+      hint:"Look back at the shaded band running from -$1.12 to -$0.06.",
+      explain:"That's exactly what the interval is for: how small and how large the real difference plausibly is."},
+    {value:"c", label:"The chi-square result says layout and order type are related, not that the board caused the change.", correct:true,
+      hint:"Think about what the test could and could not rule out about the three Layout B shops.",
+      explain:"Association is the whole claim. Something else moving with the boards could produce the same counts."},
+    {value:"d", label:"If the data breaks what a test assumes, SciPy refuses to return a p-value.", correct:false,
+      hint:"Think about what actually appears on screen when an assumption quietly fails.",
+      explain:"SciPy returns a normal-looking p-value either way. Checking assumptions is on you, not the library."}
+  ]});
+
+  /* ---- section 11: order the steps ---- */
+  K.orderSteps("#ordersteps", {id:"act-order-testflow", correctOrder:["type","null","assume","run","decide"],
+    feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+
+  /* ---- section 12: video ---- */
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"nnBJeb_I-q8"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:8});
+
+  /* ---- section 13: AI check ---- */
+  K.quiz({id:"q-ai", buttonSelector:"#card-ai .mlrk-choice", feedbackSelector:"#aifb", correct:"overclaim",
+    feedback:{overclaim:"Both overclaims in one paragraph: a single point estimate reported as proven, and an association reported as a cause.",
+              math:"The arithmetic is fine. $10.01 minus $9.42 really is $0.59. The problem is what gets claimed about that number.",
+              fine:"The word \"proven\" and the word \"caused\" are both doing work neither test supports."}});
+  K.freeResponse({id:"resp-airewrite", selector:"#airewrite", minWords:12});
+
+  /* ---- section 14: interview ---- */
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"chi",
+    feedback:{chi:"Two labels crossed against each other, which is a contingency table of counts and a chi-square test.",
+              t:"Two groups isn't enough on its own. The outcome here is a choice between two pass types, which is a label, not a number to average.",
+              none:"400 is a healthy sample for a question like this. Sample size affects how much the test can detect, not whether a test applies."}});
+
+  /* ---- section 15: summary ---- */
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"chi",
+    feedback:{chi:"Finished or abandoned is a label, crossed against which version the visitor saw. The null is that the two are unrelated.",
+              t:"There's no per-visitor number to average here. Each visitor either finished or didn't, which is a count, not a measurement.",
+              either:"Comparing two groups doesn't settle it. The data type of the outcome does, and this outcome is a label."}});
+  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:15});
+
+  const AI_PROMPTS = [
+    "Describe something you measured or tracked recently. Was it a number or a label, and what would you have to collect to compare two groups on it?",
+    "Think of a claim you've seen in an ad or a headline that a difference was proven. What confidence interval would you want to see before believing it?",
+    "Pick a decision your team or your household argues about. What would you have to count, and what would the null hypothesis sound like in plain words?"
+  ];
+  $("#aiprompt").addEventListener("click", () => {
+    const box = $("#aipromptbox");
+    box.style.display = "block";
+    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  /* ---- export / submit ---- */
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb = $("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:TAGS,
+      skills:SKILLS, onDone(status,message){
+      fb.textContent = message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

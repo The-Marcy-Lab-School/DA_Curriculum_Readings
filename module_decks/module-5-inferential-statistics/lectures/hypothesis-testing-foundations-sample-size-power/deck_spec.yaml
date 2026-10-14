@@ -1,0 +1,717 @@
+meta:
+  title: "Hypothesis Testing Foundations, Sample Size & Power"
+  module: "Module 5: Inferential Statistics"
+  module_number: 5
+  lesson_number: 1
+  date: "Day 1"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Explain why observing a difference between two sample means or proportions doesn't by itself prove a real population-level difference, and define null hypothesis, alternative hypothesis, p-value, and confidence interval using a worked example"
+    - "With a peer, analyze a sample-size/power scenario and explain why a statistically significant result from a very large sample can still be practically meaningless"
+  exercise:
+    type: bullets
+    url_or_text: "State your own null and alternative hypothesis for this question: do Gentoo penguins actually weigh more than Adelie penguins? Bring both to next class - that's the exact comparison the real test runs on."
+    uses_same_scenario_as_lecture: true
+  dependent_skills:
+    - "Reading a histogram or five-number summary to describe a distribution's shape (Module 2)"
+    - "Comparing two groups' summary statistics side by side (Module 2)"
+  interview_topics:
+    - "How would you explain a p-value to a non-technical stakeholder?"
+    - "How would you explain Type I and Type II errors to a hiring manager?"
+  final_project:
+    "This lecture rehearses two of the project's most commonly graded
+    pitfalls before they cost real points - stating your hypothesis before
+    running any test (the project's own section 2, graded first), and
+    correctly judging whether a 'significant' result is actually big enough
+    to matter for a real decision (the project's final conclusion, section
+    10)."
+  module_plan_ref: "module_sources/module-5-inferential-statistics/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-5-inferential-statistics/DATASET.md"
+  scaffolding_level: guided
+  estimated_duration_min: 55
+  scenario: >
+    You're a data analyst supporting a hospital system's clinical-research
+    team. Before anyone runs a single test on real patient data, your job
+    today is to get the logic straight: what exactly you're claiming, what
+    would actually count as evidence against it, and how big a sample you
+    need before a "significant" result means anything real.
+  glossary:
+    - term: "null hypothesis"
+      definition: "The claim that there is no real difference or effect - only ordinary sample-to-sample variation"
+    - term: "alternative hypothesis"
+      definition: "The claim that a real difference or effect actually exists"
+    - term: "p-value"
+      definition: "The probability of seeing a result at least this extreme if the null hypothesis were actually true - not the probability that the null hypothesis is true"
+    - term: "confidence interval"
+      definition: "A range of plausible values for the real population effect, built from the sample data"
+    - term: "minimum detectable effect"
+      definition: "The smallest real effect a study is actually sized to reliably catch"
+    - term: "statistical significance"
+      definition: "A result unlikely to be pure chance - not the same claim as being big enough to matter"
+    - term: "practical significance"
+      definition: "Whether an effect is actually big enough, in the real world, to act on"
+    - term: "Type I error"
+      definition: "Rejecting a null hypothesis that was actually true - a false positive"
+    - term: "Type II error"
+      definition: "Failing to reject a null hypothesis that was actually false - a false negative"
+
+slides:
+  - type: title
+    title: "Hypothesis Testing Foundations"
+    subtitle: "Sample Size, Power, and What 'Significant' Actually Means"
+    module: "Module 5: Inferential Statistics"
+    date: "Day 1"
+    image_path: "modules/module-5-inferential-statistics/lectures/hypothesis-testing-foundations-sample-size-power/images/slide_01_title.png"
+    image_prompt: "Flat illustration: A data analyst at a laptop comparing two overlapping bell-curve distributions on screen, curious and analytical, not certain"
+    image_alt: "A data analyst looking at two overlapping bell-curve distributions on a laptop screen, appearing curious and analytical rather than already certain of an answer"
+    notes: >
+      [SCRIPT] Open by naming the actual gap this closes. You already know
+      how to describe one group's data. Today is about comparing two
+      groups honestly - deciding whether a difference you see is real, or
+      just what random sampling looks like.
+
+
+      [SCRIPT] Say the format out loud. No live code today. Today is the
+      logic - what you're claiming, what would count as evidence against
+      it, and how big a sample you actually need. Next class runs the
+      real test, on exactly the comparison you'll state today.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "State a null and alternative hypothesis"
+        icon: "test"
+      - text: "Explain what a p-value actually means"
+        icon: "probability"
+      - text: "Judge if a sample size is big enough to matter"
+        icon: "checklist"
+    notes: >
+      [SCRIPT] Read all three, then flag the connection. The first two are
+      the logic of one test. The third is a separate, just as important
+      question: even a perfectly run test can mislead you if the sample
+      size is wrong for what you're actually trying to detect.
+
+
+      [SCRIPT] Name the project tie directly. Every one of these three
+      shows up as a graded section on your own project, a few weeks from
+      now, on your own real data.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "null hypothesis"
+        icon: "test"
+      - text: "alternative hypothesis"
+        icon: "compass"
+      - text: "p-value"
+        icon: "probability"
+      - text: "confidence interval"
+        icon: "statistics"
+    notes: >
+      [SCRIPT] Names only for now. All four get a real definition before
+      today is over, and all four come back with their definitions right
+      before the summary.
+
+
+      [MISCONCEPTIONS] Most people have heard "p-value" before and assume
+      they already know what it means. The single most common version of
+      that assumed meaning is wrong - today directly corrects it.
+
+  - type: case_study
+    headliner: "'Significant.' **It Barely Helped Anyone.**"
+    kicker: "REAL STUDY"
+    summary_points:
+      - "72% of large trials called it 'significant'"
+      - "Only 15% actually helped real patients"
+      - "Smaller trials found meaningful effects more often"
+    is_fictional: false
+    source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7047221/"
+    caption: "Frontiers in Pharmacology, 2020"
+    image_path: "modules/module-5-inferential-statistics/lectures/hypothesis-testing-foundations-sample-size-power/images/slide_04_case_study.png"
+    image_prompt: "Photo-realistic: A clinical researcher reviewing a printed trial-results chart at a desk, thoughtful expression, not triumphant"
+    image_alt: "A clinical researcher looking closely at a printed trial-results chart at a desk, thoughtful rather than triumphant"
+    hook_question: "Would you recommend this drug to your own grandmother?"
+    domain: "healthcare_operations"
+    notes: >
+      [ARTICLE SUMMARY] A 2020 review in Frontiers in Pharmacology examined
+      33 placebo-controlled and 18 head-to-head trials of antipsychotic
+      drugs for dementia-related agitation and psychosis. Among trials with
+      larger-than-required sample sizes, 72% reported a statistically
+      significant effect - but researchers judged only 15% of those effects
+      clinically meaningful. Smaller, underpowered trials that found an
+      effect were judged clinically meaningful more often (57% of the
+      time), and the larger trials' own "significant" effect sizes were
+      consistently smaller than what the smaller trials found. Only 14 of
+      47 trials even reported a sample-size calculation up front.
+
+
+      [SCRIPT] Walk the numbers slowly, because the shape of them is the
+      whole lesson. Bigger sample. More likely to call something
+      significant. Less likely for that something to actually matter to a
+      real patient.
+
+
+      [SCRIPT] Land the point this lesson actually needs before moving on.
+      Nothing here says the trials were run badly. Every one of them
+      followed the correct math. The math itself can produce a
+      "significant" label on a difference too small to change a single
+      real treatment decision.
+
+
+      [SCRIPT] Do not resolve the hook yet. Take a few answers, and say the
+      room is about to build the actual tools to answer it for real.
+
+
+      [MISCONCEPTIONS] The easy takeaway is "so p-values are useless."
+      That overcorrects. The actual lesson is narrower: a p-value answers
+      one specific question, and "does this matter in real life" is a
+      separate question it was never built to answer.
+
+
+      [SOURCES] Hulshof TA, Zuidema SU, Janus SIM, Luijendijk HJ, "Large
+      Sample Size Fallacy in Trials About Antipsychotics for
+      Neuropsychiatric Symptoms in Dementia," Frontiers in Pharmacology,
+      2020, pmc.ncbi.nlm.nih.gov/articles/PMC7047221.
+
+  - type: transition
+    from_label: "A Confusing Real Result"
+    to_label: "Let's Get the Logic Right, From the Start"
+    note: "Before judging whether any result matters, you need to know exactly what you're claiming, and what would count as evidence against it."
+    objective_index: 1
+    notes: >
+      [SCRIPT] Reset the room's footing. Nobody is expected to resolve the
+      hook yet. The next few slides build the actual vocabulary that makes
+      it answerable.
+
+  - type: content
+    title: "Any Difference You See Has Two Possible Explanations"
+    bullets:
+      - "Gentoo penguins in your sample weigh more"
+      - "Explanation one: A real species difference"
+      - "Explanation two: Just sample noise"
+    icon_hero:
+      icon: "normal_distribution"
+      style: "blue"
+    notes: >
+      [SCRIPT] Ground it in the actual dataset. Pull up Palmer Penguins.
+      The Gentoo penguins in this sample weigh more, on average, than the
+      Adelie penguins. That is a fact about this sample. It is not
+      automatically a fact about every penguin of each species.
+
+
+      [SCRIPT] Name both explanations out loud, evenhandedly. Maybe Gentoo
+      penguins really are heavier as a species. Or maybe you happened to
+      sample some unusually large Gentoos and some unusually small Adelies,
+      and a different 344 penguins would show something different.
+
+
+      [MISCONCEPTIONS] People assume "the sample shows a difference" and
+      "there is a real difference" are the same claim. A hypothesis test
+      exists specifically because they are not automatically the same
+      claim.
+
+
+      [SCRIPT] Name the callback directly. Comparing two groups' summary
+      statistics side by side is exactly the Module 2 skill this reuses -
+      today adds the formal question of whether that comparison is real.
+
+  - type: content
+    title: "Null Hypothesis: Assume Nothing's Different, First"
+    bullets:
+      - "Null hypothesis: No real difference, just noise"
+      - "Alternative hypothesis: A real difference exists"
+      - "You test the null. Never prove it."
+    analogy:
+      domain: "legal"
+      mapping: "A hypothesis test works like a courtroom. You start out assuming the defendant is innocent. That's the null hypothesis. The trial never tries to prove innocence. It only asks one thing: is the evidence strong enough to reject that assumption? A 'not guilty' verdict isn't proof of innocence. It just means the evidence wasn't strong enough. A hypothesis test works the same way."
+      backups:
+        - domain: "home"
+          mapping: "It is like a smoke detector. The default assumption is 'no fire.' The detector doesn't wait for proof of fire - it flags when the smoke level makes 'no fire' hard to believe. A high reading is evidence against the default, not proof either way."
+        - domain: "weather"
+          mapping: "It is like a forecaster saying an ordinary, storm-free day would rarely produce clouds like today's. That's a comment on how surprising today looks under the boring assumption, not a stated percentage chance that a storm is coming."
+    notes: >
+      [SCRIPT] Name the analogy before the terms. In a courtroom, you start
+      by assuming innocence, and the trial only asks whether the evidence
+      is strong enough to reject that assumption. A hypothesis test starts
+      by assuming "no real difference," and only asks whether the data is
+      strong enough to reject that assumption.
+
+
+      [SCRIPT] Attach the vocabulary once the picture lands. The null
+      hypothesis is "no real difference, just noise." The alternative is
+      "a real difference exists." You test the null. You never prove it
+      true, the same way a "not guilty" verdict never proves innocence.
+
+
+      [MISCONCEPTIONS] People say "we proved the null hypothesis" when a
+      test finds no significant difference. Failing to reject the null is
+      not the same claim as proving it - the same way a "not guilty"
+      verdict is not a certificate of innocence.
+
+
+      [OTHER EXAMPLES] Two backups are in the notebook if the courtroom
+      version does not land: a smoke detector's default assumption of "no
+      fire," and a forecaster's own "how surprising is today" framing.
+
+  - type: content
+    title: "Two Ways a Verdict Can Go Wrong"
+    bullets:
+      - "Type I: An innocent person, convicted"
+      - "Type II: A guilty person goes free"
+      - "Every test risks one of these two"
+    icon_hero:
+      icon: "error"
+      style: "gold"
+    notes: >
+      [SCRIPT] Extend the courtroom picture one step further, since the
+      same setup names both real error types. A Type I error is rejecting
+      a true null - convicting an innocent defendant. A Type II error is
+      failing to reject a false null - letting a guilty one go free.
+
+
+      [SCRIPT] Say the practical framing plainly. Neither error can be
+      eliminated entirely - lowering one tends to raise the other. The
+      significance level you choose before running a test is a direct
+      statement of how much Type I risk you're willing to accept.
+
+
+      [MISCONCEPTIONS] People treat a Type II error as somehow less
+      serious than a Type I error, "because at least nothing false got
+      claimed." A real effect getting missed entirely is its own real
+      cost, not a safer kind of wrong.
+
+  - type: check_understanding
+    prompt: "For 'do Gentoo penguins actually weigh more than Adelie penguins,' state the null hypothesis in one plain sentence."
+    mode: discussion
+    topic: "State the Null Hypothesis"
+    bloom_level: understand
+    question_style: conceptual
+    skill_tags: ["inferential-statistics"]
+    notes: >
+      [ACTIVITY] Table groups say their sentence out loud to each other,
+      then one person per table shares with the room. In person: circulate
+      and listen for "no real difference" language specifically, not just
+      "they're the same." Online: post in chat, call on 2-3. 3 minutes.
+
+
+      [SCRIPT] The target answer: "There is no real difference in average
+      body mass between Gentoo and Adelie penguins - any difference in
+      this sample is just random sampling variation." Anything that
+      captures "no real difference, just noise" counts.
+
+
+      [MISCONCEPTIONS] A common near-miss: "Gentoo and Adelie penguins
+      weigh the same." That states the null as a fact about penguins, not
+      as the assumption a test starts from and might reject.
+
+  - type: content
+    title: "What a p-value Actually Measures"
+    bullets:
+      - "How surprising your result would be"
+      - "If the null hypothesis were actually true"
+      - "Not the odds the null is true"
+    icon_hero:
+      icon: "probability"
+      style: "gold"
+    notes: >
+      [SCRIPT] State it precisely, because the imprecise version is the
+      single most common statistics misconception professionals carry
+      into the workplace. A p-value is the probability of seeing a result
+      at least this extreme, if the null hypothesis were actually true.
+
+
+      [SCRIPT] Say the wrong version out loud, on purpose, so the room
+      can hear how close it sounds to the right one. "The probability the
+      null hypothesis is true" is not the same claim, even though it is
+      the version most people say by accident.
+
+
+      [MISCONCEPTIONS] The American Statistical Association's own 2016
+      statement lists this exact confusion first, ahead of every other
+      p-value misuse - it is common enough among working professionals
+      that a national statistics body issued a formal correction.
+
+  - type: check_understanding
+    prompt: "A test returns p = 0.03. What does that tell you?"
+    mode: game
+    topic: "What Does a p-value Actually Tell You?"
+    bloom_level: analyze
+    question_style: interview
+    options:
+      - "There's a 3% chance the null hypothesis is true"
+      - "This result is 97% likely to be real"
+      - "This result is unlikely if the null were true"
+    answer:
+      correct: "This result is unlikely if the null were true"
+      explanation: "A p-value of 0.03 means: if the null hypothesis were actually true, a result at least this extreme would only happen 3% of the time. It says nothing directly about the probability that the null hypothesis itself is true or false - that's exactly the confusion the American Statistical Association's own 2016 statement names as the most common p-value misuse."
+      source: "American Statistical Association, 'Statement on Statistical Significance and P-Values,' 2016"
+    skill_tags: ["inferential-statistics", "critical-thinking"]
+    notes: >
+      [ACTIVITY] Poll: read all three out loud, everyone answers at once.
+      In person: call out A, B, or C on a count of three. Online: type A,
+      B, or C in chat on the same count. 45 seconds.
+
+
+      [SCRIPT] Walk why each wrong option is wrong specifically, not just
+      "not that one." Option A restates the exact misconception from two
+      slides ago. Option B inverts a probability that was never about "is
+      this real" in the first place.
+
+  - type: content
+    title: "Confidence Intervals: A Range, Not a Single Number"
+    bullets:
+      - "A single p-value hides the actual size"
+      - "CI shows a range of plausible values"
+      - "Wide range: Less certain. Narrow: More certain."
+    icon_hero:
+      icon: "statistics"
+      style: "green"
+    notes: >
+      [SCRIPT] Name the real gap a p-value alone leaves open. Knowing a
+      difference is "probably not zero" tells you nothing about whether
+      it's a tiny difference or a huge one.
+
+
+      [SCRIPT] Introduce the fix directly. A 95% confidence interval gives
+      a real range of plausible values for the true population difference,
+      built from this exact sample. "Gentoo penguins average 1,000 to
+      1,400 grams heavier" is a genuinely different, more useful claim than
+      "p equals 0.03."
+
+
+      [MISCONCEPTIONS] People say "there's a 95% chance the true value is
+      in this range," treating the true value as random and the interval
+      as fixed. The interval is what's random here - it's the method that's
+      right 95% of the time across many samples, not a 95% bet on this one
+      already-computed range.
+
+  - type: transition
+    from_label: "The Logic of One Test"
+    to_label: "A Second, Separate Question: Is Your Sample Big Enough?"
+    note: "A test can be run perfectly and still mislead you, if the sample size doesn't match what you're actually trying to detect."
+    objective_index: 2
+    style: "icon_hero"
+    icon: "checklist"
+    notes: >
+      [SCRIPT] [~25 min mark] Name the pivot explicitly. Everything so far
+      assumed the test itself was trustworthy. Now the question becomes
+      whether the sample size behind it was ever adequate in the first
+      place.
+
+  - type: content
+    title: "'Significant' Doesn't Mean 'Big Enough to Matter'"
+    bullets:
+      - "A huge sample can detect tiny differences"
+      - "Tiny and 'significant' can both be true"
+      - "Significant only means: Probably not exactly zero"
+      - "The name for this: Practical significance"
+    analogy:
+      domain: "sports"
+      mapping: "A stopwatch precise enough to catch a tiny gap in a photo finish will report that gap every single race. That gap is real. No coach would ever restructure training around it, though. A large enough sample works the same way. It can reliably detect a real difference. That difference can still be too small to act on."
+      backups:
+        - domain: "food"
+          mapping: "It is like a kitchen scale sensitive enough to detect the weight of a single fingerprint left on a cake. That reading is real and repeatable. No baker changes a recipe over it."
+        - domain: "music"
+          mapping: "It is like a tuning app flagging a guitar string as off by a hundredth of a cent, a gap no human ear could ever hear. Technically real. Not a reason to retune."
+    notes: >
+      [SCRIPT] Name the analogy before returning to the case study. A
+      stopwatch precise enough to catch a 0.0001-second gap in a photo
+      finish reports that gap faithfully, every time. Real and repeatable.
+      Also not something any coach restructures training around.
+
+
+      [SCRIPT] Connect it back explicitly. That is exactly what happened
+      in the dementia drug trials. The larger trials were precise enough
+      to reliably detect a genuinely tiny effect - and "significant" is
+      all that label was ever claiming.
+
+
+      [MISCONCEPTIONS] People treat "the sample was huge, so it must be
+      trustworthy" as settling the question. Sample size fixes precision,
+      not relevance - a huge sample answers "is this exactly zero" more
+      confidently, never "is this big enough to matter."
+
+
+      [OTHER EXAMPLES] Two backups are in the notebook if the stopwatch
+      version does not land: a kitchen scale detecting a fingerprint's
+      weight, and a tuning app flagging an inaudible pitch gap.
+
+  - type: content
+    title: "One Sample-Size Trap Runs the Other Direction"
+    bullets:
+      - "A bigger sample doesn't fix bias"
+      - "It just states the wrong answer precisely"
+      - "Random noise shrinks. A biased method doesn't."
+    icon_hero:
+      icon: "warning"
+      style: "red"
+    notes: >
+      [SCRIPT] Give the classic real example. In 1936, a magazine polled
+      2.4 million people and confidently predicted a landslide for
+      Landon. Roosevelt won in a landslide instead. The poll's sample was
+      enormous - and it was drawn from telephone and car owners, wealthier
+      than the actual voting population during the Depression.
+
+
+      [SCRIPT] Say the mechanism plainly. A bigger sample shrinks random,
+      sample-to-sample noise. It does nothing to a systematic bias in how
+      the sample was collected in the first place - it just reports that
+      same wrong answer with more apparent confidence.
+
+
+      [MISCONCEPTIONS] "More data" gets treated as an automatic fix for
+      any data-quality worry. More of a biased sample is not more true.
+      It's the same bias, stated more precisely.
+
+
+      [SOURCES] The 1936 Literary Digest poll (2.4 million respondents,
+      sampled from telephone/car-owner/club-membership lists that skewed
+      wealthier than the actual electorate during the Depression) versus
+      Roosevelt's real landslide win is a standard, widely-documented
+      example in introductory statistics teaching and survey-methodology
+      history.
+
+  - type: content
+    title: "How Big a Sample Do You Actually Need?"
+    bullets:
+      - "A tiny effect needs a bigger sample"
+      - "A big effect needs a small one"
+      - "More variation needs more data too"
+    icon_hero:
+      icon: "percentage_metric"
+      style: "blue"
+    notes: >
+      [SCRIPT] Introduce the term directly. The minimum detectable effect
+      is the smallest real effect your study is actually sized to catch.
+      Decide that number first, before picking a sample size, not after.
+
+
+      [SCRIPT] Walk the three levers plainly. A smaller effect you're
+      trying to catch needs a bigger sample. A bigger, more obvious effect
+      needs a smaller one. More natural variation in the data itself also
+      pushes the needed sample size up, even at the same effect size.
+
+
+      [MISCONCEPTIONS] People treat "how big should my sample be" as
+      answerable on its own. It's only answerable once you've named the
+      smallest effect that would actually matter to you first.
+
+  - type: check_understanding
+    prompt: "A team wants to detect a small 2-minute improvement in average wait time, using only 40 patients. What's the real risk?"
+    mode: game
+    topic: "Sample Size Versus the Effect You're Chasing"
+    bloom_level: analyze
+    question_style: conceptual
+    options:
+      - "No risk - the test will work fine either way"
+      - "The sample is likely too small to catch it"
+      - "The p-value will definitely come back significant"
+    answer:
+      correct: "The sample is likely too small to catch it"
+      explanation: "A small effect is genuinely harder to detect than a large one, and 40 patients is a small sample. That combination is exactly the recipe for a real effect getting missed entirely - a test that fails to reject the null even though a true difference exists. A proposed sample size can't be judged adequate without first knowing how small an effect it actually needs to catch."
+      source: "Direct application of this lesson's own minimum-detectable-effect reasoning"
+    skill_tags: ["inferential-statistics", "statistical-analysis"]
+    notes: >
+      [ACTIVITY] With your table: name one way the team could fix this
+      before running the study, not after. In person: call out answers,
+      collect 2-3 on the board. Online: post in chat. 2 minutes.
+
+
+      [SCRIPT] The target fix: either accept a bigger minimum detectable
+      effect (only claim you can catch a bigger improvement), or get a
+      genuinely bigger sample. There's no way around that tradeoff.
+
+  - type: check_understanding
+    prompt: "A trial of 50,000 patients finds a 'significant' 0.3% improvement in recovery rate. A hospital wants to switch treatments over it. What's the real question to ask first?"
+    mode: game
+    topic: "Big Sample, Tiny Difference"
+    bloom_level: analyze
+    question_style: conceptual
+    options:
+      - "Was the sample size big enough to trust this?"
+      - "Is 0.3% actually worth the cost of switching?"
+      - "Was the p-value below 0.05?"
+    answer:
+      correct: "Is 0.3% actually worth the cost of switching?"
+      explanation: "The sample size was clearly big enough - that's exactly why a 0.3% difference showed up as 'significant' at all. The p-value being below 0.05 is also already given, not the open question. The one thing this scenario hasn't answered is whether a 0.3% improvement is worth whatever switching treatments actually costs in money, disruption, and risk - a practical-significance question no p-value can answer."
+      source: "Direct application of this lesson's own statistical-vs-practical-significance distinction"
+    skill_tags: ["inferential-statistics", "critical-thinking"]
+    notes: >
+      [ACTIVITY] With your table: name one real-world cost of switching
+      treatments that a p-value would never capture. In person: call out
+      answers, collect 3-4 on the board. Online: post in chat. 3 minutes.
+
+
+      [SCRIPT] Tie this directly back to the case study. This is precisely
+      the dementia-trial pattern - a real, reliably-detected effect, too
+      small to justify the real-world action being considered.
+
+  - type: check_understanding
+    prompt: "Would you rather have a small trial with an obvious effect, or a huge trial with a barely-there effect?"
+    mode: would_you_rather
+    topic: "Big and Obvious, or Huge and Barely-There?"
+    bloom_level: evaluate
+    question_style: critical_thinking
+    skill_tags: ["inferential-statistics", "critical-thinking"]
+    notes: >
+      [ACTIVITY] Force a pick before any discussion. In person: move to one
+      side of the room, then two people from each side say why. Online:
+      type "small and big" or "huge and barely-there" in chat at the same
+      count. 4 minutes total.
+
+
+      [SCRIPT] Neither extreme is automatically better, and that is the
+      point. A small trial's big effect might just be sample noise that
+      hasn't been checked yet. A huge trial's tiny effect might be real
+      and still not matter.
+
+
+      [SCRIPT] Land the actual answer explicitly. You want both pieces
+      together every time: is it real (the test, the p-value), and is it
+      big enough to matter (the effect size, the confidence interval, and
+      your own judgment about the real-world stakes).
+
+
+      [MISCONCEPTIONS] Someone will argue bigger is always safer. Bigger
+      is more precise, not more meaningful - precision and importance are
+      two different questions, and this whole lesson is about telling
+      them apart.
+
+  - type: interview_prep
+    topics:
+      - question: "How would you explain a p-value to a non-technical stakeholder?"
+        short_answer: "Audience: For a stakeholder, not a fellow analyst, so I'd skip the formal notation. Simplify: A p-value is how surprising your result would be if there were actually no real effect. Analogy: Like a smoke detector - a high reading flags evidence worth checking, it doesn't prove there's a fire. Check: I'd confirm they don't walk away thinking it's 'the probability the null is true.'"
+        technique: "Teach-Back"
+        icon: "probability"
+      - question: "How would you explain Type I and Type II errors to a hiring manager?"
+        short_answer: "Audience: A hiring manager, so I'd lead with the tradeoff, not the labels. Simplify: Type I is a false alarm - rejecting a true null. Type II is a miss - failing to reject a false null. Analogy: Convicting an innocent person versus letting a guilty one go free. Check: I'd confirm they see it as a real tradeoff, not a bug you can just eliminate."
+        technique: "Teach-Back"
+        icon: "error"
+    notes: >
+      [TECHNIQUE] Both use Teach-Back: Audience, Simplify, Analogy, Check.
+      Both questions are genuinely "explain a technical idea clearly"
+      moments, not "defend a decision" moments, which is exactly when
+      Teach-Back fits better than a framework built for justifying a
+      choice.
+
+
+      [SCRIPT] Point out the deliberate callback in the second answer. The
+      courtroom analogy is the exact one taught earlier this lesson - reusing
+      it here is not repetition, it's the same idea proving useful twice.
+
+
+      [SCRIPT] [~50 min mark] If you are already past 55 minutes, show the
+      answers and skip the cold attempt. Otherwise have someone attempt the
+      first one cold before advancing.
+
+
+      [SOURCES] Both questions verified as current, commonly asked
+      data-analyst interview questions (DataCamp's own interview-prep
+      guide, cross-checked against Dataquest and KDnuggets interview-prep
+      material).
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "null hypothesis"
+        - "No real difference - only sample noise"
+      - - "alternative hypothesis"
+        - "A real difference or effect exists"
+      - - "p-value"
+        - "How surprising this result is, if null were true"
+      - - "confidence interval"
+        - "Range of plausible values for the true effect"
+      - - "minimum detectable effect"
+        - "Smallest real effect a study can reliably catch"
+    notes: >
+      [SCRIPT] Fast round trip before the summary. Ask the room to supply
+      "p-value" and "confidence interval" from what they just did, rather
+      than reading every row yourself - those two are the pair today's
+      whole example was built around.
+
+
+      [MISCONCEPTIONS] Watch for anyone still defining "p-value" as "the
+      probability the null is true" at this recap point - that is the one
+      definition worth correcting again, out loud, before moving on.
+
+  - type: bridge
+    title: "So far, we've covered..."
+    bullets:
+      - "Two explanations for any difference you see"
+      - "Null and alternative hypothesis, defined for real"
+      - "What a p-value actually measures"
+      - "Why a huge sample can mislead you"
+      - "Statistical significance versus practical significance"
+    notes: >
+      [SCRIPT] Resolve the case study's hook directly. Would a
+      'statistically significant' trial alone be enough to recommend a
+      drug to your own grandmother? Not by itself - you'd also want the
+      effect size, the confidence interval, and a real judgment about
+      whether the size of that effect is worth acting on.
+
+
+      [SCRIPT] Say the next-class tie out loud. Everything today was the
+      logic. Next class runs the real test, in Python, on exactly the
+      Gentoo-versus-Adelie comparison you stated a hypothesis for today.
+
+
+      [SCRIPT] Say the project tie out loud too. Stating your hypothesis
+      before running any test, and judging whether a significant result
+      is actually big enough to matter, are both graded sections on your
+      own project a few weeks from now.
+
+  - type: closing
+    title: "Before Next Class Runs the Real Test"
+    bullets:
+      - "Write your own null hypothesis"
+      - "Write the matching alternative hypothesis"
+      - "Bring both to next class"
+    exercise:
+      type: bullets
+      url_or_text: "State your own null and alternative hypothesis for this question: do Gentoo penguins actually weigh more than Adelie penguins? Bring both to next class - that's the exact comparison the real test runs on."
+      label: "Practice: State your own H0 and H1"
+    notes: >
+      [SCRIPT] Be specific about why this matters. Writing the hypothesis
+      before seeing a test result is exactly the discipline the project
+      grades first, and today is the low-stakes place to build the habit.
+
+
+      [SCRIPT] Preview next class honestly. You'll run this exact
+      comparison for real, in Python, via `scipy.stats` - today's
+      hypothesis is what makes that result interpretable instead of just a
+      number on a screen.
+
+  - type: further_resources
+    resources:
+      - title: "P Values, Clearly Explained"
+        url: "https://www.youtube.com/watch?v=5Z9OIYA8He8"
+        kind: video
+        time_estimate: "~6 min watch"
+        description: "StatQuest's plain-language walkthrough"
+        attribution: "StatQuest with Josh Starmer"
+      - title: "Understanding Statistical Power"
+        url: "https://rpsychologist.com/d3/nhst/"
+        kind: practice
+        time_estimate: "~10-15 min"
+        description: "An interactive sample-size and power visualizer"
+        attribution: "Kristoffer Magnusson"
+      - title: "ASA Statement on P-Values"
+        url: "https://www.amstat.org/asa/files/pdfs/p-valuestatement.pdf"
+        kind: documentation
+        time_estimate: "~10 min read"
+        description: "The field's own official correction on misuse"
+        attribution: "American Statistical Association"
+    notes: >
+      [SCRIPT] Point at the interactive power visualizer specifically,
+      since it makes today's second half genuinely tangible - dragging the
+      sample-size slider and watching power change is a different kind of
+      understanding than hearing it described.
+
+
+      [SCRIPT] The ASA statement is worth naming as the actual, official
+      source behind today's most-corrected misconception - it is the
+      field's own professional body publicly correcting how p-values get
+      misread, not just one instructor's opinion.

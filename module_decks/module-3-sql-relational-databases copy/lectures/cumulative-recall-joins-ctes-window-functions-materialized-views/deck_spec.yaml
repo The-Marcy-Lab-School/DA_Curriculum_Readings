@@ -1,0 +1,1033 @@
+meta:
+  title: "Cumulative Recall: Joins, CTEs, Window Functions, Materialized Views"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 13
+  date: "Day 13"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Rebuild a multi-table answer with the joins and aggregation the question actually needs, without a template"
+    - "Find what a query gets silently wrong when it runs clean and still returns rows"
+    - "Verify a result against a hand-built known answer before you trust it"
+  tools:
+    - "PostgreSQL / psql"
+  exercise:
+    type: project_plan
+    url_or_text: "module_sources/module-3-sql-relational-databases/PROJECT.md"
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Every query tool this module has taught: `INNER`/`LEFT JOIN`, `GROUP BY` with `HAVING`, CTEs, `RANK()` with `OVER`, `COALESCE`, and materialized views"
+    - "Reading a real result set in `psql` and saying whether the row count makes sense"
+    - "Working independently against your own running class database, without a step-by-step template"
+  interview_topics:
+    - "Explaining how you validate data before you present it to anyone"
+  final_project:
+    "The project hands you seven fixed business questions, each engineered to demand one
+    specific technique, and grades whether every answer was spot-checked against known
+    values rather than trusted because it looked right. Today is the last rehearsal for
+    both halves of that: reaching for the right tool without a template, and proving the
+    result before anyone else sees it."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: independent
+  estimated_duration_min: 58
+  scenario: >
+    Nothing new gets installed today and nothing new gets taught. The database you have
+    been building all module is still running, and every tool you need is already in your
+    hands. What changes is that the template is gone. You get a business question, you
+    pick the tool, you write the query, and then you do the part that actually separates
+    an analyst from a query: you prove the answer is right before you hand it to anybody.
+    Every query in here runs clean. Not all of them are correct.
+  notebook_warmup:
+    prompt: "A query runs with no error and returns a sensible-looking number. What would you have to do, concretely, to find out whether that number is actually true?"
+    hint: "Think about what you would need to already know before the query ran, and how small that known thing could be."
+  glossary:
+    - term: "spot-check"
+      definition: "Checking a query's result against an answer you worked out by hand first"
+    - term: "silent bug"
+      definition: "A query that runs with no error but hands back the wrong rows"
+    - term: "row count check"
+      definition: "Adding a breakdown back up and confirming it matches the source table's own total"
+
+slides:
+  - type: title
+    title: "Joins, CTEs, Window Functions, Views: **All From Memory**"
+    subtitle: "The template is gone, and not every query is telling the truth"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 13"
+    notes: >
+      [SCRIPT] Open by naming exactly what today is. There is no new keyword, no new
+      installation, no new syntax. Everything on these slides has already been taught
+      in this room. What is different is that nobody is going to tell you which tool
+      to reach for, and nobody is going to tell you when an answer is wrong.
+
+
+      [SCRIPT] Say the shape of the hour out loud. A fast warm-up on vocabulary. Then
+      one rebuild from scratch. Then a stretch where every query runs clean and two of
+      them lie to you. Then the routine you will use on every single query the project
+      asks for.
+
+
+      [SCRIPT] Set the stakes honestly and without overclaiming. The next stretch of
+      class is a sprint where the work is graded on whether the queries are correct
+      and whether you checked them, not on whether they ran. Today is the last time
+      the room does that together.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Pick the tool the shape forces"
+        icon: "shuffle"
+      - text: "Spot a query that runs but lies"
+        icon: "bug"
+      - text: "Prove it before you trust it"
+        icon: "validation"
+    notes: >
+      [SCRIPT] Read all three, then tie the last one straight to how the project is
+      graded. The rubric asks for queries that were spot-checked against known values,
+      and it treats a query that "looks right" but was never checked as a real miss,
+      not a style preference. Objective three is that requirement, rehearsed.
+
+
+      [SCRIPT] Name what is deliberately absent. There is no worked template today and
+      no step-by-step walkthrough. That is the point of an independent practice day:
+      the support fades right before the graded work starts, so the gap shows up here
+      where it costs nothing.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "Spot-Check"
+        icon: "validation"
+      - text: "Silent Bug"
+        icon: "bug"
+      - text: "Row Count Check"
+        icon: "row"
+    notes: >
+      [SCRIPT] Names only for now. Point out that all three describe habits, not
+      syntax, which is unusual for this module and deliberate. Everything else this
+      module named was a keyword. These three are the practices that decide whether
+      the keywords were used correctly.
+
+
+      [MISCONCEPTIONS] The phrase "silent bug" confuses people who expect a bug to
+      announce itself. Say it plainly once: a SQL error message is the easy case,
+      because the database tells you. The dangerous case is the query that runs,
+      returns rows, and is wrong, because nothing at all will tell you.
+
+  - type: check_understanding
+    prompt: "Quick-fire: One clause filters raw column values, the other filters a `COUNT`. Which is which?"
+    mode: game
+    topic: "Warm-Up: WHERE vs. HAVING"
+    bloom_level: remember
+    question_style: conceptual
+    options:
+      - "`WHERE` filters counts, `HAVING` filters columns"
+      - "`HAVING` filters counts, `WHERE` filters columns"
+      - "Either one works for both"
+    answer:
+      correct: "`HAVING` filters counts, `WHERE` filters columns"
+      explanation: "`WHERE` runs before the rows are grouped, so at that moment no `COUNT` exists yet to filter on. `HAVING` runs after grouping, which is why it can see the aggregate. Same underlying rule as the window-function filtering trap from the tool-choice lesson: anything computed later in the query's own order of operations cannot be filtered earlier in it."
+      source: "This module's own aggregation lesson, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] Quick-fire round, thirty seconds, no discussion. In person: shout the
+      letter out or hold up fingers for A, B or C. Online: everyone types a letter in
+      chat at the same time, then reveal. Participation over correctness here.
+
+
+      [SCRIPT] Say why this one opens the day rather than sitting anywhere else. It is
+      the single rule that has come back in three different costumes this module: you
+      cannot filter something that has not been computed yet. It shows up again the
+      moment somebody tries to filter a window value later today.
+
+
+      [MISCONCEPTIONS] The answer people reach for under time pressure is C, because
+      both clauses "filter" and the words feel interchangeable. They are not
+      interchangeable and they are not preferences. Each one is legal at exactly one
+      point in the query's order of operations.
+
+  - type: check_understanding
+    prompt: "Two asks land. Ask 1: \"Top 3 boroughs by average score.\" Ask 2: \"Every restaurant listed beside its borough average.\" Which one forces a window function?"
+    mode: poll
+    topic: "Which Shape Forces a Window Function"
+    bloom_level: analyze
+    question_style: business_thinking
+    options:
+      - "Ask 1 only"
+      - "Ask 2 only"
+      - "Both of them"
+    answer:
+      correct: "Ask 2 only"
+      explanation: "Ask what one row of the answer represents. In Ask 1 a row is a borough, so the restaurants are meant to collapse and `GROUP BY` is the right shape. In Ask 2 a row is still a restaurant, and a group-level number has to ride along beside it, which is exactly what a window function is built for. The words \"average\" and \"top\" appear in both, so the giveaway is never the vocabulary. It is whether the original rows are supposed to survive."
+      source: "This module's own window-function lessons, not an external citation"
+    skill_tags: ["sql", "window function"]
+    notes: >
+      [ACTIVITY] In person: show of hands for A, B or C, then ask one person who
+      picked B to say what a single row of each answer represents. Online: letters in
+      chat, then unmute one Fellow for the same follow-up. Ninety seconds total.
+
+
+      [SCRIPT] This is the reading skill the project actually tests. The seven business
+      questions are handed over in plain English and each one is built to demand a
+      specific technique, so the first move on every single one is this exact question:
+      does a row of the answer stay a record, or become a group?
+
+
+      [MISCONCEPTIONS] A lot of hands go up for "both," because "average" sounds like
+      it must mean the same tool every time. Push back with the row-count test rather
+      than with the definition: ask how many rows Ask 1's answer has, and how many
+      rows Ask 2's answer has. Three versus seven settles it faster than any
+      explanation.
+
+  - type: transition
+    from_label: "Vocabulary Recall"
+    to_label: "Code Along: Rebuild It Without a Template"
+    note: "Naming the right tool is the easy half - now type it with nobody reading the answer out first."
+    objective_index: 1
+    style: "icon_hero"
+    icon: "terminal"
+    notes: >
+      [SCRIPT] [~13 min mark] Terminals open now. Connect to the class database and
+      leave it open, because everything from here to the wrap-up is typed live.
+
+
+      [SCRIPT] Give the business question before any syntax and then stop talking:
+      which restaurants have no violations recorded against them at all? Let the room
+      sit with it for a beat. The interesting part is that the obvious query returns
+      nothing, and figuring out why is the whole exercise.
+
+  - type: code
+    title: "Only `LEFT JOIN` Finds What **Isn't There**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      -- Which restaurants have no violations at all?
+      SELECT dba, COUNT(violation_id) AS tv
+      FROM restaurants
+      LEFT JOIN inspections USING (camis)
+      LEFT JOIN violations USING (inspection_id)
+      GROUP BY dba
+      HAVING COUNT(violation_id) = 0;
+    starter_code: |
+      -- TODO: count violations per restaurant so that
+      -- TODO:   restaurants with none still appear
+
+
+      -- TODO: keep only the restaurants whose count
+      -- TODO:   came back as zero - remember which
+      -- TODO:   clause is allowed to filter a COUNT
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Open `psql` on the class database (`nyc_restaurants`) before the first query. `tv` is the alias for total violations, the same short name used throughout this module's queries on this database. `camis` is the restaurant id and `inspection_id` links an inspection to its violations. Nothing in this query changes data, so it is safe to re-run as many times as you like."
+    doc_url: "https://www.postgresql.org/docs/current/queries-table-expressions.html"
+    skill_tags: ["sql", "relational-databases"]
+    notes: >
+      [ACTIVITY] Two blanks and a clause name. In person: three minutes at the
+      keyboard, then call on somebody to read their line out. Online: three minutes,
+      then paste your `JOIN` line in chat before anyone runs it. Ask for a predicted
+      row count before enter gets pressed.
+
+
+      [SCRIPT] Five rows come back: Flatbush Fry, Bayside Grill, New Spot NYC, Harbor
+      Grill and Sunset Diner. Then swap the `violations` join to `INNER` live and run
+      it again. Zero rows. That contrast is the whole slide, and it lands far harder
+      from a real empty result than from any explanation.
+
+
+      [SCRIPT] Say why `INNER` returns nothing, because the room will find it
+      surprising: a restaurant with no violations has no matching violation row, so an
+      inner join throws it away before `COUNT` ever sees it. The rows you are looking
+      for are precisely the rows an inner join deletes.
+
+
+      [MISCONCEPTIONS] A common wrong answer for the third blank is `WHERE`. It reads
+      naturally and it fails, because the count does not exist yet at that point. This
+      is the warm-up question arriving in real syntax two minutes later, which is
+      exactly why the warm-up came first.
+
+
+      [SOURCES] PostgreSQL documentation, "Table Expressions," on `LEFT OUTER JOIN`:
+      for each row of the left-hand table, if no matching right-hand row exists, the
+      joined row is still added "with null values in columns of T2." A `COUNT` of a
+      nullable column ignores those nulls, which is why the count lands on zero rather
+      than on one.
+
+  - type: transition
+    from_label: "A Query That Works"
+    to_label: "Code Along: A Query That Runs and Lies"
+    note: "Everything so far failed loudly when it was wrong - the next one succeeds quietly while being wrong."
+    objective_index: 2
+    style: "panel_preview"
+    preview_items:
+      - text: "Rows quietly duplicated"
+        icon: "bug"
+      - text: "A count that proves it"
+        icon: "row"
+    notes: >
+      [SCRIPT] [~19 min mark] Make the pivot explicit before anything is typed. Up to
+      now, a broken query announced itself with a red error message. For the rest of
+      this section the database will cooperate fully and hand back a confident, wrong
+      number.
+
+
+      [SCRIPT] Warn the room that this is the single most-repeated mistake on this
+      module's own project, and that it is worth more attention than any syntax on
+      today's slides.
+
+  - type: code
+    title: "It Ran Clean. It's Also **Wrong**."
+    language: sql
+    terminal_label: "psql"
+    code: |
+      -- How many inspections has each restaurant had?
+      SELECT dba, COUNT(inspection_id) AS insp
+      FROM restaurants
+      LEFT JOIN inspections USING (camis)
+      LEFT JOIN violations USING (inspection_id)
+      GROUP BY dba
+      ORDER BY insp DESC;
+    starter_code: |
+      -- TODO: count inspections per restaurant, joining
+      -- TODO:   restaurants, inspections AND violations
+      -- TODO:   (yes, all three - that is the point)
+
+
+      -- TODO: order by the count, highest first, then
+      -- TODO:   write down the number you get for
+      -- TODO:   Corner Bistro before reading on
+    code_along: true
+    domain: "public_sector"
+    analogy:
+      domain: "family"
+      mapping: "Counting who is coming to the cookout from group-chat replies. One cousin who answers in two different chats gets counted twice, and you buy for a crowd that never shows up."
+      backups:
+        - domain: "music"
+          mapping: "Counting how many songs you own by counting playlist entries. A track sitting in four playlists looks like four songs."
+        - domain: "travel"
+          mapping: "Counting travellers by counting boarding passes. Anyone with a connecting flight gets counted twice, and the van you booked is too big."
+    domain_note: "`insp` is the alias for the inspection count. The `violations` table holds one row per violation found during an inspection, so a single inspection can have several violation rows attached to it."
+    doc_url: "https://www.postgresql.org/docs/current/tutorial-agg.html"
+    skill_tags: ["sql", "relational-databases"]
+    notes: >
+      [ACTIVITY] Before pressing enter, have everyone write down what they expect for
+      Corner Bistro. In person: hold the number up on fingers. Online: numbers in chat
+      at once. Then run it. Corner Bistro comes back as 4.
+
+
+      [SCRIPT] Now ask the room to add every restaurant's count up out loud. They come
+      to five - but the whole `inspections` table only holds four rows, across every
+      restaurant in the database. The query threw no error, returned every restaurant,
+      sorted nicely, and is wrong. Do not name the cause yet - the next slide asks the
+      room to find it.
+
+
+      [SCRIPT] Introduce the cookout comparison as a hint, not a reveal: counting who
+      is coming to a cookout from group-chat replies, where one cousin who answers in
+      two different chats gets counted twice. Let the room sit with that parallel
+      rather than explaining it - the next slide is where the mechanism gets named.
+
+
+      [SCRIPT] Say out loud that the fix is not a clever function. It is noticing at
+      all. A wrong number that arrives quietly is only ever caught by somebody who was
+      already checking. Do not explain why yet - hold the rest for after the next
+      slide's reveal.
+
+  - type: check_understanding
+    prompt: "Your per-restaurant counts add up to 5, but the whole `inspections` table only holds 4 rows. What caused the inflated number?"
+    mode: poll
+    topic: "Diagnosing an Inflated Count"
+    bloom_level: analyze
+    question_style: debug
+    options:
+      - "The `LEFT JOIN` dropped rows it should have kept"
+      - "Joining `violations` duplicated each inspection row"
+      - "`COUNT` can't be used on a joined column"
+    answer:
+      correct: "Joining `violations` duplicated each inspection row"
+      explanation: "Joining `violations` in duplicates each inspection row once per violation attached to it, and `COUNT` faithfully counts the duplicates - the join did exactly what it was told, nobody told it the right thing. One inspection with two violations produces two joined rows, and `COUNT(inspection_id)` counts both of them. Corner Bistro genuinely had three inspections, and one of those carried two violations, so the count landed on four. Notice it was only wrong for that one restaurant: every other count in the result was correct, which is exactly why glancing at the output catches nothing. The rule worth carrying into the project: every extra table you join can multiply your rows, so counting anything after a join means asking what one row now represents."
+      source: "Real PostgreSQL 16 output from this lesson's own database"
+    skill_tags: ["sql", "relational-databases"]
+    notes: >
+      [ACTIVITY] In person: show of hands, then ask whoever picked B to say which
+      inspection had two violations. Online: letters in chat, then one Fellow unmutes
+      for the same follow-up. Sixty seconds.
+
+
+      [SCRIPT] This is the module's own most-repeated project mistake stated as a
+      question, so give it a real beat rather than rushing to the fix. The rubric
+      treats a join that silently duplicates rows as a genuine failure, and it is the
+      failure that is hardest to see once the result is sitting in a spreadsheet.
+
+
+      [MISCONCEPTIONS] Option A gets picked by people who remember that `LEFT JOIN`
+      and `INNER JOIN` return different row counts and reach for the most recent
+      join-related fact they hold. Name the distinction: that difference is about rows
+      being dropped. This is about rows being multiplied, which is the opposite
+      direction and a different mechanism. Prove it live if anyone doubts it: swap
+      both joins to `INNER` and run it again - Corner Bistro still says 4, because the
+      bug is joining a table you are not counting, not which join type was used.
+
+
+      [MISCONCEPTIONS] Be careful not to say the database "got it wrong," because it
+      did not. The joined result genuinely is one row per restaurant-inspection-
+      violation combination, which is correct. What is wrong is the question asked of
+      those rows: `COUNT(inspection_id)` reports on inspections while the rows are no
+      longer one per inspection. "I asked the wrong question of the right rows" is the
+      accurate framing, and it is the one that transfers.
+
+
+      [SCRIPT] Say why this one is genuinely hard to spot, since it is the crux. Only
+      an inspection with two or more violations inflates anything. Green Leaf Cafe's
+      single inspection had one violation, so its count is perfectly correct. The
+      number is wrong for some restaurants and right for others, which is exactly why
+      glancing at the output does not catch it.
+
+
+      [SCRIPT] Give the durable version of the fix for anyone who asks. The industry
+      name for this is fan-out, and the reliable move is to aggregate the many-side
+      first and then join the already-aggregated result. `COUNT(DISTINCT ...)` happens
+      to patch a count, but it does nothing for a `SUM` of a duplicated amount column,
+      which is the version of this bug that costs real money.
+
+
+      [SOURCES] This is standard relational-join behaviour, not a PostgreSQL quirk -
+      it behaves identically in MySQL, SQL Server, BigQuery and SQLite. PostgreSQL
+      documentation, "Table Expressions," describes an inner join as producing every
+      combination of rows that satisfies the join condition, so one left-hand row
+      matched by three right-hand rows appears three times in the result. Google
+      Cloud's Looker documentation names the effect directly: "Joins can cause fanout
+      problems where rows are duplicated." Metabase Learn's "Debugging duplicated data
+      in SQL query results" attributes it to joins that assume a one-to-one
+      relationship where the data is really one-to-many.
+
+  - type: transition
+    from_label: "Wrong for a Different Reason"
+    to_label: "Code Along: A Number You Invented, Not Found"
+    note: "Fan-out is a query that ran clean and lied. This next one runs clean and asks you to pick a lie on purpose."
+    style: "icon_hero"
+    icon: "shuffle"
+    notes: >
+      [SCRIPT] Terminals stay open. Name the shift before typing: this one is not a
+      bug to find, it is a real judgment call the query forces on you.
+
+  - type: code
+    title: "`COALESCE` Doesn't Find a Value - **You Invent One**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH graded AS (
+        SELECT dba, COALESCE(score, 0) AS pts
+        FROM restaurants
+        JOIN inspections USING (camis)
+      )
+      SELECT dba, pts,
+        RANK() OVER (ORDER BY pts DESC) AS rnk
+      FROM graded
+      ORDER BY rnk;
+    starter_code: |
+      -- TODO: name a CTE that pairs each inspected
+      -- TODO:   restaurant with its score, substituting 0
+      -- TODO:   wherever the score is missing
+
+
+      -- TODO: read from that CTE and add a ranking
+      -- TODO:   column, worst score first
+
+
+      -- TODO: look at the two rows that tie, and decide
+      -- TODO:   whether 0 was an honest choice here
+    code_along: true
+    domain: "public_sector"
+    domain_note: "A New York City inspection `score` counts violation points, so a higher number is a worse result. `pts` is the score after the fallback is applied and `rnk` is the ranking. Two inspections in this database were never scored at all."
+    doc_url: "https://www.postgresql.org/docs/current/functions-conditional.html"
+    skill_tags: ["sql", "coalesce", "window function", "null handling"]
+    notes: >
+      [ACTIVITY] Have Fellows write it before you show it, since every piece is
+      already familiar. Three minutes. Then ask a harder question than the syntax one:
+      is zero an honest fallback here? In person, turn and talk for sixty seconds.
+      Online, one line in chat each.
+
+
+      [SCRIPT] Four rows come back. Corner Bistro scores 12 and ranks first, Green
+      Leaf Cafe scores 7 and ranks second, and two never-scored inspections both come
+      back as 0 and tie at rank 3. The tie is worth pausing on, because `RANK` sharing
+      a number for equal values is exactly the behaviour that surprised the room when
+      ranking was first taught.
+
+
+      [SCRIPT] Now the real point of the slide. `COALESCE` did not discover anything.
+      It replaced an unknown with a number that a human chose, and here that choice
+      quietly claims two inspections that were never scored had a perfect result.
+      Nothing in the output flags that. It is a silent bug of a different kind:
+      correct SQL, dishonest meaning.
+
+
+      [MISCONCEPTIONS] This slide's own `JOIN` is a deliberate `INNER JOIN`, the only
+      one in today's deck - every other query uses `LEFT JOIN`. A `LEFT JOIN` here
+      would pull in the five never-inspected restaurants too, coalescing all of them
+      to 0 and swelling the rank-3 tie from 2 rows to 7 - exactly the dishonesty this
+      slide is warning against.
+
+
+      [SCRIPT] Ask what a better fallback would be and let the room argue briefly.
+      There is no single right answer, which is the lesson. Leaving the null in place
+      and filtering those rows out is often the honest move. The project asks for a
+      `COALESCE` query on a genuinely nullable column, so this decision is coming for
+      everyone.
+
+
+      [MISCONCEPTIONS] The most common reading is that `COALESCE` "fixes" missing
+      data. It does not fix anything. It hides the gap behind a value you picked, and
+      whether that is helpful or misleading depends entirely on what the column means.
+
+
+      [SOURCES] PostgreSQL documentation, "Conditional Expressions": `COALESCE`
+      "returns the first of its arguments that is not null," and is described as
+      "often used to substitute a default value for null values when data is retrieved
+      for display." Substituting for display is the documented purpose. Substituting
+      before an average or a ranking is a modelling decision the documentation makes
+      no claim about.
+
+  - type: check_understanding
+    prompt: "You want every inspection that isn't grade A, so you filter on `WHERE grade <> 'A'`. It returns 1 row, not 3. Where did the other two go?"
+    mode: game
+    topic: "Why `<> 'A'` Loses the Ungraded Rows"
+    bloom_level: analyze
+    question_style: debug
+    options:
+      - "Comparing `NULL` to anything, even with `<>`, is never true"
+      - "The two ungraded rows were filtered out earlier"
+      - "`<>` doesn't work on a text column"
+    answer:
+      correct: "Comparing `NULL` to anything, even with `<>`, is never true"
+      explanation: "`NULL` means unknown, so asking whether an unknown grade is not-equal to 'A' gives back unknown rather than true, and `WHERE` only keeps rows where the condition is genuinely true. The two ungraded inspections quietly vanish, even though \"ungraded\" is intuitively not \"A\". The correct clause adds `OR grade IS NULL` explicitly - `<>` and `=` both treat `NULL` the same way. This is the sharpest example of a silent bug in the whole module, because the query runs, the syntax is legal, and the smaller-than-expected result looks like a real finding, not a bug."
+      source: "PostgreSQL documentation on comparison operators and null values"
+    skill_tags: ["sql", "null handling"]
+    notes: >
+      [ACTIVITY] Quick-fire, forty-five seconds. In person: fingers up for A, B or C.
+      Online: letters in chat at once. Then run both versions live so the room sees
+      zero rows and then two rows from what looks like the same question.
+
+
+      [SCRIPT] This is the trap most likely to cost somebody an hour during the
+      project, because there is nothing to debug. No error, no warning, just an empty
+      result that reads like the honest answer to the question.
+
+
+      [SCRIPT] Tie it back to the previous code-along explicitly. `COALESCE` was one
+      way to deal with a missing value; `IS NULL` is how you find one in the first
+      place. Reaching for `COALESCE` without ever checking how many nulls exist is how
+      a fallback gets applied to far more rows than anyone intended.
+
+
+      [MISCONCEPTIONS] Option B is picked more often than it should be, because an
+      empty result feels like evidence that the rows are gone. Emphasise the
+      distinction: an empty result set is not proof of absence. It is proof that
+      nothing matched the condition you actually wrote.
+
+
+      [SOURCES] PostgreSQL documentation, "Comparison Functions and Operators":
+      "Ordinary comparison operators yield null (signifying "unknown"), not true or
+      false, when either input is null. For example, `7 = NULL` yields null." The same
+      page is unusually direct about the mistake itself: "Do not write `expression =
+      NULL` because `NULL` is not equal to `NULL`. (The null value represents an
+      unknown value, and it is not known whether two unknown values are equal.)" Be
+      precise when saying this out loud: the comparison yields unknown, not false, and
+      `WHERE` returns only rows where the condition is genuinely true.
+
+  - type: check_understanding
+    prompt: "Your dashboard says one number and a stakeholder's own report says another. Walk me through what you'd do first."
+    mode: discussion
+    topic: "Two Numbers, One Question"
+    bloom_level: evaluate
+    question_style: interview
+    technique: "Investigation Framework"
+    skill_tags: ["sql", "relational-databases"]
+    notes: >
+      [ACTIVITY] Sixty seconds silent, then pairs for sixty more, then cold-call one
+      pair to narrate the investigation while a second Fellow adds a hypothesis they
+      missed. In person: pairs face each other. Online: breakout pairs, then unmute.
+
+
+      [TECHNIQUE] Use the Investigation Framework - Observation, Hypothesis, Evidence,
+      Recommendation. This is a "why did the numbers disagree" question, and the
+      interviewer is listening for a process, not a guess. A candidate who names
+      several possible causes before picking one sounds far more senior than one who
+      jumps straight to "my query is right."
+
+
+      [SCRIPT] Target shape of a strong answer. Observation: confirm both numbers are
+      real and ask exactly what each one measures - are they even answering the same
+      question? Hypothesis: several, out loud - a join fanning rows out, a stale
+      materialized view, a `NULL` silently dropped, a different date range. Evidence:
+      today's own routine - pick a slice, work out the answer by hand, run each query
+      against it, and see which one breaks. Recommendation: name the fix the evidence
+      actually supports, and what you would re-check afterward to confirm it.
+
+
+      [SCRIPT] Point out that today gave them the Evidence step for real, four times
+      over. That is the part most candidates hand-wave, and it is the part they can
+      now actually demonstrate with a real story.
+
+
+      [MISCONCEPTIONS] The weak answer opens with a single confident cause. Listen for
+      whether a Fellow confirms the disagreement is real and understands what both
+      numbers measure before theorising about which one is wrong.
+
+
+      [SOURCES] Verified as genuinely asked of data analysts, not only engineers:
+      Resume Worded's data-analyst behavioural guide and Dataquest's SQL interview
+      prep both carry a "numbers disagree, what do you do" cluster under this exact
+      framing. Say the tier honestly to the room - this is a mid-level question, so
+      handling it well here is a real, visible step up.
+
+  - type: transition
+    from_label: "Queries That Lie Once"
+    to_label: "Code Along: The Answer That Goes Stale"
+    note: "Those queries were wrong the moment they ran - a stored answer starts out right and rots quietly afterwards."
+    style: "icon_hero"
+    icon: "cycle"
+    notes: >
+      [SCRIPT] [~40 min mark] Name the third and last failure mode of the day. A query
+      can be written correctly, return the right answer, and still be wrong tomorrow,
+      because somebody stored the answer instead of the question.
+
+
+      [SCRIPT] Terminals open one more time. Flag before typing that this is the one
+      code-along today that changes data, so it is not freely re-runnable the way the
+      others are.
+
+  - type: code
+    title: "A Stored View Keeps Answering From **Before**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      -- The stored view still says 1
+      SELECT tv FROM restaurant_totals
+      WHERE dba = 'Green Leaf Cafe';
+      INSERT INTO violations
+        (violation_id, inspection_id, violation_code, violation_description)
+      VALUES (6, 2, '02B', 'Hot food held below 140F');
+      REFRESH MATERIALIZED VIEW restaurant_totals;
+      -- Now it says 2
+      SELECT tv FROM restaurant_totals
+      WHERE dba = 'Green Leaf Cafe';
+    starter_code: |
+      -- TODO: show that this stored view can hand back a
+      -- TODO:   stale answer, then bring it current -
+      -- TODO:   write down the number before and after
+    code_along: true
+    domain: "public_sector"
+    analogy:
+      domain: "media"
+      mapping: "A printed newspaper is fast to read and correct as of press time - a new event doesn't rewrite it. A live news site is slower to load and always current, because it re-checks its sources every time."
+      backups:
+        - domain: "sports"
+          mapping: "A printed program lists the lineup as it stood at kickoff. A trade the next day doesn't change the program - only a new one would."
+    domain_note: "`restaurant_totals` is the materialized view this module built earlier, holding one row per restaurant with its total violation count. This is the one code-along today that writes data - before class, run `SELECT max(violation_id) FROM violations;` and use the next free id. This only affects results that join `violations` directly: the earlier fan-out demo (\"It Ran Clean\") will no longer reproduce its exact numbers if re-run after this cell - don't re-run it against the board numbers."
+    doc_url: "https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html"
+    skill_tags: ["sql", "materialized view"]
+    notes: >
+      [ACTIVITY] Run the first `SELECT` and the `INSERT`, then stop before the
+      refresh. Ask the room to predict what the view says now. In person: hands up for
+      "1" or "2". Online: the number in chat. Most of the room says 2. It says 1.
+
+
+      [SCRIPT] Name the column list on the `INSERT` before running it: naming columns
+      explicitly instead of relying on their physical order is the same habit as
+      everything else today - don't trust something you never checked.
+
+
+      [SCRIPT] That gap is the whole slide. A materialized view stores rows, not a
+      live question, so new data underneath it changes nothing at all until somebody
+      runs `REFRESH`. Then run the refresh and read it again: 2.
+
+
+      [SCRIPT] Connect it to the honest version of the tradeoff rather than making the
+      view sound broken. It is fast precisely because the answer is already computed.
+      Speed and freshness are the two ends of that trade, and choosing a view means
+      choosing to manage the freshness yourself.
+
+
+      [SCRIPT] Name where this bites in the project. The final questions have to be
+      answered against the view rather than recomputed from the base tables, which
+      means the refresh has to have happened after the data was loaded. A stale view
+      produces a confidently wrong answer with no error message.
+
+
+      [MISCONCEPTIONS] Fellows regularly expect a materialized view to behave like an
+      ordinary view and update itself. An ordinary view really does re-run its query
+      every time. The word "materialized" is the entire difference, and it means the
+      rows were made real and written down.
+
+
+      [SOURCES] PostgreSQL documentation, "CREATE MATERIALIZED VIEW": the query "is
+      executed and used to populate the view at the time the command is issued... and
+      may be refreshed later using REFRESH MATERIALIZED VIEW." "REFRESH MATERIALIZED
+      VIEW" adds that it "completely replaces the contents of a materialized view"
+      and that "the old contents are discarded." The clearest statement of the
+      tradeoff is in the "Materialized Views" chapter itself: "While access to the
+      data stored in a materialized view is often much faster than accessing the
+      underlying tables directly or through a view, the data is not always current."
+
+  - type: transition
+    from_label: "A Confident Wrong Answer"
+    to_label: "Code Along: The Check That Catches It"
+    note: "Nobody caught that by staring harder at the query - it took a number worked out somewhere else first."
+    objective_index: 3
+    style: "icon_hero"
+    icon: "validation"
+    notes: >
+      [SCRIPT] Loop back explicitly to the fan-out count from earlier today, not the
+      view that just went stale - the check about to run is the one that would have
+      caught that inflated number in seconds.
+
+
+      [SCRIPT] Terminals stay open. Frame the next two queries as the habit rather
+      than the syntax: first establish a number you already trust, then compare the
+      query against it. That order matters, and doing it backwards is how a wrong
+      answer gets rationalised.
+
+  - type: code
+    title: "One `COUNT(*)` Would Have **Caught It in Seconds**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      -- The check: how many inspections exist at all?
+      SELECT COUNT(*) AS truth FROM inspections;
+
+      -- The fix: don't join what you aren't counting
+      SELECT dba, COUNT(inspection_id) AS insp
+      FROM restaurants
+      LEFT JOIN inspections USING (camis)
+      GROUP BY dba
+      ORDER BY insp DESC;
+    starter_code: |
+      -- TODO: get the total row count of inspections
+      -- TODO:   this is the number you will check against
+
+
+      -- TODO: rewrite the per-restaurant count, this
+      -- TODO:   time joining only the tables you are
+      -- TODO:   actually counting
+
+
+      -- TODO: add up your per-restaurant counts by hand
+      -- TODO:   and confirm they match the total above
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`truth` is just an alias naming what this number is for: the total that every per-restaurant breakdown has to add back up to - the same tasting-one-spoonful habit the next diagram names formally. Neither query changes data, so both are safe to re-run."
+    doc_url: "https://www.postgresql.org/docs/current/functions-aggregate.html"
+    skill_tags: ["sql", "relational-databases"]
+    notes: >
+      [ACTIVITY] Run the first query, write the number on the board or pin it in chat,
+      and leave it visible. Then have Fellows write the second query themselves before
+      you show it. Two minutes. Ask them to add their own result column up out loud
+      before anyone declares victory.
+
+
+      [SCRIPT] The total is 4. The corrected breakdown gives Corner Bistro 3, Green
+      Leaf Cafe 1, and zero for everyone else. Three plus one is four, so the
+      breakdown reconciles against the total. The earlier version summed to five,
+      which is the number that should have set off an alarm.
+
+
+      [SCRIPT] Name the habit and give it the name from the key-terms slide. This is a
+      row count check: add the breakdown back up and confirm it matches the source
+      table's own total. It costs one query and about ten seconds, and it catches the
+      single most common silent bug in this whole module.
+
+
+      [SCRIPT] Point at the fix itself, since it is smaller than people expect. The
+      only change is that `violations` is no longer joined. If you are not counting a
+      table, do not bring it into the join.
+
+
+      [MISCONCEPTIONS] Fellows sometimes conclude that the lesson is "never join three
+      tables." That is not it - the fan-out demo earlier today joined all three
+      correctly, right up until it counted a column from the wrong side of that join.
+      The rule is narrower and more useful: know what one row represents after every
+      join you add, and check the totals when you are counting.
+
+  - type: check_understanding
+    prompt: "With your partner: Design the smallest test that would catch a wrong join before anyone else sees the result."
+    mode: whiteboard
+    topic: "Designing Your Own Spot-Check"
+    bloom_level: create
+    question_style: business_thinking
+    skill_tags: ["sql", "data-modeling", "relational-databases"]
+    notes: >
+      [ACTIVITY] Pairs, six minutes, on a shared board: a physical whiteboard, or a
+      Padlet or Jamboard column per pair for a remote cohort. Post three things and
+      nothing else. One: the sample rows. Two: the number you expect. Three: the one
+      query you would run. Then read two or three out loud and let the room
+      stress-test them.
+
+
+      [SCRIPT] This is deliberately a design task rather than a recall question, and
+      it is the highest bar the room has been asked to clear this module. Nobody is
+      being handed a scenario to analyse. They are inventing the test itself, which is
+      exactly what the project asks for on every one of its questions. Do not reveal
+      the four-step version yet - the next slide names what the room just built.
+
+
+      [SCRIPT] Listen for the failure mode rather than for a right answer. A weak
+      design says "run it and see if the numbers look reasonable," which is not a test
+      at all because there is no stated expectation to fail against. A strong design
+      commits to a specific number before the query runs.
+
+
+      [SCRIPT] If a pair is stuck, give them one constraint rather than an answer: the
+      sample has to be small enough to count on your fingers. That single limit
+      usually unlocks it, because it forces them to pick a handful of rows they can
+      reason about completely.
+
+
+      [MISCONCEPTIONS] Several pairs will propose checking the query against another
+      query. Push on that gently: if both queries share the same wrong join, they will
+      agree with each other and both be wrong. The check has to come from outside the
+      query, which usually means a human, a source file, or a row count.
+
+  - type: workflow_linear
+    title: "Four Steps Between a Query and **Trusting It**"
+    steps:
+      - label: "Pick a Slice"
+        detail: "Rows You Already Know"
+      - label: "Answer It"
+        detail: "By Hand, Before SQL"
+      - label: "Run It"
+        detail: "On That Same Slice"
+      - label: "Compare"
+        detail: "Match, or Find Out Why"
+    analogy:
+      domain: "food"
+      mapping: "You taste one spoonful for seasoning before you serve forty plates. Nobody tastes the whole pot, and nobody serves it untasted either."
+      backups:
+        - domain: "fashion"
+          mapping: "You try the jacket on in the store, not after the delivery van has driven off."
+        - domain: "sports"
+          mapping: "A team runs the new play in practice against a defence they already understand before running it on game day."
+    notes: >
+      [SCRIPT] Name this as the pattern behind what pairs just designed, not a new
+      idea. Most pairs will have reinvented three or four of these steps already -
+      point at a real pair's own board and match it to the four labels here.
+
+
+      [ACTIVITY] Walk the four steps against today's own inflated count, out loud,
+      with the room supplying each step. The slice was the `inspections` table. The
+      hand answer was four rows total. The query said five once the per-restaurant
+      counts were added up. The comparison failed, and that failure was the finding.
+
+
+      [SCRIPT] Introduce the tasting comparison before the formal name. The point is
+      the size of the sample: the check only works because the slice is small enough
+      that a human can genuinely know the answer without the database's help.
+
+
+      [SCRIPT] Be specific about step two, because it is the one people skip. Working
+      the answer out by hand has to happen before the query runs. Once a number is on
+      screen it is remarkably hard to disagree with it, and a "check" done afterwards
+      usually just confirms whatever the query said.
+
+
+      [SCRIPT] Say what this costs and what it buys. It costs a couple of minutes per
+      question. It is the difference between the rubric's strongest and weakest
+      descriptions of the same query, and it is the habit that makes a junior analyst
+      trusted with real work.
+
+
+      [MISCONCEPTIONS] Fellows read step one as "test on a small table" and pick a
+      slice at random. Random is not the same as known. The slice has to be one where
+      you can state the expected answer with confidence before running anything.
+
+  - type: interview_prep
+    topics:
+      - question: "How do you validate your data before presenting it?"
+        short_answer: "I run five checks before I present a number: Complete (row counts match the source), Reasonable (survives a gut check), Accurate (spot-checked by hand), Fresh (view refreshed recently), Traceable (someone else can re-run it and match)."
+        technique: "C.R.A.F.T."
+        icon: "validation"
+    notes: >
+      [TECHNIQUE] Use C.R.A.F.T. - Complete, Reasonable, Accurate, Fresh, Traceable.
+      This is a "how do you know you can trust this" question, and the failure mode is
+      answering it as a feeling rather than as a process. Five named checks turn a
+      vague reassurance into something an interviewer can follow, and every one of
+      them was demonstrated live today. The full version of each check, to coach a
+      Fellow toward if their cold attempt is thin: Complete asks whether the row
+      counts match the source; Reasonable asks whether the number survives a gut
+      check against something already known; Accurate means spot-checking the query
+      against a small hand-worked sample; Fresh asks when a stored view was last
+      refreshed; Traceable asks whether someone else can re-run the query and land on
+      the same answer.
+
+
+      [SCRIPT] Have one Fellow attempt it cold, then ask the room which of the five
+      checks would have caught today's inflated count. Complete, and it would have
+      caught it in seconds. Grounding the framework in something the candidate
+      actually did is what separates this from a memorised list.
+
+
+      [SCRIPT] Coach one specific move: give a real example for at least one of the
+      five rather than reciting all five abstractly. Everybody in this room now has a
+      genuine story about a query that ran clean and returned a wrong number, and that
+      story is worth more in an interview than the framework itself.
+
+
+      [MISCONCEPTIONS] The weakest version of this answer is "I double-check my work."
+      It sounds responsible and says nothing. Coach Fellows off it by asking the
+      follow-up an interviewer will ask anyway: check it against what, exactly?
+
+
+      [SOURCES] This wording is quoted verbatim, not paraphrased: BrainStation's data-
+      analyst interview guide lists "How do you validate your data before presenting
+      it?" and tags it entry level, which is exactly this cohort. The same archetype
+      recurs across other named banks under different wording: DataCamp asks "How do
+      you ensure data integrity and accuracy?", Zero To Mastery asks "How would you
+      ensure data accuracy and consistency in a report?" and "What are some common
+      data validation techniques you might use?", and Indeed asks "What is data
+      validation? What methods can you use to validate data?". Worth knowing where it
+      does not appear, so nobody oversells it: the SQL-puzzle platforms (DataLemur,
+      StrataScratch) are code-challenge banks and carry no behavioural questions at
+      all, so this is a question to expect from a hiring manager, not from a take-home.
+
+  - type: table
+    title: "Key Terms - Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "Spot-check"
+        - "Compare against a hand-worked answer"
+      - - "Silent bug"
+        - "Runs clean, returns wrong rows"
+      - - "Row count check"
+        - "Totals must add back up"
+    notes: >
+      [SCRIPT] Quick pass through all three, and point at where each one showed up
+      today. The row count check is the one that caught the inflated inspection
+      number. The silent bug had three separate costumes: a duplicated row, an invented
+      fallback, and a stale stored view.
+
+
+      [SCRIPT] Say the honest framing on the way out. None of these three are SQL
+      features and none of them will ever appear in a syntax reference. They are the
+      habits that decide whether the syntax was used correctly, which is why they get
+      named on the last day rather than the first.
+
+  - type: bridge
+    title: "So far, we've covered..."
+    card_items:
+      - text: "The shape picks the tool"
+        icon: "shuffle"
+      - text: "Clean run, wrong answer"
+        icon: "bug"
+      - text: "Check against known numbers"
+        icon: "validation"
+      - text: "Stored answers go stale"
+        icon: "cycle"
+    notes: >
+      [SCRIPT] Close on the through-line rather than on a list. Every query today ran
+      without an error. Three of them were wrong anyway, in three different ways, and
+      none of those ways involved syntax. That is the difference between finishing this
+      module and being genuinely ready for the work it points at.
+
+
+      [SCRIPT] Tie it to how the project is graded, plainly. The rubric asks for
+      correct, spot-checked results, and it names trusting a query because it "looks
+      right" as a real failure. The four-step routine on the earlier diagram is the
+      answer to that requirement, on every one of the seven questions.
+
+
+      [SCRIPT] Reconnect the whole module in one sentence, since this is the last time
+      the room is together before the build. Everything from the first normalization
+      conversation to the materialized view exists so that a business question can be
+      answered from data you designed yourself, and answered in a way somebody else
+      can check.
+
+
+      [MISCONCEPTIONS] Some Fellows will leave thinking today was about being careful,
+      as a personality trait. Say plainly that it is not about temperament. It is
+      about running one extra query before you report a number, which is a mechanical
+      habit anybody can build.
+
+  - type: closing
+    title: "Before the Sprint Starts"
+    bullets:
+      - "The first sprint day is design"
+      - "Read all seven questions first"
+      - "Keep your class database running"
+    exercise:
+      type: project_plan
+      url_or_text: "module_sources/module-3-sql-relational-databases/PROJECT.md"
+      label: "The Project: Design a Database, Answer Seven Questions"
+    notes: >
+      [SCRIPT] Be concrete about what the first sprint session actually asks for,
+      because Fellows will assume it starts with SQL and it does not. It is setup and
+      design: get PostgreSQL genuinely connecting, pick one domain, read all seven of
+      that domain's business questions in full, and sketch the schema with every
+      question walked against it before a single `CREATE TABLE` runs.
+
+
+      [SCRIPT] Say why the design comes first, since it feels like a delay. A schema
+      that cannot answer question six is much cheaper to find on paper than after the
+      data is loaded. The written mapping is the same reading skill the room practised
+      in today's opening question, applied to all seven at once.
+
+
+      [SCRIPT] Remind them the class database stays useful. Nothing from the project
+      runs against it, but it is the safest place to try a syntax idea before pointing
+      it at their own new schema.
+
+
+      [SCRIPT] Point at the sprint's own checklist for the day-by-day exit criteria
+      rather than reading dates aloud, so the deck stays correct whenever this module
+      runs.
+
+
+      [SCRIPT] Name honestly that today only rehearsed half the sprint. The queries
+      are the half this deck covers - the other half is graded too: the schema
+      critique and read-only role from the independent lab, a written `EXPLAIN
+      ANALYZE` assessment, and a reasoned comparison against a STAR schema. Each of
+      those has its own prep in `PROJECT.md`; today's routine is what makes the query
+      half trustworthy, not the whole deliverable.
+
+  - type: further_resources
+    resources:
+      - title: "Debugging Duplicated Data in SQL Query Results"
+        url: "https://www.metabase.com/learn/sql/debugging-sql/sql-logic-duplicated-data"
+        kind: reading
+        time_estimate: "~10 min read"
+        description: "Traces duplicate rows back to a wrong join assumption"
+        attribution: "Metabase Learn"
+      - title: "PostgreSQL Docs: Materialized Views"
+        url: "https://www.postgresql.org/docs/current/rules-materializedviews.html"
+        kind: documentation
+        time_estimate: "~7 min read"
+        description: "Why stored view data goes stale until refreshed"
+        attribution: "PostgreSQL"
+      - title: "8 Week SQL Challenge: Danny's Diner"
+        url: "https://8weeksqlchallenge.com/case-study-1/"
+        kind: practice
+        time_estimate: "~60-90 min hands-on"
+        description: "Ten business questions on one messy relational schema"
+        attribution: "Danny Ma"
+    notes: >
+      [SCRIPT] All three are free and none needs an account. Point at the Metabase
+      article for anybody who wants the written version of today's inflated count -
+      it walks the same one-to-many join chain and is the clearest explanation of it
+      anywhere, video included.
+
+
+      [SCRIPT] The PostgreSQL page is the primary source behind the stale-view
+      demonstration, and it is honest about the tradeoff rather than selling the
+      feature: stored data is much faster to read and is not always current.
+
+
+      [SCRIPT] The practice challenge is the strongest pick for anybody who wants a
+      real rep before the build starts. It hands over ten business questions against
+      one small relational schema, which is the same shape as the project, and its
+      browser editor runs PostgreSQL specifically, so the syntax matches what has
+      been typed all module. One honest caveat to say out loud: the questions,
+      schema and editor are free, but the author's own written solutions sit behind
+      a paid course. Plenty of free community write-ups exist for anyone who gets
+      genuinely stuck.

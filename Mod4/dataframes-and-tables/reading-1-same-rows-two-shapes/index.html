@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Same Rows, Two Shapes — A SQL Table and a pandas DataFrame</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;display:block}
+.svg-shapes{max-width:740px}
+.svg-where{max-width:700px}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:20rem}
+.st-wrap{overflow-x:auto;margin:1rem 0}
+.st-table{border-collapse:collapse;min-width:300px;font-family:var(--mlrk-font-code);font-size:.95rem}
+.st-table caption{caption-side:top;text-align:left;font-family:var(--mlrk-font-body);font-weight:700;
+  margin-bottom:.4rem;color:var(--mlrk-ink-900)}
+.st-table th,.st-table td{border:1px solid var(--mlrk-divider-on-light);padding:.45rem .8rem;text-align:left}
+.st-table th{background:var(--mlrk-bg-light-alt);font-weight:700}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Same Rows, Two Shapes</h1>
+<p class="mlrk-lead">An animal rescue keeps every adoption it has ever completed as one row in a database table. Today those same rows also have to show up inside Python, so they can be counted and charted. Nothing about the rows changes along the way. What changes is the container holding them, and the container decides which computer actually does the work.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~35–38 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>pandas DataFrames</strong> — Working with data in a pandas DataFrame: reading its rows, columns, and data types correctly, and recognizing when the same job could be done in SQL instead.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Introduction</h2>
+<p>Second Chance Paws is a small animal rescue. It is a nonprofit, meaning it runs on donations and grants rather than profit, and its whole job is taking in stray and surrendered pets and finding them new homes. Every adoption it has ever completed is recorded once, in a table called <code>adoptions</code>, inside a <strong>database</strong>: a program that stores an organization's data and answers questions about it. Each row of that table is one adoption. The columns record which animal it was, what species, when the animal arrived, when it went home, and which town the adopter lives in.</p>
+
+<p>The board of directors wants one small answer before its next meeting: <em>how many adoptions did we complete for adopters in Riverton, broken out by species?</em> You could get that answer by writing <strong>SQL</strong> (Structured Query Language, the language you write to ask a database for rows). You could also get it in Python using <strong>pandas</strong>, a library built for working with tables of data. Both paths end at the exact same three numbers. They do not run on the same computer.</p>
+
+<svg class="mlrk-illustration svg-shapes" viewBox="0 0 740 620" role="img" aria-labelledby="shapesTitle shapesDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="shapesTitle">The same three adoption rows shown as a SQL table and as a pandas DataFrame</title>
+  <desc id="shapesDesc">At the top, the adoptions table as the database holds it on the server, with columns animal_id, species and adopter_town, a row showing each column's declared type of INTEGER, TEXT and TEXT, and three data rows: 1041 Dog Riverton, 1042 Cat Glenway, 1043 Dog Riverton. An arrow points downward, labeled a copy of these rows is sent to your computer. At the bottom, the same three rows as a pandas DataFrame in your computer's memory, with the same three column names, the same three data rows, and a type row reading int64, object, object instead.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="30" y="30" font-size="19" font-weight="700" fill="#261F1D">adoptions: a table inside the database, on the server</text>
+
+    <rect x="30" y="46" width="680" height="192" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <rect x="30" y="46" width="680" height="40" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <rect x="30" y="86" width="680" height="38" fill="#FFEECA" stroke="#264326" stroke-width="1.5"/>
+    <line x1="220" y1="46" x2="220" y2="238" stroke="#264326" stroke-width="1.5"/>
+    <line x1="420" y1="46" x2="420" y2="238" stroke="#264326" stroke-width="1.5"/>
+    <line x1="30" y1="124" x2="710" y2="124" stroke="#264326" stroke-width="1.5"/>
+    <line x1="30" y1="162" x2="710" y2="162" stroke="#264326" stroke-width="1.5"/>
+    <line x1="30" y1="200" x2="710" y2="200" stroke="#264326" stroke-width="1.5"/>
+    <g font-size="18" font-weight="700" fill="#261F1D">
+      <text x="42" y="73">animal_id</text><text x="232" y="73">species</text><text x="432" y="73">adopter_town</text>
+    </g>
+    <g font-size="17" font-weight="700" fill="#83671C" font-family="'Roboto Mono', Consolas, monospace">
+      <text x="42" y="112">INTEGER</text><text x="232" y="112">TEXT</text><text x="432" y="112">TEXT</text>
+    </g>
+    <g font-size="17" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
+      <text x="42" y="150">1041</text><text x="232" y="150">Dog</text><text x="432" y="150">Riverton</text>
+      <text x="42" y="188">1042</text><text x="232" y="188">Cat</text><text x="432" y="188">Glenway</text>
+      <text x="42" y="226">1043</text><text x="232" y="226">Dog</text><text x="432" y="226">Riverton</text>
+    </g>
+    <text x="30" y="264" font-size="17" fill="#264326">The database declares one type for every column.</text>
+
+    <line x1="120" y1="282" x2="120" y2="332" stroke="#264326" stroke-width="3"/>
+    <polygon points="111,330 129,330 120,346" fill="#264326"/>
+    <text x="150" y="318" font-size="17" fill="#264326">a copy of these rows is sent to your computer</text>
+
+    <text x="30" y="372" font-size="19" font-weight="700" fill="#261F1D">adoptions: a DataFrame in your computer's memory</text>
+
+    <rect x="30" y="388" width="680" height="192" fill="#FFFCF7" stroke="#2274B5" stroke-width="2.5"/>
+    <rect x="30" y="388" width="680" height="40" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <rect x="30" y="428" width="680" height="38" fill="#FFEECA" stroke="#2274B5" stroke-width="1.5"/>
+    <line x1="220" y1="388" x2="220" y2="580" stroke="#2274B5" stroke-width="1.5"/>
+    <line x1="420" y1="388" x2="420" y2="580" stroke="#2274B5" stroke-width="1.5"/>
+    <line x1="30" y1="466" x2="710" y2="466" stroke="#2274B5" stroke-width="1.5"/>
+    <line x1="30" y1="504" x2="710" y2="504" stroke="#2274B5" stroke-width="1.5"/>
+    <line x1="30" y1="542" x2="710" y2="542" stroke="#2274B5" stroke-width="1.5"/>
+    <g font-size="18" font-weight="700" fill="#261F1D">
+      <text x="42" y="415">animal_id</text><text x="232" y="415">species</text><text x="432" y="415">adopter_town</text>
+    </g>
+    <g font-size="17" font-weight="700" fill="#83671C" font-family="'Roboto Mono', Consolas, monospace">
+      <text x="42" y="454">int64</text><text x="232" y="454">object</text><text x="432" y="454">object</text>
+    </g>
+    <g font-size="17" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
+      <text x="42" y="492">1041</text><text x="232" y="492">Dog</text><text x="432" y="492">Riverton</text>
+      <text x="42" y="530">1042</text><text x="232" y="530">Cat</text><text x="432" y="530">Glenway</text>
+      <text x="42" y="568">1043</text><text x="232" y="568">Dog</text><text x="432" y="568">Riverton</text>
+    </g>
+    <text x="30" y="606" font-size="17" fill="#2F5A8B">Same rows, same columns. pandas just names the types differently.</text>
+  </g>
+</svg>
+
+<p>The two boxes in that picture hold identical data. Three rows, three named columns, and one kind of value per column in both. The words differ: the database calls a whole-number column <code>INTEGER</code>, pandas calls it <code>int64</code>; the database calls a text column <code>TEXT</code>, pandas labels it <code>object</code>, which is simply how pandas prints "this column holds text." The real difference is the arrow. The top box lives on a <strong>server</strong>, a computer that runs all the time and holds the organization's data for everyone. The bottom box lives in your own computer's <strong>memory</strong>, the fast, temporary workspace a program uses while it is running.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> almost every data analyst job description lists SQL and Python side by side, and the reason is this exact handoff. A very common interview question is "should this aggregation happen in SQL or in pandas?" There is also a practical stake with no interviewer involved: on a real table with millions of rows, pulling everything into Python so you can count it does not raise an error. It just leaves you staring at a frozen laptop for twenty minutes to produce three numbers the database could have handed you instantly.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to ask a database for rows with <code>SELECT</code> and narrow them with <code>WHERE</code>, and you already know how to keep only some rows of a table in pandas. This reading lines those two skills up against each other so the same question can be written either way on purpose, not by habit. Once a query result and a table in memory feel like one idea in two containers, connecting Python straight to a live database stops being a new subject and becomes a small next step.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall first</h2>
+<p>Three skills get leaned on heavily later in this reading: filtering rows in SQL, grouping and counting in SQL, and pulling a single column out of a pandas table. Check each one before moving on.</p>
+
+<div class="mlrk-card" id="card-where"><p><strong>Which SQL clause keeps only the rows that meet a condition?</strong></p>
+<button type="button" class="mlrk-choice" data-a="where"><code>WHERE</code></button>
+<button type="button" class="mlrk-choice" data-a="orderby"><code>ORDER BY</code></button>
+<button type="button" class="mlrk-choice" data-a="select"><code>SELECT</code></button>
+<div id="wherefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-group" style="margin-top:.8rem"><p><strong>What does this query give you back?</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">SELECT species, COUNT(*)
+FROM adoptions
+GROUP BY species;</div></div>
+<button type="button" class="mlrk-choice" data-a="perspecies">One row per species, with how many adoption rows that species has.</button>
+<button type="button" class="mlrk-choice" data-a="allrows">Every adoption row, sorted by species.</button>
+<button type="button" class="mlrk-choice" data-a="onenumber">A single number: the total count of all adoptions.</button>
+<div id="groupfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-col" style="margin-top:.8rem"><p><strong>In pandas, <code>adoptions</code> is a table of data. What does <code>adoptions["species"]</code> give you?</strong></p>
+<button type="button" class="mlrk-choice" data-a="onecol">Just that one column of values, for every row.</button>
+<button type="button" class="mlrk-choice" data-a="wholetable">The whole table, unchanged.</button>
+<button type="button" class="mlrk-choice" data-a="names">A list of all the column names.</button>
+<div id="colfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">Nothing below changes how any of these work on their own. The whole reading is about writing the same three ideas twice, once for a database and once for pandas.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Concept overview: one set of rows, two containers</h2>
+<p>Here is a slice of the real <code>adoptions</code> table, six rows of it. This is what the database hands back when you ask for these columns.</p>
+
+<div class="st-wrap"><table class="st-table"><caption>adoptions (6 of the rows)</caption>
+<tr><th>animal_id</th><th>species</th><th>intake_date</th><th>adoption_date</th><th>adopter_town</th></tr>
+<tr><td>1041</td><td>Dog</td><td>2026-01-08</td><td>2026-02-14</td><td>Riverton</td></tr>
+<tr><td>1042</td><td>Cat</td><td>2026-01-11</td><td>2026-03-02</td><td>Glenway</td></tr>
+<tr><td>1043</td><td>Dog</td><td>2026-01-19</td><td>2026-02-27</td><td>Riverton</td></tr>
+<tr><td>1044</td><td>Rabbit</td><td>2026-02-02</td><td>2026-04-06</td><td>Ashton</td></tr>
+<tr><td>1045</td><td>Cat</td><td>2026-02-10</td><td>2026-03-21</td><td>Riverton</td></tr>
+<tr><td>1046</td><td>Dog</td><td>2026-02-15</td><td>2026-03-30</td><td>Glenway</td></tr>
+</table></div>
+
+<p>A SQL table is three things at once: a set of rows, a set of named columns, and one declared type per column that the database itself enforces. Nobody can slip the word "soon" into <code>adoption_date</code>, because the column was declared to hold dates and the database refuses anything else.</p>
+
+<p>Load those same rows into Python with pandas and you get a <strong>DataFrame</strong>: a table held in your computer's memory, with rows, named columns, and one type per column. Pull a single column out of it on its own, like <code>adoptions["species"]</code>, and that one column is called a <strong>Series</strong>. The type pandas gives a column is called its <strong>dtype</strong>, short for data type. Every part of a SQL table has a pandas counterpart:</p>
+
+<div class="st-wrap"><table class="st-table"><caption>Same parts, two vocabularies</caption>
+<tr><th>In the database</th><th>In pandas</th><th>In this example</th></tr>
+<tr><td>table</td><td>DataFrame</td><td>adoptions</td></tr>
+<tr><td>row</td><td>row</td><td>one adoption</td></tr>
+<tr><td>column</td><td>Series</td><td>species</td></tr>
+<tr><td>column type</td><td>dtype</td><td>one kind of value per column</td></tr>
+<tr><td>INTEGER</td><td>int64</td><td>1041</td></tr>
+<tr><td>TEXT</td><td>object</td><td>Riverton</td></tr>
+</table></div>
+
+<div class="mlrk-callout mlrk-callout-red">
+<p><strong>The part people get wrong: a DataFrame is a copy.</strong> When those rows land in pandas, the database still has its own originals, untouched. If you rename a column, drop a row, or fix a misspelled town name in the DataFrame, you have changed your copy and nothing else. The shelter's official record is exactly as it was. Think of it like copying a list off the office wall onto your own whiteboard: scribble all you want on the whiteboard, the wall still says what it said.</p>
+<p>That cuts both ways. It means you can experiment freely without any risk of damaging real data, which is genuinely useful. It also means anything you "fixed" in pandas is fixed only for as long as that Python program is running. Close the program and the copy is gone.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Technical vocabulary</h2>
+<p>Flip each card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>DataFrame</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>DataFrame</strong><br>A pandas table held in your computer's memory: rows, named columns, and one type per column.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Series</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Series</strong><br>One column of a DataFrame, on its own. It still has one type for all its values.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>dtype</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>dtype</strong><br>Short for data type. The type pandas gives a column, the same idea as a column type declared in a database.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>in memory</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>In memory</strong><br>Held in your computer's fast, temporary workspace while a program runs. It disappears when the program stops.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>query</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Query</strong><br>A request written in SQL asking a database for specific rows. The rows it hands back are the query result.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>package</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Package</strong><br>A bundle of Python code somebody else wrote that you install and then use in your own program. pandas is one.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>uv</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>uv</strong><br>A fast tool that installs a project's Python packages and keeps them separate from other projects. An alternative to running <code>pip</code> directly.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. The board's question, written twice</h2>
+<p>Back to the board's question: how many Riverton adoptions, by species? In SQL it is one statement, and the database does all of it.</p>
+<div class="mlrk-code"><div class="mlrk-screen">SELECT species, COUNT(*) AS adoptions
+FROM adoptions
+WHERE adopter_town = 'Riverton'
+GROUP BY species;</div></div>
+
+<p>In pandas it is two lines, and they do the same three jobs in the same order.</p>
+<div class="mlrk-code"><div class="mlrk-screen">riverton = adoptions[adoptions["adopter_town"] == "Riverton"]
+
+riverton["species"].value_counts()</div></div>
+
+<p>Line by line, the pieces line up:</p>
+<ul>
+<li><code>WHERE adopter_town = 'Riverton'</code> becomes <code>adoptions["adopter_town"] == "Riverton"</code>. That comparison runs once per row and produces one <code>True</code> or <code>False</code> per row. Handing that back to <code>adoptions[...]</code> is what actually keeps the <code>True</code> rows.</li>
+<li><code>SELECT species</code> becomes <code>riverton["species"]</code>, which pulls out that one column as a Series.</li>
+<li><code>GROUP BY species</code> plus <code>COUNT(*)</code> together become <code>.value_counts()</code>, which counts how many times each value shows up in that column.</li>
+</ul>
+<p>One real difference is reading order. SQL names the columns first and filters lower down. pandas filters first and picks the column afterward. Same result, opposite reading direction, which is exactly why the translation feels awkward the first few times even when you understand both sides.</p>
+
+<h3>Write the translation yourself</h3>
+<p>Fill in the two pandas pieces below. Type them the way you would type them in real code.</p>
+
+<div class="mlrk-code"><div class="mlrk-screen">-- SQL
+WHERE adopter_town = 'Riverton'
+
+# pandas
+riverton = adoptions[ ______________________ ]</div></div>
+<div class="mlrk-fillblank">
+  <label for="maskinput">Type what goes inside the outer square brackets:</label>
+  <input type="text" id="maskinput" autocomplete="off" placeholder='adoptions["column_name"] == "Value"'>
+  <button type="button" id="maskcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="maskfb" class="mlrk-feedback" tabindex="-1"></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+<p>Name the DataFrame, then the column in its own quotes inside square brackets, then a comparison that checks equality, then the town name in quotes. Remember that checking equality in Python uses two equals signs, not one.</p>
+</details>
+
+<div class="mlrk-code" style="margin-top:1.2rem"><div class="mlrk-screen">-- SQL
+SELECT species, COUNT(*) ... GROUP BY species
+
+# pandas
+riverton["species"].______________</div></div>
+<div class="mlrk-fillblank">
+  <label for="vcinput">Type the pandas method that counts how many times each value appears:</label>
+  <input type="text" id="vcinput" autocomplete="off" placeholder="method_name()">
+  <button type="button" id="vccheck" class="mlrk-btn">Check</button>
+</div>
+<div id="vcfb" class="mlrk-feedback" tabindex="-1"></div>
+
+<div class="mlrk-card" id="card-count" style="margin-top:1.2rem"><p><strong>Using the six rows in section 3, how many rows does the Riverton filter keep?</strong></p>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="2">2</button>
+<button type="button" class="mlrk-choice" data-a="6">6</button>
+<div id="countfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-code" style="margin-top:1rem"><div id="resultscreen" class="mlrk-screen">Answer the question above to see both results side by side.</div>
+<div class="mlrk-actions"><button type="button" id="resultrun" class="mlrk-btn">Reveal both results</button></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Sort each piece by where it actually runs</h2>
+<p>Referring to the two versions of the board's question in section 5, drag each piece into the place it actually executes, then use the self-check button.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable"><code>WHERE adopter_town = 'Riverton'</code></span>
+  <span id="chip2" class="mlrk-draggable"><code>GROUP BY species</code></span>
+  <span id="chip3" class="mlrk-draggable"><code>adoptions[adoptions["adopter_town"] == "Riverton"]</code></span>
+  <span id="chip4" class="mlrk-draggable"><code>riverton["species"].value_counts()</code></span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Runs inside the database, on the server</strong></p><div class="mlrk-dropzone" id="zoneServer"></div></div>
+  <div><p class="mlrk-small"><strong>Runs in your own computer's memory</strong></p><div class="mlrk-dropzone" id="zoneLocal"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Where the work should happen</h2>
+<p>Six rows is a toy example, so the two versions feel equally good. Now picture the real table. Second Chance Paws has been operating for thirty years and shares its database with a regional network of shelters, so <code>adoptions</code> holds 4,000,000 rows. The board still wants the same three numbers.</p>
+
+<svg class="mlrk-illustration svg-where" viewBox="0 0 700 366" role="img" aria-labelledby="whereTitle whereDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="whereTitle">Two routes to the same three numbers, and how much data travels on each</title>
+  <desc id="whereDesc">Option 1, letting the database do the counting: a box labeled Database server with 4,000,000 rows, a thin arrow labeled 3 rows travel, and a box labeled Your computer receives 3 numbers. Option 2, pulling every row first: the same Database server box, a much thicker arrow labeled 4,000,000 rows travel, and a box labeled Your computer counts all 4,000,000 rows.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="20" y="28" font-size="18" font-weight="700" fill="#261F1D">Option 1: let the database do the counting</text>
+    <rect x="20" y="44" width="200" height="86" rx="12" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="120" y="78" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">Database server</text>
+    <text x="120" y="104" text-anchor="middle" font-size="17" fill="#261F1D">4,000,000 rows</text>
+    <line x1="230" y1="90" x2="426" y2="90" stroke="#327A5F" stroke-width="3"/>
+    <polygon points="426,82 444,90 426,98" fill="#327A5F"/>
+    <text x="330" y="74" text-anchor="middle" font-size="17" font-weight="700" fill="#264326">3 rows travel</text>
+    <rect x="450" y="44" width="230" height="86" rx="12" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="565" y="78" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">Your computer</text>
+    <text x="565" y="104" text-anchor="middle" font-size="17" fill="#261F1D">receives 3 numbers</text>
+
+    <text x="20" y="186" font-size="18" font-weight="700" fill="#261F1D">Option 2: pull every row first, then count</text>
+    <rect x="20" y="202" width="200" height="86" rx="12" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="120" y="236" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">Database server</text>
+    <text x="120" y="262" text-anchor="middle" font-size="17" fill="#261F1D">4,000,000 rows</text>
+    <line x1="230" y1="248" x2="426" y2="248" stroke="#EF541E" stroke-width="9"/>
+    <polygon points="426,234 452,248 426,262" fill="#EF541E"/>
+    <text x="330" y="226" text-anchor="middle" font-size="17" font-weight="700" fill="#83671C">4,000,000 rows travel</text>
+    <rect x="450" y="202" width="230" height="86" rx="12" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="565" y="230" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">Your computer</text>
+    <text x="565" y="254" text-anchor="middle" font-size="17" fill="#261F1D">counts all</text>
+    <text x="565" y="276" text-anchor="middle" font-size="17" fill="#261F1D">4,000,000 rows</text>
+
+    <text x="20" y="326" font-size="17" fill="#261F1D">Both options end with the same three numbers.</text>
+    <text x="20" y="352" font-size="17" fill="#261F1D">Only one of them makes your own computer do the work.</text>
+  </g>
+</svg>
+
+<p>Option 2 is not wrong in the sense of giving a wrong answer. It gives the right answer, eventually. The cost is that 4,000,000 rows have to travel across the network to your machine, and then all of them have to fit in your computer's memory at once, so that pandas can throw away almost all of them and report three numbers. The database was already sitting on those rows and is built to count them in place.</p>
+
+<p>The useful habit is to shrink the data in SQL first, then analyze what comes back in pandas. A few hundred rows in a DataFrame is a pleasure to work with. Four million is a stalled laptop.</p>
+
+<div class="mlrk-card" id="card-scale"><p><strong>You need per-species adoption counts for one town out of a 4,000,000-row table. Which approach should you reach for first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="sqlfirst">Filter and count in SQL, then load the handful of resulting rows into pandas.</button>
+<button type="button" class="mlrk-choice" data-a="pandasall">Load all 4,000,000 rows into a DataFrame, then filter and count there.</button>
+<button type="button" class="mlrk-choice" data-a="same">Either one, since both produce identical numbers.</button>
+<div id="scalefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<h3>Put the steps in order</h3>
+<p>Click the steps below in the order you would actually carry them out, then self-check.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="write"><span class="mlrk-order-num"></span> Write the filter and the grouping into the SQL query so the database does the counting.</li>
+  <li class="mlrk-orderitem" data-step="check"><span class="mlrk-order-num"></span> Run the query and confirm the result that comes back is small.</li>
+  <li class="mlrk-orderitem" data-step="load"><span class="mlrk-order-num"></span> Load that small result into a DataFrame.</li>
+  <li class="mlrk-orderitem" data-step="shape"><span class="mlrk-order-num"></span> Reshape, chart, or format those few rows in pandas.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+
+<h3>Select all that apply</h3>
+<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about a DataFrame and the SQL table it came from.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> Dropping a row from the DataFrame also deletes that row from the database table.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Both have rows, named columns, and one kind of value per column.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A DataFrame has to fit in your computer's memory; a database table does not.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> The DataFrame is gone once the Python program stops, unless you save it somewhere.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+
+<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem">
+<p><strong>This applies to AI-written code too.</strong> Ask an assistant to "count adoptions per species in Riverton" and it will happily hand you working pandas that loads the entire table first, because it has no idea your table has 4,000,000 rows in it. The code is correct and the plan is bad. Reading a suggestion and asking "where does this actually run, and how much data does it move" is exactly the check that catches it before you run it.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. The tool that installs pandas: uv</h2>
+<p>pandas does not come with Python. It is a <strong>package</strong>, a bundle of code somebody else wrote and published so other people can install and use it. Getting packages onto your machine has traditionally meant two separate tools: <code>pip</code>, Python's original package installer, and <code>venv</code>, which creates an isolated <strong>environment</strong> so one project's packages do not collide with another project's.</p>
+
+<p><code>uv</code> is a single command line tool that does both of those jobs. It is made by a company called Astral, and it is described as a Python package and project manager, an alternative to reaching for <code>pip</code> directly. There are two reasons a project chooses it:</p>
+<ol class="mlrk-steplist">
+  <li><strong>Speed.</strong> Astral measures <code>uv</code> as being many times faster than <code>pip</code> at installing packages. That figure comes from the company's own published benchmark, so treat it as strong evidence rather than a neutral fact, but the everyday experience of it being noticeably quicker is easy to confirm yourself.</li>
+  <li><strong>Reproducibility.</strong> <code>uv</code> writes a <strong>lock file</strong>: a record of the exact version of every package that was installed. Anyone who sets the project up later gets those same versions instead of whatever happens to be newest that day.</li>
+</ol>
+
+<p>That second reason is the one that matters most on a team. Analysis code that runs perfectly for you and crashes for a teammate is almost always a version difference nobody wrote down. A lock file writes it down. It does not stop you from upgrading anything; it just makes an upgrade a deliberate, visible change instead of something that quietly happens to you.</p>
+
+<div class="mlrk-card" id="card-uv"><p><strong>A teammate asks why the project uses <code>uv</code> instead of just running <code>pip install pandas</code>. What is the strongest answer?</strong></p>
+<button type="button" class="mlrk-choice" data-a="lock">It installs faster and records the exact package versions in a lock file, so the project sets up the same way for everyone.</button>
+<button type="button" class="mlrk-choice" data-a="different">It installs different, better versions of packages than <code>pip</code> can reach.</button>
+<button type="button" class="mlrk-choice" data-a="nopython">It removes the need to have Python installed at all.</button>
+<div id="uvfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Watch: a DataFrame from the ground up</h2>
+<p>As you watch, notice how every DataFrame in the video has the same three properties the shelter's table had: rows, named columns, and one type per column. Notice too that the whole thing lives in memory for as long as the notebook is running, and nowhere else.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=m1_33jhhiLE" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: name one thing about a DataFrame in the video that behaved just like a database table you have queried before, and one thing that behaved differently.</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"Should this aggregation happen in SQL or in pandas?" is a standard question in data analyst interviews, and it is deliberately underspecified. The interviewer is not checking whether you can name a winner. They are checking whether you ask how big the table is before answering, because the size of the table is the whole answer.</p>
+<p>A strong response names the missing information out loud, then commits: "How many rows are we talking about? If it is millions and I only need counts per species, the database should run the grouping and hand me a few rows. If I guess wrong and pull everything, I spend network time and memory on rows I am about to throw away. So I would aggregate in SQL, then shape and chart the small result in pandas."</p>
+<p>A second question shows up almost as often: "explain what a DataFrame is to someone who only knows SQL." That one rewards building on what they already have. It is a table living in Python's memory, with rows, named columns, and one type per column, and it is a copy, so changing it never touches the original.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: you load a query result into a DataFrame, clean up three misspelled town names, and save your Python file. A teammate then queries the database directly and still sees the misspellings. Why?</strong></p>
+<button type="button" class="mlrk-choice" data-a="copy">The DataFrame was a copy in memory. Editing it never sent anything back to the database.</button>
+<button type="button" class="mlrk-choice" data-a="cache">The database caches old values and needs time to refresh.</button>
+<button type="button" class="mlrk-choice" data-a="perms">The edits did reach the database, but the teammate lacks permission to see them.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Summary and critical thinking</h2>
+<p>Two ideas carried this whole reading. First, a database table and a pandas DataFrame hold the same thing: rows, named columns, and one type per column, just under two different vocabularies. Second, they do not live in the same place. The table sits on a server and the database does the work; the DataFrame is a copy in your own computer's memory and your own machine does the work. That second point is what turns "either tool works" into a real decision once the table gets big.</p>
+
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a city bike share program has a <code>trips</code> table with 9,000,000 rows. You need the average trip length for each of its 40 stations, for one month, so you can chart it. <strong>Which plan is the better first move?</strong></p>
+<button type="button" class="mlrk-choice" data-a="sqlagg">Average by station for that month in SQL, load the 40 resulting rows into a DataFrame, and chart those.</button>
+<button type="button" class="mlrk-choice" data-a="loadall">Load all 9,000,000 trips into a DataFrame, then average by station and chart it there.</button>
+<button type="button" class="mlrk-choice" data-a="loadmonth">Load all 9,000,000 trips into a DataFrame, keep the one month you need, and average there.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<label for="ownwords" style="display:block;margin-top:1.2rem"><strong>In your own words:</strong> a colleague says "a DataFrame is basically just the database table, in Python." Where is that description helpful, and where does it mislead someone who believes it completely?</label>
+<textarea id="ownwords" class="mlrk-response" data-save placeholder="Try starting with: it's helpful because..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Thinking ahead</h2>
+<p>Everything above assumed the rows had already made it from the database into Python somehow. The step that was skipped is the interesting one: opening a real connection from your Python program to a live database, sending a query across it, and receiving the result directly as a DataFrame with no file in between. That is where "shrink it in SQL first, analyze in pandas after" stops being advice and becomes something you write in a single block of code. The choice practiced here, deciding how much data crosses that line, is exactly the decision you make every time you write that block.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://pandas.pydata.org/docs/getting_started/comparison/comparison_with_sql.html" target="_blank" rel="noopener">pandas docs: Comparison with SQL</a> — the long version of this reading's translation table, straight from the people who build pandas.</li>
+<li><a href="https://pandastutor.com/" target="_blank" rel="noopener">Pandas Tutor</a> — paste in your own pandas code and watch it reshape a table step by step. Useful the moment a chained line stops making sense.</li>
+<li><a href="https://www.w3schools.com/python/pandas/pandas_dataframes.asp" target="_blank" rel="noopener">W3Schools: Pandas DataFrames</a> — short worked examples with a "Try it Yourself" editor, so you can change the code and rerun it in the page.</li>
+<li><a href="https://sqlbolt.com/lesson/select_queries_with_aggregates" target="_blank" rel="noopener">SQLBolt: Queries with aggregates</a> — free interactive practice writing the <code>GROUP BY</code> half of this reading against a real database.</li>
+<li><a href="https://docs.astral.sh/uv/" target="_blank" rel="noopener">uv documentation</a> — the official reference from Astral, if you want more on what a lock file records and why.</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> the Download JSON button above saves the file into your computer's <code>Downloads</code> folder. Here's how to move it into a repo of your own.</p>
+
+    <details class="mlrk-hint">
+      <summary>Step 1: Make a repo on your GitHub account (one time only — collapse this afterward)</summary>
+      <ol class="mlrk-steplist">
+        <li>On GitHub, click the <strong>+</strong> in the top-right corner, then <strong>New repository</strong>.</li>
+        <li>Give it a name (something like <code>data-analytics-readings</code>) and click <strong>Create repository</strong>.</li>
+        <li>On the new repo's page, click the green <strong>Code</strong> button and copy the <strong>HTTPS</strong> URL.</li>
+        <li>In your terminal, clone it to your computer, pasting in the URL you just copied:
+          <pre class="mlrk-code">git clone https://github.com/YOUR-USERNAME/YOUR-REPO.git</pre></li>
+      </ol>
+      <p class="mlrk-small">You only do this once. For every reading after this one, start at Step 2.</p>
+    </details>
+
+    <p style="margin-top:.9rem"><strong>Step 2: Save this reading's file into that repo</strong> (do this for every reading):</p>
+    <ol class="mlrk-steplist">
+      <li>Move into your repo folder:
+        <pre class="mlrk-code">cd YOUR-REPO</pre></li>
+      <li>Move the file you just downloaded out of <code>Downloads</code> and into that folder:
+        <pre class="mlrk-code">mv ~/Downloads/same-rows-two-shapes-reading.json .</pre></li>
+      <li>Save it to git and push it up to GitHub:
+        <pre class="mlrk-code">git add same-rows-two-shapes-reading.json
+git commit -m "Complete same rows two shapes reading"
+git push</pre></li>
+    </ol>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 4 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own copy.</li>
+        <li>On the create page, set the visibility to <strong>Private</strong>. It defaults to <strong>Public</strong>, so you have to change it yourself.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Copy your repo's name <strong>exactly</strong> as it appears in GitHub's URL, including any hyphens, underscores, and capitalization. Paste it into the "Your submissions repo name" box below, along with your GitHub username, then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+      <p class="mlrk-small"><strong>Getting a "404" page instead?</strong> Two usual causes: the repo name you typed doesn't exactly match the real one (check for a stray hyphen or different capitalization), or you're not signed in to GitHub as the account that owns the repo &mdash; a private repo looks like a 404 to anyone who isn't signed in to it.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "same-rows-two-shapes-reading";
+  const TITLE = "Same Rows, Two Shapes — A SQL Table and a pandas DataFrame";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-where", buttonSelector:"#card-where .mlrk-choice", feedbackSelector:"#wherefb", correct:"where",
+    feedback:{where:"WHERE tests a condition against every row and keeps only the rows that pass it.",
+              orderby:"ORDER BY changes the order rows come back in. It never removes any of them.",
+              select:"SELECT chooses which columns you get back, not which rows."}});
+
+  K.quiz({id:"q-group", buttonSelector:"#card-group .mlrk-choice", feedbackSelector:"#groupfb", correct:"perspecies",
+    feedback:{perspecies:"GROUP BY collapses the rows into one row per species, and COUNT(*) reports how many original rows went into each group.",
+              allrows:"Grouping collapses rows together rather than listing them all. Sorting would be ORDER BY.",
+              onenumber:"You would get a single total only without the GROUP BY. With it, you get one count per species."}});
+
+  K.quiz({id:"q-col", buttonSelector:"#card-col .mlrk-choice", feedbackSelector:"#colfb", correct:"onecol",
+    feedback:{onecol:"Square brackets with a column name pull out that one column's values for every row. That single column is called a Series.",
+              wholetable:"Naming a column inside the brackets narrows the result to that column instead of returning everything.",
+              names:"Column names come from a separate request. Putting a name in brackets asks for the values in it."}});
+
+  K.quiz({id:"q-count", buttonSelector:"#card-count .mlrk-choice", feedbackSelector:"#countfb", correct:"3",
+    feedback:{"3":"Animals 1041, 1043 and 1045 all went to adopters in Riverton, so three rows survive the filter.",
+              "2":"There are three Riverton rows in that slice, not two. Check animal 1045 as well.",
+              "6":"Six is every row in the slice. The filter drops the Glenway and Ashton adoptions."},
+    onDone(){revealResults()}});
+
+  function revealResults(){
+    $("#resultscreen").textContent = `-- SQL, run by the database
+SELECT species, COUNT(*) AS adoptions
+FROM adoptions
+WHERE adopter_town = 'Riverton'
+GROUP BY species;
+
+ species | adoptions
+---------+-----------
+ Dog     |         2
+ Cat     |         1
+
+# pandas, run on your own computer
+riverton = adoptions[adoptions["adopter_town"] == "Riverton"]
+riverton["species"].value_counts()
+
+Dog    2
+Cat    1
+Name: count, dtype: int64`;
+  }
+  $("#resultrun").addEventListener("click", revealResults);
+
+  /* typed translation blank 1: the boolean mask */
+  K.Scoring.register("q-mask",1,"quiz");
+  let maskAttempts=0, maskDone=false;
+  function normalizeCode(s){ return s.trim().replace(/\s+/g,"").replace(/'/g,'"'); }
+  $("#maskcheck").addEventListener("click",()=>{
+    if(maskDone) return;
+    maskAttempts++;
+    const typed = normalizeCode($("#maskinput").value);
+    const ok = typed === normalizeCode('adoptions["adopter_town"]=="Riverton"');
+    const fb=$("#maskfb");
+    if(ok){
+      K.Scoring.award("q-mask", maskAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> That comparison runs once per row and gives back one True or False per row, which is exactly the job WHERE does inside the database.";
+      maskDone=true;
+    } else if(maskAttempts>=2){
+      K.Scoring.award("q-mask",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The blank is <code>adoptions[\"adopter_town\"] == \"Riverton\"</code>.";
+      maskDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> Check three things: the DataFrame name in front, the column name in its own quotes inside square brackets, and two equals signs for the comparison. One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+    K.Storage.save(READING_ID, K.snapshot(READING_ID,TITLE));
+  });
+
+  /* typed translation blank 2: value_counts */
+  K.Scoring.register("q-vc",1,"quiz");
+  let vcAttempts=0, vcDone=false;
+  function normalizeMethod(s){
+    return s.trim().toLowerCase().replace(/\s+/g,"").replace(/^\./,"").replace(/\(\)$/,"");
+  }
+  $("#vccheck").addEventListener("click",()=>{
+    if(vcDone) return;
+    vcAttempts++;
+    const ok = normalizeMethod($("#vcinput").value) === "value_counts";
+    const fb=$("#vcfb");
+    if(ok){
+      K.Scoring.award("q-vc", vcAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> value_counts() does the job of GROUP BY and COUNT(*) together, for one column at a time.";
+      vcDone=true;
+    } else if(vcAttempts>=2){
+      K.Scoring.award("q-vc",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The method is <code>value_counts()</code>.";
+      vcDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> It is one method name, written with an underscore between two words, and it counts how often each value appears. One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+    K.Storage.save(READING_ID, K.snapshot(READING_ID,TITLE));
+  });
+
+  K.dragDrop("#dragarea", "act-drag-whereruns");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneServer", label:"WHERE adopter_town = 'Riverton'", expectedLabel:"Runs inside the database, on the server"},
+    chip2:{expectedId:"zoneServer", label:"GROUP BY species", expectedLabel:"Runs inside the database, on the server"},
+    chip3:{expectedId:"zoneLocal", label:"adoptions[adoptions[\"adopter_town\"] == \"Riverton\"]", expectedLabel:"Runs in your own computer's memory"},
+    chip4:{expectedId:"zoneLocal", label:"riverton[\"species\"].value_counts()", expectedLabel:"Runs in your own computer's memory"}
+  }});
+
+  K.quiz({id:"q-scale", buttonSelector:"#card-scale .mlrk-choice", feedbackSelector:"#scalefb", correct:"sqlfirst",
+    feedback:{sqlfirst:"The database counts the rows where they already sit and sends back a few. Your machine only ever holds the small result.",
+              pandasall:"That moves 4,000,000 rows across the network and requires all of them to fit in memory, to produce three numbers.",
+              same:"On six rows it genuinely makes no difference. At 4,000,000 rows the memory and network cost is the entire difference."}});
+
+  K.orderSteps("#ordersteps", {id:"act-order-plan", correctOrder:["write","check","load","shape"],
+    feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"Dropping a row from the DataFrame also deletes that row from the database table.", correct:false,
+      hint:"Look back at the whiteboard comparison in section 3. What happened to the list on the wall?",
+      explain:"A DataFrame is a copy. Changes to it stay in your own memory and never travel back to the database on their own."},
+    {value:"b", label:"Both have rows, named columns, and one kind of value per column.", correct:true,
+      hint:"Compare the top and bottom halves of the first diagram. What was identical in both?",
+      explain:"That shared structure is exactly why a query result and a DataFrame map onto each other so cleanly."},
+    {value:"c", label:"A DataFrame has to fit in your computer's memory; a database table does not.", correct:true,
+      hint:"Think about the 4,000,000-row example. Which side of that picture had a size limit you could hit?",
+      explain:"The database holds its table on the server and can work through far more rows than your machine can hold at once."},
+    {value:"d", label:"The DataFrame is gone once the Python program stops, unless you save it somewhere.", correct:true,
+      hint:"Check the vocabulary card for \"in memory\" and what it says about a program stopping.",
+      explain:"Memory is a program's temporary workspace, so a DataFrame lives only as long as the program holding it."}
+  ]});
+
+  K.quiz({id:"q-uv", buttonSelector:"#card-uv .mlrk-choice", feedbackSelector:"#uvfb", correct:"lock",
+    feedback:{lock:"Speed and a lock file of exact versions are the two real reasons. The lock file is what keeps a project setting up the same way on every machine.",
+              different:"It installs the same packages from the same place. What changes is how fast it gets them and what it records afterward.",
+              nopython:"Python still has to be installed. uv manages the packages and the environment around it, not the language itself."}});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"m1_33jhhiLE"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:8});
+  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:12});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"copy",
+    feedback:{copy:"Exactly. Loading rows into pandas copies them. Writing changes back to a database is a separate, deliberate step you have to ask for.",
+              cache:"Databases do not silently serve stale rows like this. Nothing was ever written back for them to serve.",
+              perms:"Permissions control what somebody can read or change. They would not hide an edit that was never sent in the first place."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"sqlagg",
+    feedback:{sqlagg:"The database filters to one month and averages by station, so only 40 small rows ever reach your machine.",
+              loadall:"That pulls all 9,000,000 trips into memory, including every month you do not need, to end up with 40 numbers.",
+              loadmonth:"Filtering after loading still means all 9,000,000 rows crossed the network and sat in memory first. The filter has to happen in SQL to save anything."}});
+
+  const AI_PROMPTS = [
+    "Think of something you have copied out of an official system into your own notes, like a schedule or a price list. What went wrong, or could have gone wrong, when the original changed and your copy didn't?",
+    "If you had to explain \"this is a copy in memory, not the real record\" to someone with no programming background, what everyday situation would you use?",
+    "Where in your own life do you already push work to whoever is closest to the information, instead of hauling everything back to yourself first?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["python-data-tools"],
+      skills:["pandas-dataframes"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

@@ -1,0 +1,969 @@
+meta:
+  title: "COALESCE, Materialized Views & a First Look at EXPLAIN ANALYZE"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 9
+  date: "Day 9"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Replace a NULL with a fallback value using COALESCE, and explain why `= NULL` never matches anything"
+    - "Create a materialized view, and use REFRESH when its stored rows go stale"
+    - "Run EXPLAIN ANALYZE on a real query and read what each line of the plan is telling you"
+  tools:
+    - "PostgreSQL / psql"
+  exercise:
+    type: bullets
+    url_or_text: "No new exercise today - all three of these land in your own project, on the schema you design yourself."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Recently: Counting across a `LEFT JOIN` with `GROUP BY` - the query today's view stores"
+    - "Earlier this module: `LEFT JOIN` keeping rows that have no match on the other side"
+  interview_topics:
+    - "Explaining the difference between a view and a materialized view, and when each one is the right call"
+    - "Walking an interviewer through how you would investigate a query that suddenly got slow"
+  final_project:
+    "Today rehearses three separate graded requirements of your project - a `COALESCE`
+    query on a genuinely nullable column, a real `CREATE MATERIALIZED VIEW` plus the two
+    follow-up queries run against it, and a real `EXPLAIN ANALYZE` run written up in
+    `query_performance.md`."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: guided
+  estimated_duration_min: 60
+  scenario: >
+    Your manager liked yesterday's borough rankings enough to want a violation-totals
+    dashboard that loads instantly. Two problems show up immediately. Some inspections
+    have no score entered yet, so the totals have holes in them. And rebuilding those
+    numbers from three tables every single time somebody opens the page is not free.
+    Today you handle the holes honestly, store the answer instead of recomputing it,
+    and ask Postgres to show you exactly what a query costs.
+  glossary:
+    - term: "NULL"
+      definition: "A missing or unknown value - not zero, and not an empty piece of text"
+    - term: "COALESCE"
+      definition: "A function that returns the first value in its list that is not NULL"
+    - term: "materialized view"
+      definition: "A saved query whose result rows are actually stored, instead of being recomputed every time"
+    - term: "query plan"
+      definition: "The step-by-step method PostgreSQL chose for running your query"
+
+slides:
+  - type: title
+    title: "COALESCE, Materialized Views & Reading a Query Plan"
+    subtitle: "Handling blanks, storing answers, measuring cost"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 9"
+    notes: >
+      [SCRIPT] Frame the day honestly: three smaller tools rather than one big
+      concept. They share a theme though, and it is worth saying out loud - all
+      three are about what a query is not telling you. A blank you assumed was a
+      zero, a number that was true an hour ago, and a cost you never measured.
+
+
+      [SCRIPT] Name that every one of the three is a graded requirement in the
+      project. Nothing today is optional enrichment.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Fill a blank on purpose"
+        icon: "check"
+      - text: "Store a query's answer"
+        icon: "camera"
+      - text: "Measure what a query costs"
+        icon: "time"
+    notes: >
+      [SCRIPT] Read all three, then tie each to the project by name: your
+      `COALESCE` question, your materialized-view question, and the
+      `EXPLAIN ANALYZE` writeup you have to hand in. Fellows should hear that
+      today is the rehearsal for three separate graded items.
+
+
+      [SCRIPT] Set expectations on depth for the third one. Today is reading a
+      plan, not tuning one. Nobody is expected to leave able to speed a query up.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "NULL"
+        icon: "x"
+      - text: "COALESCE"
+        icon: "check"
+      - text: "Materialized View"
+        icon: "camera"
+      - text: "Query Plan"
+        icon: "search_zoom_in"
+    notes: >
+      [SCRIPT] Names only for now. Point at `NULL` specifically and say the room
+      has already seen it without being told what it was - every blank cell in
+      every `LEFT JOIN` result this module has produced was one.
+
+
+      [MISCONCEPTIONS] "Materialized" is the word that trips people. It just
+      means "made real" - the rows genuinely exist on disk instead of being
+      recalculated. Say that once now so it is not a mystery word later.
+
+  - type: check_understanding
+    prompt: "Quick recall: Bayside Grill has never been inspected. Which join still keeps it in a restaurants-plus-inspections result?"
+    mode: poll
+    topic: "Warm-Up: The Join That Keeps Everyone"
+    bloom_level: remember
+    question_style: conceptual
+    options:
+      - "INNER JOIN"
+      - "LEFT JOIN"
+      - "Neither - it gets dropped either way"
+    answer:
+      correct: "LEFT JOIN"
+      explanation: "`LEFT JOIN` keeps every row from the left table whether or not a match exists. For a restaurant with no inspections, the inspection columns come back empty instead. That empty value is not an accident and it is not a zero - it has a name, and naming it is where today starts."
+      source: "This module's own join lesson, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: show of hands for A, B, or C. Online: drop a letter
+      in chat, then confirm out loud before advancing.
+
+
+      [SCRIPT] This is not a generic warm-up. Every blank cell today comes from
+      exactly this: a `LEFT JOIN` with nothing on the other side, or a column
+      nobody has filled in yet. Say that connection before moving on.
+
+
+      [MISCONCEPTIONS] Some Fellows will say `INNER JOIN` "works too, it just
+      shows nothing." It does not show the restaurant at all, which is a
+      different outcome from showing it with empty columns. That difference is
+      the whole reason the join lesson happened.
+
+  - type: transition
+    from_label: "Rows That Came Back Empty"
+    to_label: "Code Along: What That Empty Cell Really Is"
+    note: "An empty cell is a value with its own rules - and the obvious way to test for it silently fails."
+    objective_index: 1
+    style: "icon_hero"
+    icon: "x"
+    notes: >
+      [SCRIPT] [~9 min mark] Keep this to one beat. The payoff is a real query
+      returning zero rows in about three minutes.
+
+
+      [SCRIPT] Name explicitly that everything from here to the next section is
+      a code-along - terminals open now, not in five minutes.
+
+  - type: code
+    title: "New Columns Come Back **Empty on Every Old Row**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      \c nyc_restaurants
+      ALTER TABLE inspections ADD COLUMN score INT;
+      ALTER TABLE inspections ADD COLUMN grade TEXT;
+      UPDATE inspections SET score = 12, grade = 'B'
+        WHERE inspection_id = 1;
+      UPDATE inspections SET score = 7, grade = 'A'
+        WHERE inspection_id = 2;
+      SELECT inspection_id, score, grade FROM inspections
+      ORDER BY inspection_id;
+    starter_code: |
+      -- TODO: reconnect
+
+
+      -- TODO: add two new columns to inspections:
+      -- TODO:   score (whole number) and grade (text)
+
+
+      -- TODO: set inspection 1 to score 12, grade B
+      -- TODO: set inspection 2 to score 7, grade A
+
+
+      -- TODO: read back id, score and grade, in id order
+    code_along: true
+    domain: "public_sector"
+    domain_note: "In NYC's real inspection data a `score` is violation points, so a *lower* score is the cleaner restaurant, and `grade` is the A/B/C letter posted in the window. Inspections 3 and 4 are recent enough that neither has been entered yet."
+    doc_url: "https://www.postgresql.org/docs/current/sql-altertable.html"
+    skill_tags: ["sql", "database-administration"]
+    notes: >
+      [SCRIPT] `ALTER TABLE ... ADD COLUMN` is new, and it is exactly what it
+      looks like: it adds a column to a table that already has rows in it.
+      Every existing row gets the new column with no value in it, which is
+      precisely the situation we want.
+
+
+      [SCRIPT] Run it, then read the output down the screen. Two rows have a
+      score and a grade. Two rows have nothing in either column. Ask the room
+      what "nothing" means there before you name it - a zero, a blank, or
+      something else.
+
+
+      [MISCONCEPTIONS] Fellows often read the empty cell in `psql` output as an
+      empty piece of text, because that is what it looks like. It is not. An
+      empty piece of text is a real value you could match on; this is the
+      absence of any value at all.
+
+
+      [MISCONCEPTIONS] If anyone re-runs this whole block they will get
+      "column score of relation inspections already exists". That is the second
+      `ALTER` failing, not a broken command. Say so and move on rather than
+      debugging live.
+
+  - type: code
+    title: "`= NULL` Never Matches - **Not Even a NULL**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      -- Looks right. Comes back empty.
+      SELECT inspection_id FROM inspections
+      WHERE grade = NULL;
+
+      -- The real way to ask the question:
+      SELECT inspection_id FROM inspections
+      WHERE grade IS NULL;
+    starter_code: |
+      -- TODO: ask for the ungraded inspections the way
+      -- TODO:   you would ask for any other value
+
+
+      -- TODO: now ask again, using the keyword that tests
+      -- TODO:   for absence instead of comparing to a value
+    code_along: true
+    domain: "public_sector"
+    analogy:
+      domain: "community"
+      mapping: "Three people replied \"0, can't make it\" to the group chat. Two never replied at all. You can't count the silent two as zeros - you genuinely don't know their answer."
+      backups:
+        - domain: "food"
+          mapping: "An order ticket with \"no onions\" written on it is a real instruction. A ticket where the toppings line is blank is not the same thing - the kitchen has to ask, not assume."
+        - domain: "sports"
+          mapping: "A player who scored 0 points played the game. A player with a blank stat line was never on the roster. Averaging them together gets you a wrong number."
+    domain_note: "`NULL` is not a value you compare against - it means \"unknown,\" so `grade = NULL` is really asking \"does this unknown thing equal that unknown thing,\" which Postgres answers with another unknown. A `WHERE` clause only keeps rows that are definitely true, so nothing survives."
+    doc_url: "https://www.postgresql.org/docs/current/functions-comparison.html"
+    skill_tags: ["sql", "null handling"]
+    notes: >
+      [ACTIVITY] Before you run the first query, ask the room to predict how many
+      rows come back. In person: fingers up for 0, 1, or 2. Online: drop the
+      number in chat. Most of the room will say 2. Then run it and let zero rows
+      land on its own.
+
+
+      [SCRIPT] Say the rule plainly after the surprise: `NULL` means unknown, and
+      unknown is not equal to anything, including another unknown. This is the
+      single most common silent bug in SQL - the query runs, returns no error,
+      and quietly answers a different question than the one you asked.
+
+
+      [SCRIPT] Introduce the group-chat comparison before the formal wording, not
+      after. The point is that a stated zero and no answer at all are genuinely
+      different facts, and only one of them is safe to add up.
+
+
+      [MISCONCEPTIONS] The most common wrong model is "NULL is basically zero."
+      It is worth stating the opposite out loud: zero is a real, known
+      measurement. `NULL` is the database refusing to guess. Postgres also
+      applies the same rule to `!=`, so `WHERE grade != NULL` returns nothing
+      either - and that catches people out even more often.
+
+
+      [MISCONCEPTIONS] Very occasionally a Fellow reports that `= NULL` "worked"
+      somewhere. Postgres has an off-by-default setting that rewrites it into
+      `IS NULL` for old applications, and the docs actively discourage relying
+      on it. Do not teach it - just know why the story is not impossible.
+
+
+      [SOURCES] PostgreSQL documentation, "Comparison Functions and Operators":
+      "Ordinary comparison operators yield null (signifying 'unknown'), not true
+      or false, when either input is null. For example, 7 = NULL yields null, as
+      does 7 <> NULL." And: "Do not write expression = NULL because NULL is not
+      'equal to' NULL." This is standard SQL three-valued logic, not a
+      PostgreSQL quirk - it holds across databases.
+
+  - type: code
+    title: "COALESCE Picks the Fallback - **You Pick the Meaning**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT dba, COALESCE(score, 0) AS as_zero,
+        COALESCE(grade, 'Not graded') AS as_label
+      FROM restaurants
+      JOIN inspections USING (camis)
+      ORDER BY inspection_id;
+    starter_code: |
+      -- TODO: select the restaurant name, then two more
+      -- TODO:   columns, each swapping a missing value for
+      -- TODO:   a fallback you choose: 0 for the number,
+      -- TODO:   'Not graded' for the letter
+
+
+      -- TODO: join restaurants to inspections on camis
+      -- TODO: order by inspection_id
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`COALESCE` takes a list of values and hands back the first one that is not `NULL`, checking left to right. Two arguments is the common case, but it accepts as many as you want."
+    doc_url: "https://www.postgresql.org/docs/current/functions-conditional.html"
+    skill_tags: ["sql", "coalesce"]
+    notes: >
+      [ACTIVITY] Before anyone hits enter, have the room predict what the two
+      new columns will show for Corner Bistro's two unscored inspections. In
+      person: call on two Fellows for the two columns. Online: both answers in
+      chat at once, then run it.
+
+
+      [SCRIPT] Run it and read the four rows. Corner Bistro's two unscored
+      inspections now show `0` in one column and `Not graded` in the other -
+      the same missing value, presented two completely different ways.
+
+
+      [SCRIPT] Land the real point: `COALESCE` is a syntax tool with no opinion
+      about meaning. It will happily put any fallback you name into the gap. The
+      judgment about which fallback is honest is entirely yours, and the next
+      question is about exactly that.
+
+
+      [MISCONCEPTIONS] Fellows often assume `COALESCE` changes the stored data.
+      It does not - it only changes what this one query returns. The `NULL` is
+      still sitting in the table afterwards.
+
+
+      [SOURCES] PostgreSQL documentation, "Conditional Expressions": COALESCE
+      "returns the first of its arguments that is not null," and "Null is
+      returned only if all arguments are null." Arguments are evaluated left to
+      right and evaluation stops once a non-null argument is found.
+
+  - type: check_understanding
+    prompt: "A lower `score` means a cleaner restaurant. Two inspections have no score yet. What does `COALESCE(score, 0)` do to the average?"
+    mode: poll
+    topic: "Filling a Blank With Zero"
+    bloom_level: evaluate
+    question_style: business_thinking
+    options:
+      - "Nothing - averages skip it either way"
+      - "Pulls it down, so the city looks cleaner"
+      - "Pushes it up, so the city looks worse"
+    answer:
+      correct: "Pulls it down, so the city looks cleaner"
+      explanation: "The real average of the two scored inspections is 9.50. Fill the two blanks with 0 and it drops to 4.75 - the city's food-safety record looks about twice as good, purely because two inspections have not been typed in yet. `COALESCE` never warns you about this. Choosing a fallback is a claim about what the missing data means, and here `0` claims a perfect inspection nobody performed."
+      source: "This lesson's own worked example, run against the class database"
+    skill_tags: ["sql", "coalesce"]
+    notes: >
+      [ACTIVITY] In person: hands up for A, B, or C, then ask one Fellow who
+      picked B to say why before you confirm. Online: letters in chat, then
+      unmute one Fellow.
+
+
+      [SCRIPT] Run the proof live if you have a minute - it lands harder than
+      the slide does. `SELECT ROUND(AVG(score), 2), ROUND(AVG(COALESCE(score,
+      0)), 2) FROM inspections;` returns 9.50 and 4.75.
+
+
+      [SCRIPT] Name the transferable habit, since this is the part that follows
+      Fellows into the project and the job: before you fill a blank, ask what
+      the fallback is claiming. `0` claims a measurement. `'Not graded'` claims
+      nothing. One of those is a lie about food safety.
+
+
+      [MISCONCEPTIONS] Several Fellows will pick A, because `AVG` genuinely does
+      skip `NULL` on its own. That is true - and it is exactly why wrapping the
+      column in `COALESCE` changes the answer: it hands `AVG` a real zero that
+      it can no longer skip.
+
+
+      [SOURCES] PostgreSQL documentation, "Aggregate Functions": aggregate
+      functions other than `count(*)` ignore null inputs, which is why the
+      untouched average is computed over two rows rather than four.
+
+  - type: transition
+    from_label: "Filling In What's Missing"
+    to_label: "Storing an Answer Instead of Recomputing It"
+    note: "Three tables joined and grouped on every page load is real work - unless you save the result."
+    objective_index: 2
+    style: "panel_preview"
+    preview_items:
+      - text: "Create the view"
+        icon: "camera"
+      - text: "Watch it go stale"
+        icon: "time"
+    notes: >
+      [SCRIPT] [~26 min mark] Connect the two halves honestly: the totals query
+      this section stores is the same three-table `LEFT JOIN` the room has now
+      written several times. Nothing new about the query - only where its answer
+      lives.
+
+
+      [SCRIPT] Still a code-along. Terminals stay open.
+
+  - type: compare_contrast
+    title: "A View Re-Runs; a **Materialized** View Remembers"
+    left_label: "VIEW"
+    left_icon: "view"
+    left_points:
+      - "Stores only the query text"
+      - "Re-runs on every SELECT"
+      - "Always current, always costs"
+    right_label: "MATERIALIZED VIEW"
+    right_icon: "camera"
+    right_points:
+      - "Stores the actual result rows"
+      - "Reads them straight back"
+      - "Stale until you REFRESH"
+    similarities:
+      - "Both look like a table"
+      - "Both written once, reused often"
+    notes: >
+      [SCOPE] Plain `CREATE VIEW` is named here for the contrast, not taught as
+      a skill today - the project's own requirement is specifically the
+      materialized kind.
+
+
+      [SCRIPT] Both are created the same way and both are queried the same way,
+      which is exactly why the difference catches people out. The only thing
+      that changes is whether the answer is recomputed or remembered.
+
+
+      [SCRIPT] Give the honest decision rule rather than a winner: if the answer
+      must be correct to the second, a plain view is right. If the query is
+      expensive and the data changes on a schedule you control, a materialized
+      view is right. Most dashboards are the second case.
+
+
+      [MISCONCEPTIONS] Fellows sometimes hear "materialized view" as "faster
+      view." It is not faster at the same job - it is doing a different job. It
+      trades freshness for speed, and somebody has to decide that trade is
+      acceptable.
+
+
+      [SOURCES] PostgreSQL documentation, "CREATE MATERIALIZED VIEW": a
+      materialized view is populated by the query at creation time and its
+      contents are not automatically kept current; PostgreSQL's "CREATE VIEW"
+      page describes a view as a query stored under a name, re-evaluated each
+      time the view is referenced.
+
+  - type: transition
+    from_label: "Two Kinds of Saved Query"
+    to_label: "Code Along: Building the Materialized One"
+    note: "The query we are about to store is one you have already written three times - only where its answer lives changes."
+    notes: >
+      [SCRIPT] Terminals open again. Say out loud that nothing about the SELECT
+      is new, so the only thing to concentrate on is the two words in front of
+      it.
+
+  - type: code
+    title: "One Command Turns a Query Into **Stored Rows**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      CREATE MATERIALIZED VIEW restaurant_totals AS
+        SELECT dba, boro, COUNT(violation_id) AS tv
+        FROM restaurants
+        LEFT JOIN inspections USING (camis)
+        LEFT JOIN violations USING (inspection_id)
+        GROUP BY dba, boro;
+      SELECT * FROM restaurant_totals ORDER BY tv DESC;
+    starter_code: |
+      -- TODO: create a stored version of the totals query,
+      -- TODO:   named restaurant_totals
+
+
+      -- TODO: the query itself is the same three-table
+      -- TODO:   LEFT JOIN and GROUP BY you already know
+
+
+      -- TODO: then read the stored rows back, worst first
+    code_along: true
+    domain: "public_sector"
+    analogy:
+      domain: "social media"
+      mapping: "A screenshot of a live leaderboard opens instantly, but it froze the moment you took it. The live page is always current - it just has to be rebuilt every time you open it."
+      backups:
+        - domain: "food"
+          mapping: "Meal prep means dinner is ready in two minutes later in the week. It is also the food you cooked back then - if the plan changed, you cook again."
+        - domain: "travel"
+          mapping: "A printed boarding pass is instant to show and completely unaware that your gate just changed. The airline app is slower to load and always right."
+    domain_note: "`AS` here does the same job it does for a column alias: it names the thing, then gives the query that fills it. The stored rows are written to disk when this command runs, so `CREATE MATERIALIZED VIEW` on a large table can genuinely take a while."
+    doc_url: "https://www.postgresql.org/docs/current/sql-creatematerializedview.html"
+    skill_tags: ["sql", "materialized view"]
+    notes: >
+      [SCRIPT] Point at `SELECT 7` in the output first - Postgres tells you how
+      many rows it stored. That number is the whole idea: seven real rows now
+      exist on disk, and nothing has to be joined again to read them.
+
+
+      [SCRIPT] Run the second statement and note how ordinary it looks. Querying
+      a materialized view is just querying a table. `WHERE`, `ORDER BY`,
+      `GROUP BY` and joins all work on it exactly as they would anywhere else -
+      which matters, because the project asks for two further queries run against
+      the view rather than against the base tables.
+
+
+      [SCRIPT] Introduce the screenshot comparison before the word "stale" so the
+      next slide's surprise has somewhere to land.
+
+
+      [MISCONCEPTIONS] Fellows often expect the view to be a shortcut that still
+      reads the live tables. It does not read them at all after this moment.
+      Everything it will ever report is already decided.
+
+
+      [MISCONCEPTIONS] Re-running this exact command gives "relation
+      restaurant_totals already exists". Expected, not a bug - drop it first or
+      move on.
+
+  - type: code
+    title: "New Data Lands. The View **Doesn't Move**."
+    language: sql
+    terminal_label: "psql"
+    code: |
+      INSERT INTO violations VALUES
+        (5, 4, '06D', 'Food surface not clean');
+      -- Still says 3
+      SELECT dba, tv FROM restaurant_totals
+      WHERE dba = 'Corner Bistro';
+      REFRESH MATERIALIZED VIEW restaurant_totals;
+      -- Now says 4
+      SELECT dba, tv FROM restaurant_totals
+      WHERE dba = 'Corner Bistro';
+    starter_code: |
+      -- TODO: insert violation 5 for inspection 4:
+      -- TODO:   code '06D', 'Food surface not clean'
+
+
+      -- TODO: ask the view for Corner Bistro's total
+
+
+      -- TODO: tell the view to rebuild itself
+
+
+      -- TODO: ask the view for the same total again
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`REFRESH MATERIALIZED VIEW` re-runs the stored query and replaces every stored row. It is not an incremental update - the whole thing is rebuilt, which is why a big view is usually refreshed on a schedule rather than after every change."
+    doc_url: "https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html"
+    skill_tags: ["sql", "materialized view"]
+    notes: >
+      [SCRIPT] Run the block one statement at a time, not all at once. The whole
+      teaching moment is the beat between the first `3` and the `4` after the
+      refresh, and pasting the whole thing skips straight past it.
+
+
+      [SCRIPT] After the first `SELECT`, say it plainly: the base table and the
+      view now disagree, and neither of them is going to tell you. This is the
+      real cost of the trade the last slide named.
+
+
+      [SCRIPT] Then run the refresh and the second `SELECT`. Ask how long that
+      took on seven rows, and name honestly that on a real table of millions it
+      is a genuine wait - which is exactly why teams schedule refreshes
+      overnight instead of after every insert.
+
+
+      [MISCONCEPTIONS] Fellows often expect `REFRESH` to only pick up the new
+      row. It rebuilds the entire result from scratch. The rebuilt answer is
+      correct either way, but the cost is proportional to the whole query, not
+      to what changed.
+
+
+      [MISCONCEPTIONS] Somebody will ask whether Postgres can refresh
+      automatically. Core PostgreSQL has no built-in auto-refresh at all - teams
+      schedule it from outside, with cron, the `pg_cron` extension, or whatever
+      orchestrator already runs their pipelines. Scope this claim to Postgres
+      when you say it: Oracle can refresh on commit, BigQuery refreshes
+      materialized views on its own, and SQL Server's indexed views are
+      maintained by the engine automatically. An answer found online may
+      genuinely be right about a different database.
+
+  - type: check_understanding
+    prompt: "Quick-fire: Your dashboard's view refreshes nightly at 2am. A violation is logged at 9am. What does the 10am dashboard show?"
+    mode: game
+    topic: "How Stale Is Too Stale?"
+    bloom_level: apply
+    question_style: business_thinking
+    options:
+      - "The new violation, immediately"
+      - "Last night's numbers, until tomorrow"
+      - "An error, because the view is out of date"
+    answer:
+      correct: "Last night's numbers, until tomorrow"
+      explanation: "The view reports whatever it stored at its last refresh, and nothing in between changes that. So the 10am dashboard is showing a picture of the database as it looked at 2am - correct as of then, quietly wrong now. That gap is not a bug; it is the trade you agreed to when you chose a materialized view, and it is the thing to state plainly to whoever reads the dashboard."
+      source: "This lesson's own worked example, applied to a scheduled refresh"
+    skill_tags: ["sql", "materialized view"]
+    notes: >
+      [ACTIVITY] Quick-fire round. In person: shout it out or hold up fingers
+      for A, B, or C. Online: everyone types a letter in chat at once, then
+      reveal.
+
+
+      [SCRIPT] This is the transfer question - the same mechanic the room just
+      ran by hand, now on a real schedule. Push on the follow-up: how stale is
+      too stale here? For a food-safety dashboard a day might be fine; for a
+      live inventory count it would not be. Nothing in SQL answers that for you.
+
+
+      [SCRIPT] Name the professional habit that follows: whoever builds the view
+      owes the people reading it a plain statement of how fresh the numbers are.
+      A "last refreshed 2am" line on the dashboard is the whole fix.
+
+
+      [MISCONCEPTIONS] Option C keeps coming back because Fellows expect a
+      database to warn them. It will not. Stale data returns confident, wrong
+      numbers with a clean exit code, which is exactly why it is dangerous.
+
+  - type: transition
+    from_label: "Storing the Answer"
+    to_label: "Asking Postgres What a Query Actually Costs"
+    note: "We just traded freshness for speed - without ever measuring the speed we were buying."
+    objective_index: 3
+    style: "icon_hero"
+    icon: "search_zoom_in"
+    notes: >
+      [SCOPE] This is a first look, deliberately. Reading a plan is today;
+      choosing indexes and rewriting queries for speed is a later module's
+      work. Do not let the room pull you into optimization.
+
+
+      [SCRIPT] [~41 min mark] Make the link explicit rather than switching
+      topics cold: the last section assumed the base query was expensive enough
+      to be worth storing. Nobody checked. This section is how you check.
+
+  - type: content
+    title: "A Query Plan Is Postgres **Showing Its Work**"
+    card_items:
+      - text: "Seq Scan reads every row"
+        icon: "search_zoom_in"
+      - text: "Guessed rows next to real rows"
+        icon: "compass"
+      - text: "Execution time, actually measured"
+        icon: "time"
+    analogy:
+      domain: "travel"
+      mapping: "A maps app shows the route it picked and a guessed arrival time. `EXPLAIN ANALYZE` shows the route plus the real time on the clock once you actually drove it."
+    notes: >
+      [SCRIPT] Say what the two words do separately, because Fellows will meet
+      both. `EXPLAIN` alone shows the plan Postgres intends to use, with
+      estimated costs, without running anything. Adding `ANALYZE` genuinely runs
+      the query and adds measured times and real row counts next to those
+      estimates.
+
+
+      [SCRIPT] Warn about the one real footgun before anyone tries it: because
+      `ANALYZE` actually runs the query, running it on an `INSERT`, `UPDATE` or
+      `DELETE` really does change your data. On a `SELECT` it is completely
+      safe. The documented way to time a write safely is to wrap it - `BEGIN;`,
+      then the `EXPLAIN ANALYZE`, then `ROLLBACK;` - so the plan is real and the
+      change is thrown away.
+
+
+      [SCRIPT] Give the room permission not to read the whole plan. Three things
+      only: what kind of scan, how far the guess was from reality, and the
+      execution time at the bottom. The middle one is not a shortcut - the
+      PostgreSQL docs themselves say the thing usually most important to look
+      for is whether the estimated row counts are reasonably close to reality.
+
+
+      [MISCONCEPTIONS] The "cost" numbers are not seconds or milliseconds. They
+      are made-up units the planner uses only to compare its own options against
+      each other. The line that reports real time is `Execution Time`.
+
+
+      [MISCONCEPTIONS] `Seq Scan` is not automatically bad. On a seven-row table
+      reading everything is genuinely the fastest option, and Postgres knows it.
+      It becomes a signal worth investigating on large tables, not small ones.
+
+
+      [SOURCES] PostgreSQL documentation, "Using EXPLAIN": the `ANALYZE` option
+      causes the statement to be actually executed, with true row counts and run
+      times displayed alongside the planner's estimates; the documentation warns
+      that using `ANALYZE` on a data-modifying statement will really modify the
+      data, and that cost figures are in arbitrary planner units.
+
+  - type: transition
+    from_label: "What a Plan Shows You"
+    to_label: "Code Along: Reading Two Real Plans"
+    note: "Start with a query small enough that its whole plan fits on one screen, then look at what the view changed."
+    notes: >
+      [SCRIPT] Terminals open. Warn the room that the output looks alarming the
+      first time, and that they are only hunting for the three things the last
+      slide named.
+
+  - type: code
+    title: "Two Real Plans: **Five Lines, Then Three**"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      -- Start small: one table, one filter
+      EXPLAIN ANALYZE
+      SELECT dba FROM restaurants
+      WHERE boro = 'Brooklyn';
+
+      -- Now the view we built a moment ago
+      EXPLAIN ANALYZE SELECT * FROM restaurant_totals;
+    starter_code: |
+      -- TODO: ask Postgres to run and time a query that
+      -- TODO:   selects Brooklyn restaurants by name
+
+
+      -- TODO: do the same for a plain read of the
+      -- TODO:   materialized view, then compare the two plans
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Both plans come back as several lines of text above the usual result. Read them bottom-up when they get nested: the deepest line runs first, and the top line is the last thing that happens."
+    doc_url: "https://www.postgresql.org/docs/current/using-explain.html"
+    skill_tags: ["sql", "explain analyze"]
+    notes: >
+      [SCRIPT] Run the first one and walk the five lines together, slowly. It
+      says `Seq Scan on restaurants`, then a `Filter` line naming the condition,
+      then `Rows Removed by Filter: 4`, then planning and execution time. That
+      is a complete plan and it is genuinely readable.
+
+
+      [SCRIPT] Point at the two `rows=` numbers on the scan line. The first is
+      the planner's guess before running, the second is what actually came back.
+      Here it guessed 4 and got 3. On a small table nobody has collected
+      statistics for, a gap like that is normal and harmless - on a big table a
+      wide gap is the first thing a performance engineer looks at.
+
+
+      [SCRIPT] Then run the second one. Three lines total, one `Seq Scan`, no
+      joins anywhere. That is the whole payoff of the last section made visible:
+      the joins already happened once, at creation time, and reading the view
+      never redoes them.
+
+
+      [SCRIPT] If there is a spare minute, paste the original totals query after
+      `EXPLAIN ANALYZE` for the contrast. It comes back as sixteen lines with
+      three separate `Seq Scan` steps and two joins stacked above them - the work
+      the view is no longer doing.
+
+
+      [SCRIPT] Be honest about scale: on seven rows every one of these numbers is
+      a fraction of a millisecond and none of the timings mean anything on their
+      own. What transfers is the shape - three table scans and two joins versus
+      one scan.
+
+
+      [MISCONCEPTIONS] Fellows expect the execution time to be reproducible. It
+      is not - run the same query twice and the number moves, because caching and
+      whatever else the machine is doing both affect it. Compare shapes and row
+      counts, not one run's milliseconds.
+
+  - type: table
+    title: "Every Plan Line **Answers One Question**"
+    headers:
+      - "Plan Line"
+      - "What It Means"
+    rows:
+      - - "`Seq Scan on restaurants`"
+        - "Read every row, no index"
+      - - "`Filter: (boro = 'Brooklyn')`"
+        - "Then keep only the matches"
+      - - "`Rows Removed by Filter: 4`"
+        - "4 rows read, then dropped"
+      - - "`rows=4` then `rows=3`"
+        - "Guessed 4, really got 3"
+      - - "`Execution Time`"
+        - "What the run actually cost"
+    notes: >
+      [SCRIPT] Walk the five rows against the real output still on screen. These
+      are not paraphrases - they are the literal lines the query just printed.
+
+
+      [SCRIPT] Name the one line the project actually asks about. The writeup
+      wants a real assessment of the plan, and the most defensible thing a
+      Fellow can write is which step handled the most rows and why.
+
+
+      [MISCONCEPTIONS] "Rows Removed by Filter" confuses people because it
+      sounds like an error. It is not - it is a count of work that did not
+      contribute to the answer, which is why it is a useful thing to notice.
+
+
+      [MISCONCEPTIONS] That line only appears when something was actually
+      rejected. A Fellow whose plan has no `Rows Removed` line has not done
+      anything wrong - their filter simply kept everything it read.
+
+  - type: check_understanding
+    prompt: "Interview-style: A dashboard query that used to take 2 seconds now takes 40. Walk through how you'd investigate, before changing anything."
+    mode: discussion
+    topic: "Investigating a Slow Query"
+    bloom_level: analyze
+    question_style: interview
+    technique: "Investigation Framework"
+    skill_tags: ["sql", "explain analyze"]
+    notes: >
+      [ACTIVITY] In person: 60 seconds silent, then 60 seconds in pairs, then
+      cold-call one Fellow to narrate the investigation while a second Fellow
+      adds a hypothesis they missed. The pair step first is deliberate, so
+      nobody is put on the spot with an untested answer. Online: 60 seconds
+      silent, then pairs in breakouts or chat, then unmute two Fellows.
+
+
+      [TECHNIQUE] Use the Investigation Framework - Observation, Hypothesis,
+      Evidence, Recommendation. This is a "why did X happen" question, and the
+      interviewer is listening for a process, not a fix. A candidate who names
+      several possible causes before picking one sounds far more senior than one
+      who jumps straight to "add an index."
+
+
+      [SCRIPT] Target shape of a strong answer. Observation: confirm it is real
+      and repeatable, and find out what changed and when. Hypothesis: several,
+      out loud - the data volume grew, the query itself was edited, something it
+      depends on stopped being refreshed, or the machine is busier. Evidence:
+      `EXPLAIN ANALYZE` the query now and compare the plan and row counts
+      against what it used to do. Recommendation: name the next step the
+      evidence supports, and say what you would measure to prove it worked.
+
+
+      [SCRIPT] Point out that today gives them the Evidence step for real. That
+      is the part most candidates hand-wave, and it is the part they can now
+      actually demonstrate.
+
+
+      [MISCONCEPTIONS] The most common weak answer is a confident single cause
+      in the first sentence. Listen for whether a Fellow confirms the problem is
+      real before theorizing about it - a query that is slow once is not the same
+      as a query that got slower.
+
+
+      [SOURCES] Verified as genuinely asked of data analysts, not only engineers:
+      Resume Worded's SQL-analyst question bank carries a whole optimization
+      cluster ("How do you optimize a slow-performing SQL query?", "Explain the
+      concept of query execution plans"), and Dataquest lists both as advanced-
+      tier SQL interview questions whose model answers reach for `EXPLAIN
+      ANALYZE`. Say the tier honestly - this is a mid-level question, so a
+      first-role candidate is showing range by handling it, not failing by
+      finding it hard.
+
+  - type: interview_prep
+    topics:
+      - question: "What's the difference between a view and a materialized view, and when would you use each?"
+        short_answer: "A view stores only the query text and re-runs every time; a materialized view stores the actual rows, reading back fast but staying stale until refreshed. The trade is freshness for speed. I built one over a three-table join for a nightly dashboard, refreshed on a schedule, since users needed instant loads and same-day accuracy wasn't required. So: plain view when current answers matter, materialized view when the query is expensive and you control freshness."
+        technique: "PREP"
+        icon: "camera"
+    notes: >
+      [TECHNIQUE] Use PREP - Point, Reason, Example, Point. This is a
+      definitional question, and the failure mode is listing every fact a
+      candidate knows about both. Answer in one sentence, justify it, ground it
+      in something you actually built, then restate the decision rule.
+
+
+      [SCRIPT] Have one Fellow attempt it cold. Listen specifically for whether
+      the Example step is real. Everyone in this room genuinely has one after
+      today, and using it is what separates this from a memorized definition.
+
+
+      [SCRIPT] Coach the closing Point. The strongest version is a decision
+      rule, not a summary - "current answer, plain view; expensive query and
+      controllable freshness, materialized view" gives an interviewer something
+      to hire.
+
+
+      [MISCONCEPTIONS] Fellows sometimes state "materialized views need a manual
+      refresh" as though it were true of every database. In core PostgreSQL it
+      is. Oracle, BigQuery and SQL Server's indexed views can all refresh
+      themselves, so the safe phrasing in an interview is to name which database
+      you mean.
+
+
+      [SOURCES] Verified as a real, commonly-asked question: it appears in
+      Dataquest's "60 SQL Interview Questions" as an intermediate-tier item and
+      in a Deloitte-focused prep guide covering SQL developer, data analyst and
+      data engineer roles. Be honest with the room about the split, though -
+      analyst-specific banks (DataLemur's own data-analyst SQL list,
+      StrataScratch's database questions) skip views entirely. It leans
+      analytics-engineer and data-engineer. Worth knowing cold; not worth
+      expecting every time.
+
+  - type: table
+    title: "Key Terms - Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "NULL"
+        - "Unknown - not zero, not blank text"
+      - - "COALESCE"
+        - "Returns the first value that isn't NULL"
+      - - "Materialized View"
+        - "A query whose rows are stored, not rerun"
+      - - "Query Plan"
+        - "How Postgres decided to run your query"
+    notes: >
+      [SCRIPT] Quick pass through all four. Spend the extra beat on `NULL`,
+      since it is the one that causes silent wrong answers rather than errors -
+      and it is the one that will keep showing up long after this module ends.
+
+  - type: bridge
+    title: "So Far, We've Covered..."
+    bullets:
+      - "`NULL` is unknown, never zero"
+      - "A fallback is a claim you're making"
+      - "`REFRESH` or the view stays stale"
+      - "Answer it in SQL, not in pandas"
+    video_resource:
+      title: "Postgres Explain Explained"
+      url: "https://www.youtube.com/watch?v=P7EUFtjeAmI"
+      approx_duration: "~10 min"
+      note: "Walks how the planner decides on a plan before you ever read one"
+    notes: >
+      [SCRIPT] Close on the through-line: all three tools are about what a query
+      is not telling you. A blank you assumed, a number that was true an hour
+      ago, and a cost you never measured.
+
+
+      [SCRIPT] Name the project tie for all three by name, the same way the
+      objectives slide did: a `COALESCE` question on a genuinely nullable
+      column, a real materialized view with two follow-up queries run against
+      it, and a written `EXPLAIN ANALYZE` assessment.
+
+
+      [SCRIPT] The last bullet needs a real explanation, not a throwaway. The
+      project lets you run queries through Python, and the temptation is to pull
+      the table into pandas and finish with `.groupby()` or a merge. That is
+      graded as a SQL failure, not a style choice - pandas may hold or chart a
+      result the database already computed, and nothing more. Say it plainly
+      now, because it is easier to hear today than after it costs somebody a
+      grade.
+
+
+      [MISCONCEPTIONS] Fellows sometimes read that rule as "pandas is banned."
+      It is not. The line is about where the analysis happens, not which tools
+      are allowed on the machine.
+
+
+      [SCRIPT] The video is optional enrichment, not required viewing. Set
+      expectations honestly if you point at it: it spends more time on how the
+      planner chooses a plan than on reading `EXPLAIN ANALYZE` output, and it is
+      pitched at backend engineers rather than analysts. Useful for anyone who
+      wants the "why" behind today's output.
+
+  - type: further_resources
+    resources:
+      - title: "Using EXPLAIN"
+        url: "https://www.postgresql.org/docs/current/using-explain.html"
+        kind: documentation
+        time_estimate: "~12 min skim"
+        description: "Worked examples behind every plan line you read"
+        attribution: "PostgreSQL"
+      - title: "Postgres Plan Visualizer"
+        url: "https://explain.dalibo.com/"
+        kind: practice
+        time_estimate: "~10 min hands-on"
+        description: "Paste a plan, see it drawn as a tree"
+        attribution: "Dalibo"
+      - title: "How to Use COALESCE() in SQL"
+        url: "https://learnsql.com/blog/coalesce-function-sql/"
+        kind: reading
+        time_estimate: "~7 min read"
+        description: "Five real patterns for replacing NULLs usefully"
+        attribution: "LearnSQL.com"
+    notes: >
+      [SCRIPT] All three are free and none needs an account. Point at the
+      visualizer for anyone whose plan output felt unreadable - it draws the
+      same text as a tree, which makes the nesting obvious.
+
+
+      [SCRIPT] One real caution on the visualizer, worth saying out loud: a plan
+      you paste in is uploaded and stored on their server. Perfectly fine for
+      class data. Never paste a plan from an employer's database into it - the
+      site also offers a standalone version you can download and run locally,
+      which is the right answer at work.
+
+
+      [SCRIPT] The `COALESCE` article is the one to send anyone who wants more
+      than today's two examples - it walks several patterns for choosing a
+      fallback, which is exactly the judgment half of today's lesson.

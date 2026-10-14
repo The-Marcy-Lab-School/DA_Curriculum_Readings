@@ -1,0 +1,726 @@
+meta:
+  title: "Window Functions II: PARTITION BY & Ranking Within Groups"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 8
+  date: "Day 8"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Add PARTITION BY to an OVER clause so a ranking restarts inside each group"
+    - "Return just each group's top row by wrapping a ranked query in a CTE"
+  tools:
+    - "PostgreSQL / psql"
+  exercise:
+    type: bullets
+    url_or_text: "No new exercise today - your project's own window-function question is where this lands, on the schema you design yourself."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Yesterday: RANK() and ROW_NUMBER() with an OVER (ORDER BY ...) clause"
+    - "Earlier this module: Chaining multiple CTEs in one WITH clause, and GROUP BY aggregation"
+  interview_topics:
+    - "Answering honestly when an interviewer asks about a ranking function you have never used, by reasoning out loud from the ones you do know"
+  final_project:
+    "The project's window-function question asks for a ranking that means something
+    per group, not one flat list. PARTITION BY plus a CTE wrapper is how you get
+    each group's real winner out of your own schema."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: guided
+  estimated_duration_min: 60
+  scenario: >
+    Last class you ranked every restaurant against every other one, and three of
+    them landed in one tie. Today your manager asks a sharper question:
+    which restaurant has the most violations in each borough? Same data, same
+    OVER clause, one new keyword - and then a CTE to hand back only the winners.
+  glossary:
+    - term: "PARTITION BY"
+      definition: "The part of an OVER clause that splits rows into groups, so the window function starts its count over inside each one"
+    - term: "partition"
+      definition: "One group of rows that a window function treats separately from every other group"
+    - term: "top-N per group"
+      definition: "A very common query pattern that returns the highest-ranked rows inside each group, not just the highest overall"
+
+slides:
+  - type: title
+    title: "PARTITION BY: Ranking Within Groups"
+    subtitle: "Window Functions II"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 8"
+    notes: >
+      [SCRIPT] Frame today as one keyword added to something the room already
+      wrote for real last class. Nothing about the OVER clause changes; it
+      just learns to start counting over inside each group.
+
+
+      [SCRIPT] Say the business question out loud early: "who is worst in
+      each borough" is a genuinely different question from "who is worst
+      overall," and one flat ranking cannot answer it.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Restart a ranking inside each group"
+        icon: "sharding"
+      - text: "Return only each group's top row"
+        icon: "crown"
+    notes: >
+      [SCRIPT] Read both out loud, then name the project tie: the project's
+      own window-function question is graded on a ranking that answers a real
+      per-group business question, not one flat list of everything.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "PARTITION BY"
+        icon: "sharding"
+      - text: "Partition"
+        icon: "layout_list"
+      - text: "Top-N Per Group"
+        icon: "crown"
+    notes: >
+      [SCRIPT] Names only for now. "Top-N per group" is worth pointing at
+      specifically - it is the phrase interviewers actually use for this
+      pattern, so hearing it now makes the phrasing familiar later.
+
+  - type: transition
+    from_label: "One Ranking Over Everything"
+    to_label: "Why One Ranking Can Hide the Real Answer"
+    note: "A restaurant can be middling citywide and still be the worst on its own block."
+    objective_index: 1
+    notes: >
+      [SCRIPT] [~4 min mark] Keep this quick - the payoff is real output on
+      screen in a few minutes.
+
+  - type: check_understanding
+    prompt: "Quick recall: Last class three restaurants tied on total violations. What did `RANK()` give each of them?"
+    mode: poll
+    topic: "What RANK() Did With a Tie"
+    bloom_level: remember
+    question_style: conceptual
+    options:
+      - "Three different numbers"
+      - "The same number, then a gap after it"
+      - "An error, because ties are not allowed"
+    answer:
+      correct: "The same number, then a gap after it"
+      explanation: "`RANK()` gives every tied row the same rank, then picks the count back up after however many rows tied. That tie rule does not go away today - it still applies, just inside each group instead of across the whole table."
+      source: "This module's own prior lesson on RANK() and ROW_NUMBER(), not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: quick show of hands on A, B, or C. Online: drop
+      a letter in chat, then confirm.
+
+
+      [SCRIPT] This is not just a warm-up. Today's ranking still ties the
+      exact same way - the only thing that changes is the set of rows a tie
+      is measured against. Say that connection out loud before moving on.
+
+
+      [MISCONCEPTIONS] Some Fellows expect a tie to raise an error or get
+      broken automatically. It does neither - the database reports the tie
+      honestly and leaves the tie-breaking decision to you.
+
+  - type: content
+    title: "One Flat Ranking Can't Answer a Per-Group Question"
+    bullets:
+      - "\"Worst overall\" is one question"
+      - "\"Worst in each borough\" is another"
+      - "Same rows, different comparison group"
+    icon_hero:
+      icon: "sharding"
+      style: "gold"
+    analogy:
+      domain: "music"
+      mapping: "A national song chart ranks every track against every other one. A city-by-city chart restarts the count in each city - same songs, same plays, a different #1 in each place."
+      backups:
+        - domain: "sports"
+          mapping: "A league-wide scoring leaderboard has exactly one leader. A per-division leaderboard hands every division its own leader, from the exact same stats."
+        - domain: "food"
+          mapping: "One citywide 'best slice' list has one winner. A per-neighborhood list gives every neighborhood its own winner, from the same reviews."
+    notes: >
+      [SCRIPT] Introduce the chart analogy before the keyword, then name the
+      mechanism: the rows and the numbers are identical either way. The only
+      thing that changed is which other rows each row gets compared against.
+
+
+      [MISCONCEPTIONS] Fellows often assume a per-group ranking must need a
+      separate query per group, or a `WHERE boro = 'Queens'` run three times.
+      One query does all of it at once - that is exactly what `PARTITION BY`
+      buys you.
+
+  - type: transition
+    from_label: "The Chart Analogy"
+    to_label: "Code Along: Setting Up Real Groups to Rank"
+    note: "Two more restaurants, so every borough has a real group to rank inside."
+    style: "panel_preview"
+    preview_items:
+      - text: "Add two restaurants"
+        icon: "add"
+      - text: "Re-run yesterday's ranking"
+        icon: "award"
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along - everyone opens
+      their terminal now, not in five minutes.
+
+  - type: code
+    title: "Two More Restaurants, So Every Borough Has a Group"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      \c nyc_restaurants
+      INSERT INTO restaurants (camis, dba, boro) VALUES
+        (1006, 'Bayside Grill', 'Queens'),
+        (1007, 'Flatbush Fry', 'Brooklyn');
+    starter_code: |
+      -- TODO: reconnect if needed (you know this one by now)
+
+
+      -- TODO: insert the two rows below
+      -- 1006, 'Bayside Grill', 'Queens'
+      -- 1007, 'Flatbush Fry', 'Brooklyn'
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Two brand-new restaurants, so they have zero inspections and zero violations - which turns out to matter a lot in a few minutes."
+    doc_url: "https://www.postgresql.org/docs/current/sql-insert.html"
+    skill_tags: ["sql", "database-administration", "terminal-command-line"]
+    notes: >
+      [SCRIPT] Run it and confirm `INSERT 0 2`. Do not explain why these two
+      specifically yet - let the ranking output make the point on its own.
+
+
+      [MISCONCEPTIONS] If anyone runs this twice they get "duplicate key
+      value violates unique constraint restaurants_pkey". That is the
+      primary key from this module's own table-creation lesson doing its
+      job, not a broken command. Say so out loud and move on rather than
+      debugging it live.
+
+
+      [MISCONCEPTIONS] A brand-new restaurant with no inspections still
+      counts as a real row here. Its violation total is a genuine zero, not
+      missing data - that distinction is what the `LEFT JOIN` protects.
+
+  - type: code
+    title: "Yesterday's Ranking, Now With Boroughs Showing"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      -- tv = total violations, rnk = rank
+      WITH totals AS (
+        SELECT dba, boro, COUNT(violation_id) AS tv
+        FROM restaurants
+        LEFT JOIN inspections USING (camis)
+        LEFT JOIN violations USING (inspection_id)
+        GROUP BY dba, boro)
+      SELECT dba, boro, tv,
+        RANK() OVER (ORDER BY tv DESC) AS rnk
+      FROM totals ORDER BY boro, rnk;
+    starter_code: |
+      -- TODO: rebuild yesterday's totals CTE, this time
+      -- TODO:   keeping boro in the result
+
+
+      -- TODO: rank the totals by tv DESC using yesterday's
+      -- TODO:   OVER clause, then sort the printout by borough
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Adding `boro` to the SELECT list means adding it to `GROUP BY` too - a grouped query can only return columns it actually grouped on."
+    doc_url: "https://www.postgresql.org/docs/current/tutorial-window.html"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] Run it and read the `rnk` column down the screen out loud.
+      Corner Bistro is 1, Green Leaf Cafe is 2, and then five rows all sit
+      at 3. Ask the room whether that answers "who is worst in Brooklyn."
+      It does not, and everyone can see why.
+
+
+      [SCRIPT] Point at the `ORDER BY boro, rnk` on the last line: that is
+      only sorting the printout so boroughs stay together. It has no effect
+      on the ranking itself, which is still computed across all seven rows.
+
+
+      [MISCONCEPTIONS] Fellows sometimes read the `ORDER BY boro` in the
+      final line as if it grouped the ranking. It did not - sorting output
+      and defining a ranking's comparison group are two different jobs.
+
+  - type: check_understanding
+    prompt: "Predict it: With the two new restaurants added, how many rows now come back sharing `rnk = 3`?"
+    mode: poll
+    topic: "How Big the Tie Got"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "3"
+      - "4"
+      - "5"
+    answer:
+      correct: "5"
+      explanation: "Only Corner Bistro (3 violations) and Green Leaf Cafe (1) have any violations at all. The other five restaurants sit at zero, so `RANK()` puts all five of them at rank 3 - one flat ranking, and most of the table is a single undifferentiated block."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: hold up fingers for 3, 4, or 5. Online: drop the
+      number in chat before advancing.
+
+
+      [SCRIPT] The number itself is less important than the point: a flat
+      ranking got less useful as the table got bigger, not more. That is the
+      problem the next slide fixes.
+
+  - type: transition
+    from_label: "One Big Tie"
+    to_label: "Code Along: Adding PARTITION BY"
+    note: "One keyword decides which rows a rank is measured against."
+    style: "icon_hero"
+    icon: "sharding"
+    notes: >
+      [SCRIPT] Name explicitly that this is still a code-along, and that
+      only one line of the previous query changes.
+
+  - type: code
+    title: "Ranking Restarts in Each Borough"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH totals AS (
+        SELECT dba, boro, COUNT(violation_id) AS tv
+        FROM restaurants
+        LEFT JOIN inspections USING (camis)
+        LEFT JOIN violations USING (inspection_id)
+        GROUP BY dba, boro)
+      SELECT dba, boro, tv,
+        RANK() OVER (PARTITION BY boro
+          ORDER BY tv DESC) AS rnk
+      FROM totals ORDER BY boro, rnk;
+    blanked_code: |
+      WITH totals AS (
+        SELECT dba, boro, COUNT(violation_id) AS tv
+        FROM restaurants
+        LEFT JOIN inspections USING (camis)
+        LEFT JOIN violations USING (inspection_id)
+        GROUP BY dba, boro)
+      SELECT dba, boro, tv,
+        RANK() OVER (____________ boro
+          ORDER BY tv DESC) AS rnk
+      FROM totals ORDER BY boro, rnk;
+    starter_code: |
+      -- TODO: same totals CTE as the last slide
+
+
+      -- TODO: one keyword goes inside OVER (...), before the
+      -- TODO:   ORDER BY, so the rank restarts for each borough
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`PARTITION BY` must come before `ORDER BY` inside `OVER (...)` - that order is required by the grammar, not a style preference."
+    doc_url: "https://www.postgresql.org/docs/current/functions-window.html"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] Give the room 60 seconds to fill in the blank before you
+      reveal it. In person: call on one Fellow to say the keyword out loud.
+      Online: everyone types their guess in chat at the same time.
+
+
+      [SCRIPT] Run it and read the output borough by borough. Brooklyn:
+      Green Leaf Cafe 1, then Harbor Grill and Flatbush Fry both 2.
+      Manhattan: Corner Bistro 1, New Spot NYC 2. Queens: Sunset Diner and
+      Bayside Grill both 1. The five-way tie is gone, and every borough has
+      its own number one.
+
+
+      [SCRIPT] Call back to the chart analogy here: a national chart has
+      exactly one #1, and a city-by-city chart restarts the count in each
+      city. Same songs, same plays, three different winners.
+
+
+      [SCRIPT] Say the row count out loud: seven rows went in and seven rows
+      came back. `PARTITION BY` changed which rows each rank was measured
+      against - it never removed or merged a single row.
+
+
+      [MISCONCEPTIONS] The most common wrong guess here is `GROUP BY boro`.
+      That collapses the table to three rows, one per borough, and the
+      restaurant names disappear entirely. Same word "group," opposite
+      effect on your row count.
+
+
+      [SOURCES] PostgreSQL documentation, "Window Functions": PARTITION BY
+      "divides the rows into groups, or partitions... For each row, the
+      window function is computed across the rows that fall into the same
+      partition as the current row," and window function rows "retain their
+      separate identities."
+
+  - type: check_understanding
+    prompt: "Quick-fire: There are three boroughs in the table. How many rows now come back with `rnk = 1`?"
+    mode: game
+    topic: "Counting the Winners"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "3"
+      - "4"
+      - "7"
+    answer:
+      correct: "4"
+      explanation: "Three boroughs each produce a rank 1, so three is the tempting answer. But Queens has two restaurants both sitting at zero violations, and `RANK()` still gives tied rows the same number - inside a partition just as much as outside one. Sunset Diner and Bayside Grill are both rank 1, so four rows come back."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] Quick-fire round. In person: shout it out or hold up
+      fingers. Online: everyone types a number in chat at once, then reveal.
+
+
+      [SCRIPT] Expect most of the room to answer 3. That wrong answer is the
+      whole point of asking - it shows that "one winner per group" is an
+      assumption about the data, not something the function guarantees.
+
+
+      [MISCONCEPTIONS] "One row per partition" is the assumption to break
+      here. `PARTITION BY` decides the comparison group; it never promises a
+      unique winner inside it.
+
+  - type: compare_contrast
+    title: "Same Word 'Group,' Opposite Effect on Your Rows"
+    left_label: "GROUP BY boro"
+    left_icon: "table"
+    left_points:
+      - "Three rows come back"
+      - "Restaurant names disappear"
+      - "Answers: Count per borough"
+    right_label: "PARTITION BY boro"
+    right_icon: "sharding"
+    right_points:
+      - "All seven rows come back"
+      - "Every restaurant keeps its row"
+      - "Answers: Rank inside a borough"
+    similarities:
+      - "Both split rows on the same column"
+      - "Both can appear in one query"
+    notes: >
+      [SCRIPT] Name the real distinction: `GROUP BY` changes your row count,
+      `PARTITION BY` never does. If someone asks which one is "better," the
+      honest answer is that they answer different questions.
+
+
+      [SCRIPT] Say the day's through-line out loud here, since this is where
+      it lands hardest: the hard part of a ranking question is almost never
+      the function. It is deciding what each row is being compared against.
+
+
+      [MISCONCEPTIONS] These are not opposites and not mutually exclusive -
+      a single query can legitimately use both, since window functions run
+      after the grouping is already done. Do not leave the room believing
+      you must pick one.
+
+
+      [SOURCES] PostgreSQL documentation, "Window Functions": window
+      functions "do not cause rows to become grouped into a single output
+      row like non-window aggregate calls would," and they "execute after
+      non-window aggregate functions."
+
+  - type: workflow_linear
+    title: "WHERE Runs Long Before Your Rank Exists"
+    steps:
+      - label: "FROM"
+        detail: "Gather Rows"
+      - label: "WHERE"
+        detail: "Filter Rows"
+      - label: "GROUP BY"
+        detail: "Group Rows"
+      - label: "HAVING"
+        detail: "Filter Groups"
+      - label: "SELECT"
+        detail: "Rank Here"
+      - label: "ORDER BY"
+        detail: "Sort Output"
+    notes: >
+      [SCRIPT] Walk it left to right, then land on the point: `WHERE` has
+      completely finished by the time the database reaches `SELECT`, and
+      `SELECT` is where a window function runs. So at `WHERE` time, the rank
+      genuinely does not exist yet. This is not an arbitrary rule about where
+      you are allowed to type things.
+
+
+      [SCRIPT] Same reason `HAVING` cannot see a rank either - it sits to the
+      left of `SELECT` too. Fellows who learned `HAVING` as "the `WHERE` for
+      aggregates" will reach for it otherwise.
+
+
+      [MISCONCEPTIONS] The order you *write* a query in is not the order it
+      *runs* in. `SELECT` is written first and runs almost last. That gap is
+      the whole reason the next slide needs a wrapper.
+
+
+      [SOURCES] PostgreSQL documentation, "Window Functions": window
+      functions "are permitted only in the SELECT list and the ORDER BY
+      clause of the query. They are forbidden elsewhere, such as in GROUP BY,
+      HAVING and WHERE clauses. This is because they logically execute after
+      the processing of those clauses."
+
+  - type: transition
+    from_label: "The Order Clauses Actually Run"
+    to_label: "Code Along: Returning Only the Winners"
+    note: "A rank you can see is not yet a rank you can filter on."
+    objective_index: 2
+    notes: >
+      [SCRIPT] [~36 min mark] Set up the real ask: the manager wanted the
+      worst restaurant in each borough, not a ranked list of everything.
+      Name that this is a code-along.
+
+  - type: code
+    title: "Top-N Per Group Needs a CTE Wrapper"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH totals AS (
+        SELECT dba, boro, COUNT(violation_id) AS tv
+        FROM restaurants
+        LEFT JOIN inspections USING (camis)
+        LEFT JOIN violations USING (inspection_id)
+        GROUP BY dba, boro
+      ), ranked AS (
+        SELECT *, RANK() OVER (PARTITION BY boro
+            ORDER BY tv DESC) AS rnk
+        FROM totals)
+      SELECT * FROM ranked WHERE rnk = 1;
+    starter_code: |
+      -- TODO: keep the totals CTE, then chain a second CTE
+      -- TODO:   named ranked that adds the PARTITION BY ranking
+
+
+      -- TODO: select everything from ranked where rnk = 1
+    code_along: true
+    domain: "public_sector"
+    domain_note: "In Postgres a window function is only allowed in `SELECT` and `ORDER BY` - never in `WHERE`, `GROUP BY`, or `HAVING`, because those all finish running before any window function is computed."
+    doc_url: "https://www.postgresql.org/docs/current/tutorial-window.html"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] Name the pattern out loud first: this shape - rank inside
+      each group, then keep the top rows of each - is called top-N per
+      group, and that is the phrase an interviewer will use for it.
+
+
+      [SCRIPT] Ask next: why not just add `WHERE rnk = 1` to the previous
+      query? Then answer it with the real mechanism. `WHERE` has already
+      finished running by the time any window function is computed, so at
+      that moment `rnk` does not exist yet. Postgres reports it as plainly
+      as that: column "rnk" does not exist.
+
+
+      [SCRIPT] Name why the wrapper fixes it: the inner CTE finishes the
+      whole ranking first, which turns `rnk` into an ordinary column. Only
+      then does the outer `WHERE` run, against a plain value.
+
+
+      [SCRIPT] Run it and read the four rows: Green Leaf Cafe for Brooklyn,
+      Corner Bistro for Manhattan, and both Sunset Diner and Bayside Grill
+      for Queens. Tie back to the quick-fire question - four, not three.
+
+
+      [MISCONCEPTIONS] Fellows who learned `HAVING` as "the `WHERE` for
+      aggregates" will try `HAVING rnk = 1` next. That fails for the same
+      reason, and it is worth saying out loud before someone loses ten
+      minutes to it.
+
+
+      [SOURCES] PostgreSQL documentation, "Window Functions": window
+      functions "are permitted only in the SELECT list and the ORDER BY
+      clause of the query. They are forbidden elsewhere, such as in GROUP
+      BY, HAVING and WHERE clauses. This is because they logically execute
+      after the processing of those clauses." The docs give the same
+      sub-select fix this slide uses as a CTE.
+
+  - type: check_understanding
+    prompt: "Sketch it: A report must name exactly one worst restaurant per borough. Write the `OVER (...)` clause you would use, and defend `RANK()` or `ROW_NUMBER()` inside it."
+    mode: whiteboard
+    topic: "Choosing a Ranking Function for a Real Report"
+    bloom_level: evaluate
+    question_style: business_thinking
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] Use a shared board - Padlet, Jamboard, or a physical
+      whiteboard, whichever this cohort already uses. In person: pairs
+      sketch on the board, then two pairs present. Online: each pair posts
+      their clause to the shared board, then unmute two pairs to defend it.
+
+
+      [SCRIPT] Target idea: the clause is `OVER (PARTITION BY boro ORDER BY
+      tv DESC)` either way. The real decision is the function. Today's own
+      output already proves it matters - Queens tied, so `RANK()` returned
+      two "winners" for one borough. A report that promises exactly one name
+      per borough has a real, defensible reason to use `ROW_NUMBER()`.
+
+
+      [SCRIPT] Push on the honest cost: `ROW_NUMBER()` picks a winner even
+      when the data did not. Listen for whether a pair says out loud how the
+      tie should be broken, rather than letting the database decide silently.
+
+
+      [MISCONCEPTIONS] Some Fellows will treat `ROW_NUMBER()` as simply the
+      safer choice. It is only safer for the row count - it quietly hides a
+      real tie, which is sometimes exactly the wrong thing for a report to
+      do.
+
+  - type: check_understanding
+    prompt: "Interview-style: An interviewer asks for the top two highest-paid employees in each job title. Walk through how you would get there before writing any SQL."
+    mode: discussion
+    topic: "Top-N Per Group, Out Loud"
+    bloom_level: analyze
+    question_style: interview
+    technique: "Query Walkthrough Method"
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: 60 seconds silent, then 60 seconds in pairs, then
+      cold-call one Fellow to narrate the plan while a second Fellow
+      critiques it - the pair step first is deliberate, so nobody is put on
+      the spot with an untested answer. Online: 60 seconds silent, then post
+      to a pair breakout or chat, then unmute two Fellows.
+
+
+      [TECHNIQUE] Use the Query Walkthrough Method - Understand, Plan,
+      Write, Explain, Validate. This is a live SQL question, and the point
+      is narrating a plan out loud, not racing to syntax. A candidate who
+      says the plan first is easier to follow even if the syntax wobbles.
+
+
+      [SCRIPT] Target shape of a strong answer. Understand: what counts as
+      "top two" if two people tie on pay? Plan: total or select the pay per
+      employee, rank within each job title, then keep the top two. Write:
+      a ranking function with `PARTITION BY job_title ORDER BY pay DESC`,
+      wrapped in a CTE. Explain: name why the wrapper is needed at all.
+      Validate: check one job title by hand against the raw rows.
+
+
+      [SCRIPT] This exact question shape shows up constantly in real data
+      analyst interviews, phrased as top-two-per-category, top-earner-per-
+      department, or best-selling-product-per-month. Say that out loud so
+      Fellows recognize it as a pattern, not a one-off puzzle.
+
+  - type: interview_prep
+    topics:
+      - question: "An interviewer asks how you would use `DENSE_RANK()`. You have never used it. What do you say?"
+        short_answer: "Don't bluff or shut down - say honestly you haven't used it yet, then reason aloud from what you do know: you've written `RANK()`, which gives tied rows the same number then leaves a gap, so `DENSE_RANK` is likely the version that closes that gap. Then pivot to real ground: describe a ranking you've actually written with `PARTITION BY` and how you checked it by hand. Reasoning aloud beats freezing on syntax."
+        technique: "ARP"
+        icon: "chat"
+    notes: >
+      [TECHNIQUE] Use ARP - Acknowledge, Reason, Pivot. Acknowledge is not
+      apologize: "I have not used that one yet" is confident, "I'm terrible
+      at window functions" is not. Reason means thinking out loud from
+      adjacent knowledge, which Fellows genuinely have after today. Pivot
+      means landing back on something real they have built.
+
+
+      [SCOPE] `DENSE_RANK()` is deliberately not taught anywhere in this
+      module - that is the point. This question rehearses what to do when a
+      real interview reaches past what you have been taught, which is normal
+      and survivable. Do not turn it into a syntax lesson.
+
+
+      [SCRIPT] Have one Fellow attempt it cold. Listen for the three beats
+      in order, and especially for whether they actually pivot to real work
+      instead of trailing off after admitting the gap.
+
+  - type: content
+    title: "Why This Matters for Your Project"
+    bullets:
+      - "Your window-function question needs a group"
+      - "A CTE wrapper returns just the winners"
+      - "Spot-check one group by hand"
+    icon_hero:
+      icon: "goal"
+      style: "blue"
+    notes: >
+      [SCRIPT] Name it directly: the project's own window-function question
+      is graded on whether the ranking answers a real business question. A
+      per-group ranking almost always does that better than one flat list.
+
+
+      [SCRIPT] Repeat the spot-check habit this module has drilled since the
+      join lectures. Pick one group, count it by hand from the raw rows, and
+      confirm the query agrees before trusting any of it.
+
+  - type: table
+    title: "Key Terms - Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "PARTITION BY"
+        - "Splits rows into groups inside OVER"
+      - - "Partition"
+        - "One group a window function counts within"
+      - - "Top-N Per Group"
+        - "Each group's highest-ranked rows, not overall"
+    notes: >
+      [SCRIPT] Quick pass through all three. "Top-N per group" especially -
+      that is the phrase to recognize the moment an interviewer or a manager
+      uses it.
+
+  - type: bridge
+    title: "So Far, We've Covered..."
+    bullets:
+      - "PARTITION BY restarts a rank per group"
+      - "Every row still comes back"
+      - "A CTE wrapper filters on the rank"
+    video_resource:
+      title: "SQL Window Functions, Clearly Explained"
+      url: "https://www.youtube.com/watch?v=rIcB4zMYMas"
+      approx_duration: "~8 min"
+      note: "Covers OVER, PARTITION BY, and all three ranking functions in one pass"
+    notes: >
+      [SCRIPT] Close by naming the through-line across both window-function
+      lessons: the `OVER` clause has not changed at all. It just learned who
+      each row is being compared against.
+
+
+      [SCRIPT] Name the project tie explicitly, same as the objectives slide
+      did: your own project's window-function question expects a ranking that
+      answers a real per-group business question, spot-checked by hand.
+
+
+      [SCRIPT] The video is optional enrichment for anyone who wants the
+      whole idea narrated once more before the project. It is under eight
+      minutes and covers both lessons' scope together.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "No new exercise today"
+      - "Keep your database running"
+      - "Try one ranking on your own data"
+    notes: >
+      [SCRIPT] Give a specific heads-up: the next lecture runs new queries
+      against this same database, so do not drop `nyc_restaurants`.
+
+
+      [SCRIPT] The optional try-it: rank anything by anything, partitioned
+      by any column that has real groups in it. Ten minutes of that is worth
+      more than rereading the slides.
+
+  - type: further_resources
+    resources:
+      - title: "How Window Functions Work, With Animated GIFs"
+        url: "https://dataschool.com/how-to-teach-people-sql/how-window-functions-work/"
+        kind: reading
+        time_estimate: "~7 min read"
+        description: "Animated GIFs show a partition forming, group by group"
+        attribution: "Data School (Chartio)"
+      - title: "PostgreSQL Docs: Window Function Reference"
+        url: "https://www.postgresql.org/docs/current/functions-window.html"
+        kind: documentation
+        time_estimate: "~10 min skim"
+        description: "Exact definitions of every ranking function"
+        attribution: "PostgreSQL"
+      - title: "How SQL OVER PARTITION BY Works, With Practice"
+        url: "https://www.practicewindowfunctions.com/learn/how_window_functions_work"
+        kind: practice
+        time_estimate: "~20 min"
+        description: "Browser problems, including real top-N-per-group"
+        attribution: "Practice Window Functions"
+    notes: >
+      [SCRIPT] Point at the practice link specifically for anyone who wants
+      more reps - its first several problems are exactly today's pattern,
+      and it runs in the browser with no account needed.
+
+
+      [SCRIPT] The docs link is a different page than the tutorial one from
+      last class - this is the reference list where every ranking function
+      is defined precisely, including ones this course has not taught.

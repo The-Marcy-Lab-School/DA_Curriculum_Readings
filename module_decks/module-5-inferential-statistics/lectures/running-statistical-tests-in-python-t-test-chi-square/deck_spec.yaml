@@ -1,0 +1,698 @@
+meta:
+  title: "Running Statistical Tests in Python — t-test & Chi-Square"
+  module: "Module 5: Inferential Statistics"
+  module_number: 5
+  lesson_number: 2
+  date: "Day 2"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Following a step-by-step template, run a two-sample t-test or a chi-square test (as appropriate to the data type) in Python via scipy.stats, correctly stating the null hypothesis, computing the p-value, and reading off the 95% confidence interval"
+  tools:
+    - "Python"
+  exercise:
+    type: lab_plan
+    url_or_text: "modules/module-5-inferential-statistics/labs/assumption-check-parametric-vs-nonparametric.md"
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Null hypothesis, alternative hypothesis, p-value, and confidence interval (last class)"
+    - "Reading a five-number summary or histogram to describe a distribution's shape (Module 2)"
+  interview_topics:
+    - "How do you decide between a t-test and a chi-square test?"
+  final_project:
+    "This lecture is the direct rehearsal for the project's own graded
+    test-running section: A real scipy.stats test, a real p-value, a real
+    effect size, and a real 95% confidence interval, computed on your own
+    data a few weeks from now."
+  module_plan_ref: "module_sources/module-5-inferential-statistics/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-5-inferential-statistics/DATASET.md"
+  scaffolding_level: guided
+  estimated_duration_min: 60
+  scenario: >
+    Yesterday you stated a null and alternative hypothesis for one real
+    question: Do Gentoo penguins actually weigh more than Adelie penguins?
+    Today you stop guessing and find out - by running the real test, in
+    Python, on the real data.
+  glossary:
+    - term: "t-test"
+      definition: "A statistical test comparing the means of two groups on a continuous outcome"
+    - term: "chi-square test"
+      definition: "A statistical test checking whether two categorical variables are actually associated"
+    - term: "contingency table"
+      definition: "A table of counts crossing two categorical variables against each other"
+    - term: "degrees of freedom"
+      definition: "A number tied to how many values in a calculation are free to vary, used to interpret a test statistic"
+    - term: "categorical variable"
+      definition: "A variable whose values are named groups or labels, not numbers on a scale"
+
+slides:
+  - type: title
+    title: "Running Statistical Tests in Python"
+    subtitle: "t-test & Chi-Square, From a Real Hypothesis to a Real p-value"
+    module: "Module 5: Inferential Statistics"
+    date: "Day 2"
+    image_path: "modules/module-5-inferential-statistics/lectures/running-statistical-tests-in-python-t-test-chi-square/images/slide_01_title.png"
+    image_prompt: "Flat illustration: A data analyst at a laptop with a terminal window open, one hand on the keyboard, a small real p-value visible on screen, confident expression"
+    image_alt: "A data analyst typing at a laptop with a terminal window open, a small p-value visible on screen, looking confident rather than uncertain"
+    notes: >
+      [SCRIPT] Open by naming exactly what changes today. Yesterday was the
+      logic - what a hypothesis actually claims, what a p-value actually
+      measures. Today you run real code, on real data, and get a real
+      answer.
+
+
+      [SCRIPT] Say the format out loud. Notebooks open today. This is a
+      genuine code-along - type every step, not just watch it happen.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Run a real t-test in Python"
+        icon: "python"
+      - text: "Run a real chi-square test in Python"
+        icon: "table"
+      - text: "Read the p-value and CI for real"
+        icon: "probability"
+    notes: >
+      [SCRIPT] Read all three, then name the shape. Two different tests,
+      one shared shape: state the hypothesis, run the test, read the
+      output the same careful way every time.
+
+
+      [SCRIPT] Name the project tie directly. This exact shape - a real
+      test, a real p-value, a real confidence interval - is a graded
+      section on your own project, on your own data, a few weeks from now.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "t-test"
+        icon: "test"
+      - text: "chi-square test"
+        icon: "table"
+      - text: "contingency table"
+        icon: "schema"
+      - text: "degrees of freedom"
+        icon: "calculator"
+    notes: >
+      [SCRIPT] Names only for now. All four get a real definition as they
+      come up in the code today, and all four come back with their
+      definitions right before the summary.
+
+  - type: transition
+    from_label: "Yesterday's Homework"
+    to_label: "Code Along: Run It For Real"
+    note: "You already stated the null and alternative hypothesis. Today's whole job is finding out which one the data actually supports."
+    objective_index: 1
+    notes: >
+      [SCRIPT] Ask for a show of hands or a quick read-aloud: who wrote
+      down their null hypothesis for Gentoo versus Adelie body mass? Use
+      one real answer from the room as today's opening frame.
+
+  - type: code
+    title: "Load the Real Data"
+    language: python
+    code_along: true
+    code: |
+      import pandas as pd
+      from scipy import stats
+
+      df = pd.read_csv("palmer_penguins.csv")
+      df = df.dropna(subset=["body_mass_g"])
+      df.head()
+    starter_code: |
+      import pandas as pd
+      from scipy import stats
+
+      df = pd.read_csv(____)  # TODO: the real filename
+      df = df.dropna(subset=[____])  # TODO: which column can't have missing values here?
+      df.head()
+    domain_note: "Real Palmer Penguins data has a few genuinely missing measurements - dropping rows missing the one column you're about to test keeps every later step honest."
+    skill_tags: ["python", "inferential-statistics"]
+    notes: >
+      [SCRIPT] Name the new tool before typing a line of it. `scipy.stats`
+      is the real, standard Python library data analysts reach for to run
+      hypothesis tests - everything today's demo uses lives inside it.
+
+
+      [ACTIVITY] Type this along with the instructor. Confirm your own
+      `df.head()` output shows real rows before moving on - species,
+      island, and body_mass_g should all be visible.
+
+
+      [SCRIPT] Name why the drop matters now, not later. A few penguins
+      are missing a body-mass measurement. Testing with those rows still
+      in would silently break the comparison - drop them once, up front,
+      for the column you're about to use.
+
+
+      [MISCONCEPTIONS] Someone will ask why not just drop every row with
+      any missing value anywhere. That would throw away real, usable rows
+      whose only gap is in a column you're not even testing today.
+
+  - type: content
+    title: "Before You Test: A Quick Shape Check"
+    bullets:
+      - "Compare each species' spread, side by side"
+      - "Roughly similar shape: The t-test is defensible"
+      - "Wildly different: Flag it for next class"
+    icon_hero:
+      icon: "histogram"
+      style: "blue"
+    notes: >
+      [SCRIPT] Name this as the mechanic next class's lab deepens. A real
+      five-number-summary check, one per group, the same Module 2 skill
+      already built - not a new technique, a new place to apply it.
+
+
+      [SCRIPT] Keep today's bar honest and simple. If both groups look
+      roughly bell-shaped with no wild outliers, the t-test is defensible
+      enough to proceed today. Tomorrow's lab gives this judgment call
+      real depth, across several harder cases.
+
+
+      [MISCONCEPTIONS] People treat this check as optional busywork before
+      "the real test." Skipping it is common project mistake #3 on this
+      module's own rubric - checking the assumption is part of running the
+      test correctly, not a separate extra step.
+
+  - type: transition
+    from_label: "The Shape Check, Explained"
+    to_label: "Code Along: See the Real Spread"
+    note: "Same Module 2 skill, a new place to apply it - one line of pandas per group."
+    notes: >
+      [SCRIPT] Keep this beat short - the concept just landed, now type it.
+
+  - type: code
+    title: "The Shape Check, in Code"
+    language: python
+    code_along: true
+    code: |
+      df.groupby("species")["body_mass_g"].describe()
+    starter_code: |
+      df.groupby(____)["body_mass_g"].describe()  # TODO: group by which column?
+    skill_tags: ["python", "inferential-statistics", "statistical-analysis"]
+    notes: >
+      [ACTIVITY] Run this, then say out loud what you see: are the three
+      species' spreads (the `std` column) roughly similar, or is one way
+      more spread out than the others?
+
+
+      [SCRIPT] Point at `mean` and `std` together, not just one. Adelie
+      and Gentoo should look different enough in `mean` to be interesting,
+      without either group's `std` looking wildly larger than the other's.
+
+
+      [MISCONCEPTIONS] People expect "roughly similar shape" to mean the
+      three `std` values match almost exactly. It means no group's spread
+      is wildly larger than the others - real groups never match exactly,
+      and demanding that they do would fail almost any real dataset.
+
+  - type: check_understanding
+    prompt: "With your partner: State the null hypothesis you'll test next, in one sentence."
+    mode: discussion
+    topic: "Restate the Null, Right Before Testing"
+    bloom_level: understand
+    question_style: conceptual
+    skill_tags: ["inferential-statistics"]
+    notes: >
+      [ACTIVITY] Pairs say their sentence out loud to each other before the
+      instructor advances. In person: circulate and listen for "no real
+      difference" language. Online: post in chat. 2 minutes.
+
+
+      [SCRIPT] Target answer: "There is no real difference in average body
+      mass between Adelie and Gentoo penguins." Confirm the room has this
+      right before the real test result lands - it is much easier to
+      rationalize a result after seeing it than before.
+
+  - type: transition
+    from_label: "Hypothesis Restated"
+    to_label: "Code Along: Run the Real Test"
+    note: "Stop predicting. Run it."
+    notes: >
+      [SCRIPT] Short beat, high energy - this is the moment the module has
+      been building toward since yesterday.
+
+  - type: code
+    title: "Run the t-test"
+    language: python
+    code_along: true
+    code: |
+      adelie = df[df["species"] == "Adelie"]["body_mass_g"]
+      gentoo = df[df["species"] == "Gentoo"]["body_mass_g"]
+
+      result = stats.ttest_ind(adelie, gentoo)
+      print("t-statistic:", result.statistic)
+      print("p-value:", result.pvalue)
+      print("95% CI:", result.confidence_interval(confidence_level=0.95))
+    blanked_code: |
+      adelie = df[df["species"] == "Adelie"]["body_mass_g"]
+      gentoo = df[df["species"] == "Gentoo"]["body_mass_g"]
+
+      result = stats.____(adelie, gentoo)
+      print("t-statistic:", result.____)
+      print("p-value:", result.____)
+      print("95% CI:", result.____(confidence_level=0.95))
+    domain_note: "`.confidence_interval()` is a real method on the result scipy.stats.ttest_ind returns - it hands back the same 95% CI concept from last class, computed for real from this exact comparison."
+    doc_url: "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html"
+    skill_tags: ["python", "inferential-statistics", "scipy"]
+    notes: >
+      [ACTIVITY] Run it, then read your own three numbers out loud to your
+      partner before the instructor reveals the expected output.
+
+
+      [SCRIPT] Walk the real output line by line. The p-value here is far
+      smaller than 0.05 - small enough that "this is just random sampling
+      noise" is not a credible explanation anymore. The 95% CI lands
+      entirely on one side of zero, meaning the real direction of the
+      difference is clear, not just its existence.
+
+
+      [MISCONCEPTIONS] A tiny p-value gets read as "an even more true"
+      result than a p-value of 0.04. Both simply clear the same threshold -
+      how far past it a p-value sits doesn't scale to "more real."
+
+  - type: content
+    title: "Reading the t-test Output"
+    bullets:
+      - "p-value: Far below 0.05, reject the null"
+      - "The 95% CI sits on one side"
+      - "Gentoo really does weigh more, on average"
+    icon_hero:
+      icon: "task_complete"
+      style: "green"
+    notes: >
+      [SCRIPT] Connect all three numbers back to the actual claim. Reject
+      the null means: a real difference almost certainly exists. The CI's
+      direction says which species is heavier. Neither number alone tells
+      the whole story - together, they do.
+
+
+      [MISCONCEPTIONS] "Reject the null" gets treated as the finish line.
+      The project's own final write-up still asks a separate question this
+      result doesn't answer on its own: is the size of this difference
+      actually big enough to matter for a real decision.
+
+  - type: transition
+    from_label: "p-value Says 'Probably Not Zero'"
+    to_label: "Code Along: How Big, Really?"
+    note: "A p-value never answers how big a difference actually is. Cohen's d does - the project's own next graded step."
+    notes: >
+      [SCRIPT] Name the real gap the p-value alone leaves open, the same
+      gap last class's whole second half was about. A p-value near zero
+      just means the difference is probably real. It says nothing about
+      how big that difference actually is - Cohen's d rescales the raw
+      mean difference by the data's own spread, so 0.2 counts as small,
+      0.5 as medium, and 0.8 or above as large.
+
+
+      [MISCONCEPTIONS] People treat the p-value as already answering "how
+      big." It only ever answers "probably not zero" - effect size is a
+      genuinely separate number, not a restatement of the same one.
+
+  - type: code
+    title: "Compute Cohen's d"
+    language: python
+    code_along: true
+    code: |
+      import numpy as np
+
+      n1, n2 = len(adelie), len(gentoo)
+      pooled_std = np.sqrt(
+          ((n1 - 1) * adelie.std()**2 + (n2 - 1) * gentoo.std()**2)
+          / (n1 + n2 - 2)
+      )
+      cohens_d = (gentoo.mean() - adelie.mean()) / pooled_std
+      print("Cohen's d:", cohens_d)
+    starter_code: |
+      import numpy as np
+
+      n1, n2 = len(adelie), len(gentoo)
+      pooled_std = np.sqrt(
+          ((n1 - 1) * adelie.std()**2 + (n2 - 1) * ____**2)  # TODO: which group's std?
+          / (n1 + n2 - 2)
+      )
+      cohens_d = (gentoo.mean() - adelie.mean()) / ____  # TODO: divide by what you just computed
+      print("Cohen's d:", cohens_d)
+    domain_note: "Cohen's d here comes out well above 0.8 - by the standard convention (0.2 small, 0.5 medium, 0.8 large), this isn't just statistically real, it's a large real-world difference too."
+    skill_tags: ["python", "inferential-statistics", "statistical-analysis"]
+    notes: >
+      [ACTIVITY] Run it, then say the number out loud: is it closer to
+      0.2, 0.5, or 0.8 and above?
+
+
+      [SCRIPT] Land the real number. Cohen's d here comes out well above
+      0.8 - large by the standard convention. This is the rare case where
+      statistical significance and practical significance both point the
+      same direction, clearly.
+
+  - type: transition
+    from_label: "One Test, Run for Real"
+    to_label: "A Second Kind of Question: Are Two Categories Related?"
+    note: "Body mass by species was a continuous outcome. Species by island is a completely different shape of question."
+    style: "icon_hero"
+    icon: "table"
+    notes: >
+      [SCRIPT] [~30 min mark] Name the pivot precisely. Not a harder
+      version of the same test - a genuinely different question, for a
+      genuinely different shape of data: two categorical variables, not
+      one continuous outcome split by group.
+
+  - type: check_understanding
+    prompt: "With your partner: Predict whether species and island are related, before running any code."
+    mode: poll
+    topic: "Predict It First: Species and Island"
+    bloom_level: analyze
+    question_style: conceptual
+    skill_tags: ["inferential-statistics", "critical-thinking"]
+    notes: >
+      [ACTIVITY] Pairs commit to a real prediction and one reason for it,
+      out loud, before the instructor runs the code. In person: quick show
+      of hands, related or independent. Online: type your guess in chat.
+      2 minutes.
+
+
+      [SCRIPT] Do not confirm or deny yet. The whole point is committing to
+      a prediction before the real crosstab makes the answer obvious - that
+      is what makes the reveal actually land.
+
+  - type: transition
+    from_label: "Prediction Made"
+    to_label: "Code Along: See What the Data Says"
+    note: "Time to find out if the real crosstab agrees with your guess."
+    notes: >
+      [SCRIPT] Short beat - let the room's predictions hang for one more
+      moment before the real numbers settle it.
+
+  - type: code
+    title: "Run the Chi-Square Test"
+    language: python
+    code_along: true
+    code: |
+      table = pd.crosstab(df["species"], df["island"])
+      print(table)
+
+      chi2, p, dof, expected = stats.chi2_contingency(table)
+      print("chi2:", chi2)
+      print("p-value:", p)
+      print("degrees of freedom:", dof)
+      print("expected counts:")
+      print(expected)
+    starter_code: |
+      table = pd.crosstab(df[____], df[____])  # TODO: which two columns?
+      print(table)
+
+      chi2, p, dof, expected = stats.chi2_contingency(____)  # TODO: pass in the table
+      print("chi2:", chi2)
+      print("p-value:", p)
+      print("degrees of freedom:", dof)
+      print("expected counts:")
+      print(expected)
+    domain_note: "`expected` is the assumption check for this test: every expected cell count needs to be at least 5 for the chi-square approximation to be defensible - the same 'check before you trust it' habit as the t-test's shape check, just a different rule for a different data type."
+    doc_url: "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html"
+    skill_tags: ["python", "inferential-statistics", "scipy"]
+    notes: >
+      [ACTIVITY] Look at the printed `table` before reading any test
+      output. Does it match what you predicted a moment ago?
+
+
+      [SCRIPT] Walk the real crosstab first, before the test numbers.
+      Some species show up on only one or two islands, not all three -
+      that pattern alone is a strong visual hint before a single p-value
+      is computed.
+
+
+      [SCRIPT] Then walk the real output. The p-value here is extremely
+      small - species and island are not independent in this data. Name
+      the expected-counts check explicitly: every value in `expected`
+      needs to be at least 5 for this result to be trustworthy.
+
+
+      [SCRIPT] Name `dof` in plain terms before moving on. Degrees of
+      freedom here is (rows - 1) times (columns - 1) - a number the test
+      needs internally to know which chi-square distribution to compare
+      the statistic against. You won't calculate it by hand again; just
+      recognize it as part of the standard output, not a separate concept
+      to master today.
+
+
+      [MISCONCEPTIONS] People assume a chi-square test can use raw counts
+      directly. It needs a contingency table first - counts cross-tabbed
+      between the two categorical variables, not a flat list of category
+      labels.
+
+  - type: content
+    title: "Reading the Chi-Square Output"
+    bullets:
+      - "Species and island are strongly associated"
+      - "Not evenly spread across all three islands"
+      - "A real pattern, not just noise"
+    icon_hero:
+      icon: "correlation"
+      style: "gold"
+    notes: >
+      [SCRIPT] Name the honest limit of what this proves, precisely.
+      Associated is not the same claim as one causing the other - a
+      chi-square test never establishes which, only whether the two
+      variables move together more than chance would predict.
+
+
+      [MISCONCEPTIONS] "Species and island are associated" gets restated as
+      "the island determines the species," or the reverse. Association
+      alone never tells you a direction or a cause - a point worth sitting
+      with, since a future lesson comes back to exactly this dataset to
+      ask whether island might be confounding a different comparison.
+
+  - type: transition
+    from_label: "Chi-Square Says 'They're Related'"
+    to_label: "Code Along: How Strongly Related?"
+    note: "chi-square only says a real pattern likely exists. Cramér's V says how strong it is."
+    notes: >
+      [SCRIPT] Same gap as the t-test side, one slide ago. A tiny p-value
+      says the pattern is probably real, not how strong it is. Cramér's V
+      fixes that - it ranges from 0 (no association) to 1 (perfect
+      association), a comparable scale regardless of the table's size.
+
+  - type: code
+    title: "Compute Cramér's V"
+    language: python
+    code_along: true
+    code: |
+      n = table.sum().sum()
+      cramers_v = (chi2 / (n * (min(table.shape) - 1))) ** 0.5
+      print("Cramer's V:", cramers_v)
+    starter_code: |
+      n = table.sum().sum()
+      cramers_v = (____ / (n * (min(table.shape) - 1))) ** 0.5  # TODO: which value from the last step?
+      print("Cramer's V:", cramers_v)
+    domain_note: "A Cramér's V well above 0.5 is considered a strong association - species and island aren't just 'probably related,' they're strongly related."
+    skill_tags: ["python", "inferential-statistics", "statistical-analysis"]
+    notes: >
+      [ACTIVITY] Run it, then compare the number to the 0-to-1 scale from
+      the last slide - is this closer to "barely related" or "strongly
+      related"?
+
+
+      [SCRIPT] Land the real number. Cramér's V here lands well above 0.5
+      - a strong association, not a marginal one. Same lesson as the
+      t-test side: the p-value said "probably real," the effect size says
+      "and it's a big one."
+
+  - type: check_understanding
+    prompt: "A chi-square test returns p = 0.41. What's the honest conclusion?"
+    mode: game
+    topic: "A Chi-Square Result That Isn't Small"
+    bloom_level: analyze
+    question_style: interview
+    options:
+      - "The two variables are definitely independent"
+      - "No real evidence found that they're associated"
+      - "The test failed and should be rerun"
+    answer:
+      correct: "No real evidence found that they're associated"
+      explanation: "Failing to reject the null is never the same claim as proving it true - the same distinction from last class's null-hypothesis logic applies here. A p-value of 0.41 means this data doesn't give strong evidence of an association. It doesn't prove the two variables are truly independent, and there's nothing wrong with the test itself that would call for rerunning it."
+      source: "Direct application of this module's own null-hypothesis logic (last class) to a chi-square result"
+    skill_tags: ["inferential-statistics", "critical-thinking"]
+    notes: >
+      [ACTIVITY] Poll: read all three out loud, everyone answers at once.
+      In person: call out A, B, or C on a count of three. Online: type A,
+      B, or C in chat. 45 seconds.
+
+
+      [SCRIPT] Tie this back explicitly. This is the exact same "you test
+      the null, you never prove it" logic from last class, just applied to
+      a chi-square result instead of a t-test result.
+
+  - type: compare_contrast
+    title: "Which Test, When?"
+    left_label: "t-test"
+    left_icon: "test"
+    left_points:
+      - "Outcome is continuous (body mass, in grams)"
+      - "Comparing the means of two groups"
+      - "Question: 'Do these two groups differ?'"
+    right_label: "Chi-square test"
+    right_icon: "table"
+    right_points:
+      - "Both variables are categorical"
+      - "Checking if the two are linked"
+      - "Question: 'Are these two related at all?'"
+    notes: >
+      [SCRIPT] Say the one-question filter out loud, since it is the whole
+      decision rule. What kind of outcome are you actually measuring -
+      a number, or a category? That single question, asked first, decides
+      which test is even on the table.
+
+
+      [MISCONCEPTIONS] People pick a test by habit or by whichever one they
+      remember better, rather than by checking the outcome's actual data
+      type first. The data type decides the test - not the other way
+      around.
+
+  - type: check_understanding
+    prompt: "Would you rather skip the assumption check to save time, or always run it, even when you're confident?"
+    mode: would_you_rather
+    topic: "Skip the Check, or Always Run It?"
+    bloom_level: evaluate
+    question_style: critical_thinking
+    skill_tags: ["inferential-statistics", "critical-thinking"]
+    notes: >
+      [ACTIVITY] Force a pick before any discussion. In person: move to one
+      side of the room, then two people from each side say why. Online:
+      type "skip it" or "always run it" in chat at the same count. 3
+      minutes.
+
+
+      [SCRIPT] Land the real answer explicitly. Confidence is exactly the
+      feeling that leads someone to skip a check right before it would
+      have mattered - today's own shape check and expected-counts check
+      both took one extra line of code, not extra minutes.
+
+
+      [MISCONCEPTIONS] Someone will argue that with a big, obviously clean
+      dataset like today's, the check is a formality. The check is what
+      tells you the dataset is actually clean in the first place - skipping
+      it just means finding out the hard way, after the test result is
+      already in hand.
+
+  - type: interview_prep
+    topics:
+      - question: "How do you decide between a t-test and a chi-square test?"
+        short_answer: "Point: It comes down to the outcome variable's data type. Reason: A t-test compares means of a continuous outcome; a chi-square test checks association between two categorical variables. Example: Today's own two demos - body mass in grams (continuous, t-test) versus species by island (both categorical, chi-square). Point: Check the data type first, every time, before picking a test."
+        technique: "PREP"
+        icon: "test"
+    notes: >
+      [TECHNIQUE] PREP fits this question well because it's a clean
+      decision-rule question, not an audience-adaptation one - Point,
+      Reason, Example, Point maps directly onto stating the rule, why it
+      holds, a concrete case, then restating it.
+
+
+      [SCRIPT] Coach whoever answers to lead with the rule, not a list of
+      test names. "It depends on the outcome's data type" said first reads
+      as someone who has the actual decision logic, not just memorized
+      test names.
+
+
+      [SOURCES] Verified as a real, commonly discussed data-analyst
+      interview topic - Built In, "T-test vs. Chi-Square: Which Test
+      Should You Use?", frames the same continuous-vs-categorical decision
+      rule this lesson teaches.
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "t-test"
+        - "Compares the means of two groups on a continuous outcome"
+      - - "chi-square test"
+        - "Checks whether two categorical variables are associated"
+      - - "contingency table"
+        - "A table of counts crossing two categorical variables"
+      - - "degrees of freedom"
+        - "Ties to how many values were free to vary in the test"
+      - - "categorical variable"
+        - "A variable whose values are named groups, not numbers"
+    notes: >
+      [SCRIPT] Fast round trip before the summary. Ask the room to supply
+      "contingency table" from what they just built with `pd.crosstab` -
+      that is the one term today's code made concrete, not just defined.
+
+  - type: bridge
+    title: "So far, we've covered..."
+    bullets:
+      - "A real t-test, run and interpreted"
+      - "A real chi-square test, run and interpreted"
+      - "Which test fits which kind of question"
+      - "A shape check and a cell-count check"
+      - "Effect size: How big, not just real"
+    notes: >
+      [SCRIPT] Close the loop on yesterday's exercise explicitly. The
+      hypothesis you wrote by hand is now a real, tested claim, with a
+      real p-value, a real effect size, and a real confidence interval
+      behind it.
+
+
+      [SCRIPT] Preview tomorrow's lab honestly. Today's shape checks were
+      fast and single-example. Tomorrow, with a partner, you get several
+      harder cases in a row and have to make a real defensible-or-not call
+      each time - the judgment this lecture only introduced.
+
+
+      [SCRIPT] Say the project tie out loud. This exact sequence - state
+      the hypothesis, check the assumption, run the test, read the p-value
+      and CI - is graded, solo, on your own data, a few weeks from now.
+
+  - type: closing
+    title: "Tomorrow: Is Your Test Defensible?"
+    bullets:
+      - "Bring today's shape-check habit with you"
+      - "Several real cases, not just one"
+      - "A real defensible-or-not call, each time"
+    exercise:
+      type: lab_plan
+      url_or_text: "modules/module-5-inferential-statistics/labs/assumption-check-parametric-vs-nonparametric.md"
+      label: "Next: Is My Test Defensible? (lab, with a partner)"
+    notes: >
+      [SCRIPT] Frame tomorrow honestly, not as new content but as real
+      practice at a skill today only introduced once. The shape check and
+      the expected-counts check both showed up today - tomorrow is where
+      that judgment call actually gets hard.
+
+
+      [SCRIPT] Remind people how to reach office hours rather than naming a
+      time, and encourage anyone whose local Python/scipy setup is unclear
+      to raise it before tomorrow's lab.
+
+
+      [SCRIPT] Say the project tie explicitly, one more time. Every piece
+      from today - the assumption check, the test, the p-value, the effect
+      size, the CI - is exactly the sequence graded on your own data a few
+      weeks from now.
+
+  - type: further_resources
+    resources:
+      - title: "A Practical Guide to t-tests & Chi-Square in Python"
+        url: "https://www.statology.org/python-practical-introduction-to-statistical-inference-t-tests-anova-chi-square/"
+        kind: reading
+        time_estimate: "~12-15 min"
+        description: "A hands-on, code-forward walkthrough of both tests"
+        attribution: "Statology"
+      - title: "scipy.stats.ttest_ind documentation"
+        url: "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html"
+        kind: documentation
+        time_estimate: "~5-8 min"
+        description: "The official reference for today's first test"
+        attribution: "SciPy"
+      - title: "scipy.stats.chi2_contingency documentation"
+        url: "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html"
+        kind: documentation
+        time_estimate: "~5-8 min"
+        description: "The official reference for today's second test"
+        attribution: "SciPy"
+    notes: >
+      [SCRIPT] Point at the Statology walkthrough as the one to actually
+      keep open while doing tomorrow's lab - it covers both tests with
+      real runnable code, the same shape as today's own demos.

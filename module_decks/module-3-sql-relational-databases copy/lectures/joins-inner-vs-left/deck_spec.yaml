@@ -1,0 +1,491 @@
+meta:
+  title: "Joins: INNER vs. LEFT"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 3
+  date: "Day 3"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Explain what a JOIN does and use INNER JOIN to combine matching rows from two related tables"
+    - "Use LEFT JOIN to include every row from one table regardless of a match, and explain why INNER and LEFT JOIN can return different row counts"
+  tools:
+    - "PostgreSQL / psql"
+  exercise:
+    type: bullets
+    url_or_text: "No new exercise today — the project's own first two given business questions, for every domain, are exactly a join and a left join."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Yesterday: Creating tables with constraints, SELECT/WHERE/ORDER BY"
+    - "Earlier this module: Primary keys, foreign keys, why related tables exist at all"
+  interview_topics:
+    - "Which join should I use for this report?"
+  final_project:
+    "Every domain's first two given business questions are literally a join
+    (Q1) and a left join (Q2) — the exact two query shapes built today,
+    against a schema you'll design yourself instead of one already given."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: guided
+  scenario: >
+    Real syntax, day two: The same `nyc_restaurants` database from
+    yesterday, now combined across both tables for the first time. You'll
+    write a real INNER JOIN, a real LEFT JOIN, and verify — on real data,
+    not just a definition — why they don't always return the same rows.
+  glossary:
+    - term: "JOIN"
+      definition: "Combines rows from two tables based on a matching key column"
+    - term: "INNER JOIN"
+      definition: "Keeps only rows that have a match in both tables"
+    - term: "LEFT JOIN"
+      definition: "Keeps every row from the left table, with NULLs where no match exists"
+    - term: "anti-join"
+      definition: "A LEFT JOIN plus a WHERE check for NULL, used to find rows with no match at all"
+
+slides:
+  - type: title
+    title: "Joins"
+    subtitle: "INNER vs. LEFT"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 3"
+    notes: >
+      [SCRIPT] Frame this as the payoff of building two tables instead of
+      one — today is the first time those two tables actually talk to
+      each other in a query.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Combine two tables with INNER JOIN"
+        icon: "join"
+      - text: "Include every row with LEFT JOIN"
+        icon: "row"
+    notes: >
+      [SCRIPT] Read both out loud. Name explicitly: these are the
+      project's own Q1 and Q2, for every single domain, no exceptions.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "JOIN, INNER JOIN, LEFT JOIN"
+        icon: "join"
+      - text: "Anti-join"
+        icon: "sql"
+    notes: >
+      [SCRIPT] Just names for now — real, typed, verified examples for
+      every one of these are coming.
+
+  - type: transition
+    from_label: "Yesterday's Two Tables"
+    to_label: "One Quick Check"
+    note: "A fast recall check before today's tables start talking to each other."
+    objective_index: 1
+    notes: >
+      [SCRIPT] [~1 min mark] Keep this brisk.
+
+  - type: check_understanding
+    prompt: "Quick recall: In yesterday's `inspections` table, what does `camis INT REFERENCES restaurants(camis)` actually enforce?"
+    mode: discussion
+    topic: "Warm-Up: What a Foreign Key Enforces"
+    bloom_level: remember
+    question_style: conceptual
+    skill_tags: ["relational-databases"]
+    notes: >
+      [ACTIVITY] In person: a couple of quick shout-outs. Online: drop
+      one sentence in chat.
+
+
+      [SCRIPT] Quick-fire — target idea: every `camis` in `inspections`
+      must already exist in `restaurants`. That's the exact fact today's
+      join relies on.
+
+  - type: transition
+    from_label: "Still Solid"
+    to_label: "Code Along: Picking Up Where Yesterday Left Off"
+    note: "Same database, same two tables — a fresh terminal session, not a fresh start."
+    style: "icon_hero"
+    icon: "join"
+    notes: >
+      [SCRIPT] Name explicitly: your data is still there — `psql` starts
+      a new session each time, but the database itself persists on disk.
+
+  - type: code
+    title: "Reconnecting to Yesterday's Database"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      \c nyc_restaurants
+      SELECT * FROM restaurants;
+    starter_code: |
+      -- TODO: connect to nyc_restaurants (\c)
+
+
+      -- TODO: confirm your 4 restaurants are still there
+    code_along: true
+    domain: "public_sector"
+    domain_note: "A new terminal session always starts outside any database — `\\c` is the first real step of any day you come back to work."
+    notes: >
+      [SCRIPT] Run it and confirm all 4 rows print — Corner Bistro, Green
+      Leaf Cafe, Sunset Diner, Harbor Grill. Nothing was lost between
+      sessions — this is exactly the check every future class session
+      should open with, before assuming anything about the data's state.
+
+  - type: code
+    title: "Finishing What Yesterday Left Unfinished"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      INSERT INTO restaurants (camis, dba, boro) VALUES (1005, 'New Spot NYC', 'Manhattan');
+    starter_code: |
+      -- TODO: insert camis 1005, 'New Spot NYC', boro 'Manhattan'
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Same `camis` (1005) yesterday's NOT NULL violation rejected — this time `dba` is actually included, so it succeeds for real."
+    notes: >
+      [SCRIPT] Name explicitly: this is the exact insert that failed
+      yesterday, now complete. New Spot NYC just opened — real
+      restaurants start with zero inspections, which is about to matter a
+      lot in a few minutes.
+
+  - type: transition
+    from_label: "Five Restaurants Now"
+    to_label: "What a JOIN Actually Does"
+    note: "Two tables, one query — combining rows on a matching key."
+    notes: >
+      [SCRIPT] Short beat before the concept.
+
+  - type: content
+    title: "A JOIN Combines Rows That Share a Key"
+    bullets:
+      - "Two tables, one query"
+      - "ON says which columns must match"
+      - "Matching rows, linked side by side"
+    icon_hero:
+      icon: "join"
+      style: "blue"
+    notes: >
+      [SCRIPT] Draw two tables on the board with a line connecting
+      matching `camis` values — write `ON restaurants.camis =
+      inspections.camis` next to the line. That line is literally what
+      `ON` tells the database to look for.
+
+
+      [MISCONCEPTIONS] A common assumption: a JOIN needs the column
+      names to match exactly. They don't — `ON restaurants.camis =
+      inspections.camis` would work identically even if the column were
+      named `restaurant_id` in one table and `camis` in the other.
+
+  - type: transition
+    from_label: "The Concept"
+    to_label: "Code Along: INNER JOIN"
+    note: "The default join — only rows with a real match on both sides."
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "INNER JOIN: Only Real Matches"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT r.dba, i.inspection_date, i.critical_flag
+      FROM restaurants r
+      INNER JOIN inspections i ON r.camis = i.camis;
+    starter_code: |
+      -- TODO: select dba, inspection_date, critical_flag
+      -- TODO: INNER JOIN restaurants (as r) and inspections (as i)
+      -- TODO: match ON r.camis = i.camis
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`r`/`i` are table aliases — shorthand so `r.dba` and `i.camis` don't require typing the full table name every time."
+    notes: >
+      [SCRIPT] Run it and count the rows together before revealing the
+      prediction question — this is worth a genuine pause.
+
+  - type: check_understanding
+    prompt: "Predict it: How many rows does this `INNER JOIN` actually return?"
+    mode: poll
+    topic: "Predicting an INNER JOIN Row Count"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "3"
+      - "5"
+      - "6"
+    answer:
+      correct: "3"
+      explanation: "Only Corner Bistro (2 inspections) and Green Leaf Cafe (1 inspection) have any real match — that's 3 total inspection rows. Sunset Diner, Harbor Grill, and New Spot NYC have zero inspections, so INNER JOIN drops them completely."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] Name explicitly: 3 restaurants exist with zero
+      inspections, and none of them show up anywhere in this result —
+      not even once. That's the setup for the whole rest of today.
+
+  - type: transition
+    from_label: "Only Matches, Confirmed"
+    to_label: "Now, LEFT JOIN"
+    note: "Every restaurant, whether or not it's ever been inspected."
+    objective_index: 2
+    style: "panel_preview"
+    preview_items:
+      - text: "Every Left-Side Row"
+        icon: "row"
+      - text: "NULLs Where Nothing Matches"
+        icon: "flag"
+    notes: >
+      [SCRIPT] [~20 min mark] Name explicitly: everything so far only
+      showed restaurants that already had a match. LEFT JOIN is about to
+      show what INNER JOIN was silently hiding.
+
+  - type: content
+    title: "LEFT JOIN Keeps Every Row on the Left"
+    bullets:
+      - "Every row from restaurants, always"
+      - "A real match, if one exists"
+      - "NULL columns, if it doesn't"
+    icon_hero:
+      icon: "row"
+      style: "gold"
+    analogy:
+      domain: "family & gatherings"
+      mapping: "LEFT JOIN is like reading the full invite list at a reunion sign-in — every invited name gets read, even Uncle Jake who never showed, just with a blank next to his name instead of him vanishing from the list."
+      backups:
+        - domain: "sports"
+          mapping: "LEFT JOIN is like taking attendance from the full team roster — every player gets checked, even one who skipped practice, with a blank mark next to their name instead of them disappearing from the roster."
+    notes: >
+      [SCRIPT] Contrast directly with INNER JOIN's roll call: INNER JOIN
+      only reads names that actually checked in — anyone absent is never
+      mentioned at all. This is the module's own named misconception in
+      action: the difference between INNER and LEFT JOIN is invisible on
+      data with no gaps, and only shows up the moment a row genuinely has
+      no match — exactly the kind of gap that's easy to miss until it
+      costs something real.
+
+  - type: transition
+    from_label: "The Concept"
+    to_label: "Code Along: LEFT JOIN"
+    note: "One word changes — everything else stays the same."
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "LEFT JOIN: Every Restaurant, Match or Not"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT r.dba, i.inspection_date, i.critical_flag
+      FROM restaurants r
+      LEFT JOIN inspections i ON r.camis = i.camis;
+    starter_code: |
+      -- TODO: select dba, inspection_date, critical_flag
+      -- TODO: LEFT JOIN restaurants (as r) and inspections (as i)
+      -- TODO: match ON r.camis = i.camis
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Only the JOIN keyword changed — same columns, same ON, same two tables."
+    notes: >
+      [SCRIPT] Run it and let the NULL rows print in full — Sunset Diner,
+      Harbor Grill, and New Spot NYC all appear, with `NULL` in both the
+      `inspection_date` and `critical_flag` columns.
+
+  - type: check_understanding
+    prompt: "Predict it: How many rows does this `LEFT JOIN` actually return?"
+    mode: poll
+    topic: "Predicting a LEFT JOIN Row Count"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "6"
+      - "3"
+      - "5"
+    answer:
+      correct: "6"
+      explanation: "The same 3 matched rows from INNER JOIN, plus 3 more — one per restaurant with zero inspections (Sunset Diner, Harbor Grill, New Spot NYC), each with NULL in the inspection columns. Same tables, same ON, a genuinely different row count."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] This is the whole lesson's payoff moment: 3 vs. 6, same
+      tables, same ON clause, one word different. Name it explicitly as
+      real proof, not a rule to memorize.
+
+  - type: compare_contrast
+    title: "3 Rows vs. 6 Rows, One Word Different"
+    left_label: "INNER JOIN"
+    left_icon: "join"
+    left_points:
+      - "Only rows with a real match"
+      - "Silently drops the rest"
+      - "3 rows, on this data"
+    right_label: "LEFT JOIN"
+    right_icon: "row"
+    right_points:
+      - "Every row from the left table"
+      - "NULL where nothing matches"
+      - "6 rows, same data"
+    similarities:
+      - "Same tables, same ON clause"
+    notes: >
+      [SCRIPT] Name the real risk explicitly: a report built on INNER
+      JOIN can look complete and still be quietly missing exactly the
+      rows that matter most — the ones with nothing to join to yet.
+
+  - type: content
+    title: "\"Looks Complete\" Is Not the Same as Complete"
+    bullets:
+      - "INNER JOIN can hide real rows"
+      - "No error, no warning — just gone"
+      - "Only visible on unmatched data"
+    icon_hero:
+      icon: "warning"
+      style: "red"
+    notes: >
+      [SCRIPT] Tie back explicitly to this module's own opening case
+      study: a PHE-style silent failure doesn't need a file to break —
+      the wrong join can just as quietly drop real rows with zero errors
+      printed anywhere.
+
+
+      [MISCONCEPTIONS] Believing INNER JOIN and LEFT JOIN return the same
+      rows whenever the data "looks complete" — the difference only shows
+      up the moment a row genuinely has no match, which is exactly what
+      makes it easy to miss until it's a real problem.
+
+  - type: transition
+    from_label: "The Real Risk, Named"
+    to_label: "Code Along: Finding What's Missing"
+    note: "Using LEFT JOIN on purpose, to find exactly what INNER JOIN hides."
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "Which Restaurants Have Never Been Inspected?"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT r.dba
+      FROM restaurants r
+      LEFT JOIN inspections i ON r.camis = i.camis
+      WHERE i.inspection_id IS NULL;
+    starter_code: |
+      -- TODO: select dba
+      -- TODO: LEFT JOIN restaurants (as r) and inspections (as i)
+      -- TODO: match ON r.camis = i.camis
+      -- TODO: keep only rows where i.inspection_id IS NULL
+    code_along: true
+    domain: "public_sector"
+    domain_note: "This is an anti-join — a real, named pattern: LEFT JOIN plus a NULL check, used specifically to find rows with no match at all."
+    notes: >
+      [SCRIPT] Run it: exactly Sunset Diner, Harbor Grill, and New Spot
+      NYC print. Name explicitly: this is a genuinely useful real-world
+      query, not just a teaching demo — "which restaurants are we
+      missing inspection data for" is a real operational question.
+
+
+      [MISCONCEPTIONS] `WHERE i.inspection_id = NULL` looks reasonable
+      but silently returns zero rows, always — `NULL` isn't a value
+      comparisons can match against, so `=` never works on it. `IS NULL`
+      is the only real way to check for a missing match, which is exactly
+      why this specific query uses it.
+
+  - type: check_understanding
+    prompt: "Would you rather build every report with INNER JOIN by default, or LEFT JOIN by default? Defend your answer the way you would in an interview."
+    mode: would_you_rather
+    topic: "Which Join Should Be the Default?"
+    bloom_level: evaluate
+    question_style: interview
+    technique: "PREP"
+    skill_tags: ["sql", "relational-databases"]
+    notes: >
+      [TECHNIQUE] Use PREP — "which should you default to" is exactly
+      the "state a position and justify it" shape PREP fits, not a story
+      or an ambiguous ask.
+
+
+      [SCRIPT] No wrong answer up front, but land on the real point: the
+      right default depends on the actual business question — "only
+      inspected restaurants" genuinely wants INNER JOIN; "every
+      restaurant, including gaps" genuinely wants LEFT JOIN. The mistake
+      isn't picking one, it's picking one without checking which
+      question is actually being asked.
+
+  - type: interview_prep
+    topics:
+      - question: "Which join should I use for this report?"
+        short_answer: "Question: I'd first ask what the report needs to show — every record regardless of a match, or only confirmed matches? That decides the join type. Assumption: Guessing wrong here likely means defaulting to INNER JOIN. Risk: INNER JOIN silently drops unmatched rows, no error or warning. If the report is meant to show gaps, like restaurants with no inspections, INNER JOIN would quietly hide exactly those rows."
+        technique: "QAR"
+        icon: "join"
+    notes: >
+      [TECHNIQUE] Use QAR — "which join should I use" is a genuinely
+      underspecified question until the report's actual goal is known,
+      the same shape as any vague "how would you improve X" interview
+      ask.
+
+
+      [SCRIPT] Have a Fellow attempt this cold first — the goal is
+      naming the *clarifying question* first, not jumping straight to an
+      answer.
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "JOIN"
+        - "Combines rows on a matching key"
+      - - "INNER JOIN"
+        - "Only rows with a real match"
+      - - "LEFT JOIN"
+        - "Every left row, NULL if unmatched"
+      - - "Anti-join"
+        - "LEFT JOIN plus a NULL check"
+    notes: >
+      [SCRIPT] Quick round-trip through all four terms — this is exactly
+      the vocabulary the project's own Q1 and Q2 expect you to use
+      correctly, for whichever domain you choose.
+
+  - type: bridge
+    title: "So Far, We've Covered..."
+    bullets:
+      - "INNER JOIN: Only real matches"
+      - "LEFT JOIN: Every row, NULLs allowed"
+      - "3 rows vs. 6, proven for real"
+    notes: >
+      [SCRIPT] Close by naming the shift ahead: next class adds GROUP BY
+      and HAVING on top of what a join already returns. And name the
+      project tie explicitly: every domain's Q1 and Q2 are exactly
+      today's two query shapes, on a schema you'll design yourself.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "No new exercise today"
+      - "Next class: GROUP BY and HAVING"
+      - "Keep your database running"
+    notes: >
+      [SCRIPT] Give a specific heads-up: next class builds directly on
+      today's join results — don't drop `nyc_restaurants`.
+
+  - type: further_resources
+    resources:
+      - title: "PostgreSQL Tutorial: JOIN"
+        url: "https://www.postgresql.org/docs/current/tutorial-join.html"
+        kind: documentation
+        time_estimate: "~8 min read"
+        description: "The official reference, straight from the source"
+        attribution: "PostgreSQL Global Development Group"
+      - title: "SQL Joins Explained"
+        url: "https://www.w3schools.com/sql/sql_join.asp"
+        kind: reading
+        time_estimate: "~10 min read"
+        description: "Clear breakdown of every join type, with real examples"
+        attribution: "W3Schools"
+      - title: "SQLBolt"
+        url: "https://sqlbolt.com/"
+        kind: practice
+        time_estimate: "~15 min hands-on"
+        description: "The same free interactive lessons from yesterday"
+        attribution: "SQLBolt"
+    notes: >
+      [SCRIPT] Point out the W3Schools link specifically — its side-by-
+      side examples of every join type are a genuinely good way to
+      cement INNER vs. LEFT before next class adds more syntax on top.

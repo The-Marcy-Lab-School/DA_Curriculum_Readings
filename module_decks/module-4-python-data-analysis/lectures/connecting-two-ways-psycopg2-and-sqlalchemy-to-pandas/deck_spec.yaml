@@ -1,0 +1,1198 @@
+meta:
+  title: "Connecting Two Ways, psycopg2 and SQLAlchemy to pandas"
+  module: "Module 4: Python Data Analysis"
+  module_number: 4
+  lesson_number: 2
+  date: "Day 2"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Open a real PostgreSQL connection with `psycopg2` and load the rows into a pandas DataFrame"
+    - "Run the same query through SQLAlchemy and confirm both paths return the same DataFrame"
+    - "Write connection code that is safe to commit, with no typed-in password and no connection left open"
+  tools:
+    - "Python"
+  exercise:
+    type: bullets
+    url_or_text: "Redo today's four notebook cells from the blank student notebook. Then point a real `DATABASE_URL` at the database you built in the SQL module and run both connection paths against it, confirming they return the same DataFrame."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "A pandas DataFrame's rows, columns, and `dtype`, and how they map onto a SQL table (the lesson before this one)"
+    - "SQL: `SELECT`, `WHERE`, `GROUP BY`, and a real PostgreSQL database you built yourself (the SQL module)"
+    - "Reading and running cells in a Jupyter notebook, and a working Python install (Modules 0-1)"
+    - "Basic `try`/`except`/`finally` exception handling (Module 1's error-handling lesson)"
+  interview_topics:
+    - "Walk me through how you would connect a Python script to a production database safely and pull the results into pandas."
+    - "A teammate's daily script starts failing with a `too many connections` error. How would you investigate?"
+  final_project:
+    "The project's connect-and-compare day is exactly today's work on your own
+    database. One real query runs through both `psycopg2` and SQLAlchemy, both
+    confirmed to return the same result, credentials read from an environment
+    variable, and every connection released. Two of the four mistakes that
+    project is explicitly graded against, a typed-in password and a connection
+    nobody closed, are the two habits today builds."
+  module_plan_ref: "module_sources/module-4-python-data-analysis/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-4-python-data-analysis/DATASET.md"
+  scaffolding_level: guided
+  estimated_duration_min: 60
+  scenario: >
+    You are back on the city agency's data team, and the CSV export you
+    worked from last class is already stale. The service requests you need
+    live in a PostgreSQL table called `service_requests`, updated all day
+    long. Today you stop exporting and start connecting: you open a real
+    connection from Python, pull the same NYC 311 rows straight out of the
+    live table into a pandas DataFrame, do it a second time through a
+    different library, and prove the two agree.
+  notebook_warmup:
+    prompt: "Last class a date came out of a CSV as plain text. If those same rows arrive over a live database connection instead, does the type still get lost?"
+    hint: "A CSV file stores only characters. Ask yourself what else a database knows about a column that a file never had a place to write down."
+  glossary:
+    - term: "connection"
+      definition: "An open, live link between your Python program and a running database"
+    - term: "cursor"
+      definition: "The psycopg2 object you send SQL through and read rows back from"
+    - term: "driver"
+      definition: "The library that actually speaks a specific database's own language"
+    - term: "engine"
+      definition: "SQLAlchemy's reusable connection manager for one database"
+    - term: "environment variable"
+      definition: "A value your computer holds for a program, stored outside the code"
+
+slides:
+  - type: title
+    title: "Connecting Two Ways: `psycopg2` and SQLAlchemy to pandas"
+    subtitle: "Live Database Connections, Two Libraries, One DataFrame"
+    module: "Module 4: Python Data Analysis"
+    date: "Day 2"
+    image_path: "modules/module-4-python-data-analysis/lectures/connecting-two-ways-psycopg2-and-sqlalchemy-to-pandas/images/slide_01_two_paths.png"
+    image_prompt: "Flat illustration: Analyst connecting a laptop to a database two ways"
+    image_alt: "A data analyst at a laptop with two separate lines running to the same database server, showing two different ways to reach the same rows"
+    notes: >
+      [SCRIPT] Open by closing yesterday's honest gap out loud. Last class
+      ended with a real admission: you loaded a file, not a database. Today
+      that ends. The file goes away and a live connection takes its place.
+
+
+      [SCRIPT] Set expectations: this is a typing day, not a watching day.
+      Everyone should have the notebook open within the first ten minutes and
+      keep it open until the wrap-up.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Connect with `psycopg2`"
+        icon: "api"
+      - text: "Connect with SQLAlchemy"
+        icon: "settings"
+      - text: "Commit it safely"
+        icon: "lock"
+    notes: >
+      [SCRIPT] Read all three, then name the project tie directly and out
+      loud, because it is unusually exact today. The project's own
+      connect-and-compare day asks for precisely these three things against
+      your own database: one query run both ways, both confirmed to return
+      the same result, with the password in an environment variable and every
+      connection released. Today is the same task on a database everyone in
+      the room shares, so the only new thing on project day is that the
+      database is yours.
+
+
+      [SCRIPT] Say the third one is not a footnote. Two of the four mistakes
+      the project is explicitly graded against live entirely inside objective
+      three.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "connection, cursor"
+        icon: "database"
+      - text: "driver"
+        icon: "api"
+      - text: "engine"
+        icon: "settings"
+      - text: "environment variable"
+        icon: "lock"
+    notes: >
+      [SCRIPT] Names only for now. Every one of these gets a real definition
+      and a real example before today is over, and all five come back with
+      their definitions on the recap slide at the end.
+
+
+      [MISCONCEPTIONS] Two of these sound like the same thing and are not. A
+      `connection` is the open link itself. A `cursor` is what you actually
+      send SQL through once that link exists. Flag now that you will be
+      picky about the difference, because the code depends on it.
+
+  - type: check_understanding
+    prompt: "Quick recall: Last class, a real `TIMESTAMP` column came out of a CSV as plain text. What did the file fail to carry?"
+    mode: discussion
+    topic: "Warm-Up: What a File Loses"
+    bloom_level: remember
+    question_style: conceptual
+    skill_tags: ["python", "dtypes"]
+    notes: >
+      [ACTIVITY] In person: quick shout-outs, no hands, just call it out.
+      Online: drop answers in chat, then unmute one or two people to say it
+      out loud. 60 seconds, no longer.
+
+
+      [SCRIPT] Looking for the type, the schema, the column's declared type.
+      Any of those wordings counts. Then say exactly why this is today's
+      warm-up rather than trivia: the whole reason a live connection is
+      better than an export is that a connection carries the thing a file
+      could not. In about twenty minutes you will watch that same date come
+      back as a real date, with nothing converted by hand.
+
+
+      [MISCONCEPTIONS] Someone will answer "the data" or "some rows." Redirect
+      gently: every row and every value survived the export perfectly. What
+      did not survive was the database's own description of what those
+      characters mean.
+
+  - type: transition
+    from_label: "You Know What an Export Loses"
+    to_label: "Now See What a Leaked Connection Costs"
+    note: "A connection carries more than a file can, and that power comes with two responsibilities nobody sees until they are skipped."
+    objective_index: 1
+    style: "icon_hero"
+    icon: "warning"
+    notes: >
+      [SCRIPT] [~7 min mark] Short beat. Frame the case study as the reason
+      today spends real time on the boring half of connecting, not just the
+      fun half.
+
+  - type: case_study
+    headliner: "One Key Typed Into the Code. **Five Years** Exposed."
+    kicker: "IN THE NEWS"
+    summary_points:
+      - "An access key written into code"
+      - "Public repo, unnoticed for five years"
+      - "296,019 records potentially reachable"
+    is_fictional: false
+    source_url: "https://www.bleepingcomputer.com/news/security/toyota-discloses-data-leak-after-access-key-exposed-on-github/"
+    caption: "BleepingComputer, October 2022"
+    image_path: "modules/module-4-python-data-analysis/lectures/connecting-two-ways-psycopg2-and-sqlalchemy-to-pandas/images/slide_06_case_study.png"
+    image_prompt: "Photo-realistic: Developer at a monitor reviewing exposed source code, serious"
+    image_alt: "A software developer at a monitor showing source code with a credential visible in it, the kind of key that was left in a public repository for years"
+    hook_question: "A password typed straight into a file makes the script work today. What could that cost later, and who would even notice?"
+    domain: "business_operations"
+    notes: >
+      [SCRIPT] Walk the mechanism, because the mechanism is the whole point
+      and it is embarrassingly small. Somebody working on a car company's
+      connected-car app needed the app to reach a data server. They typed the
+      access key straight into the source file, because that works. Then that
+      source file was pushed to a public code repository, where anybody on the
+      internet could read it.
+
+
+      [SCRIPT] Land the ending, which is the part that gets a reaction. It sat
+      there for almost five years before anyone noticed. When they finally
+      did, the company disclosed that just under 300,000 customers' email
+      addresses and management numbers had been reachable that entire time,
+      and said plainly that it could not rule out that someone had used it.
+
+
+      [SCRIPT] Be precise rather than dramatic about what leaked. Names, phone
+      numbers, and card data were not in that database. This is not a
+      worst-case breach story. It is a story about a single line of code, and
+      that is what makes it usable: it is a mistake anyone in this room could
+      make this afternoon, in the exact code being written today.
+
+
+      [SCRIPT] Do not resolve the hook yet. Ask it, take a few answers, and
+      say that today's own code will meet the fix for this in about half an
+      hour, and that the project is graded on it.
+
+
+      [ARTICLE SUMMARY] In December 2017 a subcontractor working on Toyota's
+      T-Connect app pushed part of the app's source code to a public GitHub
+      repository, and that code contained a hardcoded access key for the data
+      server holding customer information. Nobody noticed the repository was
+      public until September 15, 2022, nearly five years later. Toyota
+      disclosed on October 7, 2022 that the email addresses and customer
+      management numbers of 296,019 people had been reachable that whole time.
+      Names, phone numbers, and credit card data were not stored in that
+      database. Toyota made the repository private and replaced the exposed
+      credentials, but said it could not completely rule out unauthorized
+      access.
+
+
+      [SOURCES] Bill Toulas, "Toyota discloses data leak after access key
+      exposed on GitHub," BleepingComputer, 2022-10-07,
+      bleepingcomputer.com/news/security/toyota-discloses-data-leak-after-access-key-exposed-on-github/.
+      Corroborated by GitGuardian's own writeup,
+      blog.gitguardian.com/toyota-accidently-exposed-a-secret-key-publicly-on-github-for-five-years/.
+      Toyota's own newsroom page for the disclosure is no longer reachable, so
+      cite the two above rather than the vendor page.
+
+  - type: content
+    title: "`psycopg2` Is the Library That **Speaks Postgres**"
+    bullets:
+      - "A driver that talks to one database"
+      - "It speaks PostgreSQL's own language"
+      - "The most widely used Postgres adapter"
+      - "SQLAlchemy sits on top of it"
+    icon_hero:
+      icon: "api"
+      style: "gold"
+    notes: >
+      [SCRIPT] Answer what, why, and who, in that order, before anyone types
+      an import. What: `psycopg2` is a driver, which means a library whose
+      entire job is speaking one specific database's own language. Why:
+      Python has no idea how to talk to PostgreSQL on its own, and something
+      has to do the translating. Who: it is the most widely used PostgreSQL
+      adapter in Python, it is what this module's own project environment
+      installs, and it is what the other library today quietly uses
+      underneath.
+
+
+      [SCRIPT] Draw the layering out loud and slowly, because the wrong
+      picture of it is the most predictable confusion in this whole lesson.
+      Your code sits on top. Under it, the second library you meet today.
+      Under that, `psycopg2`. Under that, PostgreSQL itself. The second
+      library is not another road to the database. It is a layer above the
+      same one.
+
+
+      [SCOPE] Name the word `driver` properly here and then stop. Which
+      library to reach for, and why, is next class's entire lesson. Today
+      you only need to know that one of them talks to the database directly
+      and the other one goes through it.
+
+
+      [MISCONCEPTIONS] "Driver" sounds like a person or a car part, and
+      people who have installed a printer driver assume it is an operating
+      system thing. Same word, same idea, different place: a driver is
+      whatever knows how to speak to one specific piece of software or
+      hardware on your behalf. Here, the specific thing is PostgreSQL.
+
+
+      [SOURCES] psycopg2's own documentation describes it as "the most
+      popular PostgreSQL database adapter for the Python programming
+      language," a complete implementation of the Python DB API 2.0
+      specification, "mostly implemented in C as a libpq wrapper" — libpq
+      being PostgreSQL's own C client library, which is what "speaks
+      PostgreSQL's own language" means concretely (psycopg.org/docs).
+
+  - type: workflow_linear
+    title: "Closing Is the Beat **People Skip**"
+    steps:
+      - label: "Connect"
+        detail: "`.connect()`"
+        icon: "database"
+      - label: "Ask"
+        detail: "`.execute()`"
+        icon: "sql"
+      - label: "Read"
+        detail: "`.fetchall()`"
+        icon: "data_frame"
+      - label: "Close"
+        detail: "`.close()`"
+        icon: "task_complete"
+    analogy:
+      domain: "food"
+      mapping: "A table at a packed restaurant. Camping there after you pay keeps the next party waiting outside."
+      backups:
+        - domain: "gaming"
+          mapping: "Holding a slot in a full lobby after you stop playing. Nobody else can join until you leave."
+        - domain: "sports"
+          mapping: "A court at a busy rec center. Sign it out, play, then sign it back in, or the next team waits."
+    notes: >
+      [SCRIPT] Name the analogy before the vocabulary, then attach the terms.
+      A restaurant with every table full is exactly the shape of this. Being
+      seated takes real time. The meal is the part you came for. And the
+      table is not yours forever, because somebody is waiting on it.
+
+
+      [SCRIPT] Now make it literal, because the analogy is unusually accurate
+      here and that is why it is worth spending a minute on. A PostgreSQL
+      connection is not a lightweight thing. The server starts a real
+      operating-system process for each one, with its own memory. There is a
+      hard ceiling on how many can exist at once, set by the server, and the
+      default ceiling is small enough that a handful of leaky scripts really
+      can use it up. Then the next connection request does not slow down. It
+      is refused.
+
+
+      [SCRIPT] Walk the four beats left to right and say which line of code
+      each one is, since the next two slides are literally this diagram typed
+      out. Connect opens the link. Ask sends the SQL. Read pulls the rows
+      back. Close hands the table back.
+
+
+      [MISCONCEPTIONS] The most common belief in this room today will be that
+      step four is optional politeness, like closing a file you are done
+      reading. It is not the same. A file you forget costs your own program a
+      little memory. A connection you forget costs the shared server a slot
+      that nobody else can use, and there is a fixed number of slots.
+
+
+      [OTHER EXAMPLES] If the restaurant framing does not land, the notebook
+      carries two backups: a slot in a full game lobby, and a court signed
+      out at a rec center.
+
+
+      [SOURCES] The cost claim is real and worth stating accurately.
+      PostgreSQL's own architecture documentation says the server "starts
+      ('forks') a new process for each connection," so a connection is a real
+      operating-system process, not a lookup
+      (postgresql.org/docs/current/tutorial-arch.html). Its configuration
+      documentation sets `max_connections` at a default of 100 and notes that
+      PostgreSQL "sizes certain resources based directly on the value of
+      max_connections," including shared memory
+      (postgresql.org/docs/current/runtime-config-connection.html). One
+      honest caveat the analogy undersells, worth saying out loud but not
+      putting on the slide: a tied-up phone line only inconveniences people
+      calling you, while a leaked database connection eats from a
+      server-wide budget and can lock out other teams entirely.
+
+  - type: transition
+    from_label: "You Know the Four Beats"
+    to_label: "Code Along: Type Them Out with `psycopg2`"
+    note: "The diagram is four boxes. In real code it is four lines, and one of them is the one people forget."
+    style: "panel_preview"
+    preview_items:
+      - text: "Open a real connection"
+        icon: "database"
+      - text: "Read the rows back"
+        icon: "data_frame"
+    notes: >
+      [SCRIPT] [~15 min mark] Everyone opens the notebook now and keeps it
+      open. Confirm out loud that the shared `DATABASE_URL` is already set in
+      everyone's environment before typing starts, because a room half of
+      whom cannot connect will lose ten minutes here.
+
+  - type: code
+    title: "A Cursor Is What You **Send SQL Through**"
+    language: python
+    terminal_label: "analysis"
+    code: |
+      import os
+      import psycopg2
+
+      conn = psycopg2.connect(os.environ["DATABASE_URL"])
+      cur = conn.cursor()
+
+      sql = "SELECT * FROM service_requests LIMIT 5"
+      cur.execute(sql)
+      rows = cur.fetchall()
+      print(rows[0])
+    starter_code: |
+      import os
+      import psycopg2
+
+      # TODO: open a connection using DATABASE_URL
+      conn = ...
+      cur = conn.cursor()
+
+      sql = "SELECT * FROM service_requests LIMIT 5"
+
+      # TODO: send the query, then read every row back
+      ...
+      rows = ...
+      print(rows[0])
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`service_requests` is the same NYC 311 data as last class, this time living in a real PostgreSQL table instead of a file."
+    doc_url: "https://www.psycopg.org/docs/usage.html"
+    skill_tags: ["python", "sql", "psycopg2", "database-connection"]
+    notes: >
+      [ACTIVITY] Everyone runs this cell and confirms they see one tuple
+      printed before anyone moves on. Online: thumbs-up reaction rather than
+      reading names out.
+
+
+      [SCRIPT] Go line by line, because every one of these four lines is a
+      concept, not syntax. `os.environ["DATABASE_URL"]` reads a value your
+      computer is holding outside this file, which is objective three arriving
+      early on purpose. `psycopg2.connect()` opens the real link. `conn.cursor()`
+      gives you the thing you actually send SQL through. `cur.execute()` sends
+      it, and `cur.fetchall()` brings every row back.
+
+
+      [SCRIPT] Point at the printed output before saying anything else about
+      it. It is a plain Python tuple. No column names anywhere. Ask the room
+      what is missing compared to a DataFrame, and let them notice it
+      themselves rather than telling them.
+
+
+      [SCRIPT] Say the honest thing about the URL: today everyone points at
+      one shared class database so the room stays in sync. On the project you
+      will point the exact same variable at your own database, and not one
+      line of this code changes.
+
+
+      [MISCONCEPTIONS] People merge `connect` and `cursor` into one idea.
+      Separate them out loud: the connection is the open line to the server,
+      the cursor is one conversation happening on that line. You can run
+      several cursors on one connection, which is exactly why they are two
+      objects and not one.
+
+
+      [MISCONCEPTIONS] Somebody will ask why the query is a plain string
+      rather than something more Python-shaped. Answer it directly and briefly:
+      `psycopg2` is a driver, so it hands your SQL to PostgreSQL essentially
+      untouched. That is the whole point of a driver, and it is also the first
+      real difference from the library coming up next.
+
+  - type: code
+    title: "Tuples In, a **Real DataFrame** Out"
+    language: python
+    terminal_label: "analysis"
+    code: |
+      import pandas as pd
+
+      cols = [d[0] for d in cur.description]
+      df = pd.DataFrame(rows, columns=cols)
+
+      print(df.head(3))
+      print(df["created_date"].dtype)
+
+      cur.close()
+      conn.close()
+    starter_code: |
+      import pandas as pd
+
+      # TODO: the rows came back with no column names.
+      # Get them off the cursor, then rebuild the table.
+      ...
+
+      print(df.head(3))
+
+      # TODO: print the type of the created_date column
+      ...
+
+      # TODO: release the cursor, then the connection
+      ...
+      ...
+    code_along: true
+    domain: "public_sector"
+    doc_url: "https://www.psycopg.org/docs/cursor.html#cursor.description"
+    skill_tags: ["python", "pandas-io", "database-connection"]
+    notes: >
+      [ACTIVITY] Run it, then have the room read the second printed line out
+      loud together. That one line is the payoff for the whole first half of
+      the lesson.
+
+
+      [SCRIPT] Do the DataFrame construction first. `cur.description` is the
+      cursor's own record of the query it just ran, one entry per column, and
+      the first item in each entry is that column's name. `d[0] for d in
+      cur.description` is just "give me each column's name." Then
+      `pd.DataFrame(rows, columns=cols)` puts values and names back together.
+
+
+      [SCRIPT] Now the payoff, and slow all the way down here. Last class,
+      `created_date` came out of a CSV as text and needed
+      `pd.to_datetime()` to become a real date. Read the printed dtype out
+      loud. It is a real datetime, and nobody converted anything. The type
+      survived because a connection carries the schema and a file cannot.
+      That is the answer to today's warm-up question, arriving as running
+      code rather than as a claim.
+
+
+      [SCRIPT] Then the two closing lines. Cursor first, then connection.
+      Say plainly that this is the step the case study was about, and that
+      the next section makes it bulletproof rather than merely remembered.
+
+
+      [MISCONCEPTIONS] `cur.description` reads like documentation, so people
+      assume it is a docstring or a help message. It is not. It is structured
+      metadata about the last query the cursor ran, and it is the standard way
+      every Python database library exposes column names. Two precisions if
+      anyone digs: it always describes the most recent query, not all of them,
+      and the second item in each entry is a database-specific type code, not
+      a Python type, so do not let anyone read it as a `dtype`.
+
+
+      [MISCONCEPTIONS] A few people will see text columns print as `object`
+      rather than `str` and think something broke. Nothing broke. Older
+      pandas labels a text column `object`; newer pandas labels it `str`.
+      Both mean text, and the column everyone should actually be looking at
+      today is `created_date`.
+
+
+      [SOURCES] Verified by running this exact code against a real
+      PostgreSQL 16 table holding this module's own NYC 311 sample:
+      `created_date` comes back as `datetime64[us]`, `unique_key` as
+      `int64`. Column names via `cursor.description` are standard Python
+      DBAPI behavior: PEP 249 defines `.description` as a sequence of
+      seven-item sequences, one per result column, of which `name` and
+      `type_code` are the two mandatory items (peps.python.org/pep-0249/).
+
+  - type: check_understanding
+    prompt: "`cur.fetchall()` handed back plain tuples with no column names attached. So where did the DataFrame's column names come from?"
+    mode: poll
+    topic: "Where Column Names Live"
+    bloom_level: understand
+    question_style: conceptual
+    options:
+      - "`cur.description`, the cursor's own record of the last query"
+      - "pandas guessed them by looking at the values"
+      - "They were still attached to the tuples, just hidden"
+    answer:
+      correct: "`cur.description`, the cursor's own record of the last query"
+      explanation: "Every Python database cursor keeps a `description` of the query it just ran, one entry per column, and the first item in each entry is that column's name. `fetchall()` returns only values, so putting the names back on is a separate step you do yourself. That extra step is the price of using a raw driver, and it is exactly what the next section removes."
+      source: "Python DBAPI 2.0 specification (PEP 249), `cursor.description`, plus psycopg2's own cursor documentation"
+    skill_tags: ["python", "psycopg2"]
+    notes: >
+      [ACTIVITY] Poll: read all three options, count hands on each, then
+      reveal. Online: have everyone type A, B, or C in chat before anyone
+      explains. Say the letters, not numbers, since the slide itself labels
+      the options A, B, and C. 45 seconds.
+
+
+      [SCRIPT] Option two is the interesting wrong answer, not option three.
+      pandas genuinely does guess plenty of things from values, including
+      every column's type. It just cannot guess a name, because a name is not
+      in the data. Say that out loud, because it is the same idea as last
+      class's file-versus-schema point wearing different clothes.
+
+  - type: transition
+    from_label: "One Way Works"
+    to_label: "The Same Query, Written the Other Way"
+    note: "`psycopg2` handed you tuples and left the assembling to you. SQLAlchemy hands the finished DataFrame straight to pandas."
+    objective_index: 2
+    notes: >
+      [SCRIPT] [~28 min mark] Pivot cleanly. Do not editorialize on which
+      library is better yet. Today's job is that both work and both agree;
+      deciding between them is next class's whole lesson.
+
+  - type: content
+    title: "SQLAlchemy Gives You an **Engine**, Not a Connection"
+    bullets:
+      - "A Python toolkit for talking to databases"
+      - "An `engine` hands out connections for you"
+      - "For Postgres, `psycopg2` runs underneath"
+      - "pandas reads from it in one call"
+    icon_hero:
+      icon: "settings"
+      style: "blue"
+    analogy:
+      domain: "travel"
+      mapping: "A rideshare still drives a real car. Someone else just handles the driving for you."
+      backups:
+        - domain: "music"
+          mapping: "A guitar plugged straight into an amp versus through a pedalboard. Same guitar, same amp, more handled for you."
+        - domain: "food"
+          mapping: "Buying the ingredients versus ordering the dish. The same kitchen cooks it either way."
+    notes: >
+      [SCRIPT] Answer what, why, and who, in that order, before any code.
+      What: SQLAlchemy is a Python toolkit for working with databases, and
+      the piece you meet today is the `engine`, which knows where your
+      database is and hands out connections when something asks for one. Why:
+      because pandas reads directly from it, so the tuples-plus-column-names
+      assembly you just did by hand disappears into one call. Who: it is one
+      of the most widely used database libraries in professional Python, and
+      it is what the project's own given connection module uses.
+
+
+      [SCRIPT] Land the third bullet hard, because it is the single most
+      misunderstood fact in this lesson. SQLAlchemy is not a competitor to
+      `psycopg2`, and it is not a replacement for it. It is a layer that sits
+      on top and, for PostgreSQL, uses `psycopg2` underneath by default. The
+      rideshare is still driving a real car.
+
+
+      [SCRIPT] Say the bullet's scope precisely rather than rounding it off.
+      SQLAlchemy always uses some driver underneath; which one depends on the
+      database. For PostgreSQL the default is `psycopg2`, and alternatives
+      like `psycopg` version 3 or `asyncpg` can be named instead. Point at a
+      different database and the default driver is a different library
+      entirely. "SQLAlchemy uses psycopg2" is only true for Postgres, and
+      only by default.
+
+
+      [SCOPE] Today is what an engine is and how to get a DataFrame out of
+      one. SQLAlchemy also has a whole object-relational layer where you
+      define Python classes that map onto tables. Do not open that today. The
+      real comparison of when each library fits is next class's entire
+      lesson, and the object-relational layer shows up only as an optional
+      stretch goal on the project.
+
+
+      [MISCONCEPTIONS] "Engine" sounds like the thing that runs the query. It
+      does not. PostgreSQL runs the query. The engine manages the pool of
+      connections your code borrows from, which is why creating one engine
+      and reusing it is normal, while creating a new one per query is not.
+
+
+      [SOURCES] SQLAlchemy's own 2.0 documentation: the `Engine` is "'home
+      base' for the actual database and its DBAPI, delivered to the
+      SQLAlchemy application through a connection pool and a Dialect," and
+      "the PostgreSQL dialect uses psycopg2 as the default DBAPI"
+      (docs.sqlalchemy.org/en/20/core/engines.html). psycopg2's own docs
+      describe it as "the most popular PostgreSQL database adapter," a
+      complete implementation of the Python DB API 2.0 specification and a
+      wrapper around Postgres' own C client library (psycopg.org/docs).
+
+  - type: transition
+    from_label: "You Know What an Engine Is"
+    to_label: "Code Along: Let pandas Do the Fetching"
+    note: "One call is about to replace the cursor, the fetch, and the column names you assembled by hand."
+    notes: >
+      [SCRIPT] Back into the same notebook, next cell down. Nobody restarts
+      anything: the `sql` string and the `df` from the first half are still
+      needed for the comparison at the end of this cell.
+
+  - type: code
+    title: "The Same Question, in **One Line of pandas**"
+    language: python
+    terminal_label: "analysis"
+    code: |
+      from sqlalchemy import create_engine
+
+      engine = create_engine(os.environ["DATABASE_URL"])
+
+      with engine.connect() as connection:
+          df2 = pd.read_sql(sql, connection)
+
+      print(df2.head(3))
+      print("Same as psycopg2?", df.equals(df2))
+    starter_code: |
+      from sqlalchemy import create_engine
+
+      # TODO: build an engine from the same DATABASE_URL
+      engine = ...
+
+      with engine.connect() as connection:
+          # TODO: let pandas run sql and hand back a DataFrame
+          df2 = ...
+
+      print(df2.head(3))
+      print("Same as psycopg2?", df.equals(df2))
+    code_along: true
+    domain: "public_sector"
+    doc_url: "https://pandas.pydata.org/docs/reference/api/pandas.read_sql.html"
+    skill_tags: ["python", "sqlalchemy", "database-connection"]
+    notes: >
+      [ACTIVITY] Everyone runs it and calls out what the last line printed.
+      You want to hear `True` from the whole room. If anyone gets `False`,
+      they almost certainly ran a different query than the `sql` variable
+      from earlier, which is worth surfacing rather than skipping.
+
+
+      [SCRIPT] Count the lines out loud against the previous two slides. Four
+      steps became one call, and `pd.read_sql` did the fetching and the
+      column names together. Then name what the `with` block bought: the
+      connection is handed back automatically at the end of the block, so
+      there is no close to forget here.
+
+
+      [SCRIPT] The last printed line is the whole point of the lesson title.
+      `df.equals(df2)` is not comparing values loosely. It checks shape,
+      column names, and every column's type. Getting `True` means the two
+      libraries produced genuinely identical DataFrames, including the real
+      datetime column, not just similar-looking output.
+
+
+      [SCRIPT] Say the URL detail once, because it will look like magic
+      otherwise: the exact same `DATABASE_URL` string worked for both
+      libraries. A URL starting `postgresql://` with no driver named
+      defaults to `psycopg2`, so this line is quietly using the library from
+      the first half of the lesson. Worth one extra clause: that default only
+      works because `psycopg2` is installed, which is why plenty of teams
+      write the driver into the URL explicitly.
+
+
+      [MISCONCEPTIONS] People will want to hand `pd.read_sql` the bare
+      `psycopg2` connection from earlier instead of a SQLAlchemy connection.
+      It appears to work, and then prints a warning saying pandas only
+      supports a SQLAlchemy connectable, a database string, or a sqlite3
+      connection, and that other objects are not tested. Say what pandas
+      actually does next, because it is the concrete reason to care: it falls
+      back to its SQLite code path and runs your Postgres connection through
+      that. Demonstrate it if there is time, because "it ran and only warned"
+      is exactly the kind of thing people learn to scroll past.
+
+
+      [SOURCES] Verified by running this exact code against a real
+      PostgreSQL 16 table holding this module's own NYC 311 sample, with
+      SQLAlchemy 2.0 and pandas: `df.equals(df2)` printed `True`, and passing
+      a raw psycopg2 connection to `pd.read_sql` emitted pandas' documented
+      UserWarning about untested DBAPI2 objects. pandas' own `read_sql`
+      reference states that if a DBAPI2 object is passed, "only sqlite3 is
+      supported"
+      (pandas.pydata.org/docs/reference/api/pandas.read_sql.html), and
+      pandas' source falls back to its SQLite handler after warning.
+      SQLAlchemy's own docs confirm the driverless `postgresql://` form
+      defaults to psycopg2 (docs.sqlalchemy.org/en/20/core/engines.html).
+
+  - type: check_understanding
+    prompt: "On your board, draw both paths from the same SQL string to the same DataFrame. Mark every place the two genuinely differ."
+    mode: whiteboard
+    topic: "Two Paths, One DataFrame"
+    bloom_level: analyze
+    question_style: critical_thinking
+    skill_tags: ["python", "psycopg2", "sqlalchemy"]
+    notes: >
+      [ACTIVITY] Whiteboard, in pairs, five minutes. In person: one shared
+      board or a sheet of paper per pair, then two pairs hold theirs up and
+      walk it. Online: a shared Padlet, Jamboard, or FigJam board, one frame
+      per pair, then screen-share two of them. Ask for drawings rather than
+      sentences, but say out loud that a written or spoken step-by-step list
+      of the two paths counts exactly the same as a drawing, so nobody is
+      shut out of an analyze-level beat by the format. When a pair presents,
+      have them narrate what they drew rather than only pointing at it.
+
+
+      [SCRIPT] Steer toward the differences that are actually in the code
+      they just typed, not toward opinions. Real differences to fish for:
+      `psycopg2` needs a cursor and SQLAlchemy does not expose one here; the
+      column names have to be recovered by hand on one side and arrive
+      attached on the other; closing is manual on one side and automatic
+      inside the `with` block on the other. Real sameness to name: the SQL
+      string is identical, the connection URL is identical, the resulting
+      DataFrame is identical, and SQLAlchemy is using `psycopg2` under there
+      the whole time.
+
+
+      [SCOPE] Do not let this turn into "so which one should we use." That is
+      genuinely next class's entire lesson, with real scenarios to judge
+      against. Say that out loud and park the question rather than answering
+      it thinly today.
+
+
+      [MISCONCEPTIONS] Several boards will show SQLAlchemy as a completely
+      separate road to the database. Correct it while walking the room, and
+      then draw the authoritative version on the shared board during the
+      debrief rather than only correcting it pair by pair: your code, then
+      SQLAlchemy, then `psycopg2`, then PostgreSQL, stacked, not side by
+      side. That is the same picture the driver slide named earlier, and
+      seeing it drawn once correctly after trying to draw it themselves is
+      what makes it stick.
+
+  - type: transition
+    from_label: "It Runs"
+    to_label: "Now Make It Safe to Commit"
+    note: "Code that runs and code you can push to a public repo are two different bars, and a password and an open connection are what separate them."
+    objective_index: 3
+    style: "icon_hero"
+    icon: "lock"
+    notes: >
+      [SCRIPT] [~40 min mark] Last section, and the one the project grades
+      hardest. Say that plainly rather than treating it as cleanup.
+
+  - type: content
+    title: "Your Password Belongs **Outside** Your Code"
+    bullets:
+      - "Never type a password into a file"
+      - "Read it from the environment instead"
+      - "One string holds host, user, database"
+      - "Rotate the secret, never touch code"
+    image_path: "modules/module-4-python-data-analysis/lectures/connecting-two-ways-psycopg2-and-sqlalchemy-to-pandas/images/slide_18_env_var.png"
+    image_prompt: "Flat illustration: A key kept beside a code file, never written inside it"
+    image_alt: "A code file with no password written in it, next to a separate key held outside the file, showing credentials living in the environment rather than in source code"
+    image_caption: "The code stays public, the key does not"
+    analogy:
+      domain: "community"
+      mapping: "A community center's door code is given out privately, never painted on the door itself."
+      backups:
+        - domain: "family"
+          mapping: "Where the spare key actually lives is something you get told, not something taped to the front door."
+        - domain: "social_media"
+          mapping: "Your account password is not in your bio. The app holds it somewhere the public page never shows."
+    notes: >
+      [SCRIPT] Introduce the analogy before the term. A community center with
+      its door code painted on the door has not secured anything, and worse,
+      changing the code means repainting the door. Then attach the real word:
+      an environment variable is a value your computer holds for a program,
+      stored outside the program's own files.
+
+
+      [SCRIPT] Walk what `DATABASE_URL` actually is, since everyone typed it
+      twice already without being told. It is one string holding where the
+      database lives, who is connecting, and the password, in a standard
+      shape both libraries understand. The string is the sensitive thing. The
+      code that reads it is not.
+
+
+      [SCRIPT] Name the payoff that makes this more than a rule to follow.
+      When the secret lives outside the code, rotating it is a one-line
+      change to an environment, not a code change, a commit, and a review.
+      And your notebook can be public while the credential is not.
+
+
+      [MISCONCEPTIONS] The most common belief here is that a private repo
+      makes hardcoding fine. Push back concretely: a repo's visibility can be
+      flipped by anyone with access, repos get forked, and a secret in git
+      history survives deleting the line, because the old commit still has
+      it. The habit is what protects you, not the setting.
+
+
+      [MISCONCEPTIONS] People also assume an environment variable is
+      encrypted. It is not. It is a value the operating system holds for your
+      process. What it buys you is that it lives outside the file you commit
+      and share, which is the actual thing that goes wrong.
+
+
+      [SCOPE] Be honest that this is the baseline, not the ceiling, and then
+      stop. An environment variable is a large improvement over a typed-in
+      password and it is exactly what the project grades. Production teams
+      usually go one step further and use a dedicated secrets manager,
+      because environment variables can still end up in logs and crash dumps.
+      Name that in one sentence so nobody leaves thinking this is the most
+      secure thing that exists, then move on. Secrets management is not this
+      module's topic.
+
+
+      [SOURCES] The practice being taught here is the Twelve-Factor App's
+      Config factor, which calls storing config as constants in code "a
+      violation" and asks for config in environment variables, "easy to
+      change between deploys without changing any code" (12factor.net/config).
+      The caveat above is OWASP's own Secrets Management Cheat Sheet, which
+      notes environment variables "are generally accessible to all processes
+      and may be included in logs or system dumps"
+      (cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
+      — cite Twelve-Factor for the practice, and OWASP only for the "there is
+      a next level" note, never as an endorsement of environment variables.
+
+  - type: transition
+    from_label: "The Secret Is Handled"
+    to_label: "Code Along: Closing It Every Single Time"
+    note: "Reading the password safely is only half of safe. The other half is releasing the connection even when the query fails."
+    style: "panel_preview"
+    preview_items:
+      - text: "Wrap the work in `try`"
+        icon: "code"
+      - text: "Close it in `finally`"
+        icon: "task_complete"
+    notes: >
+      [SCRIPT] Last cell of the day. Tell everyone this one is a
+      fill-in-the-blank, so they should read it before typing rather than
+      copying straight through.
+
+
+      [SCRIPT] Give the reasoning before they fill anything in, not after,
+      or the blank gets answered from memory instead of from thinking. Say
+      it plainly: a query can raise, and a network can drop. If the close
+      sits on the last line and the line above it throws, the close never
+      runs and the connection is stranded. So the question the blank is
+      really asking is: which Python block runs no matter what happened
+      above it?
+
+  - type: code
+    title: "Open It in a `try`, and **Always** Close It"
+    language: python
+    terminal_label: "analysis"
+    code: |
+      conn = psycopg2.connect(os.environ["DATABASE_URL"])
+
+      try:
+          with conn.cursor() as cur:
+              cur.execute(sql)
+              rows = cur.fetchall()
+      finally:
+          conn.close()
+
+      print(len(rows), "rows, connection closed")
+    blanked_code: |
+      conn = psycopg2.connect(os.environ["DATABASE_URL"])
+
+      try:
+          with conn.cursor() as cur:
+              cur.execute(sql)
+              rows = cur.fetchall()
+      ____:
+          conn.____()
+
+      print(len(rows), "rows, connection closed")
+    code_along: true
+    domain: "public_sector"
+    doc_url: "https://www.psycopg.org/docs/connection.html#connection.close"
+    skill_tags: ["python", "psycopg2", "connection-cleanup"]
+    notes: >
+      [ACTIVITY] Fill in the blank, 30 seconds, before advancing to the
+      answer. In person: someone says both missing pieces out loud. Online:
+      everyone types them in chat at the same time on a count of three. This
+      slide is deliberately the one cell with no `starter_code`, so the
+      student notebook shows the exact same two blanks the slide does rather
+      than a different exercise.
+
+
+      [SCRIPT] Heads up on the error anyone gets if they run the cell before
+      filling it in: a `try` with nothing after it is a `SyntaxError`, not a
+      runtime error, so Python refuses to run the cell at all and points at
+      the wrong line. That is not a broken notebook. Say it before anyone
+      panics, and note that the error message names exactly what is missing.
+
+
+      [SCRIPT] After the reveal, explain why `finally` and not just a close
+      at the end. A query can raise. A network can drop. If the close sits on
+      the last line and the line above it throws, the close never runs and
+      the connection is stranded. `finally` runs either way, which is exactly
+      what "always" means here.
+
+
+      [SCRIPT] Point out that the cursor gets a `with` block and the
+      connection does not. That asymmetry is deliberate and it is the single
+      most useful thing on this slide, so do not rush it.
+
+
+      [MISCONCEPTIONS] This is the big one, and it catches experienced people
+      too. Writing `with conn:` around the work does not close the
+      connection. In `psycopg2`, a connection used as a context manager
+      commits or rolls back the transaction when the block ends, and then
+      leaves the connection open on purpose so you can reuse it. You still
+      have to call `conn.close()` yourself. If there is time, prove it live:
+      run a `with conn:` block, then print `conn.closed` and watch it print
+      zero. `psycopg2`'s own documentation calls this out under a warning
+      heading, and its successor library's migration guide describes the old
+      behavior as "surprising," so nobody should feel slow for missing it.
+
+
+      [MISCONCEPTIONS] Someone will argue the connection closes when the
+      script ends anyway. For a small script that finishes, that is broadly
+      true. It stops being true the moment the code lives in a notebook that
+      stays open for hours, a scheduled job that loops, or anything running
+      as a service, which is most real analyst code. Do not teach a habit
+      that only works in the easiest case.
+
+
+      [SOURCES] Verified by running it: after a `with conn:` block completed
+      normally, `conn.closed` was still `0`, and only an explicit
+      `conn.close()` changed it to `1`. psycopg2's own docs state it under a
+      Warning heading: "exiting the connection's `with` block doesn't close
+      the connection, but only the transaction associated to it. If you want
+      to make sure the connection is closed after a certain point, you should
+      still use a try-catch block" (psycopg.org/docs/usage.html). Scope note
+      for anyone who reads ahead: the successor library, psycopg version 3,
+      deliberately changed this, and `with connection` there does close the
+      connection (psycopg.org/psycopg3/docs/basic/from_pg2.html). This lesson
+      uses psycopg2, which is what the project's own environment installs.
+
+  - type: check_understanding
+    prompt: "A teammate's pull request types the password straight into the file and never closes the connection. Which of these do you flag as blocking?"
+    mode: game
+    topic: "Reviewing Connection Code"
+    bloom_level: evaluate
+    question_style: interview
+    technique: "PREP"
+    options:
+      - "Both, since one leaks a secret and one leaks a resource"
+      - "Only the password, since a connection closes itself"
+      - "Neither, as long as the script runs"
+    answer:
+      correct: "Both, since one leaks a secret and one leaks a resource"
+      explanation: "The typed-in password is a secret that lands in the repository and stays in its history even if the line is later deleted, so it has to be replaced with an environment variable before this merges. The unclosed connection is more forgiving in a script that exits quickly, because the process ending does release it, but in a notebook, a scheduled job, or a service it holds a real server-side slot indefinitely, and a database has a fixed number of those. Both are the kind of thing that runs perfectly in review and fails in production."
+      source: "This module's own project rubric, which grades both a hardcoded credential and an unreleased connection against the `python` skill"
+    skill_tags: ["python", "connection-cleanup", "code-review"]
+    notes: >
+      [TECHNIQUE] Use PREP, Point then Reason then Example then Point. A code
+      review verdict is exactly the shape PREP is for: state the call first,
+      say why, give one concrete consequence, then restate the call. Coach
+      whoever answers to lead with "both, and here is which one I would fix
+      first," rather than narrating their thinking and arriving at a verdict
+      thirty seconds later. An interviewer is listening for the verdict up
+      front.
+
+
+      [ACTIVITY] Quick-fire game: read all three, count down from three out
+      loud, then everyone calls out A, B, or C at the same time. Online:
+      everyone types A, B, or C in chat on the count of three, so nobody just
+      copies the first answer posted. Use the letters the slide itself shows
+      rather than numbers, and say them out loud rather than relying on a
+      show of hands, so nobody has to read the room to take part.
+
+
+      [SCRIPT] Do not stop at the right answer. Ask whoever answered why
+      option two is genuinely tempting, because it is half right, and getting
+      that nuance out loud is the difference between a memorized rule and
+      real judgment. A short script really does release its connection when
+      the process ends. An interviewer is asking whether you know why that
+      stops being true.
+
+
+      [MISCONCEPTIONS] Some people rank the unclosed connection as harmless
+      because nothing visibly breaks. Say what the failure actually looks
+      like when it does arrive: not a slowdown, but connection requests being
+      refused outright once the server's limit is reached, usually to whoever
+      connects next rather than to the person who caused it.
+
+  - type: interview_prep
+    topics:
+      - question: "Walk me through how you would connect a Python script to a production database safely and pull the results into pandas."
+        short_answer: "Understand: Which database, which query, and who runs the script. Plan: Read the credentials from the environment, never the file, and use an engine so pandas is on supported ground. Write and explain: Open the connection, run the query, load it with `pd.read_sql`. Validate: Check the row count and column names against what I expected, and confirm the connection was released."
+        technique: "Query Walkthrough Method"
+        icon: "database"
+      - question: "A teammate's daily script starts failing with a `too many connections` error. How would you investigate?"
+        short_answer: "Observation: It ran fine for months, and the error names connections, not the query. Hypothesis: Something opens connections without releasing them, until the server hits its limit. Evidence: Count the open connections on the server, then read the code for any path that opens one outside a `try` with a close. Recommendation: Release it in a `finally` block, so it happens even when the query fails."
+        technique: "Investigation Framework"
+        icon: "warning"
+    notes: >
+      [TECHNIQUE] The first uses the Query Walkthrough Method, Understand
+      then Plan then Write then Explain then Validate, because "walk me
+      through how you would" is asking for a narrated plan, not a verdict.
+      The strongest version of this answer says the plan out loud before any
+      code, and finishes by validating, which is the step most candidates
+      drop.
+
+
+      [TECHNIQUE] The second uses the Investigation Framework, Observation
+      then Hypothesis then Evidence then Recommendation, because it is a
+      "why did this break" question. The move that separates a strong
+      candidate here is naming a hypothesis and then saying what evidence
+      would confirm it, rather than jumping straight to a fix that might be
+      addressing the wrong cause.
+
+
+      [SCRIPT] [~50 min mark] If you are already past 52 minutes, cut
+      straight to the first question and skip the cold attempt. Otherwise
+      have someone attempt the first one cold before showing the
+      answer slide. Both of these are real questions at this role level, not
+      warm-ups, so keep the register serious here even though the rest of
+      today is energetic.
+
+
+      [SCRIPT] Honest framing worth passing on: the second question is more
+      commonly asked as a debugging scenario than as trivia about closing
+      connections. Point that out, because it tells people what interviewers
+      actually want, which is reasoning about a failure, not a memorized
+      rule.
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "connection"
+        - "A live link to the database"
+      - - "cursor"
+        - "What you send SQL through"
+      - - "driver"
+        - "Speaks the database's own language"
+      - - "engine"
+        - "SQLAlchemy's connection manager"
+      - - "environment variable"
+        - "A value stored outside your code"
+    notes: >
+      [SCRIPT] Fast round trip through all five before the summary. Ask the
+      room to supply the definition for `cursor` and for `engine` rather than
+      reading every row yourself, since those are the two that get blurred
+      together most.
+
+
+      [MISCONCEPTIONS] Watch for anyone defining `engine` as "SQLAlchemy's
+      version of a connection." It manages connections; it is not one. That
+      distinction is what makes reusing a single engine the normal pattern.
+
+  - type: bridge
+    title: "So far, we've covered..."
+    bullets:
+      - "A connection is opened, used, and closed"
+      - "`psycopg2` hands back plain tuples"
+      - "SQLAlchemy hands pandas a DataFrame"
+      - "Both paths returned the identical result"
+      - "Secrets and closes are graded, not optional"
+    notes: >
+      [SCRIPT] Resolve the case study by name before anything else, since it
+      is the frame the whole lesson hangs on. Then answer today's warm-up
+      question out loud one more time, because it is the cleanest thing to
+      leave the room with: a file loses the schema, a connection carries it,
+      and everyone watched `created_date` come back as a real date with
+      nothing converted by hand.
+
+
+      [SCRIPT] Tie forward to the project without naming a specific day. The
+      project asks for one query run both ways against your own database,
+      both confirmed to return the same result, with the credential in an
+      environment variable and every connection released. Every one of those
+      four things happened in this room today. The only thing that changes is
+      whose database it points at.
+
+
+      [SCRIPT] Name today's honest limit too, the same way the previous
+      lesson did. You now know both libraries work and both agree. You do not
+      yet have any real basis for choosing between them, and next class is
+      built entirely around that question.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "Redo today's four cells from blank"
+      - "Point `DATABASE_URL` at your own database"
+      - "Confirm both paths agree on your data"
+      - "Commit it the moment it actually runs"
+      - "Never commit the file holding secrets"
+    exercise:
+      type: bullets
+      url_or_text: "Redo today's four notebook cells from the blank student notebook. Then point a real `DATABASE_URL` at the database you built in the SQL module and run both connection paths against it, confirming they return the same DataFrame."
+      label: "Practice: The student notebook"
+    video_resource:
+      title: "How to Connect to Postgres Using Python"
+      url: "https://www.youtube.com/watch?v=h-u1ML-OWok"
+      approx_duration: "4 min"
+      note: "Free, no account needed. Covers both libraries in a notebook."
+    notes: >
+      [SCRIPT] Be specific about why the practice ask is what it is. Today
+      everyone connected to one shared class database, so nobody had to make
+      a URL themselves. Doing it against your own database is the part that
+      actually breaks, and finding that out tonight costs minutes rather than
+      costing a project day.
+
+
+      [SCRIPT] Say the fourth bullet is a habit, not busywork, and give the
+      concrete version rather than the principle. A working connection is
+      the first point where the script does something real, so it is the
+      natural place to be able to come back to. Write "Add psycopg2
+      connection and DataFrame load," not "update." Your project is graded
+      on whether the commit history reads as a real story, so this is the
+      rehearsal for that.
+
+
+      [SCRIPT] The fifth bullet is the case study restated as an
+      instruction. Git remembers: deleting the line later does not remove
+      it from the history, which is exactly why a secret that lands in a
+      repository stays landed.
+
+
+      [SCOPE] Nobody sets up a repository tonight, and do not let this turn
+      into a git lesson. Creating the repo, writing your own `.gitignore`
+      and `LICENSE`, and making the first real commit all happen on the
+      project's own setup day. Today is only naming the habit while the
+      reason for it is still fresh.
+
+
+      [SCRIPT] Push hard on bringing a broken thing back rather than quietly
+      giving up on it. Someone whose connection refuses tonight and says
+      nothing will lose a full project day later. Remind people how to reach
+      office hours rather than naming a time, and point at the optional
+      video as background, not homework.
+
+  - type: further_resources
+    resources:
+      - title: "Establishing Connectivity: The Engine"
+        url: "https://docs.sqlalchemy.org/en/20/tutorial/engine.html"
+        kind: documentation
+        time_estimate: "~10 min read"
+        description: "What an engine actually is, from SQLAlchemy itself"
+        attribution: "SQLAlchemy project"
+      - title: "Python Database Programming Exercises"
+        url: "https://pynative.com/python-database-programming-exercise-with-solution/"
+        kind: practice
+        time_estimate: "~45 min hands-on"
+        description: "Connect, query, fetch, update, close, with solutions"
+        attribution: "PyNative"
+      - title: "SQLAlchemy: The Best SQL Database Library in Python"
+        url: "https://www.youtube.com/watch?v=aAy-B6KPld8"
+        kind: video
+        time_estimate: "~17 min video"
+        description: "A fuller tour of engines, connections, and core ideas"
+        attribution: "ArjanCodes"
+    notes: >
+      [SCRIPT] Point at the first one as the reference to keep open for the
+      next couple of classes. It is SQLAlchemy's own opening chapter on the
+      engine, which is the one object today only had time to introduce.
+
+
+      [SCRIPT] The middle one is the only genuinely hands-on option here, and
+      it is the one worth doing if anyone asks what to practice. It needs a
+      running database, which everyone already has from the SQL module, and
+      its exercises walk the same connect, query, fetch, close cycle from
+      today's diagram. Its solutions cover PostgreSQL alongside other
+      databases.
+
+
+      [SCRIPT] The video is the long-form version of today's SQLAlchemy half
+      from a well-known Python channel. It runs about seventeen minutes,
+      which is why it is here rather than in the lesson itself.

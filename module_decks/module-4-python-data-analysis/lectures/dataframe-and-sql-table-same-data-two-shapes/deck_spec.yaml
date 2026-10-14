@@ -1,0 +1,1050 @@
+meta:
+  title: "DataFrame and SQL Table: Same Data, Two Shapes"
+  module: "Module 4: Python Data Analysis"
+  module_number: 4
+  lesson_number: 1
+  date: "Day 1"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Explain how a pandas DataFrame corresponds to a SQL table's rows, columns, and types"
+    - "Translate a small SQL query into its pandas equivalent, and say where each one actually runs"
+    - "Describe what `uv` is and why this module manages its packages with it instead of bare `pip`"
+  tools:
+    - "Python"
+  exercise:
+    type: bullets
+    url_or_text: "Redo today's three notebook cells from the blank student notebook. Then confirm Python and `uv` are installed, and confirm you can still reach the PostgreSQL database you built in the SQL module."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Real pandas authorship, including loading a CSV, filtering rows, and aggregating (Module 2)"
+    - "SQL: `SELECT`, `WHERE`, `GROUP BY`, and a real PostgreSQL database you built yourself (Module 3)"
+    - "Terminal comfort and a working Python install (Modules 0-1)"
+  interview_topics:
+    - "Should an aggregation happen in SQL or in pandas, and how do you decide?"
+    - "How would you explain what a DataFrame is to someone who only knows SQL?"
+  final_project:
+    "The project has you query your own PostgreSQL database from Python two
+    different ways and load each result into a real pandas DataFrame,
+    confirming both return the same result. That whole task rests on one
+    idea: a query result and a DataFrame are the same rows in a different
+    container. Today is where that idea gets built, on a file small enough
+    to read end to end."
+  module_plan_ref: "module_sources/module-4-python-data-analysis/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-4-python-data-analysis/DATASET.md"
+  scaffolding_level: modeled
+  estimated_duration_min: 60
+  scenario: >
+    You have joined a city agency's data team. Every service request the
+    city takes lives in a PostgreSQL database, and you already know how to
+    ask it for rows: `SELECT unique_key, created_date, complaint_type,
+    borough FROM service_requests LIMIT 5;`. Today those same rows reach
+    you as a small CSV export of that table, because connecting to the
+    live database for real is next class. Your job today is to see the
+    same NYC 311 rows in both shapes, a SQL table and a pandas DataFrame,
+    and learn exactly how the two line up.
+  notebook_warmup:
+    prompt: "A SQL table declares a type on every column. When those same rows land in a DataFrame, where does the type information come from?"
+    hint: "Think about what a `.csv` file actually stores on disk. Is a date in a CSV any different from a piece of text?"
+  glossary:
+    - term: "DataFrame"
+      definition: "A pandas table held in memory, with rows, named columns, and one type per column"
+    - term: "Series"
+      definition: "A single column of a DataFrame, on its own"
+    - term: "dtype"
+      definition: "The type pandas gives a column, the way SQL declares a column's type"
+    - term: "in-memory"
+      definition: "Held in your computer's working memory, not saved on disk"
+    - term: "uv"
+      definition: "A fast Python package and environment manager, used here instead of bare `pip`"
+
+slides:
+  - type: title
+    title: "DataFrame and SQL Table: Same Data, Two Shapes"
+    subtitle: "Rows, Columns, Types, and Where They Live"
+    module: "Module 4: Python Data Analysis"
+    date: "Day 1"
+    image_path: "modules/module-4-python-data-analysis/lectures/dataframe-and-sql-table-same-data-two-shapes/images/slide_01_two_shapes.png"
+    image_prompt: "Flat illustration: Analyst comparing a database table and a notebook table"
+    image_alt: "A data analyst looking at the same rows of data shown two ways, as a database table and as a table inside a notebook"
+    notes: >
+      [SCRIPT] Open by naming the shift: you have spent one module writing
+      SQL against a real database, and an earlier module writing real
+      pandas. You have never had to hold both in your head at once. That
+      is the whole job this module does, and today is the conceptual half
+      of it.
+
+
+      [SCRIPT] Set expectations honestly: today is mostly watching and
+      following along, not a heavy typing day. The typing starts next
+      class, when a live database connection enters the picture.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Map a DataFrame onto a SQL table"
+        icon: "data_frame"
+      - text: "Translate a SQL query into pandas"
+        icon: "sql"
+      - text: "Say what `uv` is and why we use it"
+        icon: "package"
+    notes: >
+      [SCRIPT] Read all three out loud, then name the project tie
+      directly: the project asks you to query your own database and load
+      the result into a DataFrame, twice, two different ways. If a query
+      result and a DataFrame feel like two unrelated things, that task is
+      confusing. If they feel like the same rows in a different container,
+      it is straightforward. Today is what makes the difference.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "DataFrame, Series"
+        icon: "data_frame"
+      - text: "`dtype`, in-memory"
+        icon: "attribute"
+      - text: "`uv`"
+        icon: "package"
+    notes: >
+      [SCRIPT] Just the names for now. Every one of these gets a real
+      definition and a real example before today is over, and they all
+      come back on the recap slide at the end.
+
+  - type: check_understanding
+    prompt: "Quick recall: Name the SQL clause that keeps only some rows, and the pandas method that shows you the first few rows."
+    mode: discussion
+    topic: "Warm-Up: SQL and pandas"
+    bloom_level: remember
+    question_style: conceptual
+    skill_tags: ["sql", "python"]
+    notes: >
+      [ACTIVITY] In person: quick shout-outs, no hands raised, just call
+      them out. Online: drop both answers in chat, then unmute one or two
+      people to say them out loud. 60 seconds total.
+
+
+      [SCRIPT] Looking for `WHERE` and `.head()`. The point is not the
+      trivia, it is confirming out loud that both halves of today's
+      comparison are already things this room knows separately. Say that
+      explicitly: today does not teach you SQL or pandas, it teaches you
+      the bridge between two things you already have.
+
+
+      [MISCONCEPTIONS] Some people will answer `LIMIT` for the second
+      half. That is a fair answer for "first few rows" and worth
+      accepting out loud, then redirecting: `LIMIT` is the SQL side,
+      `.head()` is the pandas side, and noticing they do the same job is
+      literally today's lesson.
+
+  - type: transition
+    from_label: "You Know Both Tools Already"
+    to_label: "Now See Them Side by Side"
+    note: "You have used SQL tables and DataFrames separately. Today is about how the two line up, row for row."
+    objective_index: 1
+    style: "icon_hero"
+    icon: "compass"
+    notes: >
+      [SCRIPT] [~6 min mark] Short beat. Frame the case study coming next
+      as a warning about what happens when nobody checks how data changes
+      as it moves between tools.
+
+  - type: case_study
+    headliner: "A Spreadsheet Kept Turning **Gene Names** Into Dates"
+    kicker: "IN THE NEWS"
+    summary_points:
+      - "Gene `SEPT2` kept becoming a date"
+      - "1 in 5 genomics papers were hit"
+      - "So the genes got renamed instead"
+    is_fictional: false
+    source_url: "https://www.theverge.com/2020/8/6/21355674/human-genes-rename-microsoft-excel-misreading-dates"
+    caption: "The Verge, August 2020"
+    image_path: "modules/module-4-python-data-analysis/lectures/dataframe-and-sql-table-same-data-two-shapes/images/slide_06_gene_names.png"
+    image_prompt: "Photo-realistic: Geneticist reviewing a gene data table on a monitor, serious"
+    image_alt: "A genomics researcher at a monitor showing a table of gene names, several of them silently rewritten by a spreadsheet as calendar dates"
+    hook_question: "When the same data moves from one tool into another, what exactly can change without anyone noticing?"
+    domain: "healthcare"
+    notes: >
+      [SCRIPT] Walk the mechanism, because the mechanism is the whole
+      point. A gene really is named `SEPT2`. Open a spreadsheet, paste it
+      in, and the tool decides that looks like a date and rewrites it as
+      "2-Sep". Nobody clicked anything. No warning appeared. The file was
+      then attached to a peer-reviewed paper and published that way.
+
+
+      [SCRIPT] Land the ending, which is genuinely surprising: after years
+      of this getting worse rather than better, the committee that names
+      human genes gave up on fixing spreadsheets and renamed 27 genes
+      instead. `MARCH1` became `MARCHF1`. `SEPT1` became `SEPTIN1`. The
+      science changed its own vocabulary to survive a tool's type guess.
+
+
+      [SCRIPT] Do not resolve the hook question yet. Ask it, take a few
+      answers, and say out loud that today's own demo will make the same
+      thing happen in miniature, on purpose, with real city data.
+
+
+      [ARTICLE SUMMARY] In 2016, three researchers screened over 35,000
+      supplementary spreadsheets attached to genomics papers and found
+      that about one in five contained corrupted gene names. The cause was
+      mundane: a spreadsheet's default settings silently reinterpret
+      symbols like `SEPT2` and `MARCH1` as dates and rewrite them as
+      "2-Sep" and "1-Mar." Nobody clicked anything, no error appeared, and
+      the corrupted files were published as-is alongside peer-reviewed
+      papers. After years of the problem getting worse rather than better,
+      the committee that officially names human genes gave up on fixing
+      the spreadsheets and renamed the genes instead, 27 of them, so
+      `MARCH1` became `MARCHF1` and `SEPT1` became `SEPTIN1`. Their
+      revised 2020 guidelines now list "symbols that affect data handling
+      and retrieval" as a legitimate reason to rename a gene.
+
+
+      [SOURCES] James Vincent, "Scientists rename human genes to stop
+      Microsoft Excel from misreading them as dates," The Verge,
+      2020-08-06. The 27-gene figure and the `MARCH1`/`SEPT1` renames come
+      from that article and from HGNC's own revised guidelines, Bruford et
+      al., "Guidelines for human gene nomenclature," Nature Genetics,
+      2020, doi 10.1038/s41588-020-0669-3. The roughly one-in-five figure
+      is Ziemann, Eren, and El-Osta, "Gene name errors are widespread in
+      the scientific literature," Genome Biology, 2016-08-23: 987 affected
+      files across 704 of the screened articles, about 19.6 percent.
+
+  - type: table
+    title: "The Rows, Exactly as the **Database** Holds Them"
+    headers:
+      - "unique_key"
+      - "created_date"
+      - "complaint_type"
+      - "borough"
+    rows:
+      - - "47002094"
+        - "2020-07-27"
+        - "Homeless Street Condition"
+        - "MANHATTAN"
+      - - "59484263"
+        - "2023-11-18"
+        - "Water System"
+        - "STATEN ISLAND"
+      - - "59484344"
+        - "2023-11-18"
+        - "Illegal Parking"
+        - "STATEN ISLAND"
+      - - "69530202"
+        - "2026-06-29"
+        - "Noise - Residential"
+        - "QUEENS"
+      - - "69530216"
+        - "2026-06-29"
+        - "Noise - Residential"
+        - "BRONX"
+    notes: >
+      [SCRIPT] This is real NYC 311 data, the first five of the fifteen
+      rows we will use all lesson. Read it the way `psql` would print it:
+      one row per service request, named columns across the top, and in
+      the database every one of those columns has a declared type sitting
+      behind it. `unique_key` is an integer. `created_date` is a real
+      timestamp. `complaint_type` and `borough` are text. Point at
+      `created_date` specifically and say it is a real date to the
+      database, not a piece of text, because that column is about to
+      behave differently than everyone expects.
+
+
+      [SCRIPT] Give the room 30 seconds to just look before saying
+      anything else. The whole trick of today is that this picture is
+      about to reappear, unchanged, in a completely different tool.
+
+
+      [MISCONCEPTIONS] "Table" gets used loosely for anything with rows
+      and columns. Be precise here: this specific thing lives inside
+      PostgreSQL, on a server, with types the database itself enforces.
+      That is what makes the comparison coming up interesting.
+
+  - type: table
+    title: "The Database **Declares** Every Type Up Front"
+    headers:
+      - "Column"
+      - "Declared type"
+    rows:
+      - - "`unique_key`"
+        - "`INTEGER`"
+      - - "`created_date`"
+        - "`TIMESTAMP`"
+      - - "`complaint_type`"
+        - "`VARCHAR`"
+      - - "`borough`"
+        - "`VARCHAR`"
+    notes: >
+      [SCRIPT] This is the other half of what a SQL table is, and it is
+      the half people forget. Those four lines are part of the table's own
+      definition, written once when the table was created and enforced on
+      every row after that. Nobody can put the word "yesterday" into
+      `created_date`. The database will refuse it.
+
+
+      [SCRIPT] Say the consequence out loud, because the next three slides
+      turn on it: the type is stored with the table, not with the values.
+      It travels with the table, and only with the table.
+
+
+      [MISCONCEPTIONS] People assume a type is a property of the value
+      itself, so that `2026-06-29` is "a date" no matter where it sits. It
+      is not. It is a date because a column said so. Move the same
+      characters somewhere that declares nothing, and they are just
+      characters again.
+
+  - type: transition
+    from_label: "The SQL Side"
+    to_label: "Code Along: The Same Rows as a DataFrame"
+    note: "Someone exported these rows into a file. The data did not change, only the tool holding it."
+    style: "panel_preview"
+    preview_items:
+      - text: "Load the same rows"
+        icon: "dataset"
+      - text: "Check every column's type"
+        icon: "attribute"
+    notes: >
+      [SCRIPT] [~14 min mark] Tell everyone to open the notebook now. This
+      is the one stretch of today with real typing in it.
+
+  - type: code
+    title: "The Same Rows, Now **In Your Own Memory**"
+    language: python
+    terminal_label: "analysis"
+    code: |
+      import pandas as pd
+
+      # The same 311 rows the SQL table just showed
+      df = pd.read_csv("../../data/nyc_311_sample.csv")
+
+      print(df.head())
+    starter_code: |
+      import pandas as pd
+
+      df = pd.read_csv("../../data/nyc_311_sample.csv")
+
+      # TODO: SELECT * FROM service_requests LIMIT 5,
+      # written the pandas way. One line.
+      ...
+    code_along: true
+    domain: "public_sector"
+    domain_note: "You have seen NYC 311 data before, and that is deliberate. Today the new thing is the comparison, not the dataset."
+    doc_url: "https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html"
+    skill_tags: ["python", "general-programming-coding", "pandas-io"]
+    analogy:
+      domain: "music"
+      mapping: "Same album, one on a shelf you have to walk over to, one already downloaded on your phone. Identical tracks either way."
+      backups:
+        - domain: "sports"
+          mapping: "The same game watched live in the stadium, or recorded on your phone, is still the same plays either way."
+        - domain: "community"
+          mapping: "A recipe in your grandmother's book versus copied onto a card in your pocket, still the same recipe either way."
+    notes: >
+      [ACTIVITY] Have everyone run this cell and confirm they see five
+      rows before moving on. Online: ask for a thumbs-up reaction rather
+      than reading names out.
+
+
+      [SCRIPT] Name the missing step out loud before running anything:
+      somebody exported those rows out of the database into a `.csv`
+      file, and that export is the hop where the type declarations got
+      left behind. The table came along. The schema did not.
+
+
+      [SCRIPT] Say the path assumption out loud once, here, and never
+      again: the shared data folder sits two levels above the notebook,
+      which is what `../../data/` means. Anyone who typed `data/` alone
+      will get a `FileNotFoundError`, and that is the only path problem
+      today should produce.
+
+
+      [SCRIPT] Point at the output and say it plainly: these are the same
+      five rows as the previous slide, in the same order, with the same
+      column names. `.head()` shows all seven columns, so three that the
+      table left out show up here too. What changed is not the data, only
+      where it is sitting.
+
+
+      [SCRIPT] Name the analogy before the term, then attach the term:
+      that thing now sitting in memory has a name, and the name is a
+      DataFrame. If the album analogy does not land, try one of the
+      backups in this cell's notebook entry.
+
+
+      [MISCONCEPTIONS] Somebody will spot a `NaN` in the very first row of
+      the output and ask about it. Have the answer ready, because it is
+      on today's topic, not a distraction: the file genuinely contains the
+      characters `N/A` in that cell, and `pd.read_csv` treats `N/A` as one
+      of its default "this means missing" strings, so it becomes `NaN`.
+      Nobody asked it to. That is the same idea as the type story coming
+      next, arriving a slide early: reading a file means a tool making
+      decisions about what the characters mean. Say that, then move on;
+      real missing-value handling belongs to the project, not to today.
+
+
+      [MISCONCEPTIONS] A common belief is that a DataFrame is "a
+      spreadsheet in Python." Close enough to be useful, wrong in one
+      important way: a spreadsheet lets any cell hold anything, and a
+      DataFrame gives the whole column one type, exactly like SQL does.
+      The next slide makes that visible.
+
+  - type: code
+    title: "Every Column Has **One Type**, Just Like SQL"
+    language: python
+    terminal_label: "analysis"
+    code: |
+      print(df.dtypes)
+
+      # A date arrives as text until you actually parse it
+      dates = pd.to_datetime(df["created_date"])
+      print(dates.dtype)
+    starter_code: |
+      # TODO: SQL declared a type on every column.
+      # Ask pandas what type it gave each one.
+      ...
+
+      # TODO: created_date was a TIMESTAMP in the
+      # database. Make it a real date again here.
+      dates = ...
+      print(dates.dtype)
+    code_along: true
+    domain: "public_sector"
+    doc_url: "https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.dtypes.html"
+    skill_tags: ["python", "dtypes"]
+    analogy:
+      domain: "fashion"
+      mapping: "A tag reading `$24.99` is just characters until a register reads it into a field that expects money."
+      backups:
+        - domain: "gaming"
+          mapping: "Your level typed into a chat message is only text. The game treats it as a number inside the game itself."
+        - domain: "travel"
+          mapping: "A flight time on a napkin is text. Your calendar only counts down to it once you enter it as a real time."
+    notes: >
+      [SCRIPT] Walk the output column by column. `unique_key` came in as
+      `int64`, a real integer. Every other column came in as text. Then
+      land the important one: in the database, `created_date` was a real
+      timestamp. In this DataFrame it is text, and it stays text until
+      `pd.to_datetime()` is called.
+
+
+      [SCRIPT] Say why out loud: the database stores the type alongside
+      the data because the schema declares it. A CSV stores only
+      characters, so pandas has to guess a type per column when it reads
+      one, and text is the safe guess. This is not pandas being careless.
+      It is the type information genuinely not being in the file.
+
+
+      [SCRIPT] Read the printed label out loud rather than predicting it,
+      because it depends on which pandas is installed. On pandas 2.x a
+      text column prints as `object`. On pandas 3.0 and later it prints as
+      `str`. Both mean text. If two people in the room see different
+      labels, that is the real answer, not a bug, and it is a good moment
+      to say why the lesson insists on running `.dtypes` instead of
+      assuming.
+
+
+      [MISCONCEPTIONS] People read `object` as "something went wrong." It
+      did not. It is just how pandas 2.x labels a column of text. It is
+      the right label for `borough`, and the wrong one for a date, which
+      is the whole reason to look.
+
+
+      [SOURCES] Verified by running this exact code on this exact file
+      with pandas 2.2.3: `unique_key` is `int64` and the remaining six
+      columns are `object`. The version-dependence is pandas 3.0.0 release
+      notes, PDEP-14, dedicated string dtype enabled by default, released
+      2026-01-21, pandas.pydata.org/docs/whatsnew/v3.0.0.html.
+
+  - type: table
+    title: "Same Parts, **Two Vocabularies**"
+    headers:
+      - "In SQL"
+      - "In pandas"
+      - "Example"
+    rows:
+      - - "Table"
+        - "DataFrame"
+        - "`df`"
+      - - "Row"
+        - "Row"
+        - "One request"
+      - - "Column"
+        - "Series"
+        - "`borough`"
+      - - "`INTEGER`"
+        - "`int64`"
+        - "`69530216`"
+      - - "`VARCHAR`"
+        - "Text"
+        - "`BRONX`"
+      - - "`TIMESTAMP`"
+        - "Text, out of a file"
+        - "`2026-06-29`"
+    notes: >
+      [SCRIPT] This is the whole first objective on one slide. Read it
+      left to right, row by row. The first three rows are the structural
+      match: same rows, same columns, one type each. The last three are
+      the type match, and the last row is the one that bites people.
+
+
+      [SCRIPT] Say the last row out loud twice: a real timestamp in the
+      database shows up as plain text in pandas until something parses
+      it. That is the gap the gene-name story from earlier is really
+      about, just with dates going the other direction.
+
+
+      [MISCONCEPTIONS] A `Series` is not a lesser thing than a DataFrame.
+      It is one column, and it still has exactly one type. Pull a column
+      out of a DataFrame and you get one.
+
+
+      [SCRIPT] Be precise about the last row or it becomes a rule that
+      breaks next class. A timestamp arrives as text when the rows come
+      through a **file**. Read straight out of the database over a live
+      connection, the type survives and pandas gets a real date with no
+      conversion. That is next class's content, and the contrast is
+      exactly what makes today's point land.
+
+
+      [SCRIPT] The table says "Text" rather than a specific label on
+      purpose. pandas 2.x prints that as `object` and pandas 3.0 and later
+      prints it as `str`. Naming the concept rather than one version's
+      label keeps this slide correct on whichever pandas the room actually
+      has installed.
+
+  - type: check_understanding
+    prompt: "`df.dtypes` shows `created_date` as text, but in the database that same column was a real `TIMESTAMP`. What happened?"
+    mode: poll
+    topic: "Types Don't Travel"
+    bloom_level: understand
+    question_style: conceptual
+    options:
+      - "The file stored it as text, and nothing re-declared it as a date"
+      - "pandas cannot store dates at all"
+      - "The database exported the wrong column"
+    answer:
+      correct: "The file stored it as text, and nothing re-declared it as a date"
+      explanation: "A column's type lives in the database's own schema, not in the rows. A CSV holds only characters, so pandas guesses a type per column as it reads, and text is the safe guess. Calling `pd.to_datetime()` is what turns it back into a real date."
+      source: "pandas `read_csv` documentation on per-column type inference, pandas.pydata.org/docs/reference/api/pandas.read_csv.html"
+    skill_tags: ["python", "dtypes"]
+    notes: >
+      [ACTIVITY] Poll: read the three options, count hands on each, then
+      reveal. Online: post the three options in chat as 1/2/3 and have
+      everyone type a number. 45 seconds.
+
+
+      [SCRIPT] Option two is worth pausing on before dismissing it.
+      pandas has a genuinely good datetime type, which is exactly why
+      the fix is one function call rather than a workaround.
+
+  - type: transition
+    from_label: "You Can Name the Parts"
+    to_label: "Now Ask the Same Question Twice"
+    note: "Nearly every clause you already write in SQL has a pandas move that does the same job to the same rows."
+    objective_index: 2
+    notes: >
+      [SCRIPT] [~28 min mark] Pivot from vocabulary to action. Naming the
+      parts is objective one. Doing something with them is objective two.
+
+  - type: table
+    title: "One Question, **Two Languages**"
+    headers:
+      - "The Question"
+      - "In SQL"
+      - "In pandas"
+    rows:
+      - - "First few rows"
+        - "`LIMIT 5`"
+        - "`.head()`"
+      - - "Keep some rows"
+        - "`WHERE`"
+        - "A True/False mask"
+      - - "How many rows"
+        - "`COUNT(*)`"
+        - "`len(df)`"
+      - - "Count per value"
+        - "`GROUP BY`"
+        - "`.value_counts()`"
+      - - "Pick columns"
+        - "`SELECT a, b`"
+        - "`df[[\"a\", \"b\"]]`"
+      - - "Sort"
+        - "`ORDER BY`"
+        - "`.sort_values()`"
+    notes: >
+      [SCRIPT] Do not read all six. Read two, then ask the room to
+      predict the pandas side of a third before revealing it. This one is
+      worth photographing or copying down, unlike most slides today, since
+      it is the reference people will actually reach for next class.
+
+
+      [SCRIPT] Be honest about the limits of the mapping: these line up
+      cleanly, but not everything does. Window functions and recursive
+      queries have no one-line pandas twin, and pandas has reshaping
+      moves SQL has no clean equivalent for either. The point is that a
+      lot of your SQL instinct transfers, not that the two are the same
+      language.
+
+
+      [MISCONCEPTIONS] `.value_counts()` is not a full `GROUP BY`. It
+      counts occurrences of one column's values. Grouping and then
+      aggregating something else is `.groupby()`, which this room has
+      already used.
+
+  - type: compare_contrast
+    title: "One **Whole Question**, Written Twice"
+    left_label: "In SQL"
+    left_icon: "database"
+    left_points:
+      - "`SELECT complaint_type,`"
+      - "`  COUNT(*)`"
+      - "`FROM requests`"
+      - "`WHERE borough = 'BRONX'`"
+      - "`GROUP BY complaint_type`"
+    right_label: "In pandas"
+    right_icon: "python"
+    right_points:
+      - "`mask = df[\"borough\"]`"
+      - "`  == \"BRONX\"`"
+      - "`bronx = df[mask]`"
+      - "`bronx[\"complaint_type\"]`"
+      - "`  .value_counts()`"
+    similarities:
+      - "Same rows in, same counts out"
+    notes: >
+      [SCRIPT] Read the SQL side top to bottom first, the way the room
+      already reads SQL. Then walk the pandas side and match it clause by
+      clause out loud: the `WHERE` became the mask on the first line, the
+      `SELECT` of one column became the bracket lookup, and the `GROUP BY`
+      plus `COUNT(*)` collapsed into `.value_counts()`.
+
+
+      [SCRIPT] Name the two-step move on the pandas side explicitly, since
+      the very next code slide inlines it: `mask` is not the rows, it is
+      one True or False per row. Handing that back to `df[...]` is what
+      actually keeps the True ones. SQL hides that step inside `WHERE`.
+
+
+      [SCRIPT] Point out the ordering difference honestly, because someone
+      will notice it. SQL names the columns first and filters later.
+      pandas filters first and picks the column after. Same result, and
+      the reading order genuinely flips. That is one real reason the
+      translation feels awkward at first even when the concepts match.
+
+
+      [MISCONCEPTIONS] `.value_counts()` doing the work of both `GROUP BY`
+      and `COUNT(*)` at once looks like pandas being magic. It is not
+      general: it counts how often each value appears in one column.
+      Grouping by one column and summing a different one is `.groupby()`,
+      which this room already has.
+
+  - type: transition
+    from_label: "On Paper"
+    to_label: "Code Along: Run the pandas Side for Real"
+    note: "A translation table is easy to nod along to. Typing it is what proves you can actually do it."
+    style: "icon_hero"
+    icon: "python"
+    notes: >
+      [SCRIPT] Back into the notebook for one more cell.
+
+  - type: code
+    title: "A `WHERE` Clause Is Just a **True/False Mask**"
+    language: python
+    terminal_label: "analysis"
+    code: |
+      bronx = df[df["borough"] == "BRONX"]
+
+      print(len(bronx), "Bronx requests")
+      print(bronx["complaint_type"].value_counts())
+    blanked_code: |
+      bronx = df[df["____"] == "BRONX"]
+
+      print(len(bronx), "Bronx requests")
+      print(bronx["complaint_type"].value_counts())
+    starter_code: |
+      # TODO: WHERE borough = 'BRONX', in pandas
+      bronx = ...
+
+      # TODO: COUNT(*) of what is left
+      ...
+
+      # TODO: GROUP BY complaint_type, in pandas
+      ...
+    code_along: true
+    domain: "public_sector"
+    doc_url: "https://pandas.pydata.org/docs/user_guide/indexing.html#boolean-indexing"
+    skill_tags: ["python", "boolean-filtering"]
+    analogy:
+      domain: "community"
+      mapping: "A guest list at the door, one pass marking each person yes or no, then a second pass letting only the yeses in."
+      backups:
+        - domain: "sports"
+          mapping: "A coach reads the roster and calls out starter or bench for each name, then only the starters walk onto the court."
+        - domain: "fashion"
+          mapping: "Sorting a closet by tagging every item keep or donate first, then carrying only the keep pile back to the rack."
+    notes: >
+      [ACTIVITY] Fill in the blank. Give 30 seconds before advancing to
+      the answer. In person: ask someone to say the missing column name
+      out loud. Online: everyone types it in chat at the same time.
+
+
+      [SCRIPT] After the reveal, slow down on what the inner part
+      actually produces. `df["borough"] == "BRONX"` is not the filter. It
+      is fifteen True/False values, one per row. Handing that back to
+      `df[...]` is what keeps the True ones. That is exactly the job
+      `WHERE` does inside the database, just written out in the open.
+
+
+      [SCRIPT] Point at the two printed numbers: three Bronx rows, and a
+      count per complaint type. That is a `WHERE` and a `GROUP BY` in two
+      lines of pandas.
+
+
+      [SCRIPT] Heads up on a real difficulty gap: the blank on this slide
+      is one word, a 30-second whole-room beat. The same cell in the
+      student notebook asks for all three lines, including the count and
+      the grouping. That is deliberate, but do not assume finishing the
+      slide means everyone can finish the notebook cell unaided.
+
+
+      [MISCONCEPTIONS] A very common early mistake is writing
+      `df["borough" == "BRONX"]`, with the comparison inside the
+      brackets. That compares two strings, gets `False`, and asks the
+      DataFrame for a column named `False`. Show that error on purpose if
+      time allows, it is the fastest way to make the two-step nature of a
+      mask stick.
+
+  - type: check_understanding
+    prompt: "You want one number, the count of Bronx noise complaints in a 311 table with 30 million rows. Where should the counting happen?"
+    mode: game
+    topic: "Where the Work Happens"
+    bloom_level: analyze
+    question_style: interview
+    technique: "QAR"
+    options:
+      - "Count in SQL, then load the single number"
+      - "Load all 30 million rows into pandas, then count"
+      - "Either one, it makes no real difference"
+    answer:
+      correct: "Count in SQL, then load the single number"
+      explanation: "A DataFrame has to fit in your machine's memory, and every row you pull crosses the network first. The database can count all 30 million rows where they already sit and hand back one number. Pulling everything first and filtering later is what turns a fast query into a stalled laptop."
+      source: "Haki Benita, \"Practical SQL for Data Analysis\" (2021), which benchmarks database-side aggregation against pulling every row into pandas"
+    skill_tags: ["python", "sql"]
+    notes: >
+      [TECHNIQUE] Use QAR, Question then Assumption then Risk. This is a
+      real interview question, and it is deliberately underspecified: the
+      honest answer names the missing information, which here is the row
+      count. Coach whoever answers to say the assumption out loud rather
+      than just picking an option, since that is the difference between a
+      guess and an analyst's answer.
+
+
+      [ACTIVITY] Quick-fire game: read the question, count to three out
+      loud, everyone answers at once by holding up 1, 2, or 3 fingers.
+      Online: everyone types 1, 2, or 3 in chat on the count of three, so
+      nobody just copies the first answer posted.
+
+
+      [SCRIPT] Push past the right answer to the reasoning. Ask whoever
+      answered first why option three is tempting: on the fifteen-row
+      file we just used, it genuinely makes no difference. Scale is the
+      only thing that changes the answer, and that is exactly the
+      judgment a working analyst gets paid for.
+
+
+      [MISCONCEPTIONS] Some people assume pandas is simply slower than
+      SQL. That is not the claim. On data that already fits in memory
+      pandas is often faster. The claim is narrower: moving 30 million
+      rows across a network so you can throw almost all of them away is
+      the expensive part, not pandas itself.
+
+  - type: compare_contrast
+    title: "The Real Difference Is **Where It Lives**"
+    left_label: "SQL Table"
+    left_icon: "database"
+    left_points:
+      - "Sits on the database server"
+      - "The database does the work"
+      - "Still there after you log off"
+    right_label: "DataFrame"
+    right_icon: "data_frame"
+    right_points:
+      - "Sits in your own memory"
+      - "Your own laptop does the work"
+      - "Gone when the notebook restarts"
+    similarities:
+      - "Both have rows and named columns"
+    notes: >
+      [SCRIPT] This slide is the answer to "so which one do I use." Not
+      either/or. You query in SQL to get the rows worth having, then
+      analyze those rows in pandas. That is literally the shape of the
+      project: connect, query, load, summarize.
+
+
+      [SCRIPT] Be honest about the simplification rather than
+      overclaiming it. "On the server" and "in your memory" is the right
+      mental model, but a database also holds plenty of data in RAM for
+      speed, and pandas can work through a file in chunks when it will
+      not fit. The durable distinction is who owns the data and who does
+      the computing, not literally disk versus memory.
+
+
+      [MISCONCEPTIONS] "Gone when the notebook restarts" surprises people
+      who have been treating a notebook like a saved document. Say it
+      plainly, and attach the real word out loud rather than putting it on
+      the slide: what restarts is the kernel, the Python process behind
+      the notebook. The notebook file is saved. The DataFrame inside it is
+      not. Rerunning the cells is how it comes back.
+
+  - type: transition
+    from_label: "Two Shapes, One Idea"
+    to_label: "The Tool That Sets All This Up"
+    note: "Reaching a real database needs real packages installed, and this module installs them a new way."
+    objective_index: 3
+    style: "panel_preview"
+    preview_items:
+      - text: "What `uv` actually is"
+        icon: "package"
+      - text: "Why not bare `pip`"
+        icon: "bolt"
+    notes: >
+      [SCRIPT] [~43 min mark] Last section, and a short one. Frame it as
+      logistics with a real reason behind it, not a detour.
+
+  - type: content
+    title: "`uv` Installs Your Packages, and **Locks** Them"
+    bullets:
+      - "A Python package and project manager"
+      - "Made by Astral, written in Rust"
+      - "Does `pip` and `venv` in one tool"
+      - "Astral measures it 10-100x faster"
+      - "Writes a lock file of exact versions"
+    icon_hero:
+      icon: "package"
+      style: "gold"
+    notes: >
+      [SCOPE] Today is what it is and why we use it, nothing more. The
+      real hands-on setup, creating the environment and installing
+      `pandas`, `psycopg2-binary`, and `sqlalchemy`, happens on the
+      project's own first setup day. Do not turn this into a tooling
+      tutorial. Two minutes.
+
+
+      [SCRIPT] Answer what, why, and who, in that order. What: one command
+      line tool that installs packages and manages the isolated
+      environment they live in, so it covers what `pip` and `venv` did
+      separately. Why: speed and reproducibility. Astral, the company that
+      makes it, measures it at 10 to 100 times faster than `pip`, and it
+      writes a lock file recording the exact versions that worked. Who:
+      Astral also makes `ruff`, which is widely used in professional
+      Python work, and `uv` is what this module's own project asks you to
+      set up.
+
+
+      [MISCONCEPTIONS] Be careful with the speed number rather than
+      repeating it flatly. It is Astral's own benchmark, and the 100x end
+      of that range is measured with a warm cache, meaning packages
+      already downloaded once. Everyday first-time installs land nearer
+      the low end. Say "Astral measures it at" rather than stating it as
+      neutral fact, and model that habit out loud: a vendor benchmark is
+      evidence, not proof.
+
+
+      [SOURCES] Vendor, language, and the 10-100x claim all from Astral's
+      own README and docs, github.com/astral-sh/uv and docs.astral.sh/uv,
+      which link the number to their own BENCHMARKS.md. That benchmark's
+      own caption reads "Installing Trio's dependencies with a warm
+      cache," which is the basis for the caveat above.
+
+  - type: check_understanding
+    prompt: "Would you rather join a team that pins every package version in a lock file? Or one that installs the latest each time, and finds breakage early?"
+    mode: would_you_rather
+    topic: "Reproducible Environments"
+    bloom_level: evaluate
+    question_style: critical_thinking
+    skill_tags: ["python", "uv"]
+    notes: >
+      [ACTIVITY] Would You Rather. In person: everyone physically moves
+      to one side of the room, then two people from each side justify the
+      pick out loud. Online: post both options in chat, everyone types A
+      or B, then unmute one person per side. The justification is the
+      point, not the vote.
+
+
+      [SCRIPT] Both sides are genuinely defensible, so do not let the room
+      settle on one too fast. Pinned versions mean your code runs the same
+      today and in six months, and it means somebody has to deliberately
+      update the file or you quietly fall behind on security fixes.
+      Always-latest means you find breakage the day it happens instead of
+      the day you ship, and it means a build can break for reasons nobody
+      changed. Push whoever answers to name the cost of their own pick.
+
+
+      [SCRIPT] Land it on the project: the project's own stretch goal
+      asks for a committed lockfile and a clean reinstall from it. This
+      is the reasoning behind why that is worth points.
+
+
+      [MISCONCEPTIONS] People hear "lock file" and think it locks you out
+      of updating. It does not. It records exactly what was installed, so
+      an update becomes a deliberate, reviewable change instead of
+      something that happens to you silently. That gap between "what to
+      install" and "which versions actually worked together" is where "it
+      works on my machine" comes from.
+
+  - type: interview_prep
+    topics:
+      - question: "Should an aggregation happen in SQL or in pandas, and how do you decide?"
+        short_answer: "Question: How big is that table, and what do I need next? Assumption: If it is millions of rows and I only want per-borough counts, the database should run the `GROUP BY` and hand me a few hundred rows. Risk: If I guess wrong and pull it all into pandas, I burn memory and network time on rows I throw away. So aggregate in SQL to shrink the result, then reshape and chart in pandas."
+        technique: "QAR"
+        icon: "sql"
+      - question: "How would you explain what a DataFrame is to someone who only knows SQL?"
+        short_answer: "Audience: They already think in tables, so build on that. Simplify: A DataFrame is a table living in Python's memory, with rows, named columns, and one type per column. Analogy: The SQL table is the filing cabinet the database owns; the DataFrame is the photocopy on my desk I can mark up without touching the original. Check: Want me to show one query written both ways?"
+        technique: "Teach-Back"
+        icon: "data_frame"
+    notes: >
+      [TECHNIQUE] The first question uses QAR, Question then Assumption
+      then Risk, because it is genuinely underspecified. There is no right
+      answer without knowing the table size and what happens next, so the
+      strong candidate names the missing information instead of picking a
+      side and defending it.
+
+
+      [TECHNIQUE] The second uses Teach-Back, Audience then Simplify then
+      Analogy then Check, because "explain X to someone who knows Y" is
+      literally a teaching request. The check at the end matters as much
+      as the explanation: offering to show it is what an interviewer reads
+      as confidence rather than recitation.
+
+
+      [SCRIPT] Have someone attempt the first one cold before revealing
+      the answer slide. Both of these are real, commonly asked questions
+      for this role level, not warm-ups, so keep the register serious
+      here even though the rest of today is light.
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "DataFrame"
+        - "A pandas table in memory"
+      - - "Series"
+        - "One column, on its own"
+      - - "`dtype`"
+        - "A column's type in pandas"
+      - - "in-memory"
+        - "Held in RAM, not on disk"
+      - - "`uv`"
+        - "Fast package and env manager"
+    notes: >
+      [SCRIPT] Fast round trip through all five before the summary. Ask
+      the room to supply the definition for two of them rather than
+      reading every row yourself. This is the exact vocabulary the
+      project's own notebook expects you to use correctly.
+
+  - type: bridge
+    title: "So Far, We've Covered..."
+    bullets:
+      - "Same data, two shapes"
+      - "Types can change in transit"
+      - "Most SQL clauses have a pandas move"
+      - "Query in SQL, analyze in pandas"
+      - "Your project checks both give one result"
+    notes: >
+      [SCRIPT] Resolve the opening case study by name before anything
+      else. The question was what can change when data moves between
+      tools, and today gave the answer twice: the gene names changed
+      because a tool guessed a type, and `created_date` arrived as text
+      for exactly the same reason. Nothing was corrupted, nothing threw
+      an error. A tool made a reasonable guess and nobody checked it.
+
+
+      [SCRIPT] Tie forward to the project without naming a specific day:
+      the project asks you to query your own database two different ways
+      and confirm both give the same result. "The same result" is only a
+      checkable idea because a query result and a DataFrame are the same
+      rows in different containers. That is what today built.
+
+
+      [SCRIPT] Name the honest limit of today too: you loaded a file, not
+      a live database. Closing that gap is the next thing this module
+      does.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "Confirm Python and `uv` are installed"
+      - "Confirm your database still connects"
+      - "Redo today's three cells from blank"
+      - "Come ready to type, not just watch"
+    exercise:
+      type: bullets
+      url_or_text: "Redo today's three notebook cells from the blank student notebook. Then confirm Python and `uv` are installed, and confirm you can still reach the PostgreSQL database you built in the SQL module."
+      label: "Practice: The student notebook"
+    video_resource:
+      title: "Why Python Developers Are Switching to UV"
+      url: "https://www.youtube.com/watch?v=5rTwOt9Qgik"
+      approx_duration: "9 min"
+      note: "Free, no account needed. Optional background before setup day."
+    notes: >
+      [SCRIPT] Name the practice ask plainly: the student notebook has the
+      same three cells with the answers taken out. Twenty minutes redoing
+      them from blank is the whole difference between having watched
+      today and being able to do it next class, when the same moves happen
+      against a live database instead of a file.
+
+
+      [SCRIPT] Be specific about the database check, because it is the
+      one that can quietly go wrong: everyone should actually connect and
+      run one small query, not just assume it is fine. If a database did
+      not survive, there is a real rebuild path, and finding that out now
+      costs minutes instead of a whole project day.
+
+
+      [SCRIPT] Point at the video as optional, not homework. It is nine
+      minutes on why `uv` exists, and it is background for the setup work
+      the project's own first day asks for, not something to quiz anyone
+      on.
+
+
+      [SCRIPT] Remind people how to reach office hours before the next
+      class rather than discovering a broken setup during it.
+
+  - type: further_resources
+    resources:
+      - title: "pandas: Comparison with SQL"
+        url: "https://pandas.pydata.org/docs/getting_started/comparison/comparison_with_sql.html"
+        kind: documentation
+        time_estimate: "~20 min read"
+        description: "Every SQL clause mapped to its pandas equivalent"
+        attribution: "pandas development team"
+      - title: "Pandas Tutor"
+        url: "https://pandastutor.com/"
+        kind: practice
+        time_estimate: "~10 min hands-on"
+        description: "Watch your own pandas code reshape a DataFrame"
+        attribution: "Sam Lau and Philip Guo, UC San Diego"
+      - title: "Practical SQL for Data Analysis"
+        url: "https://hakibenita.com/sql-for-data-analysis"
+        kind: reading
+        time_estimate: "~35 min read"
+        description: "When the database should do the work, not pandas"
+        attribution: "Haki Benita"
+    notes: >
+      [SCRIPT] Point at the first one specifically as the reference to
+      keep open all module: it is the long version of today's translation
+      table, straight from the people who build pandas. Pandas Tutor is
+      the one to open when a chained operation stops making sense, since
+      it shows the intermediate DataFrame a notebook hides.
+
+
+      [SCRIPT] The third is longer and heavier than the other two, and
+      that is deliberate. It benchmarks the "where should the work happen"
+      question with real numbers, which is exactly the reasoning behind
+      today's quick-fire question. Skimming just its aggregation sections
+      is about ten minutes and still worth it.
+
+
+      [SCRIPT] For anyone who wants the full video treatment, Greg Reda's
+      PyData talk "Translating SQL to pandas. And back." covers this
+      ground properly, but it runs over an hour, which is why it is not on
+      the slide.

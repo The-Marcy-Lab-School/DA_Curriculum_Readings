@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>It Runs. But Is It Right? — Reviewing AI-Suggested Database Code</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:880px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:11rem}
+.ai-msg{border:2px solid var(--mlrk-blue-700);border-radius:12px;padding:1rem 1.2rem;background:var(--mlrk-blue-100);margin:1rem 0}
+.ai-msg-tag{display:inline-block;font-size:.9rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  background:var(--mlrk-blue-700);color:var(--mlrk-white);border-radius:999px;padding:.15rem .6rem;margin-bottom:.5rem}
+.sa-opt{display:block;margin:.5rem 0;line-height:1.5}
+@media(max-width:650px){h2{font-size:1.5rem}}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>It Runs. But Is It Right?</h1>
+<p class="mlrk-lead">An analyst at a telehealth company asks a free AI coding assistant for a small Python function that pulls one patient's appointment history out of a database. The function comes back in seconds. She runs it, and four rows appear. The dates look right. Nothing turns red. Three separate problems are still sitting inside it, and none of them will announce themselves. This reading is about finding them.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~37&ndash;40 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>AI Literacy</strong> &mdash; Using an AI tool thoughtfully, and being able to explain in writing what it got right, what it missed, and how you verified its answer.</p>
+    <p><strong>Attention to Detail</strong> &mdash; Independently catching a planted bug, edge case, or inconsistency that a surface-level read-through would miss.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Introduction</h2>
+<p>Northway Telehealth is a <strong>telehealth</strong> company, which means its doctors see patients over video calls instead of in an office. Every visit creates a record in the company's <strong>database</strong>, an organized store of data that programs can ask questions of.</p>
+<p>Rosa is an analyst there. She needs a small Python function that pulls one patient's appointment history out of that database, so she can check a report against the raw records. She is in a hurry. So she asks a free AI coding assistant to write it for her.</p>
+<p>Ten seconds later, she has a function. She runs it with a real patient id number. Four rows come back. The dates look right. The visit types look right. Nothing turns red.</p>
+<p>So it's finished, right?</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 880 400" role="img" aria-labelledby="draftTitle draftDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="draftTitle">An AI-drafted lookup function that runs, and three problems still hidden inside it</title>
+  <desc id="draftDesc">Three boxes in a row. First, an analyst asks a free AI assistant for a lookup function. Second, the AI writes one in a few seconds, confidently. Third, it runs and returns four real-looking rows, and nothing turns red. An arrow leads down from that third box into a wider box titled "Three things the AI never showed her", listing: the patient id is pasted straight into the query text; if the query fails, the connection is never closed; and the function's own description promises something it never does.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="10" y="45" width="250" height="100" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="135" y="80" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">An analyst asks a free</text>
+    <text x="135" y="105" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">AI assistant for a</text>
+    <text x="135" y="130" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">lookup function</text>
+
+    <polygon points="266,89 285,89 285,82 300,95 285,108 285,101 266,101" fill="#264326"/>
+
+    <rect x="306" y="45" width="250" height="100" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="431" y="80" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">The AI writes one</text>
+    <text x="431" y="105" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">in a few seconds,</text>
+    <text x="431" y="130" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">sounding certain</text>
+
+    <polygon points="562,89 581,89 581,82 596,95 581,108 581,101 562,101" fill="#264326"/>
+
+    <rect x="602" y="45" width="268" height="100" rx="14" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="736" y="80" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">It runs. It returns</text>
+    <text x="736" y="105" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">four real-looking rows.</text>
+    <text x="736" y="130" text-anchor="middle" font-size="17" font-weight="700" fill="#261F1D">Nothing turns red.</text>
+
+    <path d="M736,145 L736,198" fill="none" stroke="#264326" stroke-width="3"/>
+    <polygon points="736,214 727,197 745,197" fill="#264326"/>
+
+    <rect x="40" y="215" width="800" height="165" rx="14" fill="#F7DFDF" stroke="#C92929" stroke-width="3"/>
+    <text x="70" y="250" font-size="18" font-weight="800" fill="#261F1D">Three things the AI never showed her:</text>
+    <text x="70" y="290" font-size="17" fill="#261F1D">1. The patient id is pasted straight into the query text.</text>
+    <text x="70" y="320" font-size="17" fill="#261F1D">2. If the query fails, the connection is never closed.</text>
+    <text x="70" y="350" font-size="17" fill="#261F1D">3. Its own description promises something it never does.</text>
+  </g>
+</svg>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> "Do you have a checklist for reviewing AI-written code?" is now a real question asked in real junior data and engineering interviews. Employers ask it because everyone's AI tool produces code that runs. The thing they cannot tell from a resume is whether you read what it handed you. On the job, the same gap shows up in a quieter way: the code you accept from an AI tool ships under your name, and nobody in the room later asks whether a person or a tool typed it.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to read a Python function, and you know the shape of talking to a database from Python: open a connection, run a query, get rows back. This reading is about the step after that. You read a function someone else wrote, decide what is actually wrong with it, and write the specific fix. That habit carries into every code review you ever sit in, whether the author was a tool or a teammate.</p>
+</div>
+
+<div class="mlrk-callout mlrk-callout-gold">
+<p><strong>One plain word about the data here.</strong> Patient appointment records are names, dates, and visit types belonging to real people's health histories. They are protected for good reason. A lookup function that can be talked into returning the whole table is a real problem on the day it ships, not a tidy-up task for later. This is a good place to practice careful review precisely because the stakes are easy to see.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall first</h2>
+<p class="mlrk-small">Three skills are prerequisites for this reading: knowing what an f-string does with a variable, reading what an empty list returned from a function actually means, and knowing why an open database connection has to be closed. Check each one before moving on.</p>
+
+<div class="mlrk-card" id="card-fstring"><p><strong>Coding check:</strong> <code>city = "Queens"</code>. What is the value of <code>f"Welcome to {city}!"</code>?</p>
+<button type="button" class="mlrk-choice" data-a="pasted">The text <code>Welcome to Queens!</code> &mdash; the variable's value gets pasted into the string.</button>
+<button type="button" class="mlrk-choice" data-a="literal">The text <code>Welcome to {city}!</code>, exactly as typed.</button>
+<button type="button" class="mlrk-choice" data-a="error">An error, because you cannot put a variable inside a string.</button>
+<div id="fstringfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-emptylist" style="margin-top:.8rem"><p><strong>A function that looks up records returns <code>[]</code>, an empty list. What does that tell you?</strong></p>
+<button type="button" class="mlrk-choice" data-a="noerror">The code ran without any error and simply found no matching records.</button>
+<button type="button" class="mlrk-choice" data-a="crashed">The code crashed partway through.</button>
+<button type="button" class="mlrk-choice" data-a="norun">The function never ran at all.</button>
+<div id="emptylistfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-close" style="margin-top:.8rem"><p><strong>Scenario check:</strong> your script opens a connection to a database but never closes it. The script keeps running. Why is that a problem?</p>
+<button type="button" class="mlrk-choice" data-a="slots">A database server allows only so many open connections at once. Leaving them open uses up those slots until new work gets refused.</button>
+<button type="button" class="mlrk-choice" data-a="deletes">Leaving a connection open deletes the rows you already read.</button>
+<button type="button" class="mlrk-choice" data-a="nothing">Nothing. A connection closes itself the moment a function returns.</button>
+<div id="closefb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. The draft that runs</h2>
+<p>Here is exactly what Rosa typed into the AI assistant, and exactly what came back.</p>
+
+<div class="ai-msg">
+<span class="ai-msg-tag">Rosa asked</span>
+<p>"Write a Python function that takes a patient id and returns that patient's appointment history from our PostgreSQL database."</p>
+</div>
+
+<p class="mlrk-small">Two names in that request, defined: <strong>PostgreSQL</strong> is a widely used database system. <strong>SQL</strong> stands for Structured Query Language, the language you write in to ask a database for data. A single request written in SQL is called a <strong>query</strong>.</p>
+
+<div class="ai-msg">
+<span class="ai-msg-tag">The AI replied</span>
+<p>"Here's a clean function for that. It opens a connection, runs the lookup, and closes the connection when it's done."</p>
+</div>
+
+<pre class="mlrk-code"> 1  def get_appointment_history(patient_id):
+ 2      """Return every appointment for one patient.
+ 3      Raises an error if no patient with that id exists.
+ 4      """
+ 5      conn = psycopg2.connect(os.environ["DATABASE_URL"])
+ 6      cur = conn.cursor()
+ 7      query = (f"SELECT visit_date, visit_type FROM appointments "
+ 8               f"WHERE patient_id = '{patient_id}'")
+ 9      cur.execute(query)
+10      rows = cur.fetchall()
+11      conn.close()
+12      return rows</pre>
+
+<p>A quick tour of what each part is, so nothing here is a mystery word:</p>
+<ul>
+<li><strong>Lines 2 to 4</strong> are a <strong>docstring</strong>: a note inside the function describing what it does. Other people read it to learn how the function behaves.</li>
+<li><strong>Line 5</strong> opens the <strong>connection</strong>, an open line of communication between the Python program and the database. <code>psycopg2</code> is the Python library that lets Python talk to a PostgreSQL database. <code>os.environ["DATABASE_URL"]</code> reads the database address out of an <strong>environment variable</strong>, a setting stored on the computer rather than typed into the file. That keeps passwords out of the code, and it is the right thing to do.</li>
+<li><strong>Line 6</strong> creates a <strong>cursor</strong>, the object you actually hand a query to.</li>
+<li><strong>Lines 7 and 8</strong> build the query text. The <code>f</code> in front of each piece makes it an f-string, so whatever <code>patient_id</code> holds gets pasted right into the text.</li>
+<li><strong>Line 9</strong> sends the query to the database. <strong>Line 10</strong> collects every row it found. <strong>Line 11</strong> closes the connection. <strong>Line 12</strong> hands the rows back.</li>
+</ul>
+
+<p>Rosa calls it with a real id and gets four rows of real appointments. Every claim the AI made about it sounds true. It does open a connection. It does run the lookup. And it does call <code>conn.close()</code>, right there on line 11.</p>
+
+<div class="mlrk-card" id="card-runsright"><p><strong>True or False: a function that runs without any error and returns believable-looking rows has been verified as correct.</strong></p>
+<button type="button" class="mlrk-choice" data-a="false">False</button>
+<button type="button" class="mlrk-choice" data-a="true">True</button>
+<div id="runsrightfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Technical vocabulary</h2>
+<p>Flip each card before the practice activities below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>code review</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Code review</strong><br>Reading code someone else wrote closely enough to actually catch what is wrong with it, before it gets used for anything real.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>SQL injection</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>SQL injection</strong><br>When text someone types gets read by the database as SQL commands instead of as plain data, so that text can change what the query actually does.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>parameterized query</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Parameterized query</strong><br>A query where the value is handed to the database driver separately instead of being pasted into the query text, so it can never be read as SQL.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>placeholder</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Placeholder</strong><br>The marker you leave in the query text to say "a value goes here." In <code>psycopg2</code> it is always <code>%s</code>, even for a number.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>hallucination</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Hallucination</strong><br>An AI tool stating something that sounds confident and correct but is simply made up. The tone gives you no warning either way.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>connection leak</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Connection leak</strong><br>A database connection your code opened and never closed, so the server keeps holding it open for nothing.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Find the problems</h2>
+<p>This is the whole job. Read the function above line by line, then pick every statement that is a real problem with <em>this</em> code. There are more true statements than one.</p>
+
+<div class="mlrk-card"><p><strong>Select every statement below that names a real problem in the AI's draft.</strong></p>
+<label class="sa-opt"><input type="checkbox" class="sa-box" value="a"> The patient id is pasted directly into the query text instead of being handed to the database as a separate value.</label>
+<label class="sa-opt"><input type="checkbox" class="sa-box" value="b"> If line 9 fails, <code>conn.close()</code> on line 11 never runs.</label>
+<label class="sa-opt"><input type="checkbox" class="sa-box" value="c"> The docstring on line 3 describes behavior this function does not actually have.</label>
+<label class="sa-opt"><input type="checkbox" class="sa-box" value="d"> Line 5 should not read the database address from <code>os.environ</code>.</label>
+<label class="sa-opt"><input type="checkbox" class="sa-box" value="e"> <code>cur.fetchall()</code> on line 10 is not a real <code>psycopg2</code> method.</label>
+<label class="sa-opt"><input type="checkbox" class="sa-box" value="f"> Returning a list is wrong here, because a lookup should return one record.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+<details class="mlrk-hint"><summary>Need a hint?</summary><p>Two of the six describe things the code does correctly, and one describes a rule that does not apply to this function at all. For each statement, find the exact line it is talking about and read that line on its own before deciding.</p></details>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Problem one, up close: the query is built from raw input</h2>
+<p>Look at lines 7 and 8 again on their own.</p>
+<pre class="mlrk-code">query = (f"SELECT visit_date, visit_type FROM appointments "
+         f"WHERE patient_id = '{patient_id}'")</pre>
+<p>Whatever <code>patient_id</code> holds gets pasted into the query text before the database ever sees it. The database does not receive a query plus a value. It receives one finished string and reads the whole thing as instructions.</p>
+<p>With a normal id like <code>4102</code>, the finished query is exactly what you would expect:</p>
+<pre class="mlrk-code">SELECT visit_date, visit_type FROM appointments
+WHERE patient_id = '4102'</pre>
+<p>Now suppose <code>patient_id</code> does not arrive as a plain number. Suppose it arrives as this piece of text, typed into a search box on an internal tool:</p>
+<pre class="mlrk-code">4102' OR '1'='1</pre>
+<p>Paste that in the same way and the finished query becomes:</p>
+<pre class="mlrk-code">SELECT visit_date, visit_type FROM appointments
+WHERE patient_id = '4102' OR '1'='1'</pre>
+
+<div class="mlrk-card" id="card-inject"><p><strong>What does the database do with that second query?</strong></p>
+<details class="mlrk-hint"><summary>Need a hint?</summary><p>Read the condition after <code>WHERE</code> as two tests joined by <code>OR</code>. Ask yourself whether the second test, <code>'1'='1'</code>, is ever false for any row.</p></details>
+<button type="button" class="mlrk-choice" data-a="all">Returns every appointment row in the table, for every patient.</button>
+<button type="button" class="mlrk-choice" data-a="error">Refuses the query and raises an error, because that is not a real id.</button>
+<button type="button" class="mlrk-choice" data-a="none">Returns nothing, because no patient id matches that text.</button>
+<div id="injectfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p>That is <strong>SQL injection</strong>: text someone typed gets read as SQL commands instead of as data, and it changes what the query does. No error appears. The function returns a list of rows, exactly like it always does. It is just the wrong list.</p>
+
+<p>The fix is a <strong>parameterized query</strong>. You leave a <strong>placeholder</strong> in the query text and hand the real value to <code>psycopg2</code> separately, as a second argument to <code>execute()</code>. The driver then treats that value as data only. It can never become part of the SQL.</p>
+
+<pre class="mlrk-code">query = ("SELECT visit_date, visit_type FROM appointments "
+         "WHERE patient_id = %s")
+cur.execute(query, (patient_id,))</pre>
+<p class="mlrk-small">The <code>(patient_id,)</code> is a tuple holding one value. The trailing comma is what makes it a tuple rather than just a value in parentheses. And notice the placeholder has no quote marks around it. <code>psycopg2</code> adds whatever quoting the value needs.</p>
+
+<div class="mlrk-fillblank">
+  <label for="blankph">Type the placeholder <code>psycopg2</code> uses to stand in for a value inside a query string:</label>
+  <input type="text" id="blankph" autocomplete="off">
+  <button type="button" id="blankphcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankphfb" class="mlrk-feedback" tabindex="-1"></div>
+
+<p>Run that same suspicious text through the parameterized version and nothing exciting happens. The database compares the literal text <code>4102' OR '1'='1</code> against real patient ids, finds no match, and returns zero rows. The query's job did not change. Whether raw input could rewrite it did.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Problem two, up close: the connection that stays open</h2>
+<p>Line 11 does call <code>conn.close()</code>, so the AI's claim that it "closes the connection when it's done" is technically true. It is only true on the happy path.</p>
+<p>Trace what happens if line 9 raises an error. Maybe the database is briefly unreachable. Maybe a column name is wrong. Python stops running the function at that point and sends the error up to whoever called it. Lines 10, 11, and 12 never get a turn. The connection opened on line 5 is still open, and now nothing in the program has a reference to it.</p>
+<p>One leaked connection is not a crisis. A function like this called inside a loop over a few hundred patients, on a day the database is having trouble, is exactly how a server runs out of connection slots and starts refusing everyone's work.</p>
+<p>The shape that fixes it is <code>try</code> and <code>finally</code>. Python guarantees that a <code>finally</code> block runs, whether the code above it finished normally or blew up partway through.</p>
+
+<pre class="mlrk-code">conn = psycopg2.connect(os.environ["DATABASE_URL"])
+try:
+    cur = conn.cursor()
+    cur.execute(query, (patient_id,))
+    return cur.fetchall()
+finally:
+    conn.close()</pre>
+
+<p>Even the <code>return</code> does not skip it. Python runs the <code>finally</code> block on the way out.</p>
+
+<div class="mlrk-fillblank">
+  <label for="blankfin">Type the keyword that starts the block Python runs no matter what, so the connection always gets closed:</label>
+  <input type="text" id="blankfin" autocomplete="off">
+  <button type="button" id="blankfincheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfinfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Problem three, up close: a promise the code never keeps</h2>
+<p>Read line 3 of the draft one more time, slowly.</p>
+<pre class="mlrk-code">Raises an error if no patient with that id exists.</pre>
+<p>Now search the body of the function for the line that would do that. There isn't one. If no appointment matches the id, <code>cur.fetchall()</code> returns an empty list, and the function hands back that empty list without complaint.</p>
+<p>This is a <strong>hallucination</strong>: the AI stated something that sounds confident and correct but is simply made up. It is not a wild invention like a fake library name. It is a small, plausible, completely wrong sentence sitting in the one place people go to find out how a function behaves.</p>
+<p>Here is the cost, in Rosa's actual week. She looks up a patient, mistypes one digit of the id, and gets an empty list back. The docstring told her an unknown id raises an error. No error appeared. So she reasonably concludes this patient has no appointments on file, and writes that into a report. The real patient has eleven.</p>
+
+<div class="mlrk-card" id="card-halluc"><p><strong>What is the honest fix for line 3?</strong></p>
+<button type="button" class="mlrk-choice" data-a="either">Either change the docstring to describe what the code really does, or add the code that raises. Pick one on purpose, then make sure they match.</button>
+<button type="button" class="mlrk-choice" data-a="delete">Delete the docstring. A function with no description cannot describe itself wrongly.</button>
+<button type="button" class="mlrk-choice" data-a="leave">Leave it. A docstring is only a comment, so it cannot cause a real problem.</button>
+<div id="hallucfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p>Rosa's team picked the first option and wrote the plain truth: <em>"Returns an empty list if this patient has no appointments on file."</em> Now anyone who gets an empty list knows exactly what it means, and knows to double-check the id they typed.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. The fixed function</h2>
+<p>Same function. Same inputs. Same rows on a normal call. Three specific things changed.</p>
+
+<pre class="mlrk-code"> 1  def get_appointment_history(patient_id):
+ 2      """Return every appointment for one patient.
+ 3      Returns an empty list if this patient has no
+ 4      appointments on file.
+ 5      """
+ 6      conn = psycopg2.connect(os.environ["DATABASE_URL"])
+ 7      query = ("SELECT visit_date, visit_type FROM appointments "
+ 8               "WHERE patient_id = %s")
+ 9      try:
+10          cur = conn.cursor()
+11          cur.execute(query, (patient_id,))
+12          return cur.fetchall()
+13      finally:
+14          conn.close()</pre>
+
+<ol class="mlrk-steplist">
+  <li><strong>Lines 3 and 4:</strong> the description now matches what the code really does.</li>
+  <li><strong>Lines 7, 8 and 11:</strong> the value travels separately from the query text, so typed input can never become SQL.</li>
+  <li><strong>Lines 9, 13 and 14:</strong> the connection closes on every path out of the function, including the one where the query fails.</li>
+</ol>
+
+<p>Notice what did not change. The variable names are fine. The function name is fine. Nothing here was about style. All three fixes were about what the code actually does while it is running.</p>
+
+<div class="mlrk-card">
+<p><strong>Write the note you would leave on this code review.</strong> In one or two sentences, name the single problem you would flag first and say plainly why it matters to Northway Telehealth. Write it for a teammate, not for a textbook.</p>
+<textarea id="whymatters" class="mlrk-response" data-save placeholder="Try starting with: The line I'd flag first is..."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Your AI code-review checklist</h2>
+<p>Everything above came from five questions asked in a deliberate order. Click the five checks below in the order you would actually run them, then check your order.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="runs"><span class="mlrk-order-num"></span> Does it run at all?</li>
+  <li class="mlrk-orderitem" data-step="right"><span class="mlrk-order-num"></span> Does it do the right thing? Check one record by hand against the source.</li>
+  <li class="mlrk-orderitem" data-step="safe"><span class="mlrk-order-num"></span> Is the input handled safely, or pasted into something?</li>
+  <li class="mlrk-orderitem" data-step="cleanup"><span class="mlrk-order-num"></span> Does it clean up after itself, on the error path too?</li>
+  <li class="mlrk-orderitem" data-step="exists"><span class="mlrk-order-num"></span> Does every name and every claim in it actually exist?</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order (self-check, not graded)</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+
+<div class="mlrk-callout mlrk-callout-green" style="margin-top:1rem">
+<p><strong>The checklist, to keep:</strong></p>
+<ol class="mlrk-steplist">
+  <li><strong>Does it run?</strong> The cheapest check, and the least informative. Running rules out only the failures loud enough to crash something.</li>
+  <li><strong>Does it do the right thing?</strong> Pick one record whose correct answer you already know and check it by hand against the source data.</li>
+  <li><strong>Is the input handled safely?</strong> Any value a user types, a form sends, or another script passes in belongs in a parameter, never pasted into a query string.</li>
+  <li><strong>Does it clean up after itself?</strong> Connections, files, and anything else opened should close on every path out, including the one where something failed.</li>
+  <li><strong>Does every name and claim actually exist?</strong> Check column names, method names, and the description. An AI can invent any of the three and sound exactly the same doing it.</li>
+</ol>
+<p>Five questions, in that order, on anything an AI hands you. That order is the point: the cheap checks first, and the ones that catch real damage last, because those are the ones worth your remaining attention.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Watch: a query turned against itself</h2>
+<p>As you watch, notice how little effort the attack takes. There is no clever tool involved. The whole thing works because the text someone typed got glued into the query, exactly like lines 7 and 8 of the draft you reviewed.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=_jKylhJtPmI" target="_blank" rel="noopener">Watch on YouTube</a>
+<p class="mlrk-small">About 9 minutes.</p>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what surprised you most, and what did the video confirm about the draft function you just reviewed?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>"Do you have a mental checklist for reviewing AI-written code?" and "tell me about a time you caught an AI tool making a mistake" are both live questions in junior data and engineering interviews right now. The reason they get asked is simple. Everyone's AI tool produces code that runs, so running is no longer evidence of anything. What an interviewer wants to hear is a process.</p>
+<p>A weak answer is a feeling: "I look it over and if something seems off I rewrite it." A strong answer is an order of operations plus one real example. Name your checks in the order you run them, then tell a short, specific story: the line, what it actually did, and what you typed instead. The five checks in section 10 are a genuine answer to the first question, and the function you just reviewed is a genuine answer to the second.</p>
+<p>The same question shows up on the engineering side with one extra beat. There, they will often push on the tradeoff out loud: reviewing every AI-written line as carefully as writing it yourself can erase the time the tool saved. The honest answer is that you spend your attention where the damage is, which is why raw input, cleanup, and invented names sit at the bottom of the checklist rather than the top.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> a teammate says an AI-drafted function is "obviously fine" because it ran once on a real id and returned rows. What is still missing from that check?</p>
+<button type="button" class="mlrk-choice" data-a="edge">A check against the cases that would actually break it, such as an id that does not exist and an id containing quote marks.</button>
+<button type="button" class="mlrk-choice" data-a="comments">More comments explaining what each line does.</button>
+<button type="button" class="mlrk-choice" data-a="nothing">Nothing. One successful run on real data is a complete check.</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>13. Summary &amp; critical thinking</h2>
+<p>One idea carried this whole reading: "it runs" and "it is correct" are two different claims, and only one of them gets proven by clicking run. The AI's draft opened a connection, built a query, and returned rows, all of it fluent and all of it fast. It still pasted typed input into SQL, still leaked its connection the moment anything failed, and still described itself wrongly in the one place people look.</p>
+<p>None of those three announced themselves. That is the part worth keeping: the problems that matter most are usually the quiet ones, and the only thing that finds them is a person reading the code on purpose, in an order they decided in advance.</p>
+
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> you ask an AI assistant for a function that deletes a customer's saved payment method by customer id. It runs, and it deletes the right one in your test. Following the checklist, which check would you spend your attention on first?</p>
+<button type="button" class="mlrk-choice" data-a="input">How the customer id is handled: if it is pasted into the query text, the wrong rows could be deleted.</button>
+<button type="button" class="mlrk-choice" data-a="names">Whether the variable names are clear enough for the next reader.</button>
+<button type="button" class="mlrk-choice" data-a="speed">Whether the function runs fast enough on a large table.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<label for="ownwords"><strong>In your own words:</strong> describe something you have accepted because it sounded confident, from a person, a tool, or a set of instructions, and it turned out to be wrong. What would have caught it earlier?</label>
+<textarea id="ownwords" class="mlrk-response" data-save placeholder="Try starting with: I once took it on faith that..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>14. Go further</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://www.hacksplaining.com/lessons/sql-injection" target="_blank" rel="noopener">Hacksplaining: SQL Injection</a> &mdash; a free, click-through lesson where you run the attack yourself in a safe sandbox and then watch the parameterized version refuse it.</li>
+<li><a href="https://www.youtube.com/watch?v=ciNHn38EyRc" target="_blank" rel="noopener">Computerphile: Running an SQL Injection Attack</a> &mdash; about 17 minutes, a slower live walkthrough against a demo site if you want to see the full attack step by step.</li>
+<li><a href="https://www.psycopg.org/docs/usage.html" target="_blank" rel="noopener">psycopg2 documentation: passing parameters to SQL queries</a> &mdash; the official source for the <code>%s</code> placeholder rule, straight from the library itself.</li>
+<li><a href="https://docs.github.com/en/copilot/tutorials/review-ai-generated-code" target="_blank" rel="noopener">GitHub Docs: Review AI-generated code</a> &mdash; a practical checklist from GitHub for the exact situation in this reading.</li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html" target="_blank" rel="noopener">OWASP: SQL Injection Prevention Cheat Sheet</a> &mdash; the reference security engineers actually use, with examples in several languages.</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>15. Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> the Download JSON button above saves the file into your computer's <code>Downloads</code> folder. Here's how to move it into a repo of your own.</p>
+
+    <details class="mlrk-hint">
+      <summary>Step 1: Make a repo on your GitHub account (one time only — collapse this afterward)</summary>
+      <ol class="mlrk-steplist">
+        <li>On GitHub, click the <strong>+</strong> in the top-right corner, then <strong>New repository</strong>.</li>
+        <li>Give it a name (something like <code>data-analytics-readings</code>) and click <strong>Create repository</strong>.</li>
+        <li>On the new repo's page, click the green <strong>Code</strong> button and copy the <strong>HTTPS</strong> URL.</li>
+        <li>In your terminal, clone it to your computer, pasting in the URL you just copied:
+          <pre class="mlrk-code">git clone https://github.com/YOUR-USERNAME/YOUR-REPO.git</pre></li>
+      </ol>
+      <p class="mlrk-small">You only do this once. For every reading after this one, start at Step 2.</p>
+    </details>
+
+    <p style="margin-top:.9rem"><strong>Step 2: Save this reading's file into that repo</strong> (do this for every reading):</p>
+    <ol class="mlrk-steplist">
+      <li>Move into your repo folder:
+        <pre class="mlrk-code">cd YOUR-REPO</pre></li>
+      <li>Move the file you just downloaded out of <code>Downloads</code> and into that folder:
+        <pre class="mlrk-code">mv ~/Downloads/ai-code-review-reading.json .</pre></li>
+      <li>Save it to git and push it up to GitHub:
+        <pre class="mlrk-code">git add ai-code-review-reading.json
+git commit -m "Complete AI code review reading"
+git push</pre></li>
+    </ol>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 4 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own copy.</li>
+        <li>On the create page, set the visibility to <strong>Private</strong>. It defaults to <strong>Public</strong>, so you have to change it yourself.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Copy your repo's name <strong>exactly</strong> as it appears in GitHub's URL, including any hyphens, underscores, and capitalization. Paste it into the "Your submissions repo name" box below, along with your GitHub username, then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+      <p class="mlrk-small"><strong>Getting a "404" page instead?</strong> Two usual causes: the repo name you typed doesn't exactly match the real one (check for a stray hyphen or different capitalization), or you're not signed in to GitHub as the account that owns the repo &mdash; a private repo looks like a 404 to anyone who isn't signed in to it.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "ai-code-review-reading";
+  const TITLE = "It Runs. But Is It Right? — Reviewing AI-Suggested Database Code";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-fstring", buttonSelector:"#card-fstring .mlrk-choice", feedbackSelector:"#fstringfb", correct:"pasted",
+    feedback:{pasted:"An f-string swaps each {name} for that variable's current value. The result is one finished string with the value baked into it.",
+              literal:"The braces only stay literal without the f in front. With the f, Python replaces them.",
+              error:"Putting a variable inside a string is exactly what f-strings are built for, so this runs fine."}});
+
+  K.quiz({id:"q-emptylist", buttonSelector:"#card-emptylist .mlrk-choice", feedbackSelector:"#emptylistfb", correct:"noerror",
+    feedback:{noerror:"An empty list is a successful result that happens to contain nothing. A crash would raise an error instead of returning anything.",
+              crashed:"A crash raises an error and returns nothing at all. Getting a list back means the function reached its return line.",
+              norun:"A function that never ran would give you no value at all, not an empty list."}});
+
+  K.quiz({id:"q-close", buttonSelector:"#card-close .mlrk-choice", feedbackSelector:"#closefb", correct:"slots",
+    feedback:{slots:"Every open connection occupies one of a limited number of slots on the server. Enough unclosed ones and the server starts turning away real work.",
+              deletes:"Rows you already read into Python stay exactly where they are. An open connection does not delete data.",
+              nothing:"Python does not reliably close a database connection for you when a function returns. Your code has to do it."}});
+
+  K.quiz({id:"q-runsright", buttonSelector:"#card-runsright .mlrk-choice", feedbackSelector:"#runsrightfb", correct:"false", maxAttempts:1,
+    feedback:{false:"Running only rules out the failures loud enough to crash something. Wrong rows, leaked connections, and a wrong description all run perfectly.",
+              true:"Believable output is not proof. A query returning the wrong rows looks identical to one returning the right ones until you check a record by hand."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"The patient id is pasted directly into the query text instead of being handed to the database as a separate value.", correct:true,
+      hint:"Look at line 8 on its own. Is patient_id part of the query's instructions, or is it separate from them?",
+      explain:"This is SQL injection. Whatever text patient_id holds becomes part of the SQL itself."},
+    {value:"b", label:"If line 9 fails, conn.close() on line 11 never runs.", correct:true,
+      hint:"Trace an error raised on line 9. Which lines below it still get their turn?",
+      explain:"There is no try or finally here, so an error on line 9 skips past the close and leaves the connection open."},
+    {value:"c", label:"The docstring on line 3 describes behavior this function does not actually have.", correct:true,
+      hint:"Read line 3 out loud, then hunt for the line in the body that would do what it promises.",
+      explain:"Nothing in the body raises anything. An unknown id just produces an empty list."},
+    {value:"d", label:"Line 5 should not read the database address from os.environ.", correct:false,
+      hint:"Compare line 5 to the alternative: typing a real password into a file that gets committed to git.",
+      explain:"Reading the address from an environment variable keeps credentials out of the code. That is the safe pattern, not a bug."},
+    {value:"e", label:"cur.fetchall() on line 10 is not a real psycopg2 method.", correct:false,
+      hint:"Check this claim against psycopg2's own documented ways of getting rows back.",
+      explain:"fetchall() is real, and so are fetchone() and fetchmany(). This is the kind of claim worth verifying rather than assuming either way."},
+    {value:"f", label:"Returning a list is wrong here, because a lookup should return one record.", correct:false,
+      hint:"Re-read what line 2 says the function is for, then ask how many appointments one patient can have.",
+      explain:"One patient can have many appointments, so a list of rows is exactly the right shape."}
+  ]});
+
+  K.quiz({id:"q-inject", buttonSelector:"#card-inject .mlrk-choice", feedbackSelector:"#injectfb", correct:"all",
+    feedback:{all:"'1'='1' is true for every row, and OR makes the whole condition true whenever either side is. The patient_id test stops mattering, so every row comes back.",
+              error:"Nothing here is invalid SQL. The database sees a perfectly well-formed query and runs it happily.",
+              none:"The OR gives the database a second way to say yes, and that second test is true for every row in the table."}});
+
+  K.Scoring.register("q-blankph",1,"quiz");
+  let phAttempts=0, phDone=false;
+  $("#blankphcheck").addEventListener("click",()=>{
+    if(phDone) return;
+    phAttempts++;
+    const raw=$("#blankph").value.trim().toLowerCase().replace(/['"`]/g,"");
+    const fb=$("#blankphfb");
+    if(raw==="%s"){
+      K.Scoring.award("q-blankph", phAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> psycopg2 uses <code>%s</code> for every value, including numbers, and you never put quote marks around it.";
+      phDone=true;
+    } else if(phAttempts>=2){
+      K.Scoring.award("q-blankph",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The placeholder is <code>%s</code>.";
+      phDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not that one.</strong> It's two characters, it starts with a percent sign, and it's the same marker whether the value is text or a number. One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.Scoring.register("q-blankfin",1,"quiz");
+  let finAttempts=0, finDone=false;
+  $("#blankfincheck").addEventListener("click",()=>{
+    if(finDone) return;
+    finAttempts++;
+    const raw=$("#blankfin").value.trim().toLowerCase().replace(/:/g,"");
+    const fb=$("#blankfinfb");
+    if(raw==="finally"){
+      K.Scoring.award("q-blankfin", finAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> A <code>finally</code> block runs on the way out no matter what happened above it, including after an error and after a return.";
+      finDone=true;
+    } else if(finAttempts>=2){
+      K.Scoring.award("q-blankfin",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The keyword is <code>finally</code>.";
+      finDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not that one.</strong> Look back at the code block just above the box. It's the keyword paired with <code>try</code>, and it runs whether or not an error happened. One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  K.quiz({id:"q-halluc", buttonSelector:"#card-halluc .mlrk-choice", feedbackSelector:"#hallucfb", correct:"either",
+    feedback:{either:"Both are valid fixes. What is not valid is leaving a description and a body that disagree with each other, since the next reader will trust the description.",
+              delete:"Deleting it removes the wrong information and also removes the chance to say something true. The next person still needs to know what an empty result means.",
+              leave:"A docstring is how the next person learns how the function behaves. A wrong one sends them to a wrong conclusion, exactly like it did to Rosa."}});
+
+  K.orderSteps("#ordersteps", {id:"act-order-checklist", correctOrder:["runs","right","safe","cleanup","exists"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"_jKylhJtPmI"});
+  K.freeResponse({id:"resp-whymatters", selector:"#whymatters", minWords:12});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:10});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"edge",
+    feedback:{edge:"The happy path was never the thing in doubt. A real check re-runs the cases that would actually break it and confirms each one behaves.",
+              comments:"Comments help the next reader, but none of the three problems in this reading would have been caught by adding one.",
+              nothing:"One clean run only proves the code did not crash on that one input. Wrong rows and leaked connections both survive that test."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"input",
+    feedback:{input:"A delete with pasted-in input is the highest-damage version of this bug. A condition that is accidentally true for every row deletes every row.",
+              names:"Clear names are worth having, and they are not where the damage is. Nothing about naming changes what this function does to the data.",
+              speed:"Speed matters eventually. It comes well after making sure the function deletes only what you meant it to."}});
+
+  const AI_PROMPTS = [
+    "Think of a time you accepted an answer because of how it was delivered rather than what was in it. What was the first thing that would have shown you it was wrong?",
+    "If you had to teach the five-question checklist to someone who has never written code, which question would you put first, and why that one?",
+    "Which of the three problems in this reading do you think you would have missed on a first read, and what would make you catch it next time?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["python-data-tools","software-practice"],
+      skills:["ai-literacy","attention-to-detail"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

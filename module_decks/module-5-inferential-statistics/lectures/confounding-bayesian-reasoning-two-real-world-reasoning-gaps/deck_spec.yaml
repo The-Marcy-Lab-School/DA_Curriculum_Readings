@@ -1,0 +1,668 @@
+meta:
+  title: "Confounding & Bayesian Reasoning: Two Real-World Reasoning Gaps"
+  module: "Module 5: Inferential Statistics"
+  module_number: 5
+  lesson_number: 4
+  date: "Day 4"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "With a worked example, define what a confounding variable is, and identify a real confounder hiding inside a group comparison"
+    - "Explain what a prior and posterior represent, and run a real beta-binomial update on real sequential data"
+  tools:
+    - "Python"
+  exercise:
+    type: lab_plan
+    url_or_text: "modules/module-5-inferential-statistics/labs/naming-a-real-confounder.md"
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Comparing group summary statistics with pandas .groupby() (last two classes)"
+    - "Reading a chi-square test's contingency table for association (two classes ago)"
+  interview_topics:
+    - "What is the difference between correlation and causation?"
+  final_project:
+    "This lecture rehearses two of the project's own graded sections, at
+    reduced stakes: Naming a real confounder for your own comparison
+    (section 7), and running a real belief update on your own sequential
+    data (section 8)."
+  module_plan_ref: "module_sources/module-5-inferential-statistics/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-5-inferential-statistics/DATASET.md"
+  scaffolding_level: guided
+  estimated_duration_min: 65
+  scenario: >
+    Two habits, both easy to skip under deadline pressure. Before trusting
+    a group comparison, check whether something else is secretly driving
+    it. Before trusting a belief based on limited data, ask how it should
+    change once more data actually arrives. Today is one real worked
+    example of each - two genuinely different reasoning gaps, not two
+    versions of the same idea.
+  glossary:
+    - term: "confounding variable"
+      definition: "A hidden variable that drives both sides of a comparison, making an association look real or causal when it isn't"
+    - term: "prior"
+      definition: "Your belief about a true proportion before seeing the data at hand"
+    - term: "posterior"
+      definition: "Your updated belief about a true proportion after folding in real data"
+    - term: "credible interval"
+      definition: "A Bayesian range that genuinely supports 'there's a 95% chance the true value is in here' - a confidence interval does not"
+    - term: "confidence interval"
+      definition: "A frequentist range where 95% of intervals built this way would contain the true value across many repeats - not a 95% probability statement about this one interval"
+
+slides:
+  - type: title
+    title: "Confounding & Bayesian Reasoning"
+    subtitle: "Two Real-World Reasoning Gaps"
+    module: "Module 5: Inferential Statistics"
+    date: "Day 4"
+    image_path: "modules/module-5-inferential-statistics/lectures/confounding-bayesian-reasoning-two-real-world-reasoning-gaps/images/slide_01_title.png"
+    image_prompt: "Flat illustration: A data analyst looking at two overlapping bar charts, one hand raised in a questioning gesture, genuinely curious rather than certain"
+    image_alt: "A data analyst looking at two overlapping bar charts with one hand raised in a questioning gesture, genuinely curious rather than already certain"
+    notes: >
+      [SCRIPT] Name the shape of today honestly up front. Two real, separate
+      reasoning gaps, one worked example each - not two versions of the
+      same idea, and not meant to blend together in your notes.
+
+
+      [SCRIPT] Say why both matter now specifically. Both show up as graded
+      sections on your own project, and neither was taught by any earlier
+      module - today is the only time either gets a real introduction
+      before you're asked to use it independently.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Spot a real confounder in a comparison"
+        icon: "search_zoom_in"
+      - text: "Explain what a prior and posterior are"
+        icon: "probability"
+    notes: >
+      [SCRIPT] Read both, then name the split plainly. The first is about
+      catching something hidden. The second is about updating a belief
+      honestly as real data arrives. Different skills, same standard:
+      don't trust the first number you see.
+
+
+      [SCRIPT] Name the project tie now, not just at the end. Both of
+      today's skills are graded sections on your own project, solo, a few
+      weeks from now - today is the only time either gets a real
+      introduction first.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "confounding variable"
+        icon: "search_zoom_in"
+      - text: "prior"
+        icon: "probability"
+      - text: "posterior"
+        icon: "statistics"
+      - text: "credible interval"
+        icon: "percentage_metric"
+    notes: >
+      [SCRIPT] Names only for now. All four get a real definition as
+      today's two worked examples unfold, and all four come back with
+      their definitions right before the summary.
+
+  - type: transition
+    from_label: "Two Reasoning Gaps, Today"
+    to_label: "A Suspiciously Simple Finding"
+    note: "Real Palmer Penguins data, one honest question: Are islands really different, or is something else going on?"
+    objective_index: 1
+    notes: >
+      [SCRIPT] Ground this in the exact dataset from the last two classes -
+      nothing new to load, a genuinely new question to ask of it.
+
+  - type: content
+    title: "Biscoe Penguins Are Heavier... Or Are They?"
+    bullets:
+      - "Biscoe: 4,716g average"
+      - "Dream: 3,713g average"
+      - "Torgersen: 3,706g average"
+    icon_hero:
+      icon: "bar_chart"
+      style: "gold"
+    notes: >
+      [SCRIPT] State the naive finding plainly, as if it were the whole
+      story. Biscoe penguins average roughly 1,000 grams heavier than
+      Dream or Torgersen penguins. Real numbers, real gap.
+
+
+      [SCRIPT] Resist explaining it yet. Let the room sit with the claim
+      "island affects body mass" before anyone checks whether that claim
+      actually holds up.
+
+  - type: check_understanding
+    prompt: "With your partner: Name one reason island itself might not be the real cause."
+    mode: discussion
+    topic: "Before You Trust It, Ask Why"
+    bloom_level: analyze
+    question_style: conceptual
+    skill_tags: ["inferential-statistics", "critical-thinking"]
+    notes: >
+      [ACTIVITY] Pairs generate one real candidate explanation before the
+      reveal. In person: circulate and listen for anyone naming species
+      specifically. Online: post in chat. 2 minutes.
+
+
+      [SCRIPT] Do not confirm or deny any specific guess yet. Collect a few
+      out loud, then let the next slide answer it with real data instead
+      of a guess.
+
+  - type: transition
+    from_label: "A Guess, on the Table"
+    to_label: "Code Along: Check the Naive Number"
+    note: "Same pandas skill from the last two classes, one new question."
+    notes: >
+      [SCRIPT] Keep this beat short - the room already has a guess, now
+      confirm the real number behind it.
+
+  - type: code
+    title: "The Naive Comparison, in Code"
+    language: python
+    code_along: true
+    code: |
+      import pandas as pd
+
+      df = pd.read_csv("palmer_penguins.csv")
+      df = df.dropna(subset=["body_mass_g"])
+
+      df.groupby("island")["body_mass_g"].mean()
+    starter_code: |
+      import pandas as pd
+
+      df = pd.read_csv("palmer_penguins.csv")
+      df = df.dropna(subset=[____])
+
+      df.groupby(____)["body_mass_g"].mean()  # TODO: fix both blanks to compare by island
+    skill_tags: ["python", "inferential-statistics"]
+    domain_note: "Same real dataset, same .groupby() skill from the last two classes - the only thing new today is the question being asked of it."
+    notes: >
+      [ACTIVITY] Run it and confirm your own output matches: Biscoe
+      4716g, Dream 3713g, Torgersen 3706g. This is a real, correctly-run
+      comparison - the problem isn't the code.
+
+  - type: content
+    title: "What's Actually Different Between Islands?"
+    bullets:
+      - "Recall it: Species and island are linked"
+      - "Gentoo only ever appears on Biscoe"
+      - "Gentoo is also the heaviest species"
+    icon_hero:
+      icon: "correlation"
+      style: "blue"
+    notes: >
+      [SCRIPT] Call back directly to the chi-square result from two
+      classes ago. Species and island were strongly associated - Gentoo
+      only ever showed up on Biscoe, Chinstrap only on Dream.
+
+
+      [SCRIPT] Connect the dot explicitly. Gentoo is also the heaviest
+      species in this whole dataset, by a wide margin. Biscoe isn't a
+      "heavier island." Biscoe is the island where all the Gentoo happen
+      to live.
+
+  - type: transition
+    from_label: "A Real Candidate Explanation"
+    to_label: "Code Along: Control for Species"
+    note: "Compare islands again, but only within one species this time."
+    notes: >
+      [SCRIPT] Name exactly what's about to change. Same comparison, same
+      code shape, one added filter.
+
+  - type: code
+    title: "The Controlled Comparison, in Code"
+    language: python
+    code_along: true
+    code: |
+      adelie = df[df["species"] == "Adelie"]
+
+      adelie.groupby("island")["body_mass_g"].mean()
+    starter_code: |
+      adelie = df[df["species"] == ____]  # TODO: hold species constant at which value?
+
+      adelie.groupby("island")["body_mass_g"].mean()
+    skill_tags: ["python", "inferential-statistics", "critical-thinking"]
+    domain_note: "Adelie is the only species living on all three islands, which is exactly why it's the one that lets you compare islands while holding species constant."
+    notes: >
+      [ACTIVITY] Run it and read the three real numbers out loud before
+      the next slide names what they mean.
+
+
+      [SCRIPT] Do not interpret yet - let the room actually notice the
+      numbers are close before naming why.
+
+  - type: content
+    title: "The Island Effect Nearly Disappears"
+    bullets:
+      - "Biscoe: 3,710g. Dream: 3,688g. Torgersen: 3,706g."
+      - "A 22-gram spread, not a 1,000-gram one"
+      - "Species drove the naive result"
+    icon_hero:
+      icon: "task_complete"
+      style: "green"
+    notes: >
+      [SCRIPT] Land the real comparison. Within Adelie only, the three
+      islands average within about 22 grams of each other - nowhere close
+      to the naive 1,000-gram gap.
+
+
+      [SCRIPT] Name the mechanism precisely. Species was doing almost all
+      the real work in the naive comparison. Island, on its own, barely
+      matters once species is held constant.
+
+  - type: content
+    title: "Confounding Variable: The Formal Name"
+    bullets:
+      - "Drives both sides of a comparison"
+      - "Can make a fake link look real"
+      - "Check for one before trusting a gap"
+    analogy:
+      domain: "family"
+      mapping: "Across a group of kids, shoe size and reading ability are genuinely correlated - bigger shoes really do line up with better reading scores. Buying bigger shoes doesn't improve reading, and better reading doesn't grow feet. Age drives both at once: older kids have bigger feet and have had more years of practice reading. Age is the real confounder hiding behind a correlation that looks, at a glance, like one thing causing the other."
+      backups:
+        - domain: "business_operations"
+          mapping: "Ice cream sales and drowning deaths rise and fall together across the year. Ice cream doesn't cause drowning. Summer heat drives both - more swimming, more ice cream, at the same time of year."
+    notes: >
+      [SCRIPT] Name the analogy before the formal term. Shoe size and
+      reading ability really do correlate across a group of kids - and
+      neither one causes the other. Age drives both at once.
+
+
+      [SCRIPT] Attach the vocabulary once the picture lands. A confounding
+      variable drives both sides of a comparison, making a link look real
+      even when neither side is actually causing the other. Species, for
+      the island/body-mass comparison, played exactly this role.
+
+
+      [MISCONCEPTIONS] People hear this and conclude island truly has zero
+      effect on anything. The actual finding is narrower: for body mass
+      specifically, once species is held constant, island's own effect is
+      small - not that island could never matter for anything else.
+
+
+      [OTHER EXAMPLES] A backup is in the notebook if the shoe-size version
+      does not land: ice cream sales and drowning deaths, both driven by
+      summer heat.
+
+  - type: check_understanding
+    prompt: "A study finds towns with more firefighters also have more fire damage. What's the real confounder?"
+    mode: game
+    topic: "Firefighters and Fire Damage"
+    bloom_level: apply
+    question_style: interview
+    options:
+      - "Firefighters cause fires to spread further"
+      - "Fire size drives both firefighter count and damage"
+      - "More fire damage attracts new firefighters to town"
+    answer:
+      correct: "Fire size drives both firefighter count and damage"
+      explanation: "A bigger fire genuinely calls for more firefighters AND causes more damage - fire size drives both numbers at once. Neither firefighter count nor damage is causing the other; a bigger fire is the real confounder behind the correlation."
+      source: "A standard textbook confounding example, structurally identical to the ice-cream/drowning and shoe-size/reading-ability cases from this lesson"
+    skill_tags: ["critical-thinking", "inferential-statistics"]
+    notes: >
+      [ACTIVITY] Poll: read all three out loud, everyone answers at once.
+      In person: call out A, B, or C on a count of three. Online: type A,
+      B, or C in chat. 45 seconds.
+
+
+      [SCRIPT] Confirm the room can apply the pattern to a brand-new
+      example, not just recall the penguin one. Same shape every time:
+      something else is driving both numbers at once.
+
+  - type: transition
+    from_label: "One Reasoning Gap, Closed"
+    to_label: "A Second Kind of Reasoning: Updating Belief as Data Arrives"
+    note: "Confounding was about a hidden variable. This is about how a real belief should change as more real data comes in."
+    objective_index: 2
+    style: "icon_hero"
+    icon: "probability"
+    notes: >
+      [SCRIPT] [~35 min mark] Name the pivot cleanly. Completely different
+      question: not "what's secretly driving this," but "how much should
+      new data actually move what I believe."
+
+  - type: content
+    title: "Before Any Data: What Do You Believe?"
+    bullets:
+      - "A prior: Your belief, before you've looked"
+      - "A posterior: Your belief, after real data"
+      - "Each new batch updates the last belief"
+    analogy:
+      domain: "food"
+      mapping: "Tasting a big pot of soup for saltiness works the same way. Before the first taste, your best guess is a flat, wide-open one - could be bland, could be salty. Each spoonful is a real batch of evidence. After each one, you update your belief about the true saltiness, and you get more confident - a narrower range of guesses - the more spoonfuls you taste."
+      backups:
+        - domain: "gaming"
+          mapping: "It is like guessing an opponent's hand in a card game. Your first guess is wide open. Each card they play is a new piece of evidence, and your guess about their hand narrows with every one - you rarely get it exactly right after one card, but you get closer with each."
+    notes: >
+      [SCRIPT] Name the analogy before the terms. Tasting soup for
+      saltiness: before the first spoonful, your guess is wide open. Each
+      spoonful narrows it. That narrowing, spoonful by spoonful, is the
+      whole idea.
+
+
+      [SCRIPT] Attach the vocabulary once the picture lands. The prior is
+      your belief before data. The posterior is your updated belief after
+      folding in a real batch. Today's batches are real years of data, not
+      spoonfuls, but the update logic is identical.
+
+
+      [MISCONCEPTIONS] People treat the prior as a guess you're stuck with.
+      The whole point is that it changes, batch by batch, as real evidence
+      arrives - a prior is a starting point, not a commitment.
+
+
+      [OTHER EXAMPLES] A backup is in the notebook if the soup version does
+      not land: guessing an opponent's hand in a card game, narrowing with
+      each new card played.
+
+  - type: content
+    title: "The Mechanics: Two Running Counters"
+    bullets:
+      - "Start with a flat, wide-open belief"
+      - "Each batch updates both running counters"
+      - "Posterior mean: A simple ratio"
+    icon_hero:
+      icon: "calculator"
+      style: "gold"
+    doc_url: "https://en.wikipedia.org/wiki/Conjugate_prior"
+    notes: >
+      [SCRIPT] Say plainly that this is given, not derived. Beta(alpha,
+      beta) is a standard way to represent a belief about an unknown true
+      proportion. You apply the update rule today - proving why it works
+      is out of scope.
+
+
+      [SCRIPT] Walk the rule once, concretely. Start at alpha=1, beta=1 -
+      a flat prior, every proportion equally likely. For each real batch,
+      add the number of successes to alpha and the number of failures to
+      beta. That's the whole update.
+
+
+      [SOURCES] Beta(alpha, beta) is the real, standard conjugate prior for
+      a binomial likelihood - confirmed against MIT OpenCourseWare 18.05's
+      own conjugate-priors reading and Wikipedia's "Conjugate prior" table,
+      both giving the identical update rule used here.
+
+  - type: transition
+    from_label: "The Rule, Named"
+    to_label: "Code Along: Update Belief, Batch by Batch"
+    note: "Real Palmer Penguins data, one real year at a time, in real chronological order."
+    notes: >
+      [SCRIPT] Name the real question before typing. Each year, what
+      fraction of observed penguins were Gentoo? Watch the belief update
+      as each year's batch arrives.
+
+  - type: code
+    title: "Run the Real Update"
+    language: python
+    code_along: true
+    code: |
+      from scipy import stats
+
+      alpha, beta = 1, 1
+      batches = [(2007, 34, 110), (2008, 46, 114), (2009, 44, 120)]
+      for year, k, n in batches:
+          alpha += k
+          beta += n - k
+          mean = alpha / (alpha + beta)
+          ci = stats.beta.ppf([.025, .975], alpha, beta)
+          print(year, round(mean, 3), ci.round(3))
+    starter_code: |
+      from scipy import stats
+
+      alpha, beta = 1, 1
+      batches = [(2007, 34, 110), (2008, 46, 114), (2009, 44, 120)]
+      for year, k, n in batches:
+          alpha += ____  # TODO: add the number of successes
+          beta += ____  # TODO: add the number of failures
+          mean = alpha / (alpha + beta)
+          ci = stats.beta.ppf([.025, .975], alpha, beta)
+          print(year, round(mean, 3), ci.round(3))
+    domain_note: "`k` is how many observed penguins that year were Gentoo; `n` is the total observed that year - both real counts, read directly off the same dataset from the last two classes."
+    doc_url: "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/mit18_05_s22_class15-prep.pdf"
+    skill_tags: ["python", "inferential-statistics", "scipy"]
+    notes: >
+      [ACTIVITY] Run it and read all three years' output before the next
+      slide interprets it.
+
+
+      [SCRIPT] Name `.ppf` before moving on. It's the inverse of a
+      cumulative distribution - plugging in .025 and .975 finds the two
+      values bounding the middle 95% of the current belief. That range is
+      what the next slide names formally.
+
+
+      [SCRIPT] Confirm the real numbers as they print: 2007 mean≈0.312,
+      2008 mean≈0.358, 2009 mean≈0.361 - and the 95% range narrowing
+      each year.
+
+  - type: content
+    title: "Reading the Real Update"
+    bullets:
+      - "Belief drifts from 50% toward truth"
+      - "Each year's interval gets narrower"
+      - "More data means more certainty"
+    icon_hero:
+      icon: "task_complete"
+      style: "green"
+    notes: >
+      [SCRIPT] Walk the drift explicitly. Starting from a flat 50/50
+      guess, the belief moves to about 31% after 2007, then settles near
+      36% by 2009 - close to the true full-dataset proportion.
+
+
+      [SCRIPT] Name the narrowing separately from the drift. The range's
+      width shrinks from about 0.17 to 0.10 across the three
+      years - the same real number of years, a genuinely tighter range
+      each time.
+
+  - type: check_understanding
+    prompt: "If you'd stopped after only 2007's batch, how would your belief have compared to the full three-year picture?"
+    mode: discussion
+    topic: "Stopping Early, on Purpose"
+    bloom_level: analyze
+    question_style: conceptual
+    skill_tags: ["inferential-statistics", "critical-thinking"]
+    notes: >
+      [ACTIVITY] Pairs compare the 2007-only mean (~0.312) to the
+      2009-final mean (~0.361) and name what changed. In person: circulate
+      and ask for the actual numbers, not just "it got more accurate."
+      Online: post in chat. 2 minutes.
+
+
+      [SCRIPT] Target answer: the 2007-only belief was already in the
+      right neighborhood, but the interval around it was wider - real,
+      honest uncertainty that later years genuinely earned down.
+
+  - type: content
+    title: "One Word, Two Different Meanings"
+    bullets:
+      - "Confidence interval: A frequentist idea"
+      - "Credible interval: Today's Bayesian idea"
+      - "Only one truly means 95% chance"
+    icon_hero:
+      icon: "warning"
+      style: "red"
+    notes: >
+      [SCRIPT] Name the trap directly, since the two terms get used
+      interchangeably constantly, including by working professionals. A
+      confidence interval (from two classes ago) and a credible interval
+      (today) are not the same claim.
+
+
+      [SCRIPT] Say the real distinction precisely. A 95% confidence
+      interval means: if you repeated the experiment many times, 95% of
+      the computed intervals would contain the true value - it is not a
+      95% probability statement about this one interval. A 95% credible
+      interval genuinely does support "there's a 95% chance the true value
+      is in here," because Bayesian reasoning treats the unknown value
+      itself as having a probability distribution.
+
+
+      [MISCONCEPTIONS] Nearly everyone says "95% chance the true value is
+      in this interval" about a confidence interval. That sentence is only
+      actually true for a credible interval - confusing the two is one of
+      the most common real misstatements in applied statistics.
+
+
+      [SOURCES] Confirmed against Kevin Ross's "An Introduction to
+      Bayesian Reasoning and Methods" (bookdown.org), which states the
+      frequentist and Bayesian interpretations side by side in these exact
+      terms.
+
+  - type: check_understanding
+    prompt: "Would you rather report a confidence interval or a credible interval to a stakeholder who wants a real probability statement?"
+    mode: would_you_rather
+    topic: "Which Interval Actually Answers the Question?"
+    bloom_level: evaluate
+    question_style: critical_thinking
+    skill_tags: ["inferential-statistics", "critical-thinking"]
+    notes: >
+      [ACTIVITY] Force a pick before discussion. In person: move to one
+      side of the room, then two people from each side say why. Online:
+      type "confidence" or "credible" in chat at the same count. 3
+      minutes.
+
+
+      [SCRIPT] Land the real answer. If a stakeholder genuinely wants "what
+      is the probability the true value is in this range," only a credible
+      interval actually answers that question - a confidence interval
+      answers a different, more roundabout question about the method's own
+      long-run behavior.
+
+
+      [MISCONCEPTIONS] Someone will argue confidence intervals are just as
+      good "close enough." The two are answering genuinely different
+      questions, not two phrasings of the same one - this is exactly the
+      kind of imprecision that leads someone to misquote their own result.
+
+  - type: interview_prep
+    topics:
+      - question: "What is the difference between correlation and causation?"
+        short_answer: "Observation: Two variables move together in the data. Hypothesis: A real causal link, a confounder, or pure chance could all produce that same pattern. Evidence: Check for a plausible confounder driving both sides, and whether a controlled comparison or designed experiment could isolate the real effect. Recommendation: Name the specific confounder you'd check first, and what data or design would actually rule it in or out - not just 'correlation isn't causation' as a slogan."
+        technique: "Investigation Framework"
+        icon: "search_zoom_in"
+    notes: >
+      [TECHNIQUE] Investigation Framework (Observation, Hypothesis,
+      Evidence, Recommendation) fits because this is a "how would you
+      investigate" question, not a definition to recite - naming today's
+      own confounder example as the evidence step shows real, applied
+      thinking, not a memorized slogan.
+
+
+      [SCRIPT] [~65 min mark] If you are already past 70 minutes, show the
+      answer and skip the cold attempt. Otherwise have someone attempt it
+      cold first.
+
+
+      [SCRIPT] Coach against the slogan-only answer explicitly. "Correlation
+      isn't causation" alone is the weak version of this answer - naming a
+      specific confounder and a specific way to check it is the strong
+      version.
+
+
+      [SOURCES] Verified as a real, commonly asked data-analyst interview
+      question (SkillScouter's own 54-question interview guide lists it
+      directly), corroborated by multiple independent data-analyst
+      interview-question roundups that all pair it with a confounding-
+      variable example in the strong-answer pattern.
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "confounding variable"
+        - "Drives both sides of a comparison, hiding the real story"
+      - - "prior"
+        - "Your belief about a true proportion, before real data"
+      - - "posterior"
+        - "Your updated belief, after folding in real data"
+      - - "credible interval"
+        - "A range that genuinely supports a real probability claim"
+    notes: >
+      [SCRIPT] Fast round trip before the summary. Ask the room to supply
+      "confounding variable" and "credible interval" from what they just
+      did - those two are the pair today's whole example was built around.
+
+  - type: bridge
+    title: "So far, we've covered..."
+    bullets:
+      - "A real confounder, found inside real data"
+      - "Naive versus controlled, side by side"
+      - "A prior updated into a real posterior"
+      - "Credible intervals versus confidence intervals"
+    notes: >
+      [SCRIPT] Say the callback explicitly. The chi-square result from two
+      classes ago wasn't just a test to run - it was the exact clue that
+      explained today's confounding example.
+
+
+      [SCRIPT] Preview the next two classes honestly. One is a full
+      collaborative rep at naming a real confounder, on a genuinely
+      different dataset than today's penguins. The other is a full rep at
+      running this same batch-by-batch update, on a real proportion
+      outcome of your own.
+
+
+      [SCRIPT] Say the project tie out loud. Naming a real confounder for
+      your own comparison, and running a real belief update on your own
+      sequential data, are both graded sections on your own project, solo,
+      a few weeks from now.
+
+  - type: closing
+    title: "Next: Naming a Real Confounder"
+    bullets:
+      - "A dataset you have not seen yet"
+      - "Your own comparison, your own confounder"
+      - "The same judgment call, on your own"
+    exercise:
+      type: lab_plan
+      url_or_text: "modules/module-5-inferential-statistics/labs/naming-a-real-confounder.md"
+      label: "Next: Naming a Real Confounder (lab, with a partner)"
+    notes: >
+      [SCRIPT] Frame the next class honestly - not new content, a real
+      collaborative rep at today's first skill on data that hasn't already
+      given away the answer.
+
+
+      [SCRIPT] Remind people how to reach office hours rather than naming a
+      time, and encourage anyone still unsure about the prior/posterior
+      mechanics to raise it before the Bayesian lab.
+
+
+      [SCRIPT] Close with the project tie one more time. Naming a real
+      confounder and running a real belief update are both graded, solo,
+      on your own data - today and the next two labs are the only
+      rehearsal you get first.
+
+  - type: further_resources
+    resources:
+      - title: "Bayesian Inference (Interactive)"
+        url: "https://seeing-theory.brown.edu/bayesian-inference/index.html"
+        kind: practice
+        time_estimate: "~10-15 min"
+        description: "Drag sliders and watch a posterior form"
+        attribution: "Seeing Theory, Brown University"
+      - title: "Confounding Variables 101"
+        url: "https://www.nngroup.com/videos/confounding-variables-1/"
+        kind: video
+        time_estimate: "~3 min"
+        description: "A short, plain-language confounding explainer"
+        attribution: "Nielsen Norman Group"
+      - title: "Conjugate Priors: Beta and Normal"
+        url: "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/mit18_05_s22_class15-prep.pdf"
+        kind: documentation
+        time_estimate: "~20-30 min"
+        description: "The real math behind today's update rule"
+        attribution: "MIT OpenCourseWare"
+    notes: >
+      [SCRIPT] Point at the interactive Bayesian visualizer specifically -
+      dragging the sliders and watching the posterior shape change in real
+      time is a different kind of understanding than reading the update
+      rule.
+
+
+      [SCRIPT] The MIT reading is the one to open only if today's "this is
+      given, not derived" framing left someone wanting the real proof
+      underneath - genuinely optional, not required for the lab.

@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Both of Them Work — Choosing Between psycopg2 and SQLAlchemy</title>
+<link rel="stylesheet" href="../../../assets/brand-tokens.css">
+<link rel="stylesheet" href="../../../assets/reading-kit.css">
+<style>
+.mlrk-illustration{width:100%;max-width:840px;height:auto;display:block;
+  margin-top:1.1rem;margin-bottom:1.1rem;margin-left:auto;margin-right:auto}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:11rem}
+.tradeoff-table{border-collapse:collapse;width:100%;margin:1rem 0}
+.tradeoff-table th,.tradeoff-table td{border:1px solid var(--mlrk-divider-on-light);padding:.6rem .8rem;
+  text-align:left;vertical-align:top}
+.tradeoff-table th{background:var(--mlrk-bg-light-alt);font-weight:700}
+.tradeoff-wrap{overflow-x:auto}
+</style>
+</head><body>
+
+<header class="mlrk-header"><div class="mlrk-wrap">
+<div class="mlrk-eyebrow">Interactive reading</div>
+<h1>Both of Them Work</h1>
+<p class="mlrk-lead">Every night, one small script checks that the money a payments company thinks it moved is the money the bank actually moved. Two engineers agree on the query, agree on the database, and agree on what the answer should look like. They disagree about which Python library the script should use to go get it. Both of them are partly right, and the reason why is the whole point of this reading.</p>
+<div class="mlrk-meta">
+  <span class="mlrk-pill">~38–41 minutes</span>
+  <span class="mlrk-pill">Interactive</span>
+  <span class="mlrk-pill">No setup needed</span>
+  <span class="mlrk-pill">Saves your progress automatically</span>
+</div>
+</div></header>
+
+<div class="mlrk-progress-track"><div id="bar" class="mlrk-progress-bar"></div></div>
+<div id="banner" class="mlrk-banner" role="status" hidden></div>
+
+<main class="mlrk-main"><div class="mlrk-wrap">
+
+<section class="mlrk-section" id="persona-section">
+  <div id="persona"></div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-green">
+    <p><strong>Skills you'll practice in this reading:</strong></p>
+    <p><strong>Python Database Connectivity</strong> — Connecting Python to a real database and loading the results into pandas: opening a connection, keeping passwords out of your code, and closing what you opened.</p>
+    <p><strong>Library &amp; Tool Tradeoffs</strong> — Comparing two tools that both do the job, naming what each one actually costs you, and defending your pick in writing instead of picking by habit.</p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+  <div class="mlrk-callout mlrk-callout-blue">
+    <p><strong>Already started this reading?</strong> If you saved a JSON file from a previous visit, upload it here to pick up right where you left off.</p>
+    <input type="file" id="importfile-top" accept="application/json">
+    <p id="importfb-top" class="mlrk-small"></p>
+  </div>
+</section>
+
+<section class="mlrk-section">
+<h2>1. Introduction</h2>
+<p>Ledgerline is a small <strong>fintech</strong>. That word is short for financial technology, and it means a company that builds software for banking or payments. Ledgerline's software lets corner stores and small salons take card payments from customers.</p>
+<p>At two in the morning, one script wakes up and runs the <strong>nightly reconciliation job</strong>. Reconciliation sounds fancy, but it means something plain: take two lists of money and check them against each other. List one is every payment Ledgerline's own app recorded yesterday. List two is the bank's record of what it actually <strong>settled</strong>, which means the money genuinely moved. If a payment sits on one list and not the other, a human needs to look at it before a customer notices.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 840 330" role="img" aria-labelledby="reconTitle reconDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="reconTitle">Two payment lists side by side, with one row missing from the bank's list</title>
+  <desc id="reconDesc">On the left, a panel titled "What our app recorded" lists three payments: PMT-1041 for $120.00, PMT-1042 for $85.50, and PMT-1043 for $40.00, with the third row shaded pink. On the right, a panel titled "What the bank settled" lists PMT-1041 for $120.00 and PMT-1042 for $85.50, and its third row reads "no record" in red. Dashed lines connect the first two rows across the panels with the label "matches", and the third row has the label "no match" and no connecting line.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="20" y="40" width="340" height="40" rx="8" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="190" y="67" text-anchor="middle" font-weight="700" font-size="19" fill="#261F1D">What our app recorded</text>
+    <rect x="20" y="80" width="340" height="168" fill="#FFFCF7" stroke="#2274B5" stroke-width="1.5"/>
+    <rect x="21" y="193" width="338" height="54" fill="#F7DFDF"/>
+    <line x1="20" y1="136" x2="360" y2="136" stroke="#2274B5" stroke-width="1"/>
+    <line x1="20" y1="192" x2="360" y2="192" stroke="#2274B5" stroke-width="1"/>
+    <g font-size="17" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
+      <text x="36" y="114">PMT-1041</text><text x="240" y="114">$120.00</text>
+      <text x="36" y="170">PMT-1042</text><text x="240" y="170">$85.50</text>
+      <text x="36" y="226">PMT-1043</text><text x="240" y="226">$40.00</text>
+    </g>
+
+    <rect x="480" y="40" width="340" height="40" rx="8" fill="#FFEECA" stroke="#83671C" stroke-width="2.5"/>
+    <text x="650" y="67" text-anchor="middle" font-weight="700" font-size="19" fill="#261F1D">What the bank settled</text>
+    <rect x="480" y="80" width="340" height="168" fill="#FFFCF7" stroke="#83671C" stroke-width="1.5"/>
+    <line x1="480" y1="136" x2="820" y2="136" stroke="#83671C" stroke-width="1"/>
+    <line x1="480" y1="192" x2="820" y2="192" stroke="#83671C" stroke-width="1"/>
+    <g font-size="17" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
+      <text x="496" y="114">PMT-1041</text><text x="700" y="114">$120.00</text>
+      <text x="496" y="170">PMT-1042</text><text x="700" y="170">$85.50</text>
+    </g>
+    <text x="496" y="226" font-size="17" font-style="italic" font-weight="700" fill="#C92929">no record</text>
+
+    <line x1="360" y1="108" x2="480" y2="108" stroke="#264326" stroke-width="2" stroke-dasharray="5 4"/>
+    <line x1="360" y1="164" x2="480" y2="164" stroke="#264326" stroke-width="2" stroke-dasharray="5 4"/>
+    <text x="420" y="141" text-anchor="middle" font-size="17" font-weight="700" fill="#264326">matches</text>
+    <text x="420" y="226" text-anchor="middle" font-size="17" font-weight="700" fill="#C92929">no match</text>
+
+    <text x="420" y="295" text-anchor="middle" font-size="19" fill="#261F1D">One row is missing. Finding it is the whole job.</text>
+  </g>
+</svg>
+
+<p>Two engineers on the team, Nia and Samir, both know how to write this script. They wrote the same query. They agree the result should land in a <strong>pandas DataFrame</strong>, which is a table of rows and columns held in Python. They disagree about one line near the top.</p>
+<p>Nia wants <code>psycopg2</code>. It is the <strong>driver</strong> for PostgreSQL, the database system Ledgerline keeps its payments in. A driver is the library that actually speaks one specific database's own language. Nia's case: it is one library, there is not much of it to learn, and when something breaks the error message comes straight from PostgreSQL with nothing in the way.</p>
+<p>Samir wants SQLAlchemy. His case: it manages connections for you instead of making you do it by hand, and if this job ever has to run against a different database, one line changes instead of the whole file.</p>
+<p>Neither of them is wrong. They are weighing different costs, and they have not yet said out loud which cost matters for <em>this</em> script.</p>
+
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>Why this matters:</strong> "how would you connect Python to a database, and what would make you reach for SQLAlchemy instead of the raw driver" is a real, common data-role interview question. It is also a real decision on a real team. You will inherit scripts other people wrote and have to say why the choice they made was fine or why it is now costing something. An answer like "SQLAlchemy is more modern" gets you nothing. An answer that names one fact about the script gets you a lot.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know that both of these libraries can hand you the same DataFrame from the same query, so the results are not what separates them. This reading is about everything happening underneath that identical result: how connections get reused, what moves if the database changes, what an error looks like, and how much there is to learn. Once you can price a layer like that, the same four questions work on any pair of tools that both technically do the job.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall before comparing</h2>
+<p class="mlrk-small">Three ideas get reused heavily later in this reading: what a library is, what a database connection is, and what a DataFrame is. Check each one before moving on.</p>
+
+<div class="mlrk-card" id="card-pre-lib"><p><strong>What is a library in Python?</strong></p>
+<button type="button" class="mlrk-choice" data-a="code">Code someone else already wrote that you bring into your own file with <code>import</code>.</button>
+<button type="button" class="mlrk-choice" data-a="folder">A folder on your computer where Python stores every file you have ever run.</button>
+<button type="button" class="mlrk-choice" data-a="db">Another name for a database table.</button>
+<div id="prelibfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-pre-conn" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a script opens a connection to a database, runs a query, and then the script ends without ever closing that connection. What is the problem?</p>
+<button type="button" class="mlrk-choice" data-a="held">The database server keeps holding resources for a connection nobody is using any more.</button>
+<button type="button" class="mlrk-choice" data-a="wrong">The query results come back wrong.</button>
+<button type="button" class="mlrk-choice" data-a="none">Nothing. A connection closes itself the instant a query finishes.</button>
+<div id="preconnfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-pre-df" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> two different libraries run the exact same <code>SELECT</code> and both hand back a pandas DataFrame with identical rows, identical column names, and identical types. What does that tell you about which library to use?</p>
+<button type="button" class="mlrk-choice" data-a="nothing">Nothing on its own. The result is the same, so the decision has to come from something you cannot see in the output.</button>
+<button type="button" class="mlrk-choice" data-a="either">That the two libraries are interchangeable in every way that matters.</button>
+<button type="button" class="mlrk-choice" data-a="faster">That whichever one produced it first is the faster library.</button>
+<div id="predffb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue">That last one is the honest starting point for this whole reading. Same query, same DataFrame, no winner yet. Everything that decides it is underneath.</div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Concept overview: they are stacked, not side by side</h2>
+<p>Here is the picture most people carry into this argument: two separate roads to the same database, and you pick a lane. That picture is wrong, and fixing it changes the whole conversation.</p>
+<p>SQLAlchemy does not replace <code>psycopg2</code>. When SQLAlchemy talks to PostgreSQL, it reaches for <code>psycopg2</code> underneath and hands the work down to it. So Samir's option is not "instead of the driver." It is "the driver, plus a floor on top of it."</p>
+<p>That extra floor has a name. An <strong>abstraction layer</strong> is code that sits on top of something messier and gives you a simpler set of things to call. Think of the popcorn button on a microwave. It hides the exact time and the exact power level behind one press, and most of the time it does a better job than you would. The cost only shows up on the one bag that needed fifteen more seconds, because now you have to take over from a machine that was making the decision for you.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 880 440" role="img" aria-labelledby="stackTitle stackDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="stackTitle">The same database reached through four layers or through three</title>
+  <desc id="stackDesc">Two stacks of boxes side by side. The left stack, titled "Using SQLAlchemy", has four layers from top to bottom: "Your Python code" (the SQL text you wrote), "SQLAlchemy" (picks a connection for you), "psycopg2" (the driver that speaks PostgreSQL), and "PostgreSQL" (runs the query, sends rows back). The right stack, titled "Using psycopg2 directly", has three layers: "Your Python code" (the same SQL text), "psycopg2" (the driver that speaks PostgreSQL), and "PostgreSQL" (runs the query, sends rows back), with the note "Same driver. Same database. One less floor." A caption below both stacks reads "SQLAlchemy does not replace psycopg2. It sits on top of it."</desc>
+  <g font-family="Helvetica, Arial, sans-serif" fill="#261F1D">
+    <text x="210" y="30" text-anchor="middle" font-weight="700" font-size="20">Using SQLAlchemy</text>
+    <rect x="20" y="48" width="380" height="80" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="210" y="81" text-anchor="middle" font-weight="700" font-size="19">Your Python code</text>
+    <text x="210" y="108" text-anchor="middle" font-size="17">the SQL text you wrote</text>
+    <rect x="20" y="128" width="380" height="80" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="210" y="161" text-anchor="middle" font-weight="700" font-size="19">SQLAlchemy</text>
+    <text x="210" y="188" text-anchor="middle" font-size="17">picks a connection for you</text>
+    <rect x="20" y="208" width="380" height="80" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="210" y="241" text-anchor="middle" font-weight="700" font-size="19">psycopg2</text>
+    <text x="210" y="268" text-anchor="middle" font-size="17">the driver that speaks PostgreSQL</text>
+    <rect x="20" y="288" width="380" height="80" fill="#E4E7EB" stroke="#261F1D" stroke-width="2.5"/>
+    <text x="210" y="321" text-anchor="middle" font-weight="700" font-size="19">PostgreSQL</text>
+    <text x="210" y="348" text-anchor="middle" font-size="17">runs the query, sends rows back</text>
+
+    <text x="670" y="30" text-anchor="middle" font-weight="700" font-size="20">Using psycopg2 directly</text>
+    <rect x="480" y="48" width="380" height="80" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="670" y="81" text-anchor="middle" font-weight="700" font-size="19">Your Python code</text>
+    <text x="670" y="108" text-anchor="middle" font-size="17">the same SQL text</text>
+    <rect x="480" y="128" width="380" height="80" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="670" y="161" text-anchor="middle" font-weight="700" font-size="19">psycopg2</text>
+    <text x="670" y="188" text-anchor="middle" font-size="17">the driver that speaks PostgreSQL</text>
+    <rect x="480" y="208" width="380" height="80" fill="#E4E7EB" stroke="#261F1D" stroke-width="2.5"/>
+    <text x="670" y="241" text-anchor="middle" font-weight="700" font-size="19">PostgreSQL</text>
+    <text x="670" y="268" text-anchor="middle" font-size="17">runs the query, sends rows back</text>
+    <text x="670" y="322" text-anchor="middle" font-size="18" font-weight="700" fill="#264326">Same driver. Same database.</text>
+    <text x="670" y="348" text-anchor="middle" font-size="18" font-weight="700" fill="#264326">One less floor.</text>
+
+    <text x="440" y="412" text-anchor="middle" font-size="18">SQLAlchemy does not replace psycopg2. It sits on top of it.</text>
+  </g>
+</svg>
+
+<p>Read the two stacks against each other and one thing stands out: the bottom two floors are identical. Same driver, same database, same SQL text going down and same rows coming back up. The entire argument between Nia and Samir is about one box.</p>
+
+<div class="mlrk-card" id="card-stack" style="margin-top:1rem"><p><strong>Using the two stacks above: what does Nia's script skip by leaving out the SQLAlchemy box?</strong></p>
+<button type="button" class="mlrk-choice" data-a="extras">Everything that box does for you, which she now has to do herself in her own code.</button>
+<button type="button" class="mlrk-choice" data-a="driver">The <code>psycopg2</code> driver, since SQLAlchemy is what contains it.</button>
+<button type="button" class="mlrk-choice" data-a="rename">Nothing real. SQLAlchemy is the same functions under different names.</button>
+<div id="stackfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Technical vocabulary</h2>
+<p>Flip each card before the practice below.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>driver</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Driver</strong><br>The library that actually speaks one specific database's own language. <code>psycopg2</code> is PostgreSQL's driver.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>abstraction layer</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Abstraction layer</strong><br>Code that sits on top of something messier and gives you a simpler set of things to call. You write less, and you also steer less.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>connection pool</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Connection pool</strong><br>A set of already-open connections kept ready and handed out as needed, instead of opening a fresh one every time.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>dialect</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Dialect</strong><br>The specific flavor of SQL a given database speaks. Two databases can both run SQL and still disagree on how you write a date.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>engine</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Engine</strong><br>SQLAlchemy's one object holding the database address, the dialect, and the pool. You build one and reuse it for the life of the script.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>ORM</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>ORM</strong><br>Object-relational mapper: a tool that lets you work with database rows as Python objects instead of writing SQL text. SQLAlchemy includes one. You do not have to use it, and it is not covered here.</span></button>
+</div>
+<p class="mlrk-small">That last card is worth one extra sentence, because the mix-up is everywhere. SQLAlchemy is not an ORM. It is a toolkit that happens to contain one, and plenty of working code uses SQLAlchemy without ever touching that part.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Tradeoff one: reusing connections</h2>
+<p>Opening a database connection is not free, and the bill lands on the database server, not on your laptop. When a brand-new connection arrives, PostgreSQL starts a whole separate running program for it, called a <strong>process</strong>, with its own slice of memory. There is also a ceiling on how many can exist at once. Out of the box that ceiling is 100.</p>
+<p>A <strong>connection pool</strong> is the fix. Picture the front desk of an office building. Instead of printing a brand-new plastic badge for every visitor, the desk keeps a small stack of badges. You take one, you use it all day, you hand it back, and the next visitor gets that same badge. Nobody prints anything. A pool does that with open connections.</p>
+<p>Here is where the two libraries genuinely split. SQLAlchemy's <strong>engine</strong> comes with a pool already switched on. You do not ask for it and you do not configure it. <code>psycopg2</code> can pool too, through a part of the library built for exactly that, but you have to reach for it and wire it up yourself.</p>
+<div class="mlrk-callout mlrk-callout-red">
+<p><strong>The honest limit:</strong> a pool only pays off when a script asks the database questions over and over. A script that connects once and exits saves nothing at all. And a connection sitting in a pool is a slot nobody else can use for as long as you hold it. Pooling is a trade, not a free upgrade.</p>
+</div>
+
+<h3 style="font-size:1.2rem;margin-top:1.4rem">Order the steps: what a brand-new connection costs</h3>
+<p>Click these steps in the order they actually happen when a connection is opened and then closed. Click a step again to take it back out, then press the check button. This is a self-check, not graded on correctness.</p>
+<ul class="mlrk-orderlist" id="ordersteps">
+  <li class="mlrk-orderitem" data-step="ask"><span class="mlrk-order-num"></span> Your script asks the database server for a new connection.</li>
+  <li class="mlrk-orderitem" data-step="process"><span class="mlrk-order-num"></span> The server starts a separate running process just for your script.</li>
+  <li class="mlrk-orderitem" data-step="setup"><span class="mlrk-order-num"></span> That process gets its own memory, and your username and password get checked.</li>
+  <li class="mlrk-orderitem" data-step="ready"><span class="mlrk-order-num"></span> The connection is finally ready, and your query runs.</li>
+  <li class="mlrk-orderitem" data-step="close"><span class="mlrk-order-num"></span> Your script closes the connection, and the server shuts that process back down.</li>
+</ul>
+<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
+<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+<p style="margin-top:1rem">Run those five steps once and the cost is invisible. Run them ten thousand times in a day and the database is doing an enormous amount of setup work it never needed to do.</p>
+
+<div class="mlrk-card" id="card-pool" style="margin-top:1rem"><p><strong>Ledgerline's nightly job opens one connection, runs six queries with it, and exits. Where would a connection pool actually pay off instead?</strong></p>
+<details class="mlrk-hint"><summary>Need a hint?</summary><p>A pool reuses connections. Ask yourself which of these three scripts has anything to reuse.</p></details>
+<button type="button" class="mlrk-choice" data-a="many">A service that opens and closes a connection thousands of times a day, once per incoming request.</button>
+<button type="button" class="mlrk-choice" data-a="big">A script that runs one very large query that takes four minutes to finish.</button>
+<button type="button" class="mlrk-choice" data-a="wide">A script that reads a table with two hundred columns in it.</button>
+<div id="poolfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Tradeoff two: moving to a different database</h2>
+<p>Every database speaks its own <strong>dialect</strong>, meaning its own flavor of SQL, and every database needs its own driver. SQLAlchemy handles both of those for you. You hand it a database address, it reads which database you meant, and it picks the right dialect and the right driver on its own.</p>
+<p>The practical version: if Ledgerline moved this job to a different database system, the SQLAlchemy version changes one line, the address. Nia's version changes a lot more, because <code>psycopg2</code> only speaks PostgreSQL. That is not a flaw in <code>psycopg2</code>. Being one database's driver is the entire reason it exists.</p>
+<p>The everyday version is smaller and more useful than "what if we switch databases," since most teams never do. It is running the same code against a small throwaway database while you test, and against the real one in production.</p>
+<div class="mlrk-callout mlrk-callout-red">
+<p><strong>The honest limit, and this one gets overclaimed constantly:</strong> what moves is the connection code. Your SQL text does not become portable. A plain <code>SELECT</code> will usually run anywhere, but date functions, data types, and plenty of ordinary syntax genuinely differ between databases, and no layer makes that disappear.</p>
+</div>
+
+<div class="mlrk-card" id="card-portable"><p><strong>True or false: moving a SQLAlchemy job from PostgreSQL to a different database means the SQL text in your script is guaranteed to run there unchanged.</strong></p>
+<button type="button" class="mlrk-choice" data-a="false">False</button>
+<button type="button" class="mlrk-choice" data-a="true">True</button>
+<div id="portablefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-fillblank">
+  <label for="blankinput">SQLAlchemy cannot reach PostgreSQL on its own. Type the name of the driver it reaches for underneath:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Tradeoff three: what an error looks like</h2>
+<p>Nia is writing the query and types <code>paymets</code> instead of <code>payments</code>. Both versions of the script fail. They do not fail the same way.</p>
+<div class="mlrk-code"><div class="mlrk-screen">Using psycopg2 directly:
+
+psycopg2.errors.UndefinedTable: relation "paymets" does not exist
+
+
+Using SQLAlchemy:
+
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable)
+relation "paymets" does not exist</div></div>
+<p>The driver hands back PostgreSQL's own complaint, in PostgreSQL's own words, with nothing in between. SQLAlchemy takes that exact same complaint and wraps it in an error type of its own, keeping the original inside where you can still get at it.</p>
+<p>Neither one is better. One is shorter to read. The other is the same error type no matter which database you are pointed at, which is worth something if you maintain code across several. Which you want depends on what you are doing, not on which library is nicer.</p>
+
+<div class="mlrk-card" id="card-errors"><p><strong>Looking at the two errors above: what is the real difference between them?</strong></p>
+<button type="button" class="mlrk-choice" data-a="wrap">SQLAlchemy wraps the driver's original error inside its own error type, and the original is still there.</button>
+<button type="button" class="mlrk-choice" data-a="hide">SQLAlchemy throws away the original message, so you cannot tell what actually went wrong.</button>
+<button type="button" class="mlrk-choice" data-a="silent">Only SQLAlchemy catches the typo. The driver quietly returns an empty table.</button>
+<div id="errorsfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Tradeoff four: how much there is to learn</h2>
+<p>This one is easy to dismiss as soft, and it is the one that most often decides real arguments on real teams.</p>
+<p><code>psycopg2</code> is small. Connect, get a cursor, run the query, fetch the rows, close what you opened. That is most of it. The trade is that you also rebuild a few things by hand, including the column names, which arrive separately rather than attached to your results.</p>
+<p>SQLAlchemy is bigger. There is an engine, there are connections borrowed from a pool, there is a specific way to hand it raw SQL text, and there is a whole ORM sitting next to all of it that you can safely ignore but will trip over in every tutorial you read. In exchange, pandas reads directly from it in one supported call, and the column names come back attached.</p>
+<p>The question that actually settles this is not "which is harder." It is "who else touches this script, and what do they already know."</p>
+
+<div class="tradeoff-wrap">
+<table class="tradeoff-table">
+<caption class="mlrk-small" style="text-align:left;margin-bottom:.4rem">The four tradeoffs side by side. Neither column is the professional one.</caption>
+<tr><th>What you are weighing</th><th><code>psycopg2</code></th><th>SQLAlchemy</th></tr>
+<tr><td>Reusing connections</td><td>Possible, but you wire it up yourself</td><td>Pools and reuses by default</td></tr>
+<tr><td>Moving to another database</td><td>PostgreSQL only, on purpose</td><td>Change the address, keep the connection code</td></tr>
+<tr><td>Error messages</td><td>PostgreSQL's own words, unwrapped</td><td>One consistent error type, original kept inside</td></tr>
+<tr><td>How much to learn</td><td>A handful of calls</td><td>More surface, plus an ORM you can ignore</td></tr>
+</table>
+</div>
+
+<h3 style="font-size:1.2rem;margin-top:1.4rem">Sort the facts</h3>
+<p>Referring to the table above, drag each fact into the column it argues for, then use the self-check button.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">The job runs once and then exits</span>
+  <span id="chip2" class="mlrk-draggable">The script opens thousands of connections a day</span>
+  <span id="chip3" class="mlrk-draggable">You want PostgreSQL's own error text, unwrapped</span>
+  <span id="chip4" class="mlrk-draggable">The same job may need to run against a different database</span>
+  <span id="chip5" class="mlrk-draggable">You want the fewest new things for the next person to learn</span>
+  <span id="chip6" class="mlrk-draggable">You want connection reuse without wiring it up yourself</span>
+</div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Argues for the raw driver</strong></p><div class="mlrk-dropzone" id="zoneDriver"></div></div>
+  <div><p class="mlrk-small"><strong>Argues for SQLAlchemy</strong></p><div class="mlrk-dropzone" id="zoneAlchemy"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+
+<div class="mlrk-card" style="margin-top:1.4rem"><p><strong>Select every statement below that is TRUE.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> When SQLAlchemy talks to PostgreSQL, <code>psycopg2</code> is doing the actual talking underneath.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Pointing a SQLAlchemy job at a different database makes your SQL text run there unchanged.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A connection pool keeps a set of already-open connections and hands them out as needed.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> <code>psycopg2</code> has no way to reuse connections at all.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Pick a library, and say why</h2>
+<p>This is the part an interviewer and a teammate both actually want. Four scripts. For each one, pick a library and notice which single fact about the script decided it. Every choice below gets you a real answer, including the ones that are wrong.</p>
+
+<div class="mlrk-card" id="card-s1"><p><strong>Script 1.</strong> You pull last quarter's refunds into a notebook once, answer one question from the finance team, and you are done. <strong>Which library, and what is the strongest reason?</strong></p>
+<button type="button" class="mlrk-choice" data-a="raw"><code>psycopg2</code>, because this runs once and never moves, so an extra layer buys nothing here.</button>
+<button type="button" class="mlrk-choice" data-a="alch">SQLAlchemy, because pooling connections is always the safer default.</button>
+<button type="button" class="mlrk-choice" data-a="either">Either one, because at this size the choice has no consequences at all.</button>
+<div id="s1fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-s2" style="margin-top:1rem"><p><strong>Script 2.</strong> Ledgerline is moving off PostgreSQL next year, and this job has to keep working on whatever replaces it. <strong>Which library, and what is the strongest reason?</strong></p>
+<button type="button" class="mlrk-choice" data-a="alch">SQLAlchemy, because the connection code moves by changing the address, and the driver gets picked for you.</button>
+<button type="button" class="mlrk-choice" data-a="alchsql">SQLAlchemy, because it makes the SQL itself portable so nothing in the query has to change.</button>
+<button type="button" class="mlrk-choice" data-a="raw"><code>psycopg2</code> now, and somebody can rewrite the whole thing next year.</button>
+<div id="s2fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-s3" style="margin-top:1rem"><p><strong>Script 3.</strong> A support dashboard asks the database a question on every page load, thousands of times a day, and opens a connection each time. <strong>Which library, and what is the strongest reason?</strong></p>
+<button type="button" class="mlrk-choice" data-a="alch">SQLAlchemy, because its engine reuses connections by default and this script has a huge amount to reuse.</button>
+<button type="button" class="mlrk-choice" data-a="raw"><code>psycopg2</code> unchanged, because the code closes every connection properly.</button>
+<button type="button" class="mlrk-choice" data-a="either">Either one, because the query being run is identical in both.</button>
+<div id="s3fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-s4" style="margin-top:1rem"><p><strong>Script 4.</strong> The nightly reconciliation job itself. One connection, six queries, once a night, PostgreSQL only, and two teammates already maintain <code>psycopg2</code> scripts. <strong>Which library, and what is the strongest reason?</strong></p>
+<button type="button" class="mlrk-choice" data-a="raw"><code>psycopg2</code>, because nothing here repeats enough to need a pool and nothing is moving, so the team's existing knowledge decides it.</button>
+<button type="button" class="mlrk-choice" data-a="alch">SQLAlchemy, because this runs in production, and production code should use the more capable library.</button>
+<button type="button" class="mlrk-choice" data-a="either">Either one, because the job only takes a few seconds either way.</button>
+<div id="s4fb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1.2rem">
+<p><strong>One honest footnote on Script 1.</strong> Plenty of analysts reach for an engine even in a throwaway notebook, because pandas officially supports reading from a SQLAlchemy connection and only promises support for a raw driver connection in one narrow case. That is a real argument and it would be a fine answer in an interview. What is being tested here, and what gets you hired, is whether you named a fact about the script instead of a fact about the library's reputation.</p>
+</div>
+
+<div class="mlrk-card" style="margin-top:1.2rem">
+<label for="justify"><strong>Now write it.</strong> Pick any one of the four scripts above. In one sentence, name the library you would use and the single fact about that script that decided it.</label>
+<textarea id="justify" class="mlrk-response" data-save placeholder="Try starting with: For script 3 I would use..."></textarea>
+</div>
+
+<div class="mlrk-callout mlrk-callout-gold" style="margin-top:1.2rem">
+<p><strong>Where AI fits here.</strong> Ask an AI assistant which of these two libraries to use and it will almost always answer confidently, usually with SQLAlchemy, because that is the more common answer on the internet. It cannot see how often your script runs, how long it lives, or what your teammates already know. Those four facts are yours, and checking a confident answer against them is the actual skill.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Watch: what a connection costs the server</h2>
+<p>As you watch, notice the moment the screen shows PostgreSQL starting a separate process for each connection, and then watch what happens to that count once a pool is switched on. That is the same cost the order-the-steps activity walked through, only visible.</p>
+<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=Vq34xPYZwXg" target="_blank" rel="noopener">Watch on YouTube</a>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what surprised you most about what happens on the server when a connection is opened?</strong></p>
+<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>11. How this shows up in interviews</h2>
+<div class="mlrk-callout mlrk-callout-green">
+<p>Nobody is likely to quiz a junior analyst on two PostgreSQL drivers by name. What is genuinely common is the shape underneath it: "how would you connect a Python script to a database safely, and what would make you reach for SQLAlchemy instead of writing raw SQL through the driver?" Interviewers ask it because the answer tells them fast whether you have actually shipped something or only read about it.</p>
+<p>A weak answer compares the libraries. A strong answer compares your script. Name how often it runs, how long it lives, whether it will ever point somewhere else, and who maintains it. Then pick, out loud, and say the pick first instead of narrating your way to it.</p>
+<p>The other place this shows up is the "explain a technical idea to someone non-technical" question, which is on almost every data-analyst interview list. Connection pooling is a great thing to practice that on, because the badge-at-the-front-desk version of it lands with anybody.</p>
+</div>
+<div class="mlrk-card" id="card-interview"><p><strong>An interviewer asks what would make you reach for SQLAlchemy over the raw driver. Which answer is strongest?</strong></p>
+<button type="button" class="mlrk-choice" data-a="script">"It depends on the script. If it runs constantly and opens a lot of connections, I want the pool the engine gives me for free."</button>
+<button type="button" class="mlrk-choice" data-a="modern">"SQLAlchemy is the more modern library and it has more features."</button>
+<button type="button" class="mlrk-choice" data-a="beginner">"The raw driver is really for beginners, so I would use SQLAlchemy on anything real."</button>
+<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>12. Summary &amp; critical thinking</h2>
+<p>Three ideas carried this reading. SQLAlchemy sits on top of <code>psycopg2</code> rather than replacing it, so the choice is about how many floors you want, not which road you take. That extra floor buys you a pool by default, a swappable database address, and one consistent error type, and it costs you some control and more to learn. And every one of those tradeoffs is priced by a fact about your script, never by which library sounds more professional.</p>
+
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> Ledgerline rewrites the nightly job. Instead of running once at two in the morning, it now runs whenever a support agent clicks "recheck this payment," hundreds of times a day, opening a connection each time. Which fact about the script changed, and what does it do to the recommendation?</p>
+<button type="button" class="mlrk-choice" data-a="often">How often it connects changed, so now there is something for a pool to reuse and SQLAlchemy's engine gets much more attractive.</button>
+<button type="button" class="mlrk-choice" data-a="nothing">Nothing that matters changed, because the query and the database are the same.</button>
+<button type="button" class="mlrk-choice" data-a="portable">The database changed, so portability is now the deciding factor.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" style="margin-top:1rem">
+<label for="ownwords"><strong>In your own words:</strong> think of any two tools you have used that both did the same job, in code or out of it. What did the easier one quietly take away from you, and was that a good trade?</label>
+<textarea id="ownwords" class="mlrk-response" data-save placeholder="Try starting with: Both of them could..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</div>
+
+<p style="margin-top:1.4rem">One more thing worth carrying forward. The four questions used here, how often does it run, how long does it live, will it ever move, and who maintains it, are not about databases. They work on any pair of tools that both technically do the job: two charting libraries, two ways to schedule a script, two file formats. Having a short, repeatable way to price a convenience is what turns a preference into a decision you can defend.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>Go further</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://docs.sqlalchemy.org/en/20/tutorial/index.html" target="_blank" rel="noopener">SQLAlchemy Unified Tutorial</a> — hands-on and type-along: build an engine, run real queries, and see the pieces from section 3 in working code.</li>
+<li><a href="https://www.youtube.com/watch?v=GTeCtIoV2Tw" target="_blank" rel="noopener">Connection Pooling in PostgreSQL, with real performance numbers</a> — about 12 minutes, and pooling's speedup is measured rather than asserted. The demo code is JavaScript, so watch it for the numbers and the reasoning, not the syntax.</li>
+<li><a href="https://www.psycopg.org/docs/" target="_blank" rel="noopener">psycopg2 documentation</a> — the driver's own reference, including the part of the library that pools connections if you want to wire one up yourself.</li>
+<li><a href="https://pandas.pydata.org/docs/reference/api/pandas.read_sql.html" target="_blank" rel="noopener">pandas: read_sql reference</a> — read what pandas officially accepts as a connection, which is the least hand-wavy argument for the layer that exists.</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>Your score &amp; keep a copy of your work</h2>
+<div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
+<div class="mlrk-export" style="margin-top:1rem">
+  <div class="mlrk-actions">
+    <button type="button" id="md" class="mlrk-btn">Download Markdown</button>
+    <button type="button" id="json" class="mlrk-btn">Download JSON</button>
+    <button type="button" id="txt" class="mlrk-btn">Download TXT</button>
+    <button type="button" id="show" class="mlrk-btn">Show plain text</button>
+  </div>
+  <p id="exportfb" class="mlrk-small" aria-live="polite"></p>
+  <div id="plainwrap" class="mlrk-plain"><label for="plain"><strong>Plain-text fallback</strong></label>
+    <textarea id="plain" class="mlrk-response" style="min-height:220px"></textarea>
+    <p><button type="button" id="selectall" class="mlrk-btn">Select all text</button></p>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-green" style="margin-top:1.2rem">
+    <p><strong>Keep it in your own GitHub repo (optional, for your streak/portfolio):</strong> the Download JSON button above saves the file into your computer's <code>Downloads</code> folder. Here's how to move it into a repo of your own.</p>
+
+    <details class="mlrk-hint">
+      <summary>Step 1: Make a repo on your GitHub account (one time only — collapse this afterward)</summary>
+      <ol class="mlrk-steplist">
+        <li>On GitHub, click the <strong>+</strong> in the top-right corner, then <strong>New repository</strong>.</li>
+        <li>Give it a name (something like <code>data-analytics-readings</code>) and click <strong>Create repository</strong>.</li>
+        <li>On the new repo's page, click the green <strong>Code</strong> button and copy the <strong>HTTPS</strong> URL.</li>
+        <li>In your terminal, clone it to your computer, pasting in the URL you just copied:
+          <pre class="mlrk-code">git clone https://github.com/YOUR-USERNAME/YOUR-REPO.git</pre></li>
+      </ol>
+      <p class="mlrk-small">You only do this once. For every reading after this one, start at Step 2.</p>
+    </details>
+
+    <p style="margin-top:.9rem"><strong>Step 2: Save this reading's file into that repo</strong> (do this for every reading):</p>
+    <ol class="mlrk-steplist">
+      <li>Move into your repo folder:
+        <pre class="mlrk-code">cd YOUR-REPO</pre></li>
+      <li>Move the file you just downloaded out of <code>Downloads</code> and into that folder:
+        <pre class="mlrk-code">mv ~/Downloads/library-tradeoffs-reading1.json .</pre></li>
+      <li>Save it to git and push it up to GitHub:
+        <pre class="mlrk-code">git add library-tradeoffs-reading1.json
+git commit -m "Complete psycopg2 vs SQLAlchemy tradeoffs reading"
+git push</pre></li>
+    </ol>
+  </div>
+
+  <div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
+    <p><strong>Submit for credit:</strong> this opens a pre-filled GitHub Issue in your own private submission repo. Only you and your instructor can ever see it. You get 4 submission attempts per reading; your best score counts.</p>
+    <details class="mlrk-hint"><summary>First time submitting? Set up your private submission repo (one-time)</summary>
+      <ol>
+        <li>Go to the <a href="https://github.com/The-Marcy-Lab-School/DA-Reading_Submissions" target="_blank" rel="noopener">DA-Reading_Submissions template</a> and click <strong>"Use this template"</strong> to create your own copy.</li>
+        <li>On the create page, set the visibility to <strong>Private</strong>. It defaults to <strong>Public</strong>, so you have to change it yourself.</li>
+        <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
+        <li>Copy your repo's name <strong>exactly</strong> as it appears in GitHub's URL, including any hyphens, underscores, and capitalization. Paste it into the "Your submissions repo name" box below, along with your GitHub username, then click Submit for credit.</li>
+      </ol>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+      <p class="mlrk-small"><strong>Getting a "404" page instead?</strong> Two usual causes: the repo name you typed doesn't exactly match the real one (check for a stray hyphen or different capitalization), or you're not signed in to GitHub as the account that owns the repo &mdash; a private repo looks like a 404 to anyone who isn't signed in to it.</p>
+    </details>
+    <div class="mlrk-fillblank">
+      <label for="ghuser">GitHub username</label>
+      <input type="text" id="ghuser" autocomplete="off">
+    </div>
+    <div class="mlrk-fillblank">
+      <label for="ghrepo">Your submissions repo name</label>
+      <input type="text" id="ghrepo" autocomplete="off" placeholder="reading-submissions">
+    </div>
+    <p><button type="button" id="submitcredit" class="mlrk-btn mlrk-btn-primary">Submit for credit</button></p>
+    <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
+  </div>
+</div>
+</section>
+
+</div></main>
+
+<footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
+<script src="../../../assets/reading-kit.js"></script>
+<script>
+(function(){
+  const K = ReadingKit;
+  const $ = s => document.querySelector(s);
+  const READING_ID = "library-tradeoffs-reading1";
+  const TITLE = "Both of Them Work — Choosing Between psycopg2 and SQLAlchemy";
+
+  K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
+  K.Persona.renderPicker("#persona");
+  K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
+  K.Scoring.renderChip("#scorechip");
+
+  K.quiz({id:"q-pre-lib", buttonSelector:"#card-pre-lib .mlrk-choice", feedbackSelector:"#prelibfb", correct:"code",
+    feedback:{code:"That is it. Both psycopg2 and SQLAlchemy are libraries, which is why you can swap one for the other in a script.",
+              folder:"That describes a place files live, not a library. A library is reusable code you import.",
+              db:"A table lives inside a database. A library is Python code you bring into your own file."}});
+
+  K.quiz({id:"q-pre-conn", buttonSelector:"#card-pre-conn .mlrk-choice", feedbackSelector:"#preconnfb", correct:"held",
+    feedback:{held:"Right. The server set something up for that connection and keeps holding it until the connection is released. This reading is largely about that cost.",
+              wrong:"The results already came back correctly. The problem is what the server is still holding afterward.",
+              none:"A connection does not close itself when a query finishes. It stays open until something closes it."}});
+
+  K.quiz({id:"q-pre-df", buttonSelector:"#card-pre-df .mlrk-choice", feedbackSelector:"#predffb", correct:"nothing",
+    feedback:{nothing:"Exactly. Identical output is where this comparison starts, not where it ends.",
+              either:"Identical output only proves the results match. Connections, portability, errors, and learning curve are all still different.",
+              faster:"Speed was not measured here, and it is not the tradeoff this reading is built on anyway."}});
+
+  K.quiz({id:"q-stack", buttonSelector:"#card-stack .mlrk-choice", feedbackSelector:"#stackfb", correct:"extras",
+    feedback:{extras:"Yes. Everything the layer handled is still needed, so skipping the layer moves that work into her own code.",
+              driver:"Look at the stacks again: psycopg2 is the floor below SQLAlchemy, not inside it. Nia still uses the driver, she just uses it directly.",
+              rename:"The layer adds real machinery, including connection handling and the database address, not new spellings for the same calls."}});
+
+  K.quiz({id:"q-pool", buttonSelector:"#card-pool .mlrk-choice", feedbackSelector:"#poolfb", correct:"many",
+    feedback:{many:"Right. Thousands of separate connections a day is thousands of rounds of server setup, and reuse removes almost all of it.",
+              big:"One long query still only needs one connection. The time is spent inside the query, not on opening connections.",
+              wide:"Column count changes how much data comes back. It does not change how many connections get opened."}});
+
+  K.quiz({id:"q-portable", buttonSelector:"#card-portable .mlrk-choice", feedbackSelector:"#portablefb", correct:"false", maxAttempts:1,
+    feedback:{false:"Correct. The connection code moves. The SQL text does not, because databases genuinely differ on dates, types, and syntax.",
+              true:"This is the most common overclaim about SQLAlchemy. What moves is the connection code, not the query language itself."}});
+
+  K.quiz({id:"q-errors", buttonSelector:"#card-errors .mlrk-choice", feedbackSelector:"#errorsfb", correct:"wrap",
+    feedback:{wrap:"Right. Look at the second block: the driver's original error name is printed in parentheses inside SQLAlchemy's error.",
+              hide:"The original is right there in the second block, in parentheses, and it is still reachable in code.",
+              silent:"Both versions raise an error. Neither one quietly returns an empty table for a table name that does not exist."}});
+
+  K.quiz({id:"q-s1", buttonSelector:"#card-s1 .mlrk-choice", feedbackSelector:"#s1fb", correct:"raw",
+    feedback:{raw:"Good reasoning. The deciding fact is the script's lifespan: one run, no repetition, nothing to reuse.",
+              alch:"Pooling is not always safer, it is sometimes pointless. A script that connects once has no second connection to reuse.",
+              either:"There is one consequence even here: whoever opens your notebook next has to know whichever library you left in it."}});
+
+  K.quiz({id:"q-s2", buttonSelector:"#card-s2 .mlrk-choice", feedbackSelector:"#s2fb", correct:"alch",
+    feedback:{alch:"Yes. The address carries the dialect and the driver, so the connection code survives the move.",
+              alchsql:"Half right, and the half that is wrong matters. The connection code moves. The SQL text still has to be checked against the new database.",
+              raw:"Defensible if the move were uncertain, but it is already planned, so this knowingly schedules work you could avoid today."}});
+
+  K.quiz({id:"q-s3", buttonSelector:"#card-s3 .mlrk-choice", feedbackSelector:"#s3fb", correct:"alch",
+    feedback:{alch:"Right, and notice the reason is the script, not the library: constant repetition is exactly the condition a pool is for.",
+              raw:"Closing properly is not the issue. Every one of those correctly closed connections still cost the server a full round of setup first.",
+              either:"The query is identical, and that is exactly why the query cannot be what decides this. How often it connects is."}});
+
+  K.quiz({id:"q-s4", buttonSelector:"#card-s4 .mlrk-choice", feedbackSelector:"#s4fb", correct:"raw",
+    feedback:{raw:"Strong answer. No repetition, no move planned, and the maintenance cost lands on people who already know this library.",
+              alch:"More capable is not a reason a script needs. Nothing in this job asks for pooling or portability.",
+              either:"Runtime is not the question. Who maintains it and whether anything repeats are, and both point the same way here."}});
+
+  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"script",
+    feedback:{script:"That is the shape interviewers listen for: a condition about the script, then the pick that follows from it.",
+              modern:"This compares reputations instead of scripts, and it gives the interviewer nothing to follow up on.",
+              beginner:"Working teams ship both. Calling the driver a beginner tool signals you have not had to weigh the choice."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"often",
+    feedback:{often:"Exactly. The query did not change, the database did not change, and the recommendation moved anyway, because how often it connects did.",
+              nothing:"The query really is the same, and the recommendation still changed. Frequency is the fact that moved.",
+              portable:"The database stayed put. What changed is how many times a day the script opens a connection."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"When SQLAlchemy talks to PostgreSQL, psycopg2 is doing the actual talking underneath.", correct:true,
+      hint:"Look back at the two stacks in section 3. Which box sits directly above PostgreSQL in the left-hand stack?",
+      explain:"The two stacks share their bottom floors. SQLAlchemy hands the work down to the driver rather than replacing it."},
+    {value:"b", label:"Pointing a SQLAlchemy job at a different database makes your SQL text run there unchanged.", correct:false,
+      hint:"Re-read the red callout in the section about moving databases. What exactly did it say moves, and what did it say does not?",
+      explain:"The connection code moves. Dates, data types, and plenty of syntax still differ between databases, and no layer fixes that."},
+    {value:"c", label:"A connection pool keeps a set of already-open connections and hands them out as needed.", correct:true,
+      hint:"Check the vocabulary card for connection pool, and the front-desk badge example next to it.",
+      explain:"That is the definition. The badges are reused instead of printed fresh for every visitor."},
+    {value:"d", label:"psycopg2 has no way to reuse connections at all.", correct:false,
+      hint:"Re-read the third paragraph of the pooling section. It says something specific about what psycopg2 can do and what you have to do.",
+      explain:"psycopg2 ships a part of the library for exactly this. The difference is that you reach for it and wire it up, instead of getting one without asking."}
+  ]});
+
+  K.orderSteps("#ordersteps", {id:"act-order-connect",
+    correctOrder:["ask","process","setup","ready","close"],
+    feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+
+  K.dragDrop("#dragarea", "act-drag-sort");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneDriver", label:"The job runs once and then exits", expectedLabel:"Argues for the raw driver"},
+    chip2:{expectedId:"zoneAlchemy", label:"The script opens thousands of connections a day", expectedLabel:"Argues for SQLAlchemy"},
+    chip3:{expectedId:"zoneDriver", label:"You want PostgreSQL's own error text, unwrapped", expectedLabel:"Argues for the raw driver"},
+    chip4:{expectedId:"zoneAlchemy", label:"The same job may need to run against a different database", expectedLabel:"Argues for SQLAlchemy"},
+    chip5:{expectedId:"zoneDriver", label:"You want the fewest new things for the next person to learn", expectedLabel:"Argues for the raw driver"},
+    chip6:{expectedId:"zoneAlchemy", label:"You want connection reuse without wiring it up yourself", expectedLabel:"Argues for SQLAlchemy"}
+  }});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  K.video({id:"act-video", elementId:"ytplayer", videoId:"Vq34xPYZwXg"});
+  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
+  K.freeResponse({id:"resp-justify", selector:"#justify", minWords:12});
+  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:10});
+
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
+  $("#blankcheck").addEventListener("click",()=>{
+    if(blankDone) return;
+    blankAttempts++;
+    const typed = $("#blankinput").value.trim().toLowerCase();
+    const ok = typed==="psycopg2" || typed==="psycopg";
+    const fb=$("#blankfb");
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> Point a plain PostgreSQL address at SQLAlchemy and <code>psycopg2</code> is what it loads underneath.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The driver is <code>psycopg2</code>, the same one Nia would use directly.";
+      blankDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> Look at the middle box of the left-hand stack in section 3, then the box directly under it. One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
+
+  const AI_PROMPTS = [
+    "Think of a convenience you use every day that makes a decision for you, like a route app or an auto-reply. What does it decide, and when would you want to overrule it?",
+    "If you had to explain a connection pool to a friend who has never written code, what would you compare it to besides a desk full of visitor badges?",
+    "Pick a script or project you have already built. How often does it run, how long does it live, and would either answer change the tool you reached for?"
+  ];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.style.display="block";
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  });
+
+  $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
+  $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
+  $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
+  $("#ghrepo").addEventListener("input", e => localStorage.setItem("mlrk:ghrepo", e.target.value));
+
+  function stat(ok){
+    $("#exportfb").textContent = ok
+      ? "File created. Keep a copy; your instructor will tell you where/how to store or submit it."
+      : "File generation failed in this browser. Use \"Show plain text\" below instead.";
+  }
+  $("#md").addEventListener("click", () => stat(K.download(READING_ID+".md","text/markdown",K.toMarkdown(K.snapshot(READING_ID,TITLE)))));
+  $("#json").addEventListener("click", () => stat(K.download(READING_ID+".json","application/json",JSON.stringify(K.snapshot(READING_ID,TITLE),null,2))));
+  $("#txt").addEventListener("click", () => stat(K.download(READING_ID+".txt","text/plain",K.toText(K.snapshot(READING_ID,TITLE)))));
+  $("#show").addEventListener("click", () => {
+    $("#plainwrap").classList.add("mlrk-show");
+    $("#plain").value = K.toText(K.snapshot(READING_ID,TITLE));
+    $("#plain").focus(); $("#plain").select();
+  });
+  $("#selectall").addEventListener("click", () => { $("#plain").focus(); $("#plain").select(); });
+
+  $("#submitcredit").addEventListener("click", () => {
+    if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
+    const fb=$("#submitfb");
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["python-data-tools"],
+      skills:["python-database-connectivity","library-tradeoff-analysis"], onDone(status,message){
+      fb.textContent=message;
+    }});
+  });
+
+  K.wireImport("#importfile-top", ok => {
+    $("#importfb-top").textContent = ok
+      ? "Progress restored from your saved file."
+      : "That file couldn't be read. Make sure it's the JSON you downloaded from this reading.";
+  });
+})();
+</script>
+</body></html>

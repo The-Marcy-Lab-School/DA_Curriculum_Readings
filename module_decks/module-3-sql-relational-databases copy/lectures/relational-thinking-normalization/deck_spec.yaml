@@ -1,0 +1,635 @@
+meta:
+  title: "Relational Thinking & Normalization"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 1
+  date: "Day 1"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Explain what primary keys, foreign keys, and normalization mean, and why splitting data into related tables reduces redundancy compared to one flat spreadsheet"
+    - "Take a deliberately un-normalized table through 1NF, 2NF, and 3NF, live"
+  tools:
+    - "None — today is entirely conceptual, no SQL yet (psql starts next class)"
+  exercise:
+    type: bullets
+    url_or_text: "No new exercise today — psql and your first real database start next class, built on this same schema."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Terminal/command-line comfort (Modules 0-2) — psql starts next class"
+    - "General data literacy: What a row/column/dataset is (Module 0)"
+  interview_topics:
+    - "Why does normalization matter, and what's the tradeoff against denormalization?"
+  final_project:
+    "Every one of the project's 7 given business questions depends on a
+    schema that's actually normalized to at least 3NF, with real primary
+    and foreign keys expressing the domain's real relationships —
+    Objective 5 later grades independently spotting a schema that skips
+    this. Today is where that judgment starts, on a table small enough to
+    reason through by hand."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: modeled
+  scenario: >
+    A worked example, no SQL yet: A restaurant's order data, first crammed
+    into one flat spreadsheet, then split into real, related tables.
+    You'll learn what a primary key and foreign key actually are, then
+    walk a messy table through three real normalization steps — before
+    `psql` gives you the tools to build any of it for real.
+  glossary:
+    - term: "primary key"
+      definition: "The column (or columns) that uniquely identifies each row in a table"
+    - term: "foreign key"
+      definition: "A column that references another table's primary key, linking the two tables together"
+    - term: "normalization"
+      definition: "Organizing a database's tables so each fact lives in exactly one place"
+    - term: "1NF"
+      definition: "First Normal Form — every cell holds exactly one value, not a list crammed into one"
+    - term: "2NF"
+      definition: "Second Normal Form — 1NF, plus no column depends on only part of a multi-column key"
+    - term: "3NF"
+      definition: "Third Normal Form — 2NF, plus no non-key column depends on another non-key column"
+    - term: "partial dependency"
+      definition: "A column that only really depends on part of a table's key, not the whole key"
+    - term: "transitive dependency"
+      definition: "A column that depends on another non-key column, instead of depending on the key directly"
+
+slides:
+  - type: title
+    title: "Relational Thinking & Normalization"
+    subtitle: "Why One Big Spreadsheet Breaks"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 1"
+    notes: >
+      [SCRIPT] Frame this as a real shift from Module 2: you've analyzed
+      data that already lived in one clean file. Today starts the module
+      that teaches you to design where that data actually lives in the
+      first place — before a single line of SQL.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Explain primary keys, foreign keys, normalization"
+        icon: "schema"
+      - text: "Take a messy table through 1NF, 2NF, 3NF"
+        icon: "checklist"
+    notes: >
+      [SCRIPT] Read both out loud. Name explicitly: every schema you'll
+      design for your own project later this module has to pass the exact
+      normalization test you're about to learn by hand today.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "Primary key, foreign key"
+        icon: "primary_key"
+      - text: "Normalization: 1NF, 2NF, 3NF"
+        icon: "schema"
+    notes: >
+      [SCRIPT] Just names for now — you'll get real definitions and
+      hands-on examples for every one of these before today's over.
+
+  - type: check_understanding
+    prompt: "Quick recall: Name one real terminal command you've already typed for real, in an earlier module."
+    mode: discussion
+    topic: "Warm-Up: Terminal Comfort"
+    bloom_level: remember
+    question_style: conceptual
+    skill_tags: ["terminal-command-line"]
+    notes: >
+      [ACTIVITY] In person: a few quick shout-outs. Online: drop one
+      command in chat.
+
+
+      [SCRIPT] Quick-fire — the point isn't which specific command gets
+      named, it's confirming the terminal itself is already familiar
+      ground before `psql` becomes the new thing riding on top of it next
+      class.
+
+  - type: transition
+    from_label: "Warmed Up"
+    to_label: "One Given Example"
+    note: "You'll see a worked, already-correct schema first — then learn to build one yourself."
+    objective_index: 1
+    style: "icon_hero"
+    icon: "compass"
+    notes: >
+      [SCRIPT] [~2 min mark] Set expectations: today has two halves —
+      first, recognizing a good design; second, actually building one from
+      a mess.
+
+  - type: content
+    title: "A Primary Key Uniquely Identifies a Row"
+    bullets:
+      - "One column (or combo) per table"
+      - "No two rows ever share it"
+      - "Nothing to do with row order"
+    icon_hero:
+      icon: "primary_key"
+      style: "blue"
+    notes: >
+      [SCRIPT] Contrast explicitly with a name: two Fellows can share a
+      first name, but never a student ID. That's exactly what a primary
+      key guarantees for a row.
+
+
+      [MISCONCEPTIONS] A common early mix-up: assuming the primary key has
+      to be the *first* column, or has to be a number. Neither is true —
+      what matters is uniqueness, not position or type.
+
+  - type: content
+    title: "A Foreign Key Points at Another Table's Row"
+    bullets:
+      - "Lives in one table"
+      - "Matches a primary key in another"
+      - "That's the actual \"link\" between tables"
+    icon_hero:
+      icon: "foreign_key"
+      style: "gold"
+    analogy:
+      domain: "school & community"
+      mapping: "Like writing a friend's library card number on a form instead of copying their whole name and address every time — you just point at their record."
+    notes: >
+      [SCRIPT] Name explicitly: a foreign key doesn't duplicate the other
+      table's data, it *references* it. That single idea is what makes
+      normalization possible at all.
+
+  - type: content
+    title: "A Worked Schema: Customers, Orders, Menu Items"
+    card_items:
+      - text: "customers — customer_id (PK)"
+        icon: "person"
+      - text: "orders — order_id (PK), customer_id (FK)"
+        icon: "invoice"
+      - text: "menu_items — item_id (PK)"
+        icon: "menu_book"
+    notes: >
+      [SCRIPT] Walk each card left to right: customers and menu_items each
+      have their own primary key; orders links to customers via a foreign
+      key. This is a simplified starting point: one order, one item. Real
+      orders usually have more than one, which is exactly what today's
+      second half builds toward.
+
+
+      [MISCONCEPTIONS] Fellows sometimes expect every table to link to
+      every other table. Here, `orders` links to `customers`, but nothing
+      links directly to `menu_items` yet — that gap is deliberate, and
+      today's normalization walkthrough resolves it for real.
+
+  - type: check_understanding
+    prompt: "In this schema, `orders.customer_id` matches `customers.customer_id`. What kind of key is `orders.customer_id`, and how would you explain the difference from a primary key?"
+    mode: game
+    topic: "Spotting a Foreign Key"
+    bloom_level: understand
+    question_style: interview
+    technique: "Teach-Back"
+    options:
+      - "A foreign key"
+      - "A primary key"
+      - "Neither — just a coincidence"
+    answer:
+      correct: "A foreign key"
+      explanation: "A foreign key is a column that references another table's primary key. `orders.customer_id` doesn't identify the order itself — that's `order_id`'s job — it points at which customer placed it."
+      source: "This module's own objective-1 definition, not an external citation"
+    skill_tags: ["relational-databases"]
+    notes: >
+      [TECHNIQUE] Use Teach-Back — "what's the difference between a
+      primary key and a foreign key" is a genuinely common real interview
+      question, and the strongest answer is one that could teach a
+      newcomer the distinction cleanly, not just recite a definition.
+
+
+      [SCRIPT] Have a Fellow explain the reasoning out loud, not just pick
+      the answer — the "points at, doesn't duplicate" idea is the one
+      that matters.
+
+  - type: transition
+    from_label: "A Clean Example"
+    to_label: "But Why Bother?"
+    note: "One flat spreadsheet feels simpler — until it has to grow."
+    notes: >
+      [SCRIPT] Short beat before the case study.
+
+  - type: case_study
+    headliner: "A Spreadsheet Row Limit Quietly Dropped 16,000 COVID Cases"
+    kicker: "IN THE NEWS"
+    summary_points:
+      - "One spreadsheet, always growing"
+      - "15,841 real cases went missing"
+    is_fictional: false
+    source_url: "https://www.theregister.com/2020/10/05/excel_england_coronavirus_contact_error/"
+    caption: "The Register, October 2020"
+    image_path: "modules/module-3-sql-relational-databases/lectures/relational-thinking-normalization/images/phe_excel_incident.png"
+    image_prompt: "Photo-realistic: A public health analyst reviewing a data dashboard, serious expression, muted office lighting"
+    image_alt: "A public health data analyst reviewing case data on a monitor in an office setting"
+    key_takeaway: "One growing flat file has real, hard limits — a relational database is built specifically so structure, not luck, is what keeps data from silently breaking as it grows."
+    notes: >
+      [SCRIPT] Walk the timeline: automated exports kept appending rows to
+      an old-format Excel template. Once a template hit ~1,400 cases
+      (each result took several rows), every case past that point just...
+      didn't make it in. No error, no warning.
+
+
+      [SCRIPT] Name explicitly: this isn't really an "Excel is bad" story.
+      It's a "one growing flat file has a ceiling nobody was watching"
+      story. That's the exact problem a relational database's own table
+      structure is built to avoid. Related tables don't have this
+      ceiling: each fact lives in exactly one place, so growth just means
+      more rows, not more risk — that's what normalization is for.
+
+
+      [ARTICLE SUMMARY] In September-October 2020, Public Health England's
+      automated process for compiling COVID-19 test results used an
+      outdated .xls file format capped at 65,536 rows. Because each test
+      result generated several rows and the process split data across
+      templates capped near 1,400 cases each, any case past that per-file
+      limit was silently dropped rather than flagged. Over an 8-day window,
+      15,841 positive cases were left off the file that fed England's
+      contact-tracing system, delaying or preventing contact tracing for
+      an estimated 48,000 close contacts. The fix was switching to a
+      modern file format without the row cap.
+
+
+      [SOURCES] The Register, "UK health department created its own
+      coronavirus crisis after choosing Excel over a real database"
+      (2020-10-05).
+
+  - type: compare_contrast
+    title: "Structure, Not Luck, Prevents Breakage"
+    left_label: "One Flat Spreadsheet"
+    left_icon: "warning"
+    left_points:
+      - "Repeats the same info every row"
+      - "One typo creates two \"truths\""
+      - "Growth can silently break the file"
+    right_label: "Related Tables"
+    right_icon: "database"
+    right_points:
+      - "Each fact stored exactly once"
+      - "One update fixes it everywhere"
+      - "Normalization: Each fact, one place"
+    similarities:
+      - "Both answer the same business questions"
+    notes: >
+      [SCRIPT] Name explicitly: this "each fact stored exactly once" habit
+      is literally what normalization means — organizing tables so every
+      fact lives in exactly one place. Name the tradeoff honestly too,
+      don't oversell: related tables cost you a `psql` `JOIN` to bring
+      facts back together — that's next class. Today's payoff is on the
+      write/update side, not reading yet.
+
+  - type: transition
+    from_label: "You Can Recognize a Good Design"
+    to_label: "Now, Build One From a Mess"
+    note: "A real dataset rarely arrives already normalized — you have to get it there."
+    objective_index: 2
+    style: "panel_preview"
+    preview_items:
+      - text: "1NF: One Value Per Cell"
+        icon: "row"
+      - text: "2NF: No Partial Dependency"
+        icon: "join"
+      - text: "3NF: No Transitive Dependency"
+        icon: "database"
+    notes: >
+      [SCRIPT] [~15 min mark] Name explicitly: everything so far assumed
+      someone already designed the schema well. The rest of today is
+      about *how* — starting from a genuinely messy table, through these
+      three real steps.
+
+  - type: table
+    title: "The Un-Normalized Orders Table"
+    headers:
+      - "Order ID"
+      - "Customer"
+      - "Zip"
+      - "Items"
+      - "Item Prices"
+    rows:
+      - - "101"
+        - "Renee K."
+        - "11201"
+        - "Burger, Fries"
+        - "$12.00, $4.00"
+      - - "102"
+        - "Renee K."
+        - "11201"
+        - "Soda"
+        - "$2.50"
+      - - "103"
+        - "Jordan M."
+        - "10001"
+        - "Burger, Soda"
+        - "$12.00, $2.50"
+    notes: >
+      [SCRIPT] This is one real row per order, straight out of a flat
+      spreadsheet — customer info repeated, multiple items crammed into
+      one cell. Give Fellows 30 seconds to look before asking anything —
+      let them notice the "Items" column on their own first.
+
+  - type: check_understanding
+    prompt: "Look at the \"Items\" column. What rule does it break?"
+    mode: poll
+    topic: "Spotting a 1NF Violation"
+    bloom_level: analyze
+    question_style: debug
+    options:
+      - "Each cell holds more than one value"
+      - "The order ID repeats across rows"
+      - "The customer name is spelled wrong"
+    answer:
+      correct: "Each cell holds more than one value"
+      explanation: "\"Burger, Fries\" crammed into one cell isn't atomic — a real database column holds exactly one value per row. That's the whole rule 1NF enforces."
+      source: "This module's own objective-2 definition, not an external citation"
+    skill_tags: ["relational-databases"]
+    notes: >
+      [SCRIPT] Confirm out loud: this isn't about the *number* of items,
+      it's about cramming a list into a single cell instead of giving each
+      item its own row.
+
+  - type: table
+    title: "1NF: Every Cell Holds One Value"
+    headers:
+      - "Order ID"
+      - "Customer"
+      - "Zip"
+      - "Item"
+      - "Price"
+    rows:
+      - - "101"
+        - "Renee K."
+        - "11201"
+        - "Burger"
+        - "$12.00"
+      - - "101"
+        - "Renee K."
+        - "11201"
+        - "Fries"
+        - "$4.00"
+      - - "102"
+        - "Renee K."
+        - "11201"
+        - "Soda"
+        - "$2.50"
+      - - "103"
+        - "Jordan M."
+        - "10001"
+        - "Burger"
+        - "$12.00"
+      - - "103"
+        - "Jordan M."
+        - "10001"
+        - "Soda"
+        - "$2.50"
+    notes: >
+      [SCRIPT] This is 1NF, First Normal Form: every cell holds exactly
+      one value, no lists or comma-separated values. Fixing this means
+      the table gets *more* rows, not fewer. Order 101 now takes two
+      rows, one per item — the direct, correct consequence of making
+      every cell atomic, not a sign something went wrong. But look what's
+      still repeated: "$12.00" for Burger, twice; Renee's zip, on every
+      one of her orders. 1NF alone didn't fix this.
+
+
+      [MISCONCEPTIONS] Fellows often think 1NF is the finish line once
+      every cell has one value. It's necessary, not sufficient — the next
+      slide is the pivot to why.
+
+  - type: check_understanding
+    prompt: "Why did `Price` end up repeated for Burger across two different orders?"
+    mode: discussion
+    topic: "Naming the Repetition"
+    bloom_level: analyze
+    question_style: critical_thinking
+    skill_tags: ["relational-databases"]
+    notes: >
+      [ACTIVITY] In person: turn and talk with a neighbor, 60 seconds.
+      Online: drop a guess in chat, then unmute 1-2 Fellows.
+
+
+      [SCRIPT] Target idea: Burger's price doesn't actually depend on
+      *which order* it's part of — it depends only on the item itself.
+      Storing it once per order-row is what's causing the repeat.
+
+  - type: content
+    title: "Rule 2: No Partial Dependencies"
+    bullets:
+      - "This is 2NF — Second Normal Form"
+      - "Real key here: (Order ID, Item)"
+      - "Price depends only on Item"
+    icon_hero:
+      icon: "schema"
+      style: "blue"
+    analogy:
+      domain: "food & delivery"
+      mapping: "A delivery fee depends only on the zone, not which item's in the bag — writing it next to every single item is a partial dependency."
+    notes: >
+      [SCRIPT] Write "(Order ID, Item)" as the key on the board, then
+      circle "Item" alone next to Price — that visual is the whole
+      concept of a partial dependency: a column depending on only part of
+      the key, not the whole thing.
+
+
+      [MISCONCEPTIONS] "Partial dependency" sounds abstract until it's
+      framed concretely: it just means a column that only cares about
+      *part* of what uniquely identifies the row, not the whole thing.
+
+  - type: content
+    title: "2NF: Split Off the Partial Dependency"
+    card_items:
+      - text: "orders — order_id (PK), customer, zip"
+        icon: "invoice"
+      - text: "items — item (PK), price"
+        icon: "menu_book"
+      - text: "order_items — order_id (FK), item (FK)"
+        icon: "join"
+    notes: >
+      [SCRIPT] Walk it left to right: `orders` now holds only what
+      depends on the whole order; `items` holds only what depends on the
+      item; `order_items` just links the two — no data of its own, purely
+      a connector.
+
+  - type: check_understanding
+    prompt: "Why did `price` move into its own `items` table instead of staying with the order?"
+    mode: game
+    topic: "Spotting a Partial Dependency"
+    bloom_level: analyze
+    question_style: conceptual
+    options:
+      - "It depends only on the item, not on which order it's in"
+      - "It's a dollar amount, not text"
+      - "It was too long to fit in one cell"
+    answer:
+      correct: "It depends only on the item, not on which order it's in"
+      explanation: "A Burger costs $12.00 no matter which order it's part of — `price` was never really about the order at all. That's exactly what a partial dependency is, and splitting it out is how 2NF fixes it."
+      source: "This module's own objective-2 definition, not an external citation"
+    skill_tags: ["relational-databases"]
+    notes: >
+      [SCRIPT] Reconnect explicitly to the previous discussion slide — this
+      is the same idea, now with the vocabulary attached to it.
+
+  - type: content
+    title: "3NF: The Final, Normalized Schema"
+    analogy:
+      domain: "social media"
+      mapping: "A friend's hometown doesn't depend on which post you're viewing, it depends on the friend. Storing it on every post instead of their profile is a transitive dependency."
+    card_items:
+      - text: "customers — customer_id (PK), name, zip"
+        icon: "person"
+      - text: "orders — order_id (PK), customer_id (FK)"
+        icon: "invoice"
+      - text: "items — item_id (PK), price"
+        icon: "menu_book"
+      - text: "order_items — order_id (FK), item_id (FK)"
+        icon: "join"
+    notes: >
+      [SCRIPT] This is 3NF, Third Normal Form: no non-key column depends
+      on another non-key column. Point back at the `orders` table from
+      the last slide: Renee's zip was still on order 101 AND order 102,
+      one customer stored in two rows. 2NF alone didn't fix this. Draw
+      the chain on the board: `order_id` leads to `customer`, which leads
+      to `zip`. Zip is two steps removed from the actual key, that gap is
+      the transitive dependency. Name explicitly: this is now a real,
+      4-table normalized schema built from scratch, genuinely richer than
+      the simplified 3-table version from the start of the lesson,
+      because real orders hold more than one item. This is what "given a
+      worked ERD" actually takes to produce.
+
+
+      [MISCONCEPTIONS] Fellows sometimes confuse this with 2NF's partial
+      dependency. The distinction: 2NF is about a *composite* key's parts;
+      3NF is about one non-key column depending on *another* non-key
+      column instead of the key itself.
+
+  - type: check_understanding
+    prompt: "Renee moves and her zip code changes. In this final design, how many rows do you actually update?"
+    mode: game
+    topic: "The Payoff: Update Once, Not Everywhere"
+    bloom_level: evaluate
+    question_style: business_thinking
+    options:
+      - "1 row, in `customers`"
+      - "Every row she appears in, across every table"
+      - "0 — zip code isn't stored anywhere"
+    answer:
+      correct: "1 row, in `customers`"
+      explanation: "Her zip lives in exactly one place now — `customers`. In the original flat spreadsheet, you'd have had to catch and fix every single order row she ever appeared in, and one missed row means two different \"truths\" about where she lives. This is the exact class of problem the PHE spreadsheet failure came from, just at file-breaking scale instead of a single wrong field."
+      source: "This module's own objective-2 definition, not an external citation"
+    skill_tags: ["relational-databases", "data-modeling"]
+    notes: >
+      [SCRIPT] This is the whole lesson's payoff moment — connect it back
+      to the case study by name before moving on.
+
+  - type: workflow_linear
+    title: "The Whole Journey, in Four Steps"
+    steps:
+      - label: "Messy"
+        detail: "One Big Table"
+        icon: "table"
+      - label: "1NF"
+        detail: "One Value Per Cell"
+        icon: "row"
+      - label: "2NF"
+        detail: "No Partial Dependency"
+        icon: "join"
+      - label: "3NF"
+        detail: "No Transitive Dependency"
+        icon: "database"
+    notes: >
+      [SCRIPT] Walk it left to right, fast — this is a recap, not new
+      content. Each arrow is a real fix for a real problem you just found
+      by hand: atomicity, then partial dependency, then transitive
+      dependency.
+
+  - type: interview_prep
+    topics:
+      - question: "Why does normalization matter, and what's the tradeoff against denormalization?"
+        short_answer: "Point: Normalization splits data into related tables so each fact lives once. Reason: That prevents the update-anomaly problem from today's lesson — one change touches one place. Example: Today's zip-code update went from touching every order row to touching one `customers` row. Point: The real tradeoff is on reads — pulling facts back together needs a join, so some systems deliberately denormalize (a STAR schema) to trade redundancy for fewer joins."
+        technique: "PREP"
+        icon: "database"
+    notes: >
+      [TECHNIQUE] Use PREP — this is a "explain a concept and its
+      tradeoff" question, not a story or an ambiguous ask, so
+      Point-Reason-Example-Point gives a clean, complete answer without
+      rambling.
+
+
+      [SCRIPT] Have a Fellow attempt this cold first, then reveal — the
+      goal is naming the *tradeoff* specifically, not just defining
+      normalization.
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "Primary key"
+        - "Uniquely IDs each row"
+      - - "Foreign key"
+        - "Points to another table's PK"
+      - - "Normalization"
+        - "Each fact, one place"
+      - - "1NF"
+        - "One value per cell"
+      - - "2NF"
+        - "No partial dependency"
+      - - "3NF"
+        - "No transitive dependency"
+      - - "Partial dependency"
+        - "Depends on part of the key"
+      - - "Transitive dependency"
+        - "Depends on a non-key column"
+    notes: >
+      [SCRIPT] Quick round-trip through all eight terms before the
+      summary — this is the exact vocabulary the project's own
+      `business_questions_and_schema.md` expects you to use correctly.
+
+  - type: bridge
+    title: "So Far, We've Covered..."
+    bullets:
+      - "Primary keys, foreign keys"
+      - "1NF, 2NF, 3NF — by hand"
+      - "Your schema.sql must hit 3NF too"
+    notes: >
+      [SCRIPT] Close by naming the shift ahead directly: next class turns
+      everything you just did by hand into a real, running PostgreSQL
+      database via `psql`. And name the project tie explicitly: this
+      exact reasoning is what `schema_critique.md` and
+      `business_questions_and_schema.md` both grade later this module —
+      first on someone else's schema, then independently on your own.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "No new exercise — today was concept-only"
+      - "psql starts next class"
+      - "Come ready to type, not just read"
+    notes: >
+      [SCRIPT] Give a specific heads-up: next class is the first hands-on
+      rep with a real installed tool — make sure everyone knows where to
+      find the setup instructions before then.
+
+  - type: further_resources
+    resources:
+      - title: "Database Normalization – Normal Forms, 1NF, 2NF, 3NF, With Table Examples"
+        url: "https://www.freecodecamp.org/news/database-normalization-1nf-2nf-3nf-table-examples/"
+        kind: reading
+        time_estimate: "~10 min read"
+        description: "The same restaurant walkthrough, written out again"
+        attribution: "freeCodeCamp"
+      - title: "SQLZoo"
+        url: "https://sqlzoo.net/wiki/SQL_Zoo"
+        kind: practice
+        time_estimate: "~20 min hands-on"
+        description: "Free SQL tutorials — useful once psql starts"
+        attribution: "SQLZoo"
+      - title: "The SQL Murder Mystery"
+        url: "https://mystery.knightlab.com/"
+        kind: game
+        time_estimate: "~30-45 min"
+        description: "A free detective game, really SQL practice"
+        attribution: "Knight Lab"
+    notes: >
+      [SCRIPT] Point out explicitly: SQLZoo and the Murder Mystery both
+      assume you already know basic SQL syntax — bookmark them now, they
+      pay off starting next class, not today.

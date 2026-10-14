@@ -1,0 +1,459 @@
+meta:
+  title: "CTEs I: Syntax & Rewriting a Subquery"
+  module: "Module 3: SQL & Relational Databases"
+  module_number: 3
+  lesson_number: 5
+  date: "Day 5"
+  instructor: "Instructor: J. Sprattley"
+  learning_objectives:
+    - "Explain what a CTE is and write one using a WITH clause"
+    - "Rewrite a nested subquery as a CTE, and explain why it's more readable"
+  tools:
+    - "PostgreSQL / psql"
+  exercise:
+    type: bullets
+    url_or_text: "No new exercise today — the project's own fourth given business question, for every domain, requires a CTE that genuinely improves readability, exactly what today's rewrite practices."
+    uses_same_scenario_as_lecture: false
+  dependent_skills:
+    - "Yesterday: GROUP BY and HAVING, and why WHERE can't filter an aggregate"
+    - "Earlier this module: INNER JOIN and LEFT JOIN"
+  interview_topics:
+    - "When would you choose a CTE over a subquery?"
+  final_project:
+    "The project's rubric doesn't just ask for any CTE — it specifically
+    grades whether the CTE \"genuinely improves readability\" over the
+    equivalent nested subquery. Today's side-by-side rewrite is exactly
+    that judgment call, made concrete on a query small enough to compare
+    both versions at a glance."
+  module_plan_ref: "module_sources/module-3-sql-relational-databases/INSTRUCTOR_MODULE_SUMMARY.md"
+  module_dataset_ref: "module_sources/module-3-sql-relational-databases/DATASET.md"
+  scaffolding_level: guided
+  scenario: >
+    Real syntax, day four: The same `nyc_restaurants` database. You'll
+    write one genuinely hard-to-read nested subquery, then rewrite the
+    exact same question as a CTE — named, top-to-bottom, and easier to
+    trust at a glance.
+  glossary:
+    - term: "CTE"
+      definition: "Common Table Expression — a named, temporary result set defined with WITH, usable like a table in the rest of the query"
+    - term: "WITH clause"
+      definition: "The SQL syntax that defines a CTE, written before the main SELECT"
+
+slides:
+  - type: title
+    title: "CTEs I"
+    subtitle: "Syntax & Rewriting a Subquery"
+    module: "Module 3: SQL & Relational Databases"
+    date: "Day 5"
+    notes: >
+      [SCRIPT] Frame this as a readability upgrade, not a new capability —
+      everything today's CTE does, a subquery could already do. The point
+      is being able to trust what you wrote at a glance.
+
+  - type: content
+    title: "By the End of Today, You'll Be Able To..."
+    card_items:
+      - text: "Write a CTE with WITH"
+        icon: "sql"
+      - text: "Rewrite a subquery as a CTE"
+        icon: "join"
+    notes: >
+      [SCRIPT] Read both out loud. Name explicitly: the project's own
+      rubric grades whether your CTE genuinely reads easier than the
+      subquery it replaces — not just that one exists.
+
+  - type: content
+    title: "Key Terms You'll Know by the End of Today"
+    card_items:
+      - text: "CTE"
+        icon: "sql"
+      - text: "WITH clause"
+        icon: "join"
+    notes: >
+      [SCRIPT] Just names for now — a genuinely hard-to-read query is
+      coming up in a few minutes, and you'll fix it yourself.
+
+  - type: transition
+    from_label: "Yesterday's Aggregates"
+    to_label: "One Quick Check"
+    note: "A fast recall check before today's rewrite starts."
+    objective_index: 1
+    notes: >
+      [SCRIPT] [~1 min mark] Keep this brisk.
+
+  - type: check_understanding
+    prompt: "Quick recall: Why did yesterday's WHERE clause raise a real error on COUNT(i.inspection_id)?"
+    mode: discussion
+    topic: "Warm-Up: Why WHERE Failed on COUNT"
+    bloom_level: remember
+    question_style: conceptual
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: a couple of quick shout-outs. Online: drop
+      one sentence in chat.
+
+
+      [SCRIPT] Target idea: WHERE filters rows before GROUP BY ever runs,
+      so the aggregate doesn't exist yet at the point WHERE checks it.
+      Today's whole example leans on aggregates too, just nested instead
+      of filtered.
+
+  - type: transition
+    from_label: "Still Solid"
+    to_label: "Code Along: A Genuinely Hard Query"
+    note: "The exact same question yesterday's GROUP BY answered — now nested inside a subquery."
+    style: "icon_hero"
+    icon: "sql"
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "Which Restaurants Beat the Average — The Hard Way"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      SELECT a.dba, COUNT(b.inspection_id) AS ct
+      FROM restaurants a
+      LEFT JOIN inspections b ON a.camis = b.camis
+      GROUP BY a.dba
+      HAVING COUNT(b.inspection_id) > (
+        SELECT AVG(ct) FROM (
+          SELECT COUNT(d.inspection_id) AS ct
+          FROM restaurants c
+          LEFT JOIN inspections d ON c.camis = d.camis
+          GROUP BY c.dba
+        ) sub);
+    starter_code: |
+      -- TODO: reconnect if needed (you know this one by now)
+
+
+      -- TODO: same GROUP BY as yesterday, but HAVING compares against
+      -- the AVERAGE inspection count across ALL restaurants -- a
+      -- subquery inside a subquery, computed inline
+    code_along: true
+    domain: "public_sector"
+    domain_note: "Reconnect first if this is a fresh terminal session (`\\c nyc_restaurants`) — same database as the last 3 classes."
+    notes: >
+      [SCRIPT] Run it and let the result print — 2 rows, Corner Bistro
+      and Green Leaf Cafe. Then ask the room to actually read the query
+      back out loud, start to finish. Watch how hard that is.
+
+
+      [MISCONCEPTIONS] Fellows often assume "correct" and "readable" are
+      the same thing. This query is completely correct — it's also
+      genuinely hard to trust at a glance, which is a real, separate
+      problem.
+
+  - type: check_understanding
+    prompt: "Discuss it: This query is 100% correct. What makes it hard to trust at a glance anyway?"
+    mode: discussion
+    topic: "Correct vs. Readable"
+    bloom_level: analyze
+    question_style: critical_thinking
+    skill_tags: ["sql"]
+    notes: >
+      [ACTIVITY] In person: turn and talk, 60 seconds. Online: drop a
+      take in chat.
+
+
+      [SCRIPT] Target idea: the innermost subquery has to be read and
+      understood *first*, then the one wrapping it, then the outer query
+      — reasoning happens inside-out, backwards from how the eye actually
+      scans the page top to bottom.
+
+  - type: workflow_linear
+    title: "Subqueries Evaluate Inside-Out"
+    steps:
+      - label: "Innermost"
+        detail: "Evaluated First"
+        icon: "warning"
+      - label: "Middle"
+        detail: "Wraps the First"
+        icon: "warning"
+      - label: "Outer Query"
+        detail: "Reads Last"
+        icon: "sql"
+    notes: >
+      [SCRIPT] Point at each step: the eye scans this query top to
+      bottom, but the database has to reason about it right to left —
+      innermost first. That mismatch is the real readability problem, not
+      a vague "subqueries are confusing" feeling.
+
+  - type: content
+    title: "A CTE Names a Result Set, Up Front"
+    bullets:
+      - "CTE: A named, temporary result set"
+      - "Defined once, at the top"
+      - "Read top-to-bottom, not inside-out"
+    icon_hero:
+      icon: "sql"
+      style: "blue"
+    analogy:
+      domain: "gaming"
+      mapping: "A CTE is like saving a loadout in a game — set it up once, under a name, then just call that name every time you need it, instead of reconfiguring everything from scratch."
+      backups:
+        - domain: "cooking"
+          mapping: "Like prepping a sauce once and calling it \"the sauce\" for the rest of the recipe, instead of re-listing every ingredient each time a step needs it."
+    notes: >
+      [SCRIPT] Name explicitly: everything a CTE does, a subquery could
+      already do. The only thing that changed is where the reasoning
+      happens — named and up front, instead of buried inside parentheses.
+
+
+      [MISCONCEPTIONS] Fellows sometimes assume a CTE is faster than a
+      subquery. It isn't, reliably. The real win here is readability, not
+      performance.
+
+
+      [SOURCES] PostgreSQL's query planner treats a CTE and an equivalent
+      subquery as performance-comparable in the general case (materialization
+      behavior can differ). See the official WITH-queries docs linked in
+      this lesson's further_resources.
+
+  - type: table
+    title: "Every WITH Clause Has the Same Four Pieces"
+    headers:
+      - "Piece"
+      - "What It Does"
+    rows:
+      - - "WITH"
+        - "Starts the CTE definition"
+      - - "inspection_counts"
+        - "The name you choose"
+      - - "AS ( ... )"
+        - "The query being named"
+      - - "Main SELECT"
+        - "Uses the name like a table"
+    notes: >
+      [SCRIPT] Point at each piece in order — this is the exact shape
+      every CTE in this module will follow, simple or complex.
+
+  - type: transition
+    from_label: "The Shape"
+    to_label: "Code Along: A CTE, By Itself First"
+    note: "One small, real CTE — no rewrite yet, just the bare syntax."
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "A CTE, By Itself First"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH not_critical AS (
+        SELECT * FROM inspections WHERE critical_flag = 'Not Critical'
+      )
+      SELECT * FROM not_critical;
+    starter_code: |
+      -- TODO: WITH not_critical AS (
+      -- TODO:   SELECT * FROM inspections WHERE critical_flag = 'Not Critical'
+      -- TODO: )
+      -- TODO: SELECT * FROM not_critical;
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`not_critical` is used exactly once here — the real payoff shows up once a name gets reused, which is what the next query does."
+    notes: >
+      [SCRIPT] Run it: 3 rows print, the same 3 "Not Critical"
+      inspections you'd get from the plain WHERE version. Name explicitly:
+      this alone doesn't need a CTE — it's here to isolate the bare
+      syntax before the harder rewrite.
+
+  - type: check_understanding
+    prompt: "Predict it: How many rows does `not_critical` actually return?"
+    mode: poll
+    topic: "Predicting a Simple CTE's Row Count"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "3"
+      - "4"
+      - "1"
+    answer:
+      correct: "3"
+      explanation: "3 of the 4 real inspection rows have `critical_flag = 'Not Critical'` — only the very first inspection (2026-01-15) was marked Critical."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] Quick confirmation before moving to the harder rewrite —
+      the syntax itself should feel solid by now.
+
+  - type: transition
+    from_label: "The Bare Syntax, Solid"
+    to_label: "Code Along: The Same Query, Named"
+    note: "Same question, same answer, read top-to-bottom this time."
+    objective_index: 2
+    style: "panel_preview"
+    preview_items:
+      - text: "The Hard Way, Again"
+        icon: "warning"
+      - text: "Named, This Time"
+        icon: "sql"
+    notes: >
+      [SCRIPT] Name explicitly that this is a code-along.
+
+  - type: code
+    title: "The Same Query, Rewritten as a CTE"
+    language: sql
+    terminal_label: "psql"
+    code: |
+      WITH inspection_counts AS (
+          SELECT r.dba, COUNT(i.inspection_id) AS num_inspections
+          FROM restaurants r
+          LEFT JOIN inspections i ON r.camis = i.camis
+          GROUP BY r.dba
+      )
+      SELECT dba, num_inspections
+      FROM inspection_counts
+      WHERE num_inspections > (SELECT AVG(num_inspections) FROM inspection_counts);
+    starter_code: |
+      -- TODO: WITH inspection_counts AS (...)
+      -- TODO: the same SELECT/JOIN/GROUP BY from the hard version, inside the parens
+      -- TODO: SELECT dba, num_inspections FROM inspection_counts
+      -- TODO: WHERE num_inspections > (SELECT AVG(num_inspections) FROM inspection_counts)
+    code_along: true
+    domain: "public_sector"
+    domain_note: "`inspection_counts` is referenced twice — once in the main SELECT, once inside the AVG subquery — without ever being recomputed or retyped."
+    notes: >
+      [SCRIPT] Run it and let the same 2 rows print. Name explicitly: same
+      answer, same underlying logic, and the query now reads in the exact
+      order you'd explain it out loud.
+
+  - type: check_understanding
+    prompt: "Predict it: Does this CTE version return the same 2 restaurants as the nested subquery version?"
+    mode: poll
+    topic: "Confirming the Rewrite Matches"
+    bloom_level: apply
+    question_style: conceptual
+    options:
+      - "Yes — Corner Bistro and Green Leaf Cafe, same as before"
+      - "No — a CTE changes which rows qualify"
+      - "There's no way to know without different data"
+    answer:
+      correct: "Yes — Corner Bistro and Green Leaf Cafe, same as before"
+      explanation: "A CTE doesn't change what a query computes — it only changes how the query is organized on the page. Same restaurants, same average, same 2-row answer."
+      source: "This lesson's own worked example, not an external citation"
+    skill_tags: ["sql"]
+    notes: >
+      [SCRIPT] Name explicitly: this is the whole point proven concretely
+      — rewriting as a CTE is a pure readability change, not a logic
+      change.
+
+  - type: compare_contrast
+    title: "Same Logic, One Reads Top-to-Bottom"
+    left_label: "Nested Subquery"
+    left_icon: "warning"
+    left_points:
+      - "Reasoning happens inside-out"
+      - "No name for the inner result"
+      - "Correct, but hard to trust fast"
+    right_label: "CTE"
+    right_icon: "sql"
+    right_points:
+      - "Reasoning happens top-to-bottom"
+      - "A real name, chosen by you"
+      - "Reusable, without retyping"
+    similarities:
+      - "Same tables, same answer, same logic"
+    notes: >
+      [SCRIPT] Name the real takeaway: this isn't "subqueries are wrong."
+      It's that a CTE earns its place the moment a query gets nested
+      enough to slow a reader down — exactly the judgment call the
+      project's own rubric grades.
+
+  - type: check_understanding
+    prompt: "Would you rather rewrite every subquery as a CTE, or only reach for one when a query gets hard to read?"
+    mode: would_you_rather
+    topic: "When Does a CTE Actually Earn Its Place?"
+    bloom_level: evaluate
+    question_style: interview
+    technique: "PREP"
+    skill_tags: ["sql"]
+    notes: >
+      [TECHNIQUE] Use PREP — "when would you choose X over Y" is exactly
+      the state-a-position-and-justify shape PREP fits.
+
+
+      [SCRIPT] No wrong answer up front, but land on the real point: a
+      one-line subquery doesn't need a CTE — the project's own rubric
+      specifically asks whether your CTE "genuinely improves readability,"
+      which means the call has to be judged case by case, not applied as
+      a blanket rule.
+
+  - type: interview_prep
+    topics:
+      - question: "When would you choose a CTE over a subquery?"
+        short_answer: "Point: Reach for a CTE once nested logic forces a reader to work inside-out to follow it. Reason: A CTE names that logic and moves it to the top, so the query reads in the order you'd explain it aloud. Example: Today's rewrite kept the same answer and tables — only where the reasoning lives on the page changed. Point: For a simple subquery, a CTE adds a name without adding real clarity — the judgment call is whether naming it helps the next reader."
+        technique: "PREP"
+        icon: "sql"
+    notes: >
+      [TECHNIQUE] Use PREP again here — same "explain a concept and its
+      tradeoff" shape as the CFU right before this slide, now as the
+      formal model answer.
+
+
+      [SCRIPT] Have a Fellow attempt this cold first — the goal is naming
+      the actual *judgment call*, not reciting "CTEs are more readable."
+
+  - type: table
+    title: "Key Terms — Recap"
+    headers:
+      - "Term"
+      - "Definition"
+    rows:
+      - - "CTE"
+        - "A named, temporary result set"
+      - - "WITH clause"
+        - "Defines a CTE, before the main query"
+    notes: >
+      [SCRIPT] Quick round-trip through both terms — this is exactly the
+      vocabulary the project's own Q4 expects you to use correctly.
+
+  - type: bridge
+    title: "So Far, We've Covered..."
+    bullets:
+      - "A CTE names a result set"
+      - "Same logic, read top-to-bottom"
+      - "A judgment call, not a blanket rule"
+    notes: >
+      [SCRIPT] Close by naming the shift ahead: next class takes CTEs
+      further — decomposing a real multi-table question with a peer,
+      the harder rep this single-CTE day was deliberately keeping simple.
+      Name the project tie explicitly: your own Q4 CTE gets graded on
+      exactly today's own standard — does it genuinely read easier than
+      the subquery it replaces.
+
+  - type: closing
+    title: "Before Next Class"
+    bullets:
+      - "No new exercise today"
+      - "Next class: CTEs II, with a peer"
+      - "Keep your database running"
+    notes: >
+      [SCRIPT] Give a specific heads-up: next class is collaborative —
+      come ready to work through a harder multi-table question with a
+      partner, building directly on today's own WITH syntax.
+
+  - type: further_resources
+    resources:
+      - title: "PostgreSQL Tutorial: WITH Queries (CTEs)"
+        url: "https://www.postgresql.org/docs/current/queries-with.html"
+        kind: documentation
+        time_estimate: "~10 min read"
+        description: "The official, authoritative reference on CTEs"
+        attribution: "PostgreSQL Global Development Group"
+      - title: "CTE in SQL"
+        url: "https://www.geeksforgeeks.org/sql/cte-in-sql/"
+        kind: reading
+        time_estimate: "~8 min read"
+        description: "A real CTE-vs-subquery comparison, with more examples"
+        attribution: "GeeksforGeeks"
+      - title: "SQLBolt"
+        url: "https://sqlbolt.com/"
+        kind: practice
+        time_estimate: "~15 min hands-on"
+        description: "The same free interactive lessons from earlier"
+        attribution: "SQLBolt"
+    notes: >
+      [SCRIPT] Point out the official docs specifically — CTEs have real
+      extra features (like recursive CTEs) this lesson doesn't cover,
+      and the docs are where that depth actually lives.
