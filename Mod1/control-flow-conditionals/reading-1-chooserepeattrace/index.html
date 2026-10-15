@@ -15,9 +15,10 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Choose, Repeat, Trace</h1>
-<p class="mlrk-lead">A personal budgeting app reviews yesterday's transactions, one at a time. For each one it asks the same question: is this over $75? The answer changes what happens next: flag it for review, label it routine, or something else entirely. The app doesn't treat every transaction the same way, and it doesn't check just once. It repeats the same question for every transaction on the list until the list runs out. That combination, <strong>a conditional that chooses a path, and a loop that controls what repeats</strong>, is what this reading is about.</p>
+<p class="mlrk-lead">A personal budgeting app reads yesterday's transactions one at a time. For each one it asks the same question: is this amount over $75? If the amount is over $75, the app flags that transaction for review. If it is not, the app files that transaction as routine. So the app is doing two jobs at once. It picks a path for each transaction, and it asks the same question again for the next transaction, until the list runs out. <strong>Picking the path is a conditional. Controlling the repeats is a loop.</strong></p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~38–41 minutes</span>
+  <span class="mlrk-pill">~42–45 minutes</span>
+  <span class="mlrk-pill">Includes a 10-minute video</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -50,7 +51,7 @@
 
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
-<p>Picture the budgeting app from the intro. It has a list of transactions from yesterday, and it walks through them one after another. For each single transaction, it asks: is the amount over $75? If yes, it flags the transaction for review. Otherwise, it just files it as "routine." That's a <strong>conditional</strong> — code that checks a condition and runs exactly one matching branch, never more than one.</p>
+<p>Start with that budgeting app and a single transaction of $42. The app asks one question about it: is 42 more than 75? The answer is no, so the app files the transaction as routine and never touches the flag-for-review path at all. Code shaped like that is a <strong>conditional</strong>: it checks a condition and runs exactly one matching branch.</p>
 
 <svg class="mlrk-illustration" viewBox="0 0 640 200" role="img" aria-labelledby="cfFlowTitle cfFlowDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="cfFlowTitle">Three transactions flowing one at a time into a single decision</title>
@@ -79,18 +80,18 @@
   </g>
 </svg>
 
-<p>Now notice what happens across the whole list: the app doesn't ask that question once. It asks it once for every single transaction, in order, until there are no transactions left. That repeating behavior is a <strong>loop</strong>. Each single pass through the list — one transaction, one question, one answer — is an <strong>iteration</strong>. And the actual instructions that run during each pass, the part that checks the amount and decides what to print or store, is the <strong>loop body</strong>.</p>
+<p>One transaction is never the whole job. The app asks that same question about every transaction on the list, in order, until no transactions are left. That repeating is a <strong>loop</strong>. Each single pass through it, one transaction and one answer, is an <strong>iteration</strong>. The instructions that run during a pass, the ones that check the amount and print a label, are the <strong>loop body</strong>.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> a loop that visits every item plus a conditional that decides what to do with it is the shape behind almost every real program that processes a list of things — filtering transactions, flagging records, sorting search results. It's also one of the very first things an interviewer asks you to trace out loud, before anything more advanced.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to compare two values and store a list of things. This reading is about controlling what happens to each item and how many times something repeats. Once tracing a single loop and a single conditional feels automatic, the next step is putting loops and conditionals inside each other, and eventually wrapping this whole pattern inside a function you can reuse on any list.</p>
+<p><strong>Why this matters:</strong> a loop that visits every item, plus a conditional that decides what to do with that item, is the shape behind almost every program that handles a list. Filtering transactions, flagging bad records, pulling out the rows a person needs to look at: all the same shape. An interviewer will hand you six lines of it and ask what it prints, usually before any harder question.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to compare two values and how to store a list of them. This reading adds control over what happens to each item and over how many times something repeats. Once a single loop and a single conditional feel easy to trace, the next step is putting one loop inside another, and then wrapping the whole pattern in a reusable piece of code you can point at any list.</p>
 </div>
-<p>Put those two ideas together and you have the shape behind almost every real program that processes a list of things: a loop that visits every item, and a conditional that decides what to do with the one it's currently looking at. The rest of this reading is about getting fast and accurate at predicting exactly what a short snippet like that will do, before you ever run it.</p>
+<p>Predicting that output by hand is the skill worth building first. Python follows the same steps in the same order every time it runs a snippet, so a careful read of the code tells you exactly what it will print before you run it.</p>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before choosing</h2>
-<p class="mlrk-small">Understanding basic data types and comparisons is a prerequisite skill for this reading. Test each one below before moving on.</p>
-<div class="mlrk-card" id="card-recall"><p><strong>Which value below is a string?</strong></p>
+<p>Reading data types and comparisons accurately is a prerequisite skill for this reading. Answer all four questions in this section before moving on.</p>
+<div class="mlrk-card" id="card-recall"><p><strong>Which of these three values is a string?</strong></p>
 <button type="button" class="mlrk-choice" data-a="b">75</button>
 <button type="button" class="mlrk-choice" data-a="c">75.0</button>
 <button type="button" class="mlrk-choice" data-a="a">"75"</button>
@@ -113,40 +114,26 @@
 <button type="button" class="mlrk-choice" data-a="speed">Comparisons only exist to make the code run faster.</button>
 <div id="whyfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-callout mlrk-callout-blue">None of this changes once loops and conditionals are introduced — comparisons, data types, and lists all work exactly the same way inside a loop or an <code>if</code> as they do on their own. Get each one right in isolation first.</div>
+<div class="mlrk-callout mlrk-callout-blue"><p>Comparisons, data types, and lists behave the same way inside a loop or an <code>if</code> as they do on their own. A loop wrapped around a comparison changes how many times the comparison runs, not what it means. So getting each one right on its own is what makes the traces later in this reading easy.</p></div>
 </section>
 
 <section class="mlrk-section">
 <h2>3. Technical vocabulary</h2>
-<p>Flip each card before moving into the tracing practice below.</p>
+<p>Flip all six cards, then start tracing code.</p>
 <div class="mlrk-grid" id="vocab">
 <button type="button" class="mlrk-term"><span class="mlrk-front"><strong>conditional</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Conditional</strong><br>Code that checks a condition and runs exactly one branch, depending on whether the condition is True or False.</span></button>
 <button type="button" class="mlrk-term"><span class="mlrk-front"><strong>branch</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Branch</strong><br>One possible path in a conditional — the code under an <code>if</code>, an <code>elif</code>, or an <code>else</code>.</span></button>
 <button type="button" class="mlrk-term"><span class="mlrk-front"><strong>loop</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Loop</strong><br>A structure that repeats a block of code, once per item or for as long as a condition holds.</span></button>
 <button type="button" class="mlrk-term"><span class="mlrk-front"><strong>iteration</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Iteration</strong><br>One single pass through a loop's body.</span></button>
 <button type="button" class="mlrk-term"><span class="mlrk-front"><strong>loop body</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Loop body</strong><br>The indented code inside a loop that actually runs, once per iteration.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>off-by-one error</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Off-by-one error</strong><br>A loop that runs one iteration too many or one too few, because a start or stop boundary is set a single step away from what was intended. Python raises no error: the result is simply wrong by one.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>4. <code>if</code> / <code>elif</code> / <code>else</code>: exactly one path runs</h2>
-<p>Python checks branches from top to bottom and stops at the first one that's True. An <code>elif</code> only gets checked if every branch above it was False, and <code>else</code> only runs if nothing above it matched.</p>
-<div class="mlrk-card" id="card-cond"><p><strong>A budgeting app sees <code>amount = 42</code>. What prints?</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">if amount > 100:
-    print("flag")
-elif amount > 50:
-    print("review")
-else:
-    print("routine")</div></div>
-<button type="button" class="mlrk-choice" data-a="routine">routine</button>
-<button type="button" class="mlrk-choice" data-a="flag">flag</button>
-<button type="button" class="mlrk-choice" data-a="review">review</button>
-<div id="condfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>5. Predict first. Reveal second.</h2>
-<p>A reliable habit is to write down your prediction before you ever reveal or run the output.</p>
+<p>Python reads an <code>if</code>/<code>elif</code>/<code>else</code> chain from top to bottom and stops at the first branch whose condition is True. An <code>elif</code> is checked only when every earlier branch in its own chain was False. An <code>else</code> runs only when no condition in the chain was True. Exactly one branch runs per chain, so tracing a conditional comes down to finding that one branch.</p>
+<p>The savings-tracker snippet starts with $620 set aside. Write your prediction down before you reveal or run anything.</p>
 <div class="mlrk-code"><div id="predictScreen" class="mlrk-screen">saved = 620
 
 if saved >= 1000:
@@ -164,7 +151,8 @@ else:
 </section>
 
 <section class="mlrk-section">
-<h2>6. A <code>for</code> loop repeats once per item</h2>
+<h2>5. A <code>for</code> loop repeats once per item</h2>
+<p>A <code>for</code> loop takes a list and runs its body once per item in that list. The number of items decides the number of iterations, so you can count iterations without running anything.</p>
 <div class="mlrk-code"><div class="mlrk-screen">categories = ["Groceries", "Rent", "Streaming"]
 
 for category in categories:
@@ -177,8 +165,8 @@ for category in categories:
 </section>
 
 <section class="mlrk-section">
-<h2>7. <code>range()</code>: watch the stopping boundary</h2>
-<p><code>range(n)</code> starts at 0 and stops <strong>before</strong> <code>n</code>. The stop value itself is never produced.</p>
+<h2>6. <code>range()</code>: watch the stopping boundary</h2>
+<p><code>range(n)</code> produces exactly <code>n</code> numbers: it starts at 0 and stops one step <strong>before</strong> <code>n</code>. So <code>range(3)</code> produces 0, 1, and 2. The stop value itself stays out.</p>
 <div class="mlrk-card" id="card-rangebound"><p><strong>What does <code>range(4)</code> produce?</strong></p>
 <button type="button" class="mlrk-choice" data-a="0123">0, 1, 2, 3</button>
 <button type="button" class="mlrk-choice" data-a="1234">1, 2, 3, 4</button>
@@ -192,6 +180,33 @@ for category in categories:
   <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
 </div>
 <div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Off-by-one errors: wrong by exactly one</h2>
+<p>The budgeting app now reviews a whole week instead of a single day: seven days, seven checks. Here is the week-review snippet someone wrote for it.</p>
+<div class="mlrk-code"><div class="mlrk-screen">for day in range(6):
+    print("checking day", day + 1)</div></div>
+<p>Running the week-review snippet prints this:</p>
+<div class="mlrk-code"><div class="mlrk-screen">checking day 1
+checking day 2
+checking day 3
+checking day 4
+checking day 5
+checking day 6</div></div>
+<p>Six lines, not seven. <code>range(6)</code> produces 0 through 5, so <code>day + 1</code> reaches 6 and stops. Day 7 never gets checked, and any spending on day 7 is missing from the week's review. A mistake with that shape is an <strong>off-by-one error</strong>: a loop that runs one iteration too many or one too few, because its start or stop boundary sits a single step away from what was intended.</p>
+<p>Python raises no error here. The week-review snippet runs, prints, and finishes normally, so nothing on screen says anything is wrong. That leaves one reliable way to catch it: trace the <strong>first</strong> iteration and the <strong>last</strong> iteration by hand, then compare both against what you meant. The first should be day 1, and the last should be day 7.</p>
+<div class="mlrk-code" style="margin-top:1rem"><div class="mlrk-screen">for day in range(____):
+    print("checking day", day + 1)</div></div>
+<div class="mlrk-fillblank">
+  <label for="oboinput">Type the stop value that makes this snippet check all seven days:</label>
+  <input type="text" id="oboinput" autocomplete="off">
+  <button type="button" id="obocheck" class="mlrk-btn">Check</button>
+</div>
+<div id="obofb" class="mlrk-feedback" tabindex="-1"></div>
+<details class="mlrk-hint"><summary>Need a hint?</summary>
+  <p>Count the numbers you need on the screen, not the numbers <code>range()</code> hands out. The last line should read <code>checking day 7</code>, and <code>day + 1</code> is what prints, so work backward to the last value <code>day</code> itself has to hold.</p>
+</details>
 </section>
 
 <section class="mlrk-section">
@@ -215,7 +230,7 @@ for category in categories:
 <h2>9. <code>while</code>: the condition is checked before every pass</h2>
 <div class="cf-flow">
   <div class="cf-flow-step">Check the condition</div>
-  <div class="cf-flow-note">only if it's True does the next step happen</div>
+  <div class="cf-flow-note">the next step happens only when the check comes out True</div>
   <div class="cf-flow-step">Run the loop body</div>
   <div class="cf-flow-note">something in the body usually changes a value the condition depends on</div>
   <div class="cf-flow-step">Check the condition again, using the updated value</div>
@@ -248,8 +263,8 @@ while saved < 500:
 
 <section class="mlrk-section">
 <h2>11. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about conditionals and loops.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> <code>elif</code> is only checked when the <code>if</code> condition above it was False.</label>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE about conditionals and loops.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> An <code>elif</code> is checked only when the <code>if</code> that opens its chain was False.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A <code>while</code> loop's condition is checked once, before the very first pass, and never checked again after that.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> <code>range(6)</code> produces seven values: 0 through 6.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Once one branch in an <code>if</code>/<code>elif</code>/<code>else</code> chain runs, Python skips every remaining branch in that chain.</label>
@@ -260,7 +275,7 @@ while saved < 500:
 
 <section class="mlrk-section">
 <h2>12. Two ideas, one move: loop + conditional together</h2>
-<p>A loop can visit every item in a list while a conditional decides what happens to the one it's currently looking at.</p>
+<p>A loop visits every item in a list, and a conditional inside the loop body decides what happens to the item of the current iteration.</p>
 <div class="mlrk-code"><div id="comboScreen" class="mlrk-screen">amounts = [30, 120, 60]
 
 for amount in amounts:
@@ -277,9 +292,9 @@ for amount in amounts:
 </section>
 
 <section class="mlrk-section">
-<h2>13. Debug by tracing, not guessing</h2>
-<div class="mlrk-card" id="card-debug"><p><strong>You predicted the wrong output by one item. What's the best next move?</strong></p>
-<button type="button" class="mlrk-choice" data-a="trace">Trace from the first iteration and check each boundary one at a time.</button>
+<h2>13. Debug by tracing</h2>
+<div class="mlrk-card" id="card-debug"><p><strong>Your prediction came out one line short of what a snippet really printed, and Python raised no error. What is the best next move?</strong></p>
+<button type="button" class="mlrk-choice" data-a="trace">Trace the first iteration and the last iteration by hand, and check each boundary on its own.</button>
 <button type="button" class="mlrk-choice" data-a="random">Assume Python randomly skipped an iteration.</button>
 <button type="button" class="mlrk-choice" data-a="rewrite">Rewrite the whole snippet before checking the trace.</button>
 <div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
@@ -291,7 +306,8 @@ for amount in amounts:
 
 <section class="mlrk-section">
 <h2>14. Watch: for and while loops, live</h2>
-<p>As you watch, notice the exact moment a variable gets updated inside the <code>while</code> loop and the condition gets checked again right after — that's the same check, run, update, recheck cycle from the order-the-steps activity above.</p>
+<p class="mlrk-small">About 10 minutes.</p>
+<p>As you watch, notice the exact moment a variable gets updated inside the <code>while</code> loop, and the moment right after when the condition gets checked again. That is the same check, run, update, recheck cycle as the <code>saved &lt; 500</code> loop in section 9.</p>
 <div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=6iF8Xb7Z3wQ" target="_blank" rel="noopener">Watch on YouTube</a>
 <div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one moment where the video's explanation matched, or didn't match, how you were already picturing a loop repeating?</strong></p>
@@ -302,9 +318,9 @@ for amount in amounts:
 <section class="mlrk-section">
 <h2>15. How this shows up in interviews</h2>
 <div class="mlrk-callout mlrk-callout-green">
-<p>"Trace this code and tell me what prints" is one of the most common opening questions in both data and software engineering interviews. Interviewers are listening for how you reason through it — reading top to bottom, catching the exact branch that runs — not just whether you land on the right final answer.</p>
-<p>Off-by-one mistakes with <code>range()</code> and <code>while</code>-loop boundaries are a classic follow-up: you're handed a snippet that's one iteration too short or too long and asked to find exactly where, live.</p>
-<p>For data roles specifically, this shape — a loop visiting every row, a conditional deciding what to do with each one — is the mental model behind almost every "clean this messy column" or "filter these records" prompt, long before you ever touch a library built for it.</p>
+<p>"Trace this code and tell me what prints" is one of the most common opening questions in both data and software engineering interviews. Interviewers listen for how you reason through it: reading top to bottom, naming the exact branch that runs, saying what each iteration does. The reasoning counts for as much as the final answer.</p>
+<p>An off-by-one error is the classic follow-up. You get a snippet that runs one iteration too short or too long, and you have to say exactly which boundary is wrong, out loud, without running it.</p>
+<p>For data roles, a loop visiting every row with a conditional deciding what to do with each row is the mental model behind almost every "clean this messy column" or "filter these records" prompt, long before you touch a library built for it.</p>
 </div>
 <div class="mlrk-card" id="card-interview"><p><strong>Interview-style: a loop iterates over 6 items. Inside, a conditional only prints when an item is over 50. Exactly 2 of the 6 items are over 50. How many lines print in total?</strong></p>
 <button type="button" class="mlrk-choice" data-a="2">2</button>
@@ -315,7 +331,12 @@ for amount in amounts:
 
 <section class="mlrk-section">
 <h2>16. Summary &amp; critical thinking</h2>
-<p>Two habits carried this whole reading: reading an <code>if</code>/<code>elif</code>/<code>else</code> chain top to bottom to find the one branch that actually runs, and tracking a loop's iterations one pass at a time instead of guessing the total.</p>
+<p>Three habits carried this whole reading:</p>
+<ol class="mlrk-steplist">
+  <li>Read an <code>if</code>/<code>elif</code>/<code>else</code> chain top to bottom and name the one branch that runs.</li>
+  <li>Count a loop's iterations one pass at a time, rather than guessing the total.</li>
+  <li>Check the first and the last iteration against what you meant, which is where an off-by-one error shows itself.</li>
+</ol>
 <div class="mlrk-card" id="card-bridge"><p><strong>New situation:</strong> a system reviews every login attempt in a list. For each attempt, it checks whether it happened after business hours. If so, it flags the login for review; otherwise, it logs it normally. Which combination of tools does this job need?</p>
 <button type="button" class="mlrk-choice" data-a="both">A loop to visit every attempt + a conditional to decide what happens to that attempt</button>
 <button type="button" class="mlrk-choice" data-a="if">Only a conditional, because repetition happens automatically</button>
@@ -327,7 +348,7 @@ for amount in amounts:
 
 <section class="mlrk-section">
 <h2>17. Thinking ahead</h2>
-<p>This same pair — a loop that visits every item, a conditional that decides what happens to each one — is the exact shape reused very soon: a loop nested inside another loop, a conditional nested inside another conditional, and eventually a function built specifically to wrap this whole pattern so it can run on any list handed to it.</p>
+<p>A loop that visits every item, with a conditional deciding what happens to each one, is a shape that gets reused immediately. Put one loop inside another and every single pass of the outer loop sets off a full run of the inner one, which is where counting iterations and watching boundaries starts to matter much more. After that comes packaging the whole pattern into one reusable piece of code you can point at any list.</p>
 </section>
 
 <section class="mlrk-section">
@@ -447,11 +468,6 @@ git push</pre></li>
               cantread:"Python can read a plain number just fine. The issue is that a number alone isn't True or False.",
               speed:"Comparisons exist to produce a True/False answer, not to make code run faster."}});
 
-  K.quiz({id:"q-cond", buttonSelector:"#card-cond .mlrk-choice", feedbackSelector:"#condfb", correct:"routine",
-    feedback:{routine:"42 is not greater than 100, and it's not greater than 50 either, so Python falls through to else and prints routine.",
-              flag:"amount > 100 is false because 42 is not greater than 100.",
-              review:"amount > 50 is also false, since 42 is not greater than 50 either. Only else matches."}});
-
   K.quiz({id:"q-predict", buttonSelector:"#card-predict .mlrk-choice", feedbackSelector:"#predictfb", correct:"halfway",
     feedback:{halfway:"620 is not at least 1000, but it is at least 500, so the elif branch runs and prints halfway there.",
               goal:"saved >= 1000 is false because 620 is less than 1000.",
@@ -481,9 +497,9 @@ git push</pre></li>
     onDone(){revealCombo()}});
 
   K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"trace",
-    feedback:{trace:"Tracing one iteration at a time exposes exactly where an off-by-one or boundary mistake happens.",
-              random:"Python's control flow is deterministic. It never randomly skips an iteration.",
-              rewrite:"Find the mismatch by tracing first. Rewriting before understanding it can hide the real error."}});
+    feedback:{trace:"Checking the first and last iteration against what you meant is exactly how an off-by-one error gets found, since Python reports nothing on its own.",
+              random:"Python runs the same steps in the same order every time. It never randomly skips an iteration, so a missing line always has a cause you can find in the code.",
+              rewrite:"A rewrite can quietly keep the same boundary mistake, and you still won't know where the missing line went. Trace it first."}});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"2",
     feedback:{2:"The loop visits all 6 items, but the print only happens inside the True branch, which fires for the 2 items over 50.",
@@ -496,18 +512,18 @@ git push</pre></li>
               loop:"A loop repeats work, but a conditional is still needed since not every attempt gets the same outcome."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"elif is only checked when the if condition above it was False.", correct:true,
-      hint:"Think back to section 4: does Python check elif regardless, or only under a certain condition?",
-      explain:"This is the top-to-bottom rule from section 4: elif is only reached once the branch above it fails."},
+    {value:"a", label:"An elif is checked only when the if that opens its chain was False.", correct:true,
+      hint:"Think back to section 4: does Python check every elif in a chain, or only some of them?",
+      explain:"This is the top-to-bottom rule from section 4: an elif is reached only once every earlier branch in its chain has come out False."},
     {value:"b", label:"A while loop's condition is checked once, before the very first pass, and never checked again after that.", correct:false,
       hint:"Look again at the check-run-update-recheck cycle from section 9. Does the condition get checked only once, or every time?",
       explain:"A while loop rechecks its condition before every single pass, not just the first one."},
     {value:"c", label:"range(6) produces seven values: 0 through 6.", correct:false,
-      hint:"Revisit section 7's stopping-boundary rule. Is the stop value itself ever produced?",
-      explain:"range(6) stops before 6, producing six values: 0 through 5, not seven."},
+      hint:"Revisit the stopping-boundary rule in section 6. Does range() ever produce its stop value?",
+      explain:"range(6) stops one step before 6, producing six values: 0 through 5, not seven."},
     {value:"d", label:"Once one branch in an if/elif/else chain runs, Python skips every remaining branch in that chain.", correct:true,
-      hint:"This is the same rule practiced in section 4 and section 5. Does it hold here too?",
-      explain:"Exactly one branch runs per if/elif/else chain, exactly as practiced in sections 4 and 5."}
+      hint:"This is the same rule the savings-tracker snippet in section 4 demonstrates. Does it hold here too?",
+      explain:"Exactly one branch runs per if/elif/else chain, which is what the savings-tracker snippet in section 4 shows."}
   ]});
 
   K.dragDrop("#dragarea", "act-drag-triggers");
@@ -568,29 +584,43 @@ for amount in amounts:
   }
   $("#comborun").addEventListener("click", revealCombo);
 
-  K.Scoring.register("q-blank",1,"quiz");
-  let blankAttempts=0, blankDone=false;
-  $("#blankcheck").addEventListener("click",()=>{
-    if(blankDone) return;
-    blankAttempts++;
-    const ok = $("#blankinput").value.trim().toLowerCase()==="range";
-    const fb=$("#blankfb");
-    if(ok){
-      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> range(7) generates the numbers this loop counts through: 0 up to (not including) 7.";
-      blankDone=true;
-    } else if(blankAttempts>=2){
-      K.Scoring.award("q-blank",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing function is <code>range</code>.";
-      blankDone=true;
-    } else {
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> One more try.";
-    }
-    fb.setAttribute("tabindex","-1");fb.focus();
-  });
+  function typedAnswer(opts){
+    K.Scoring.register(opts.id,1,"quiz");
+    let attempts=0, done=false;
+    $(opts.button).addEventListener("click",()=>{
+      if(done) return;
+      attempts++;
+      const typed = $(opts.input).value.trim().toLowerCase();
+      const fb=$(opts.feedback);
+      if(opts.accept.includes(typed)){
+        K.Scoring.award(opts.id, attempts===1?1:0.5);
+        fb.className="mlrk-feedback mlrk-show mlrk-good";
+        fb.innerHTML="<strong>Correct.</strong> "+opts.correctNote;
+        done=true;
+      } else if(attempts>=2){
+        K.Scoring.award(opts.id,0);
+        fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+        fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> "+opts.reveal;
+        done=true;
+      } else {
+        fb.className="mlrk-feedback mlrk-show mlrk-bad";
+        fb.innerHTML="<strong>That isn't it yet.</strong> "+opts.retryNote;
+      }
+      fb.setAttribute("tabindex","-1");fb.focus();
+    });
+  }
+
+  typedAnswer({id:"q-blank", input:"#blankinput", button:"#blankcheck", feedback:"#blankfb",
+    accept:["range","range()"],
+    correctNote:"range(7) generates the numbers this loop counts through: 0 up to, but not including, 7.",
+    retryNote:"The missing name belongs to the built-in that turns a single stop value into a run of numbers to loop over. It was used earlier in this section.",
+    reveal:"The missing function is <code>range</code>, so the loop header reads <code>for day in range(7):</code>."});
+
+  typedAnswer({id:"q-obo", input:"#oboinput", button:"#obocheck", feedback:"#obofb",
+    accept:["7","range(7)","7)"],
+    correctNote:"range(7) produces 0 through 6, so day + 1 prints 1 through 7 and all seven days get checked.",
+    retryNote:"Check the last line your value would print. The stop value is one step past the last number range() produces, and the printed day is always day + 1.",
+    reveal:"The stop value is <code>7</code>. range(7) produces 0 through 6, and day + 1 turns those into day 1 through day 7."});
 
   const AI_PROMPTS = [
     "Think about a daily routine that only makes sense in a certain order, like checking whether you have clean clothes before deciding what to wear. Where's the conditional in that routine?",

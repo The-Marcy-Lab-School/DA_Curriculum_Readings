@@ -585,12 +585,23 @@ def check_quest_vocabulary(path, html):
     # conditionals reading to define "Nested Loop". Report a term only when no
     # reading in the quest defines it.
     root = Path(__file__).parent.parent
+    # Look for the term where a reading DEFINES it - the vocabulary flip-card
+    # fronts, and any <dt>/<strong> term label - not anywhere in the prose.
+    # A substring search over visible text let "nested loops" in a sentence
+    # satisfy "Nested Loop" in a reading that never defined it, which is the
+    # one failure this check exists to catch.
+    def defined_terms(html):
+        out = re.findall(
+            r'mlrk-front[^>]*>\s*<strong>(.*?)</strong>|<dt[^>]*>(.*?)</dt>',
+            html, re.S)
+        return [" ".join(re.sub("<[^>]+>", "", a or b).split()) for a, b in out]
+
     per_reading = {}
     for rel in quest.get("readings", []):
         f = root / rel / "index.html"
-        per_reading[rel] = norm(visible_text(f.read_text(encoding="utf-8"))) if f.exists() else ""
+        per_reading[rel] = defined_terms(f.read_text(encoding="utf-8")) if f.exists() else []
     missing = [t for t in quest.get("vocabulary_mission", [])
-               if not any(covered(h, t) for h in per_reading.values())]
+               if not any(covered(norm(d), t) for ds in per_reading.values() for d in ds)]
     if missing:
         return [("ERROR",
                  f"quest {quest['quest']} ({quest['title']}) Vocabulary Mission term(s) defined by "
