@@ -14,14 +14,14 @@ of work, not a rigid script.
 ## Inputs to gather before starting
 
 - Topic/concept for the reading.
-- The lecture it precedes (used ONLY to check for duplicate analogies/examples — never named in the reading itself).
+- The quest it belongs to (`curriculum/mod<N>-quests.json`), and from that the LiveLab deck(s), Data Challenge and project that share its days (see "Source of truth"). These are used to avoid, align with and prepare for, and are never named in the reading itself.
 - Audience: data-only, or data + software engineering (Python/OOP/SQL topics usually serve both).
 - Complexity flag: standard (up to ~45 min total is fine — see "Time estimate methodology" below) vs. genuinely complex — data structures, OOP, functions, recursion, statistical tests/distributions, linear algebra, ACID, design patterns, gradient descent (no strict time cap for these).
 
 ## Hard constraints (do not skip any of these)
 
 1. **No module numbers, no "before lecture" language, anywhere in the reading's own text.** Folder paths can stay module-numbered for now (that's just current repo organization, checked by `qa/reading_qa.py`), but the page content must read as fully standalone — a reading may get moved between modules later.
-2. **Never reuse the lecture's analogies/examples/scenarios.** Read the target lecture's source first and pick something else. Older decks keep this in `module_decks/module-N-*/INSTRUCTOR_LECTURE_NOTES.md` (+ `PROJECT.md`/`DATASET.md`); **newer decks (Modules 3-5 as re-dropped 2026-09) instead have `module_decks/module-N-*/CALENDAR.md` (the day-by-day map) plus one folder per lesson under `lectures/<slug>/`, where `deck_spec.yaml` is the thing to read** — its `meta.scenario`, `meta.glossary`, `meta.learning_objectives`, and every slide's `analogy:` block are exactly the material a reading must not duplicate — rotate real-world scenarios across finance / healthcare / public sector / nonprofit & social impact / business ops / professional services (see `pedagogy/pedagogy/PEDAGOGY_SUMMARY.md` §5).
+2. **Never reuse an example a Fellow will meet elsewhere in the module.** That means the LiveLab deck's analogies (including its backups), code examples, scenario and datasets; the code-along notebook's examples; every Data Challenge's scenario and dataset; and the graded project's stakeholders, scenarios and data files. The full list of where to look, and in what order of authority, is "Source of truth" below. Write the avoid-list into the content brief before choosing anything, then rotate real-world scenarios across finance / healthcare / public sector / nonprofit & social impact / business ops / professional services (see `pedagogy/pedagogy/PEDAGOGY_SUMMARY.md` §5).
 3. **Required sections**: **Introduction** (see its own bullet below — this is not optional and not the same thing as "Concept Overview," though the two can flow directly into each other), Concept Overview (scenario-based — open inside a concrete situation, never "a loop is X, a conditional is Y" style dry definitions), Technical Vocabulary, Interactive Practice, "How This Shows Up in Interviews" (data-focused; +SWE angle for Python/OOP/SQL), Overall Summary/Critical Thinking Questions, Additional Resources. Optional but encouraged when genuinely relevant: a prereq-recall section (1-4 questions, mixing types — recall, coding-based/trace, scenario-based, critical-thinking — covering the *actual* prerequisite skills the reading leans on later, not just the one most obvious one; e.g. a nested-loops reading that later unpacks tuples needs a tuple-unpacking prereq question too, not just `range()`), and a "thinking ahead" section on where the concept resurfaces later.
 
 3a. **The Introduction must do four things, explicitly** — not just imply them:
@@ -83,32 +83,111 @@ teach them.
   from no quest. They are held to the same standard and marked
   `supplementary: true` in the manifest.
 
-### Deck context: what a reading should be built from
-The module's real teaching material lives in a separate local folder,
-`/Users/jellyspratley/Documents/Marcy/AI_DeckGeneration`:
-- `modules/<module-slug>/livelabs/<slug>/deck_spec.yaml` — the taught session
-  (a **LiveLab**), with its objectives, glossary, scenario and analogies. This
-  is the anti-duplication source: never reuse a LiveLab's scenario or analogy.
-- `modules/<module-slug>/data-challenges/<slug>.md` + `.yaml` + `RUBRIC.md` —
-  the 60-minute group block that follows each LiveLab. Its day span matches its
-  quest's, so a reading and its Data Challenge share vocabulary.
-- `module_sources/<module-slug>/` — `PROJECT.md` (the one graded project and
-  its `competency_assessments`), `DATASET.md`, `INSTRUCTOR_MODULE_SUMMARY.md`.
-- `modules/<module-slug>/CALENDAR.md` — the day-by-day flow.
-
-That folder is **not a git repo**, so `curriculum/mod1-quests.json` records a
-`content_pin`: a sha256 over the deck specs, data challenges and module
-sources. Recompute it before a build and compare. A changed pin means the
-module was rebuilt and the readings may be stale — this is the only drift
-signal available, and the equivalent pin on the SWE side is what caught a
-lesson reorder that would otherwise have gone unnoticed.
-
 ### Videos
 About **10-12 minutes** is the guide here, not the SWE repo's 5-minute cap, since
 DA readings run 25-50 minutes. But every pick must be verified: real duration,
 English **audio** (the default caption track's `languageCode` — an English
 title proves nothing), and embeddable. Over 12 warns, over 20 fails, and the
 verified duration goes into the displayed time estimate.
+
+## Source of truth: the decks, the labs repo, the projects repo (added 2026-10-15)
+
+A reading is built around what is **actually taught now**. The decks are
+hand-edited after they are generated, and the projects are revised, so the
+local generator files fall behind. Each module's sources are listed in its
+`curriculum/mod<N>-quests.json` under `_sources`. In order of authority:
+
+1. **The Google Slides decks in Drive** (top folder
+   `14Udi5Zj0Lkoz240cZnLMNR_eeQsOyJSF`, one `mod<N>_decks` subfolder per
+   module). These are the most recent version of each LiveLab. Match a deck
+   to its LiveLab by title. Read the slide text with the Drive connector's
+   `read_file_content`, and read the speaker notes with the Slides
+   connector's `read_presentation`, fields
+   `slides.slideProperties.notesPage.pageElements.shape.text.textElements.textRun.content`.
+   The notes carry the `[SCRIPT]`, `[MISCONCEPTIONS]` and answer-key text that
+   the slides abbreviate.
+2. **`The-Marcy-Lab-School/DA_INSTRUCTOR_CodeAlongs_Labs`** (private), under
+   `module-<N>-<slug>/`:
+   - `CALENDAR.md`: which LiveLab, quest and Data Challenge share each day.
+   - `livelabs/<slug>/instructor_prep.md`: prereqs, misconceptions, timing.
+   - `livelabs/<slug>/*_STUDENT.ipynb` / `TERMINAL_WORKSHEET_STUDENT.md`: the
+     code-along Fellows type in class. Its examples are taken.
+   - `data-challenges/<slug>/<slug>.md`, `.yaml`, `RUBRIC.md`,
+     `TERMINAL_WORKSHEET_STUDENT.md`, and `data-challenges/data/`: the
+     60-minute group block that follows the LiveLab, with its dataset.
+3. **`The-Marcy-Lab-School/DA_Projects_Curriculum_FALL26_INSTRUCTOR`**
+   (private), under `projects/Module<N>_<Name>/`:
+   - `student/PROJECT_OVERVIEW.md`, `student/SCENARIOS.md`, `student/data/`:
+     what Fellows will build, for which stakeholders, on which files.
+   - `instructor/overview.md`: its **Lecture/Lab Handoff** names what the
+     module's content must produce, the bridging gaps, and the domains already
+     earmarked for lecture/lab demos (off-limits to a reading too). Its
+     **Common roadblocks** list is what a reading should defuse early.
+   - `_brief.json`: `competency_assessments`, `common_project_mistakes`,
+     `good_vs_bad_criteria`.
+   - `projects/CURRICULUM_CHANGES.md`: merges and renumbering across modules.
+4. **Local fallback: `/Users/jellyspratley/Documents/Marcy/AI_DeckGeneration`**,
+   `modules/<module-slug>/livelabs/<slug>/deck_spec.yaml`. Use it for the
+   backup analogies and the full glossary the slides shorten. Where it and
+   the Drive deck disagree, the Drive deck wins. Note the disagreement in the
+   brief.
+
+Module numbers differ across these places (the projects repo was renumbered
+0-12 after merges). Match modules by name, not by number.
+
+### How each source is used
+- **Avoid**: the deck's analogies, backups, code examples and scenario; the
+  code-along's examples; every Data Challenge scenario and dataset; the
+  project's stakeholders, scenarios and data files; the demo domains the
+  project handoff earmarks for lecture. A reading uses a different domain,
+  different names and different data.
+- **Align**: the reading's definitions must agree with the deck's. A Fellow
+  who reads one definition and hears another in class has to work out which
+  is right. The quest's Vocabulary Mission terms are owed (the Data Challenge
+  worksheet tells Fellows to use them in their shareout), plus any deck
+  glossary term the reading's topic covers.
+- **Prepare**: a reading rehearses, on its own small examples, the moves the
+  Data Challenge and project will ask for. Read the Data Challenge's steps,
+  `RUBRIC.md` and common mistakes, and the project's roadblocks and
+  `common_project_mistakes`, then build activities that practise the same
+  skill in a different setting. For example, if the challenge has Fellows
+  predict a count from a hand-typed text log before running the code, the
+  reading has Fellows predict output from a short invented list in another
+  domain. The reading gives the skill. The challenge applies it to a real
+  file. The Data Challenges already promise not to reuse a reading's
+  checkpoints, so the reading returns the favour: **it never works a Data
+  Challenge step, and never solves part of the project.**
+
+### The instructor repos are private; this repo is public
+The two repos above and the decks' speaker notes hold answer keys, planted
+bugs, rubric detail and solution code. A reading is a public page. So:
+- Never copy text, code, data rows or answers from them into a reading.
+  Paraphrasing a Data Challenge's answer is still giving it away.
+- Never name the project's stakeholders or scenarios, list its planted edge
+  cases, or describe its solution's design.
+- Never link to the private repos or the Drive decks from a reading.
+- Local copies live in `.sources/` (gitignored, written by
+  `qa/check_sources.py`). Never commit them, and never put deck or
+  answer-key text in a committed content brief beyond a short avoid-list
+  entry such as "deck analogy: traffic light".
+
+### Drift check before every build
+None of the three sources tells this repo when it changes. Before building
+or revising any reading:
+1. List the module's Drive deck folder with the Drive connector's
+   `search_files` (`parentId = '<drive.folder_id>'`), and save the JSON
+   result to a scratchpad file.
+2. Run `python3 qa/check_sources.py curriculum/mod<N>-quests.json --drive-listing <that file>`.
+   It lists every deck edited and every repo file changed under the module
+   since the recorded baseline, and refreshes `.sources/`.
+3. Re-read whatever it lists before trusting a brief or reading built
+   earlier.
+4. After the readings have really been rebuilt or re-checked against the
+   current state, record it as the new baseline by adding `--record`. Never
+   record a baseline the readings don't match.
+
+The older `content_pin` (a hash of the local `AI_DeckGeneration` folder) is
+retired: it could not see edits made in Drive or in either repo.
 
 ## Points & gamification (build in via `assets/reading-kit.js`, do not reinvent)
 
@@ -186,11 +265,12 @@ Two separate, unrelated tiers, both from `assets/reading-kit.js`:
 
 ## Pipeline
 
-1. **Anti-duplication check + skill lookup.** Read the target lecture's deck notes; note what to avoid. In the same pass, find which of that module's `skills.json` competencies this lesson feeds into — cross-reference `module_decks/<module>/INSTRUCTOR_MODULE_SUMMARY.md`'s day-by-day/objective table (which lesson maps to which objective number) against its "Skill | Rubric ceiling | Assessment method" table (which objective number maps to which `competency_assessments` slug from `PROJECT.md`). Usually one, sometimes two slugs per reading — don't over-tag. If the target deck is new, run `python3 extract_skills.py` first (writes `skills_raw.json`, a reference file) and hand-write the new slug's `name`/`definition` into `skills.json` yourself — this step is never fully automatic, see that script's header comment for why. **The newer deck drops have no `PROJECT.md` and no `INSTRUCTOR_MODULE_SUMMARY.md` at all**, so there's no `competency_assessments` list to extract from; for those, hand-write the slugs from the lessons' own `learning_objectives` across `lectures/*/deck_spec.yaml`, and reuse an existing slug wherever the competency genuinely recurs (adding the new module to that entry's `modules` array) rather than minting a near-duplicate. Add any genuinely new broad category to `taxonomy.json` in the same pass — a `reading.meta.json` tag that isn't in `taxonomy.json` silently falls out of the landing page's grouping.
-2. **Research** (dispatch to a research subagent with WebSearch/WebFetch): a real-world scenario distinct from the lecture's, a candidate video, 2-4 additional-resource links (w3schools/SQL-Bolt/TED/official docs/games) — the agent live-checks every link it returns.
+0. **Drift check and source read.** Run the drift check in "Source of truth" above. Then, for the reading's quest, read every source it lists: each LiveLab deck in the quest's day span (slides and speaker notes), its `instructor_prep.md` and code-along, the Data Challenge for those days, and the module project's overview, scenarios and handoff. Fill the brief's **Sources**, **Avoid**, **Align** and **Prepare** sections from them before choosing a scenario.
+1. **Skill lookup.** The avoid-list is already in the brief from step 0. Now, find which of that module's `skills.json` competencies this lesson feeds into. Check first against the projects repo's `_brief.json` `competency_assessments` and the Data Challenge `.yaml`'s `skills_tested`, since those are current; then cross-reference `module_decks/<module>/INSTRUCTOR_MODULE_SUMMARY.md`'s day-by-day/objective table (which lesson maps to which objective number) against its "Skill | Rubric ceiling | Assessment method" table (which objective number maps to which `competency_assessments` slug from `PROJECT.md`). Usually one, sometimes two slugs per reading — don't over-tag. If the target deck is new, run `python3 extract_skills.py` first (writes `skills_raw.json`, a reference file) and hand-write the new slug's `name`/`definition` into `skills.json` yourself — this step is never fully automatic, see that script's header comment for why. **The newer deck drops have no `PROJECT.md` and no `INSTRUCTOR_MODULE_SUMMARY.md` at all**, so there's no `competency_assessments` list to extract from; for those, hand-write the slugs from the lessons' own `learning_objectives` across `lectures/*/deck_spec.yaml`, and reuse an existing slug wherever the competency genuinely recurs (adding the new module to that entry's `modules` array) rather than minting a near-duplicate. Add any genuinely new broad category to `taxonomy.json` in the same pass — a `reading.meta.json` tag that isn't in `taxonomy.json` silently falls out of the landing page's grouping.
+2. **Research** (dispatch to a research subagent with WebSearch/WebFetch): hand it the brief's avoid-list (domains and names only, never answer-key text) and ask for a real-world scenario outside every item on it, a candidate video, 2-4 additional-resource links (w3schools/SQL-Bolt/TED/official docs/games) — the agent live-checks every link it returns.
 3. **Fill out the content brief** — copy `content-briefs/TEMPLATE.md`, fill it in. This is the fast-review artifact; if anything about the scenario/video/tags needs a sanity check with Angelica, do it here, before writing HTML.
 4. **Author `index.html`** using `assets/brand-tokens.css` + `assets/reading-kit.css` + `assets/reading-kit.js`. Near the top (after the persona widget, before section 1), add a visible "Skills you'll practice in this reading" callout — one `<p><strong>{skills.json name}</strong> — {skills.json definition}</p>` per matched slug, using that file's `name`/`definition` fields verbatim (they're already written for students, don't reword or shorten them). Write a sidecar `reading.meta.json` (`{title, tags: [taxonomy.json ids], skills: [skills.json competency slugs], audience, time_minutes}`) next to it. Pass both `tags` and `skills` into the `ReadingKit.submitForCredit({..., tags, skills})` call so instructor-side analytics can report at both the broad-category and the specific-competency level.
-5. **QA pass** (dispatch to a separate QA subagent, fresh context — not the same thread that authored the page, so QA isn't grading its own homework): run `python3 qa/reading_qa.py <path>/index.html`, plus a manual semantic check against this file's constraints list (activity variety, feedback-on-every-choice, no seductive-detail diagrams). Fix everything it flags.
+5. **QA pass** (dispatch to a separate QA subagent, fresh context — not the same thread that authored the page, so QA isn't grading its own homework): run `python3 qa/reading_qa.py <path>/index.html`, plus a manual semantic check against this file's constraints list (activity variety, feedback-on-every-choice, no seductive-detail diagrams). Give the QA agent the brief's avoid-list and the `.sources/` paths, and have it confirm three things: no example overlaps the deck, code-along, Data Challenge or project; every definition agrees with the deck's; and nothing from the private repos or speaker notes (answers, planted bugs, stakeholder names, solution code) appears on the page. Fix everything it flags.
 6. **Manual smoke test in an actual browser** — click every interactive element, both quiz-attempt paths (right-first-try, wrong-twice-then-reveal), the video, every export button, the import/resume flow, mobile breakpoint.
 7. **Regenerate the catalog**: `python3 build_catalog.py` (rebuilds the root landing page + the README table — never hand-edit either between the `READINGS_TABLE_START`/`END` markers or inside the generated `index.html`).
 8. **Report**: the live GitHub Pages URL, and a short "please review" list — the video pick, the chosen scenario, any QA findings that were judgment calls rather than hard fixes.
@@ -202,6 +282,8 @@ Two separate, unrelated tiers, both from `assets/reading-kit.js`:
 - `skills.json` — the module-level graded competencies (from each `module_decks/*/PROJECT.md`'s `competency_assessments` list), one `{name, definition, modules}` entry per slug, **hand-curated** — this is the source for `reading.meta.json`'s `skills` field and the in-reading "Skills you'll practice" callout. `extract_skills.py` regenerates `skills_raw.json` (the raw rubric-table data, reference only) when a new deck lands; a human/agent still has to write the readable `name`/`definition` into `skills.json` itself — never paste raw rubric-column text ("guided coding exercise + trace review") in front of students, and never hand-edit `skills_raw.json` (it's disposable, always regenerated).
 - `content-briefs/TEMPLATE.md` — fill out per reading.
 - `qa/reading_qa.py` — automated QA pass.
+- `qa/check_sources.py` — drift check against the Drive decks and both instructor repos; keeps `.sources/` (gitignored, private content) current.
+- `curriculum/mod<N>-quests.json` — quest map plus `_sources` (Drive folder, repo paths, recorded baselines).
 - `build_catalog.py` — regenerates the landing page + README table.
 - `instructor-tools/aggregate_submissions.py` — instructor-run only, pulls scores across the roster and reports performance by reading, by broad tag, and by specific objective.
 - `brand/brand/BRAND_GUIDELINES.md` + `tokens.json` — source of truth if the shared kit ever needs to change.

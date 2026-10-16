@@ -455,12 +455,43 @@ def check_video_language(html, skip_network=False):
         except Exception as e:
             findings.append(("WARN", f"could not verify language of video {vid} ({e}) — confirm manually via its caption track"))
             continue
-        m = re.search(r'"captionTracks":\[\{"baseUrl":"[^"]*","name":\{"simpleText":"[^"]*"\},"vssId":"[^"]*","languageCode":"([a-z-]+)"', body)
-        if not m:
+        lang = _default_caption_language(body)
+        if lang is None:
             findings.append(("WARN", f"could not find a caption track for video {vid} to verify language — confirm manually"))
-        elif not m.group(1).startswith("en"):
-            findings.append(("ERROR", f"video {vid}'s default caption track is language '{m.group(1)}', not English — its audio likely isn't English either, swap this video"))
+        elif not lang.startswith("en"):
+            findings.append(("ERROR", f"video {vid}'s default caption track is language '{lang}', not English — its audio likely isn't English either, swap this video"))
     return findings
+
+
+def _default_caption_language(body):
+    """Language of the caption track YouTube shows by default.
+
+    `captionTracks` is listed alphabetically, so its first entry is not the
+    default: an English video with auto-translated Arabic captions lists `ar`
+    first (two real false positives, 2026-10-16). The default is named by
+    `audioTracks[defaultAudioTrackIndex].defaultCaptionTrackIndex`. Fall back to
+    the first track only when the page carries no audio-track data.
+    """
+    def array_after(key):
+        start = body.find(f'"{key}":[')
+        if start < 0:
+            return None
+        try:
+            return json.JSONDecoder().raw_decode(body, start + len(key) + 3)[0]
+        except ValueError:
+            return None
+
+    tracks = array_after("captionTracks")
+    if not tracks:
+        return None
+    index = 0
+    audio = array_after("audioTracks")
+    m = re.search(r'"defaultAudioTrackIndex":(\d+)', body)
+    if audio and m and int(m.group(1)) < len(audio):
+        index = audio[int(m.group(1))].get("defaultCaptionTrackIndex", 0)
+    if index >= len(tracks):
+        index = 0
+    return tracks[index].get("languageCode")
 
 
 def check_video_embeddable(html, skip_network=False):

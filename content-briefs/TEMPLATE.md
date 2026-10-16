@@ -6,16 +6,34 @@ this file alone, without reading raw HTML. Delete this comment block when done.
 
 # Content brief: <reading title>
 
-- **Precedes lecture on:** <topic — used only to avoid duplicating its analogies/examples, never printed in the reading itself>
+- **Quest / LiveLab(s):** <quest id + title; the LiveLab deck(s) in its day span. Never printed in the reading itself>
 - **Skill tags (from taxonomy.json):** <tag-1>, <tag-2>
 - **Audience:** data-only / data + software engineering
 - **Complexity flag:** standard (<20 min) / complex (data structures, OOP, functions, recursion, stats/distributions, linear algebra, ACID, design patterns, gradient descent — no strict time cap)
 - **Estimated time:** <n> minutes (reading + embedded video + practice; excludes Additional Resources)
 
-## Lecture analogy/example check
-What the target lecture's `module_decks/module-N-*/INSTRUCTOR_LECTURE_NOTES.md` already uses (analogies, datasets, scenarios) — this reading must NOT reuse any of these:
-- <analogy/example 1>
-- <analogy/example 2>
+## Sources (see SKILL.md, "Source of truth")
+State read, so a later drift check shows what this brief predates.
+- **Drive decks read:** <deck title — modifiedTime>, ...
+- **Labs repo commit:** <sha> (`module-<N>-<slug>/`)
+- **Projects repo commit:** <sha> (`projects/Module<N>_<Name>/`)
+- **Deck vs. local deck_spec disagreements:** <none / what differs; the Drive deck wins>
+
+## Avoid (already used elsewhere in the module)
+Short labels only. This repo is public, so no answer-key text, no data rows, no solution detail.
+- **LiveLab deck(s):** <analogies + backups, code examples, scenario>
+- **Code-along:** <examples>
+- **Data Challenge:** <scenario, dataset>
+- **Project:** <stakeholder domains, data files, demo domains earmarked in the handoff>
+
+## Align
+- **Deck definitions this reading must agree with:** <term — the deck's wording, in brief>
+- **Quest Vocabulary Mission terms this reading owes:** <terms>
+
+## Prepare (what this reading rehearses, on its own examples)
+- **Data Challenge move:** <the skill a challenge step asks for> → <the reading activity that practises it in another setting>
+- **Project roadblock / common mistake defused:** <roadblock> → <where the reading addresses it>
+- **Confirmed:** the reading works no Data Challenge step and solves no part of the project.
 
 ## Real-world scenario for this reading
 - **Domain (rotate across finance / healthcare / public sector / nonprofit & social impact / business ops / professional services):** <domain>
