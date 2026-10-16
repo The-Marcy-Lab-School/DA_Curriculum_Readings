@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-illustration{width:100%;max-width:720px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;display:block}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
 @media(max-width:650px){.mlrk-illustration{max-width:100%}}
@@ -14,7 +14,7 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Build It Once, Use It Again</h1>
-<p class="mlrk-lead">A community health clinic bills dozens of patients a day. Every visit needs a co-pay calculated from the patient's insurance plan and visit type. Someone could type that math fresh into every patient's chart, or copy-paste the same few lines over and over. Or someone could write the calculation once, give it a name, and reuse it for every single patient. That reusable, callable piece of code is a <strong>function</strong>, and this reading is about how to build one from scratch.</p>
+<p class="mlrk-lead">A small electric co-op sends every household a bill each month. Every bill uses the same math: the electricity a household used, times the price of electricity. You could retype that math for each household. Or you could write it once, give it a name, and reuse it for every bill. That named, reusable piece of code is a <strong>function</strong>.</p>
 <div class="mlrk-meta">
   <span class="mlrk-pill">~48–52 minutes</span>
   <span class="mlrk-pill">Interactive</span>
@@ -49,73 +49,83 @@
 
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
-<p>Picture the clinic's front desk. A patient with a basic plan and an office-visit fee owes one amount. A patient with a specialist plan and a longer visit owes a different amount. Both amounts come from the exact same math: take a base fee, multiply it by a rate that depends on the plan, and that's the co-pay. Without a function, a receptionist's script might repeat those same three lines near-verbatim for every patient it bills that day, only the numbers plugged in changing each time.</p>
+<p>Electricity is measured in kilowatt-hours (kWh). This month, one household used 300 kWh, another used 520, and a third used 160. The co-op charges everyone $0.25 per kWh. Without a function, the billing script repeats the same two lines for each household. Only the number changes.</p>
 
-<svg class="mlrk-illustration" viewBox="0 0 720 300" role="img" aria-labelledby="fnIntroTitle fnIntroDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="fnIntroTitle">Copy-pasted math collapsing into one reusable function</title>
-  <desc id="fnIntroDesc">On the left, three nearly identical blocks of code, each computing a co-pay for a different base fee, labeled as copy-pasted. An arrow points to a single function box on the right labeled calculate_copay. Three separate arrows carry the three different base fees into that one function, and three arrows carry three different results back out, showing the same function reused with different inputs.</desc>
+<svg class="mlrk-illustration" viewBox="0 0 760 300" role="img" aria-labelledby="fnIntroTitle fnIntroDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="fnIntroTitle">Copy-pasted billing math compared with one reusable function</title>
+  <desc id="fnIntroDesc">On the left, three nearly identical blocks of code, each computing a cost for a different number of kilowatt-hours, labeled copy-pasted. On the right, three usage numbers, 300, 520 and 160, each flow into a single box labeled energy_cost, defined once. Three results come out: 75.0, 130.0 and 40.0.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-    <text x="115" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Copy-pasted three times</text>
+    <text x="125" y="24" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">Copy-pasted</text>
     <g fill="#F7DFDF" stroke="#C92929" stroke-width="2">
-      <rect x="10" y="30" width="210" height="52" rx="10"/>
-      <rect x="10" y="92" width="210" height="52" rx="10"/>
-      <rect x="10" y="154" width="210" height="52" rx="10"/>
+      <rect x="10" y="40" width="230" height="60" rx="10"/>
+      <rect x="10" y="110" width="230" height="60" rx="10"/>
+      <rect x="10" y="180" width="230" height="60" rx="10"/>
     </g>
-    <g font-size="12.5" fill="#261F1D">
-      <text x="22" y="50">total = 40 * 1.2</text>
-      <text x="22" y="66">print(total)</text>
-      <text x="22" y="112">total = 65 * 1.2</text>
-      <text x="22" y="128">print(total)</text>
-      <text x="22" y="174">total = 20 * 1.2</text>
-      <text x="22" y="190">print(total)</text>
+    <g font-size="16" fill="#261F1D" font-family="Menlo, Consolas, monospace">
+      <text x="24" y="65">cost = 300 * 0.25</text>
+      <text x="24" y="88">print(cost)</text>
+      <text x="24" y="135">cost = 520 * 0.25</text>
+      <text x="24" y="158">print(cost)</text>
+      <text x="24" y="205">cost = 160 * 0.25</text>
+      <text x="24" y="228">print(cost)</text>
     </g>
-    <text x="115" y="228" text-anchor="middle" font-size="12.5" font-weight="600" fill="#83671C">same three lines, three separate places to fix a bug</text>
+    <text x="125" y="272" text-anchor="middle" font-size="16" font-weight="700" fill="#83671C">3 places to fix a bug</text>
 
-    <polygon points="238,105 268,105 268,96 288,113 268,130 268,121 238,121" fill="#264326"/>
+    <line x1="268" y1="34" x2="268" y2="282" stroke="#B3BBB0" stroke-width="2" stroke-dasharray="6 6"/>
 
-    <rect x="310" y="70" width="180" height="86" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="400" y="98" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">function</text>
-    <text x="400" y="120" text-anchor="middle" font-weight="700" font-size="13.5" fill="#261F1D">calculate_copay</text>
-    <text x="400" y="140" text-anchor="middle" font-size="12" fill="#261F1D">defined exactly once</text>
-
+    <text x="520" y="24" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">One function, called 3 times</text>
     <g fill="none" stroke="#2274B5" stroke-width="2.5">
-      <path d="M240,40 C270,40 280,70 310,90"/>
-      <path d="M240,113 C270,113 280,113 310,113"/>
-      <path d="M240,190 C270,190 280,150 310,136"/>
+      <path d="M332,80 C365,80 370,125 400,125"/>
+      <path d="M332,150 L400,150"/>
+      <path d="M332,220 C365,220 370,175 400,175"/>
     </g>
     <g fill="#2274B5">
-      <circle cx="252" cy="42" r="16"/><circle cx="252" cy="113" r="16"/><circle cx="252" cy="188" r="16"/>
+      <circle cx="310" cy="80" r="23"/><circle cx="310" cy="150" r="23"/><circle cx="310" cy="220" r="23"/>
     </g>
-    <g font-size="11" font-weight="700" fill="#FFFCF7" text-anchor="middle">
-      <text x="252" y="46">40</text><text x="252" y="117">65</text><text x="252" y="192">20</text>
+    <g font-size="16" font-weight="700" fill="#FFFCF7" text-anchor="middle">
+      <text x="310" y="86">300</text><text x="310" y="156">520</text><text x="310" y="226">160</text>
     </g>
 
+    <rect x="400" y="100" width="210" height="100" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="505" y="143" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">energy_cost</text>
+    <text x="505" y="170" text-anchor="middle" font-size="16" fill="#261F1D">defined once</text>
+
     <g fill="none" stroke="#264326" stroke-width="2.5">
-      <path d="M490,90 C560,80 590,55 630,42"/>
-      <path d="M490,113 C560,113 590,113 630,113"/>
-      <path d="M490,136 C560,150 590,175 630,188"/>
+      <path d="M610,125 C640,125 650,80 685,80"/>
+      <path d="M610,150 L685,150"/>
+      <path d="M610,175 C640,175 650,220 685,220"/>
     </g>
     <g fill="#264326">
-      <circle cx="642" cy="42" r="18"/><circle cx="642" cy="113" r="18"/><circle cx="642" cy="188" r="18"/>
+      <circle cx="717" cy="80" r="32"/><circle cx="717" cy="150" r="32"/><circle cx="717" cy="220" r="32"/>
     </g>
-    <g font-size="11" font-weight="700" fill="#FFFCF7" text-anchor="middle">
-      <text x="642" y="46">48</text><text x="642" y="117">78</text><text x="642" y="192">24</text>
+    <g font-size="16" font-weight="700" fill="#FFFCF7" text-anchor="middle">
+      <text x="717" y="86">75.0</text><text x="717" y="156">130.0</text><text x="717" y="226">40.0</text>
     </g>
-    <text x="642" y="230" text-anchor="middle" font-size="12.5" font-weight="600" fill="#264326">one definition, three different results</text>
+    <text x="520" y="285" text-anchor="middle" font-size="16" font-weight="700" fill="#264326">same code, three results</text>
   </g>
 </svg>
 
-<p>That single box on the right is the whole idea of a <strong>function</strong>: a named, reusable block of code that gets defined once and then <strong>called</strong> as many times as needed, each time with different input values. Those input values are called <strong>arguments</strong>, and inside the function's own definition, the names that receive them are called <strong>parameters</strong>. Instead of a fee getting hardcoded into three separate blocks, one parameter named <code>base_fee</code> stands in for whatever fee gets passed in on a given call. And instead of the function just displaying its answer on screen, it can <strong>return</strong> that answer, handing the actual value back to whatever line called it, so that value can be saved, billed, or added into a running total.</p>
+<p>The box on the right is a <strong>function</strong>: a named, reusable block of code. You define it once. Then you <strong>call</strong> it as many times as you need, with different values each time. Here is <code>energy_cost</code> in Python, called twice:</p>
+<div class="mlrk-code"><div class="mlrk-screen">def energy_cost(kwh_used, price_per_kwh):
+    return kwh_used * price_per_kwh
+
+print(energy_cost(300, 0.25))
+print(energy_cost(520, 0.25))
+
+[Output]
+75.0
+130.0</div></div>
+<p>The values passed in at a call, like <code>300</code> and <code>0.25</code>, are <strong>arguments</strong>. The names in the <code>def</code> line that receive them, <code>kwh_used</code> and <code>price_per_kwh</code>, are <strong>parameters</strong>. The <code>return</code> line hands the answer back to the line that called the function. That line can then store the answer, add it to a total, or print it. The answer is the <strong>return value</strong>.</p>
 
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> "can this be a function?" is one of the very first things a code reviewer or an interviewer notices in a piece of code. A duplicated formula that lives in four separate places is a real, common source of bugs: the billing rule changes, someone updates three of the four copies, and the fourth quietly keeps charging the old rate. A function fixes that by construction. There's exactly one place the rate lives, so there's exactly one place to fix it.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to write a sequence of steps that runs top to bottom, store values in variables, and print results. This reading is about naming a sequence of steps once and reusing that name with different inputs, instead of writing (or copying) the steps again every time. Once defining and calling a function feels automatic, the next idea builds directly on it: figuring out exactly which variables a function can see while it runs, and which ones stay invisible to everything outside it.</p>
+<p><strong>Why this matters:</strong> a formula copied into four places is a common source of bugs. The price changes, someone updates three of the copies, and the fourth keeps charging the old price. With a function, the formula lives in one place, so there is one place to fix it. Code reviewers and interviewers check for this early.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to store values in variables, write loops and conditionals, and print results. Here you name a set of steps once and reuse it with different inputs. The next idea builds on this one: which variables a function can see while it runs, and which ones the rest of the program can't see.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before functions</h2>
-<p class="mlrk-small">A few already-familiar skills get reused heavily inside function bodies later in this reading: assignment, evaluating an arithmetic expression, and reading which lines belong to which block by indentation. Test each one below before moving on.</p>
+<p>Function bodies in this reading use three skills you already have: assignment, arithmetic, and reading indentation. Check each one.</p>
 
 <div class="mlrk-card" id="card-recall"><p><strong>Which operator assigns a value to a variable in Python?</strong></p>
 <button type="button" class="mlrk-choice" data-a="eq"><code>=</code></button>
@@ -124,122 +134,122 @@
 <div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-arith" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">base_fee = 40
-total = base_fee + 10
+<div class="mlrk-code"><div class="mlrk-screen">usage = 300
+total = usage + 20
 print(total)</div></div>
 <p><strong>What prints?</strong></p>
-<button type="button" class="mlrk-choice" data-a="50">50</button>
-<button type="button" class="mlrk-choice" data-a="40">40</button>
-<button type="button" class="mlrk-choice" data-a="4010">"4010"</button>
+<button type="button" class="mlrk-choice" data-a="50">320</button>
+<button type="button" class="mlrk-choice" data-a="40">300</button>
+<button type="button" class="mlrk-choice" data-a="4010">"30020"</button>
 <div id="arithfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-indent" style="margin-top:.8rem"><p><strong>Scenario check:</strong> reading which lines belong to which branch, by indentation alone — <code>visits = 4</code>:</p>
-<div class="mlrk-code"><div class="mlrk-screen">if visits > 5:
-    print("frequent")
-elif visits > 2:
-    print("occasional")
+<div class="mlrk-card" id="card-indent" style="margin-top:.8rem"><p><strong>Scenario check:</strong> <code>kwh_used</code> is <code>450</code>.</p>
+<div class="mlrk-code"><div class="mlrk-screen">if kwh_used > 600:
+    print("high")
+elif kwh_used > 300:
+    print("average")
 else:
-    print("rare")</div></div>
+    print("low")</div></div>
 <p><strong>What prints?</strong></p>
-<button type="button" class="mlrk-choice" data-a="occasional">occasional</button>
-<button type="button" class="mlrk-choice" data-a="frequent">frequent</button>
-<button type="button" class="mlrk-choice" data-a="rare">rare</button>
+<button type="button" class="mlrk-choice" data-a="occasional">average</button>
+<button type="button" class="mlrk-choice" data-a="frequent">high</button>
+<button type="button" class="mlrk-choice" data-a="rare">low</button>
 <div id="indentfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-critical" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> the same three lines of billing math appear, copy-pasted, in four different scripts. A bug is found in the formula. For the fix to actually take effect everywhere it's used, what has to happen?</p>
+<div class="mlrk-card" id="card-critical" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> the same billing math is copy-pasted into four different scripts. Someone finds a bug in it. What has to happen for the fix to work everywhere?</p>
 <button type="button" class="mlrk-choice" data-a="four">Someone has to find and correctly edit all four copies.</button>
-<button type="button" class="mlrk-choice" data-a="one">Editing any single copy automatically updates the other three.</button>
-<button type="button" class="mlrk-choice" data-a="restart">Restarting the computer applies the fix everywhere at once.</button>
+<button type="button" class="mlrk-choice" data-a="one">Editing any one copy updates the other three.</button>
+<button type="button" class="mlrk-choice" data-a="restart">Restarting the computer applies the fix everywhere.</button>
 <div id="criticalfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-callout mlrk-callout-blue">None of this changes once functions are introduced: assignment, arithmetic, and reading indentation all work exactly the same way inside a function body as they do on their own. Get each one right in isolation first.</div>
+<div class="mlrk-callout mlrk-callout-blue">Assignment, arithmetic, and indentation work the same way inside a function body as they do anywhere else.</div>
 </section>
 
 <section class="mlrk-section">
 <h2>3. Technical vocabulary</h2>
 <p>Flip each card before the practice below.</p>
 <div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Function</strong><br>A named, reusable block of code, defined once and callable as many times as needed.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>define</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Define</strong><br>Writing the <code>def</code> line and body that creates a function. Defining it does not run it.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>call</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Call</strong><br>Actually using a function by writing its name followed by parentheses, which runs its body.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>parameter</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Parameter</strong><br>A name written in the function's own definition that will receive an input value.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>argument</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Argument</strong><br>The actual value supplied at a specific call, matched up to a parameter.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>return value</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Return value</strong><br>The value a function hands back to the exact line that called it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Function</strong><br>A named, reusable block of code. You define it once and call it as many times as you need.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>define</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Define</strong><br>Write the <code>def</code> line and the body that create a function. Defining a function does not run it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>call</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Call</strong><br>Run a function by writing its name followed by parentheses. Only a call runs the body.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>parameter</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Parameter</strong><br>A name in the function's <code>def</code> line. It is a placeholder for an input value.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>argument</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Argument</strong><br>The real value passed in at a specific call. It fills the matching parameter.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>return value</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Return value</strong><br>The result a function sends back to the line that called it.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>4. The shape of a function</h2>
-<p>Not every function needs every part below, but this input, process, output model is a strong way to read a function you've never seen before.</p>
-<svg class="mlrk-illustration" viewBox="0 0 640 150" role="img" aria-labelledby="shapeTitle shapeDesc" xmlns="http://www.w3.org/2000/svg" style="max-width:560px">
+<p>Most functions have the same shape: input, process, output. Use it to read a function you have never seen before.</p>
+<svg class="mlrk-illustration" viewBox="0 0 640 150" role="img" aria-labelledby="shapeTitle shapeDesc" xmlns="http://www.w3.org/2000/svg" style="max-width:600px">
   <title id="shapeTitle">Input, process, output model of a function</title>
-  <desc id="shapeDesc">Three boxes connected left to right by arrows: Input, arguments become parameters. Process, the function body runs. Output, a return value goes back to the caller.</desc>
+  <desc id="shapeDesc">Three boxes connected left to right by arrows: Input, arguments fill parameters. Process, the function body runs. Output, a return value goes back to the caller.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-    <rect x="10" y="30" width="180" height="90" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
-    <text x="100" y="60" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Input</text>
-    <text x="100" y="82" text-anchor="middle" font-size="12" fill="#261F1D">arguments become</text>
-    <text x="100" y="98" text-anchor="middle" font-size="12" fill="#261F1D">parameters</text>
+    <rect x="10" y="25" width="180" height="100" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="100" y="57" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">Input</text>
+    <text x="100" y="83" text-anchor="middle" font-size="16" fill="#261F1D">arguments fill</text>
+    <text x="100" y="104" text-anchor="middle" font-size="16" fill="#261F1D">parameters</text>
 
-    <polygon points="196,68 222,68 222,60 240,75 222,90 222,82 196,82" fill="#264326"/>
+    <polygon points="194,68 216,68 216,60 232,75 216,90 216,82 194,82" fill="#264326"/>
 
-    <rect x="230" y="30" width="180" height="90" rx="14" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="320" y="60" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Process</text>
-    <text x="320" y="82" text-anchor="middle" font-size="12" fill="#261F1D">the function body</text>
-    <text x="320" y="98" text-anchor="middle" font-size="12" fill="#261F1D">runs</text>
+    <rect x="236" y="25" width="170" height="100" rx="14" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="321" y="57" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">Process</text>
+    <text x="321" y="83" text-anchor="middle" font-size="16" fill="#261F1D">the function</text>
+    <text x="321" y="104" text-anchor="middle" font-size="16" fill="#261F1D">body runs</text>
 
-    <polygon points="416,68 442,68 442,60 460,75 442,90 442,82 416,82" fill="#264326"/>
+    <polygon points="410,68 432,68 432,60 448,75 432,90 432,82 410,82" fill="#264326"/>
 
-    <rect x="450" y="30" width="180" height="90" rx="14" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
-    <text x="540" y="60" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Output</text>
-    <text x="540" y="82" text-anchor="middle" font-size="12" fill="#261F1D">a return value goes</text>
-    <text x="540" y="98" text-anchor="middle" font-size="12" fill="#261F1D">back to the caller</text>
+    <rect x="452" y="25" width="180" height="100" rx="14" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+    <text x="542" y="57" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">Output</text>
+    <text x="542" y="83" text-anchor="middle" font-size="16" fill="#261F1D">a return value goes</text>
+    <text x="542" y="104" text-anchor="middle" font-size="16" fill="#261F1D">back to the caller</text>
   </g>
 </svg>
 </section>
 
 <section class="mlrk-section">
 <h2>5. Defining is not calling</h2>
-<p>Predict before revealing the simulated Python result.</p>
-<div class="mlrk-code"><div id="defineScreen" class="mlrk-screen">def greet_patient():
-    print("Welcome to the clinic")
+<p>Predict what this code prints, then reveal the output.</p>
+<div class="mlrk-code"><div id="defineScreen" class="mlrk-screen">def show_outage_notice():
+    print("Planned outage Saturday, 9 a.m. to noon")
 
 # No call appears below.</div><div class="mlrk-actions"><button type="button" id="defrun" class="mlrk-btn">Reveal simulated output</button></div></div><div id="defrunfb" class="mlrk-feedback" tabindex="-1"></div>
-<div class="mlrk-card" id="card-defq" style="margin-top:1rem"><p><strong>What would actually make this function's body run?</strong></p>
-<button type="button" class="mlrk-choice" data-a="call"><code>greet_patient()</code></button>
-<button type="button" class="mlrk-choice" data-a="def"><code>def greet_patient():</code></button>
-<button type="button" class="mlrk-choice" data-a="string"><code>"Welcome to the clinic"</code></button>
+<div class="mlrk-card" id="card-defq" style="margin-top:1rem"><p><strong>Which line would make the body of <code>show_outage_notice</code> run?</strong></p>
+<button type="button" class="mlrk-choice" data-a="call"><code>show_outage_notice()</code></button>
+<button type="button" class="mlrk-choice" data-a="def"><code>def show_outage_notice():</code></button>
+<button type="button" class="mlrk-choice" data-a="string"><code>"Planned outage Saturday, 9 a.m. to noon"</code></button>
 <div id="defqfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>6. Parameters are placeholders, arguments are real values</h2>
-<div class="mlrk-code"><div class="mlrk-screen">def make_id_tag(patient_name):
-    return "PATIENT: " + patient_name
+<div class="mlrk-code"><div class="mlrk-screen">def meter_label(meter_id):
+    return "METER " + meter_id
 
-label = make_id_tag("Rosa Delgado")</div></div>
-<div class="mlrk-card" id="card-par" style="margin-top:1rem"><p><strong>Which statement is correct?</strong></p>
-<button type="button" class="mlrk-choice" data-a="right"><code>patient_name</code> is the parameter; <code>"Rosa Delgado"</code> is the argument.</button>
-<button type="button" class="mlrk-choice" data-a="reverse"><code>"Rosa Delgado"</code> is the parameter; <code>patient_name</code> is the argument.</button>
+label = meter_label("A-1042")</div></div>
+<div class="mlrk-card" id="card-par" style="margin-top:1rem"><p><strong>Which statement about <code>meter_label</code> is correct?</strong></p>
+<button type="button" class="mlrk-choice" data-a="right"><code>meter_id</code> is the parameter; <code>"A-1042"</code> is the argument.</button>
+<button type="button" class="mlrk-choice" data-a="reverse"><code>"A-1042"</code> is the parameter; <code>meter_id</code> is the argument.</button>
 <button type="button" class="mlrk-choice" data-a="both">Both of them are parameters.</button>
 <div id="parfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p class="mlrk-small">A parameter is written in the <code>def</code> line itself. An argument is the actual value handed over at one specific call.</p>
+<p>A parameter is written in the <code>def</code> line. An argument is the value passed in at one call.</p>
 </section>
 
 <section class="mlrk-section">
 <h2>7. Fill in the blanks: write the function</h2>
-<p>Complete this function so it takes two parameters, multiplies them, and hands the result back to whatever calls it (rather than just displaying it).</p>
-<div class="mlrk-code"><div class="mlrk-screen">def calculate_copay(base_fee, plan_multiplier):
-    total = base_fee * plan_multiplier
-    ____(1) total
+<p>Complete <code>energy_cost</code> so it multiplies its two parameters and hands the result back to the caller.</p>
+<div class="mlrk-code"><div class="mlrk-screen">def energy_cost(kwh_used, price_per_kwh):
+    cost = kwh_used * price_per_kwh
+    ____(1) cost
 
-bill_amount = calculate_copay(40, 1.2)
+march_bill = energy_cost(300, 0.25)
 print(____(2))</div></div>
 <div class="mlrk-fillblank">
-  <label for="blank1">Blank (1): which keyword sends <code>total</code> back to the caller?</label>
+  <label for="blank1">Blank (1): which keyword sends <code>cost</code> back to the caller?</label>
   <input type="text" id="blank1" autocomplete="off">
 </div>
 <div class="mlrk-fillblank">
-  <label for="blank2">Blank (2): which variable actually holds that returned value, ready to print?</label>
+  <label for="blank2">Blank (2): which variable holds the returned value?</label>
   <input type="text" id="blank2" autocomplete="off">
 </div>
 <p><button type="button" id="fillcheck" class="mlrk-btn">Check my answers</button></p>
@@ -248,12 +258,12 @@ print(____(2))</div></div>
 
 <section class="mlrk-section">
 <h2>8. Order the steps: what happens when a function is called</h2>
-<p>Click steps, in order, to build the sequence Python actually follows for <code>calculate_copay(40, 1.2)</code>. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<p>Click the steps in the order Python runs them for <code>energy_cost(300, 0.25)</code>. Click a step again to remove it. Press "Check my order" when you're done. This self-check is not graded.</p>
 <ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="args"><span class="mlrk-order-num"></span> Python evaluates the arguments in the call: 40 and 1.2.</li>
-  <li class="mlrk-orderitem" data-step="assign"><span class="mlrk-order-num"></span> Each argument's value is assigned to its matching parameter: base_fee gets 40, plan_multiplier gets 1.2.</li>
-  <li class="mlrk-orderitem" data-step="body"><span class="mlrk-order-num"></span> The function body runs top to bottom, computing total.</li>
-  <li class="mlrk-orderitem" data-step="return"><span class="mlrk-order-num"></span> The return statement sends total's value back to the line that made the call.</li>
+  <li class="mlrk-orderitem" data-step="args"><span class="mlrk-order-num"></span> <code>energy_cost</code> is called with 300 and 0.25.</li>
+  <li class="mlrk-orderitem" data-step="assign"><span class="mlrk-order-num"></span> Each argument fills its matching parameter: <code>kwh_used</code> gets 300, <code>price_per_kwh</code> gets 0.25.</li>
+  <li class="mlrk-orderitem" data-step="body"><span class="mlrk-order-num"></span> The function body runs and computes <code>cost</code>.</li>
+  <li class="mlrk-orderitem" data-step="return"><span class="mlrk-order-num"></span> <code>return</code> sends the value of <code>cost</code> back to the line that made the call.</li>
 </ul>
 <div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
 <div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
@@ -261,49 +271,49 @@ print(____(2))</div></div>
 
 <section class="mlrk-section">
 <h2>9. Predict the return value, then trace it</h2>
-<p>Same function, different arguments each time. This is exactly the point of a function: define it once, call it as often as needed.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def calculate_copay(base_fee, plan_multiplier):
-    return base_fee * plan_multiplier</div></div>
+<p>Here is <code>energy_cost</code> again. Each call passes in different arguments.</p>
+<div class="mlrk-code"><div class="mlrk-screen">def energy_cost(kwh_used, price_per_kwh):
+    return kwh_used * price_per_kwh</div></div>
 <div class="mlrk-fillblank">
-  <label for="predict1">Predict: what does <code>calculate_copay(30, 2)</code> return?</label>
+  <label for="predict1">Predict: what does <code>energy_cost(200, 0.25)</code> return?</label>
   <input type="text" id="predict1" autocomplete="off">
 </div>
 <div class="mlrk-fillblank">
-  <label for="predict2">Predict: what does <code>calculate_copay(45, 1.5)</code> return?</label>
+  <label for="predict2">Predict: what does <code>energy_cost(90, 0.5)</code> return?</label>
   <input type="text" id="predict2" autocomplete="off">
 </div>
 <p><button type="button" id="predictcheck" class="mlrk-btn">Check my predictions</button></p>
 <div id="predictfb" class="mlrk-feedback" tabindex="-1"></div>
-<p style="margin-top:1.2rem">Now click through the first call yourself, one step at a time.</p>
+<p style="margin-top:1.2rem">Now click through the first call one step at a time.</p>
 <div id="tracestep"></div>
 </section>
 
 <section class="mlrk-section">
 <h2>10. Debug the invisible <code>None</code></h2>
-<div class="mlrk-code"><div id="noneScreen" class="mlrk-screen">def announce_copay(base_fee, plan_multiplier):
-    print("Patient owes $" + str(base_fee * plan_multiplier))
+<div class="mlrk-code"><div id="noneScreen" class="mlrk-screen">def show_cost(kwh_used, price_per_kwh):
+    print("This month's cost: $" + str(kwh_used * price_per_kwh))
 
-saved = announce_copay(40, 1.2)
+saved = show_cost(300, 0.25)
 print(saved)</div><div class="mlrk-actions"><button type="button" id="nonerun" class="mlrk-btn">Reveal simulated output</button></div></div>
 <div id="nonefb" class="mlrk-feedback" tabindex="-1"></div>
-<div class="mlrk-card" id="card-nonequiz" style="margin-top:1rem"><p><strong>Why does the second <code>print(saved)</code> show <code>None</code> instead of the dollar amount?</strong></p>
-<button type="button" class="mlrk-choice" data-a="noreturn">The function has no <code>return</code> statement, so the call itself has nothing to hand back to <code>saved</code>.</button>
-<button type="button" class="mlrk-choice" data-a="always">Any function built around math always returns <code>None</code> by default.</button>
-<button type="button" class="mlrk-choice" data-a="bug">This is a Python bug, and <code>saved</code> should hold the dollar amount.</button>
+<div class="mlrk-card" id="card-nonequiz" style="margin-top:1rem"><p><strong>Why does <code>print(saved)</code> show <code>None</code> instead of the cost?</strong></p>
+<button type="button" class="mlrk-choice" data-a="noreturn"><code>show_cost</code> has no <code>return</code> statement, so the call has nothing to hand back to <code>saved</code>.</button>
+<button type="button" class="mlrk-choice" data-a="always">A function that does math always returns <code>None</code>.</button>
+<button type="button" class="mlrk-choice" data-a="bug">It's a Python bug; <code>saved</code> should hold the cost.</button>
 <div id="nonequizfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>11. Matching: <code>return</code> versus <code>print</code></h2>
-<p>This mix-up is one of the most common early mistakes with functions. Drag each keyword into the description that matches how it actually behaves, then use the self-check button to confirm your matches.</p>
+<p>Mixing up these two is one of the most common early mistakes with functions. Drag each one to the description that matches it, then check your matches.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
   <span id="chip1" class="mlrk-draggable"><code>print(value)</code></span>
   <span id="chip2" class="mlrk-draggable"><code>return value</code></span>
 </div>
 <div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>Displays something on screen for a person to see; the calling code gets nothing back from it</strong></p><div class="mlrk-dropzone" id="zonePrint"></div></div>
-  <div><p class="mlrk-small"><strong>Sends the value back to the exact line that called the function; shows nothing on its own</strong></p><div class="mlrk-dropzone" id="zoneReturn"></div></div>
+  <div><p class="mlrk-small"><strong>Shows the value on screen for a person. The calling code gets nothing back.</strong></p><div class="mlrk-dropzone" id="zonePrint"></div></div>
+  <div><p class="mlrk-small"><strong>Sends the value back to the line that called the function. Shows nothing on its own.</strong></p><div class="mlrk-dropzone" id="zoneReturn"></div></div>
 </div>
 <div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
 <div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
@@ -312,22 +322,22 @@ print(saved)</div><div class="mlrk-actions"><button type="button" id="nonerun" c
 
 <section class="mlrk-section">
 <h2>12. Why split code into functions?</h2>
-<div class="mlrk-card" id="card-reuse"><p>The clinic's co-pay formula currently appears, copy-pasted, inside four separate billing scripts. The insurance rules change every few months. Which design is easiest to update and test?</p>
+<div class="mlrk-card" id="card-reuse"><p>The co-op's cost formula is copy-pasted into four billing scripts. The price per kWh changes every season. Which design is easiest to update and test?</p>
 <button type="button" class="mlrk-choice" data-a="function">Put the formula in one function and call it from all four scripts.</button>
 <button type="button" class="mlrk-choice" data-a="copy">Keep copy-pasting the formula into each script that needs it.</button>
-<button type="button" class="mlrk-choice" data-a="long">Merge all four scripts into one enormous script with no separate pieces.</button>
+<button type="button" class="mlrk-choice" data-a="long">Merge all four scripts into one long script with no separate pieces.</button>
 <div id="reusefb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="why"><strong>Explain in your own words:</strong> how does testing one small function differ from testing an entire program at once?</label>
-<textarea id="why" class="mlrk-response" data-save placeholder="Try thinking about how many separate pieces you'd need to check for a single bug."></textarea>
+<label for="why"><strong>Explain in your own words:</strong> how is testing one small function different from testing a whole program at once?</label>
+<textarea id="why" class="mlrk-response" data-save placeholder="Think about how many places you'd have to check to find one bug."></textarea>
 </section>
 
 <section class="mlrk-section">
 <h2>13. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about functions, parameters, and return values.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A function's code starts running the moment Python reaches its <code>def</code> line.</label>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE about functions, parameters, and return values.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A function's body runs as soon as Python reaches its <code>def</code> line.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> The same function can be called many times, with different arguments each time.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"><code>print()</code> and <code>return</code> do the same job: both hand the value back to the code that called the function.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A parameter is a name written in the function's own definition; an argument is the actual value supplied at a call.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A parameter is a name in the function's <code>def</code> line; an argument is the value passed in at a call.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
@@ -335,10 +345,10 @@ print(saved)</div><div class="mlrk-actions"><button type="button" id="nonerun" c
 
 <section class="mlrk-section">
 <h2>14. Watch: functions, from scratch</h2>
-<p>As you watch, notice how the video treats a function definition as separate from actually calling it, and how it demonstrates a parameter receiving a different argument on different calls.</p>
+<p>As you watch, notice that the video defines each function before it calls it. Also notice how one parameter gets a different argument on each call.</p>
 <div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=89cGQjB5R4M" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one thing the video's explanation of parameters or return values made clearer than it was before?</strong></p>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what is one thing about parameters or return values that the video made clearer?</strong></p>
 <textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
 </div>
 </section>
@@ -346,25 +356,36 @@ print(saved)</div><div class="mlrk-actions"><button type="button" id="nonerun" c
 <section class="mlrk-section">
 <h2>15. How this shows up in interviews</h2>
 <div class="mlrk-callout mlrk-callout-green">
-<p>"Can you turn this into a function?" is one of the very first things an interviewer or a code reviewer says when they see the same few lines repeated. Writing a clean function with real parameters, instead of hardcoding one value and duplicating the block, is often the single clearest signal of a candidate's habits in an otherwise simple exercise.</p>
-<p>For software-engineering-leaning roles specifically, expect a live follow-up like "what does this function return if that condition is never met?" Reviewers are trained to look for a function that quietly falls through without an explicit <code>return</code>, since that's exactly the bug practiced in section 10: the call looks like it worked because something printed, but the caller receives <code>None</code>.</p>
-<p>For data roles, the same idea shows up as "write a function that takes a column name and a threshold and returns the filtered rows," rather than one script hardcoded to a single column. The interviewer is checking whether the solution generalizes past the one example in front of them.</p>
+<p>When an interviewer or code reviewer sees the same few lines repeated, they often ask, "Can you turn this into a function?" A function with real parameters, instead of a hardcoded value in a copied block, shows good habits even in a simple exercise.</p>
+<p>For software engineering roles, expect a follow-up like "What does this function return if that condition is never met?" Reviewers look for a function with no <code>return</code>. That is the bug from section 10: something prints, so the call looks like it worked, but the caller gets <code>None</code>.</p>
+<p>For data roles, the same idea shows up as "Write a function that takes a column name and a threshold and returns the matching rows." The interviewer wants a solution that works for any column, not only the one in the example.</p>
 </div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> a reviewer reads your function and asks, "what happens if I call this twice with two different inputs?" What answer shows you designed it correctly?</p>
-<button type="button" class="mlrk-choice" data-a="right">It runs independently each time and returns a result based on whatever arguments that specific call passed in.</button>
-<button type="button" class="mlrk-choice" data-a="remember">It remembers the first call's arguments and reuses them on the second call.</button>
-<button type="button" class="mlrk-choice" data-a="crash">Calling any function a second time raises an error in Python.</button>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> a reviewer asks, "What happens if I call your function twice with two different inputs?" Which answer shows you designed it correctly?</p>
+<button type="button" class="mlrk-choice" data-a="right">Each call runs on its own and returns a result based on that call's arguments.</button>
+<button type="button" class="mlrk-choice" data-a="remember">The second call reuses the arguments from the first call.</button>
+<button type="button" class="mlrk-choice" data-a="crash">Calling a function a second time raises an error.</button>
 <div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>16. Debugging habit + reflection</h2>
-<div class="mlrk-card" id="card-debug"><p><strong>A teammate's function is supposed to return a discounted price, but the variable that stores its result keeps printing <code>None</code>. What should you check first?</strong></p>
-<button type="button" class="mlrk-choice" data-a="return">Whether the function actually contains a <code>return</code> statement, rather than only a <code>print</code>.</button>
-<button type="button" class="mlrk-choice" data-a="rename">Whether the function's name needs to be changed.</button>
-<button type="button" class="mlrk-choice" data-a="args">Whether Python allows more than one argument in a single call.</button>
+<div class="mlrk-card" id="card-debug"><p><strong><code>total_kwh</code> should add up three monthly meter readings.</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">def total_kwh(readings):
+    total = 0
+    for reading in readings:
+        total = total + reading
+        return total
+
+print(total_kwh([310, 285, 340]))
+
+[Output]
+310</div></div>
+<p><strong>The three readings add up to 935, but the function returns 310 with no error. What is wrong?</strong></p>
+<button type="button" class="mlrk-choice" data-a="return">The <code>return</code> line is indented inside the loop, so the function stops after the first reading.</button>
+<button type="button" class="mlrk-choice" data-a="rename"><code>total</code> should start at 1 instead of 0.</button>
+<button type="button" class="mlrk-choice" data-a="args">A function can't take a list as an argument.</button>
 <div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>Your debugging habit:</strong> in 1-2 sentences, describe how you'd check whether an unfamiliar function actually returns a value or only displays one.</label>
+<label for="strategy"><strong>Your debugging habit:</strong> in 1-2 sentences, describe how you'd check whether an unfamiliar function returns a value or only displays one.</label>
 <textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I'd look for..."></textarea>
 <p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
 <div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
@@ -372,19 +393,19 @@ print(saved)</div><div class="mlrk-actions"><button type="button" id="nonerun" c
 
 <section class="mlrk-section">
 <h2>17. Summary &amp; critical thinking</h2>
-<p>Three ideas carried this whole reading: a function is defined once but called as many times as needed, parameters let each call plug in different arguments without touching the function's own code, and <code>return</code> hands a real value back to the caller while <code>print</code> only displays something on screen.</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a small bakery needs to calculate an order total from an item's price and quantity, for dozens of different orders throughout the day, and then add each total into a running daily sales figure. Which design fits?</p>
+<p>This reading covered three ideas. You define a function once and call it as many times as you need. Parameters let each call pass in different arguments without changing the function's code. <code>return</code> hands a value back to the caller, while <code>print</code> only shows it on screen.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a bakery needs an order total (price times quantity) for dozens of orders a day. Each total gets added to the day's sales. Which design fits?</p>
 <button type="button" class="mlrk-choice" data-a="right">One function that takes price and quantity as parameters and returns the order total, called once per order.</button>
-<button type="button" class="mlrk-choice" data-a="print">One function that just prints each order total, since the totals need to be seen anyway.</button>
-<button type="button" class="mlrk-choice" data-a="hardcode">A separate block of hardcoded math for each individual order of the day.</button>
+<button type="button" class="mlrk-choice" data-a="print">One function that prints each order total, since someone needs to see the totals.</button>
+<button type="button" class="mlrk-choice" data-a="hardcode">A separate block of hardcoded math for each order.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> if you inherited a function you'd never seen before, what would you check first to figure out its parameters and its return value?</label>
+<label for="clue"><strong>In your own words:</strong> if you inherited a function you'd never seen, what would you check first to find its parameters and its return value?</label>
 <textarea id="clue" class="mlrk-response" data-save></textarea>
 </section>
 
 <section class="mlrk-section">
 <h2>18. Thinking ahead</h2>
-<p>Defining and calling a function is the foundation for everything functions do later: deciding exactly which variables a function can see while it runs and which ones stay invisible outside it, catching a function that silently returns the wrong thing when a real bug slips into a bigger program, and combining several small functions so each one has exactly one job. All of that starts from the same two moves practiced here: define it once, and call it with whatever input a given situation actually needs.</p>
+<p>Everything you do with functions later builds on two moves from this reading: define it once, and call it with the input each situation needs. Next come questions like which variables a function can see while it runs, how to catch a function that quietly returns the wrong answer, and how to combine small functions so each one has one job.</p>
 </section>
 
 <section class="mlrk-section">
@@ -485,88 +506,88 @@ git push</pre></li>
   K.Scoring.renderChip("#scorechip");
 
   K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"eq",
-    feedback:{eq:"A single = assigns a value to a variable name.",
-              eqeq:"== compares two values for equality. It doesn't assign anything.",
-              colon:":= is the walrus operator, used for assigning inside an expression. Plain assignment uses a single =."}});
+    feedback:{eq:"Right. A single = assigns a value to a name.",
+              eqeq:"== compares two values. It doesn't assign anything.",
+              colon:":= assigns inside an expression. Plain assignment uses a single =."}});
 
   K.quiz({id:"q-arith", buttonSelector:"#card-arith .mlrk-choice", feedbackSelector:"#arithfb", correct:"50",
-    feedback:{50:"base_fee starts at 40, then total is assigned base_fee + 10, which is 50.",
-              40:"total is reassigned to base_fee + 10 on the second line, so it doesn't stay at 40.",
-              4010:"Python adds these two numbers together. It doesn't join them as text."}});
+    feedback:{50:"Right. usage is 300, so total is 300 + 20, which is 320.",
+              40:"300 is usage. total is a new variable set to usage + 20.",
+              4010:"Both values are numbers, so Python adds them. It doesn't join them as text."}});
 
   K.quiz({id:"q-indent", buttonSelector:"#card-indent .mlrk-choice", feedbackSelector:"#indentfb", correct:"occasional",
-    feedback:{occasional:"Python checks branches top to bottom and stops at the first true one. visits > 5 is false (4 is not greater than 5), so it checks visits > 2, which is true, and prints occasional.",
-              frequent:"visits > 5 is false, since 4 is not greater than 5, so that branch never runs.",
-              rare:"Python already found a true branch (visits > 2) before ever reaching else, so else is skipped."}});
+    feedback:{occasional:"Right. 450 > 600 is false, so Python checks the elif. 450 > 300 is true, so it prints average.",
+              frequent:"450 > 600 is false, so the first branch is skipped.",
+              rare:"The elif is already true (450 > 300), so Python never reaches else."}});
 
   K.quiz({id:"q-critical", buttonSelector:"#card-critical .mlrk-choice", feedbackSelector:"#criticalfb", correct:"four",
-    feedback:{four:"With four separate copies, each one has to be found and fixed individually. Missing even one leaves the bug live in that spot.",
-              one:"Copy-pasted code has no connection between the copies. Editing one does nothing to the other three.",
-              restart:"Restarting a computer doesn't rewrite code sitting in separate files."}});
+    feedback:{four:"Right. Each copy has to be fixed on its own. Miss one and the bug stays there.",
+              one:"Copies aren't connected. Editing one changes nothing in the other three.",
+              restart:"Restarting doesn't rewrite code saved in separate files."}});
 
   K.quiz({id:"q-defq", buttonSelector:"#card-defq .mlrk-choice", feedbackSelector:"#defqfb", correct:"call",
-    feedback:{call:"Calling greet_patient() tells Python to actually run the function's body.",
-              def:"The def line creates the function. It does not execute the body by itself.",
-              string:"The string is just data sitting inside the function body. Writing it out doesn't call the function."}});
+    feedback:{call:"Right. show_outage_notice() calls the function, which runs its body.",
+              def:"The def line creates the function. It doesn't run the body.",
+              string:"The string is data inside the body. Writing it doesn't call the function."}});
 
   K.quiz({id:"q-par", buttonSelector:"#card-par .mlrk-choice", feedbackSelector:"#parfb", correct:"right",
-    feedback:{right:"patient_name is the placeholder named in the definition. \"Rosa Delgado\" is the real value supplied at this specific call.",
-              reverse:"These are reversed: the parameter is named in def, and the argument is passed at the call.",
-              both:"Only patient_name is the parameter. \"Rosa Delgado\" is an argument for this one call."}});
+    feedback:{right:"Right. meter_id is the placeholder in the def line. \"A-1042\" is the value passed in at this call.",
+              reverse:"These are reversed. The parameter is in the def line; the argument is in the call.",
+              both:"Only meter_id is a parameter. \"A-1042\" is the argument for this one call."}});
 
   K.quiz({id:"q-nonequiz", buttonSelector:"#card-nonequiz .mlrk-choice", feedbackSelector:"#nonequizfb", correct:"noreturn",
-    feedback:{noreturn:"With no return statement, the call itself has no value to hand back, so Python gives it the default: None.",
-              always:"Whether a function returns None depends entirely on whether it has a return statement, not on what kind of math it does.",
-              bug:"This is normal, expected Python behavior. A function without return always hands back None, on purpose."}});
+    feedback:{noreturn:"Right. With no return, the call hands back Python's default value: None.",
+              always:"The math doesn't matter. A function returns None only when it has no return.",
+              bug:"This is normal Python. A function with no return always hands back None."}});
 
   K.quiz({id:"q-reuse", buttonSelector:"#card-reuse .mlrk-choice", feedbackSelector:"#reusefb", correct:"function",
-    feedback:{function:"One function gives you exactly one place to test the formula and exactly one place to update it when the rules change.",
-              copy:"Copying creates four separate places that can quietly drift out of sync with each other.",
-              long:"One giant script without separated pieces makes any single formula harder to find, test, or fix in isolation."}});
+    feedback:{function:"Right. One function means one place to test the formula and one place to update the price.",
+              copy:"Four copies means four places that can drift apart when the price changes.",
+              long:"In one long script, the formula is harder to find, test, or fix on its own."}});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"right",
-    feedback:{right:"Each call is independent: parameters receive whatever arguments that call supplies, and the result depends only on those inputs.",
-              remember:"A function doesn't remember arguments from a previous call. Each call starts fresh with its own parameter values.",
-              crash:"Calling the same function multiple times is completely normal. It's the entire point of writing one."}});
+    feedback:{right:"Right. Each call fills the parameters with its own arguments, so the result depends only on those inputs.",
+              remember:"A function doesn't keep arguments from an earlier call. Each call starts fresh.",
+              crash:"Calling a function many times is normal. That's the reason to write one."}});
 
   K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"return",
-    feedback:{return:"A function that prints but never returns will always hand back None to whatever tries to store its result.",
-              rename:"Renaming the function changes nothing about whether it returns a value.",
-              args:"Python allows any number of arguments in a call. That's unrelated to a missing return statement."}});
+    feedback:{return:"Right. return is inside the loop, so the function returns after adding 310. Move return out of the loop to get 935.",
+              rename:"Starting at 1 would give a wrong total too. Look at where return sits.",
+              args:"Functions can take lists. The list is fine; look at the indentation of return."}});
 
   K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"right",
-    feedback:{right:"One function, called once per order with that order's own price and quantity, returns a real number that can be added into a running total.",
-              print:"Printing shows the total on screen, but the daily sales figure needs an actual value it can add, not displayed text.",
-              hardcode:"Hardcoded math for each order recreates the exact copy-paste problem this whole reading has been about avoiding."}});
+    feedback:{right:"Right. Each call returns a number, and the day's sales can add that number to its total.",
+              print:"A printed total can't be added to the day's sales. The code needs a returned value.",
+              hardcode:"Hardcoded math for each order is the copy-paste problem from the start of this reading."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"A function's code starts running the moment Python reaches its def line.", correct:false,
-      hint:"Revisit section 5's reveal. Did the function body run before it was ever called?",
-      explain:"A def line only creates the function. Its body doesn't run until the function is actually called, as shown in section 5."},
+    {value:"a", label:"A function's body runs as soon as Python reaches its def line.", correct:false,
+      hint:"Look at section 5. Did show_outage_notice print anything?",
+      explain:"A def line only creates the function. The body runs when the function is called, as section 5 showed."},
     {value:"b", label:"The same function can be called many times, with different arguments each time.", correct:true,
-      hint:"Think back to section 9's two predictions using the same function.",
-      explain:"That's the entire point of writing a function: define it once, call it repeatedly with whatever inputs a given situation needs."},
+      hint:"Look at section 9's two predictions.",
+      explain:"That's the reason to write a function: define it once, call it with whatever inputs you need."},
     {value:"c", label:"print() and return do the same job: both hand the value back to the code that called the function.", correct:false,
-      hint:"Revisit section 10's None debugging example. Did print() give the caller anything to store?",
-      explain:"print() only displays a value on screen. Only return actually hands a value back to the calling code, as section 10's None bug demonstrated."},
-    {value:"d", label:"A parameter is a name written in the function's own definition; an argument is the actual value supplied at a call.", correct:true,
-      hint:"Revisit section 6's patient_name example.",
-      explain:"This is the same distinction practiced in section 6: parameter in the definition, argument at the call."}
+      hint:"Look at section 10. What did saved hold?",
+      explain:"print() only shows a value. Only return hands it back to the caller, which is why saved held None in section 10."},
+    {value:"d", label:"A parameter is a name in the function's def line; an argument is the value passed in at a call.", correct:true,
+      hint:"Look at section 6's meter_label example.",
+      explain:"This is section 6's rule: parameter in the def line, argument at the call."}
   ]});
 
   K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["args","assign","body","return"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
   K.flipCards("#vocab", "act-flip-vocab");
   K.dragDrop("#dragarea", "act-drag-printreturn");
   K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zonePrint", label:"print(value)", expectedLabel:"Displays something on screen"},
+    chip1:{expectedId:"zonePrint", label:"print(value)", expectedLabel:"Shows the value on screen"},
     chip2:{expectedId:"zoneReturn", label:"return value", expectedLabel:"Sends the value back to the caller"}
   }});
   K.traceStepper("#tracestep", {steps:[
-    {cell:"call calculate_copay(30, 2)", line:"calculate_copay(30, 2)"},
-    {cell:"base_fee = 30", line:"base_fee = 30"},
-    {cell:"plan_multiplier = 2", line:"plan_multiplier = 2"},
-    {cell:"return base_fee * plan_multiplier", line:"return 30 * 2"},
-    {cell:"call returns 60", line:"calculate_copay(30, 2) evaluates to 60"}
+    {cell:"call energy_cost(200, 0.25)", line:"energy_cost(200, 0.25)"},
+    {cell:"kwh_used = 200", line:"kwh_used = 200"},
+    {cell:"price_per_kwh = 0.25", line:"price_per_kwh = 0.25"},
+    {cell:"return kwh_used * price_per_kwh", line:"return 200 * 0.25"},
+    {cell:"call returns 50.0", line:"energy_cost(200, 0.25) evaluates to 50.0"}
   ]});
 
   K.video({id:"act-video", elementId:"ytplayer", videoId:"89cGQjB5R4M"});
@@ -576,8 +597,8 @@ git push</pre></li>
   K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
 
   $("#defrun").addEventListener("click",()=>{
-    $("#defineScreen").textContent = `def greet_patient():
-    print("Welcome to the clinic")
+    $("#defineScreen").textContent = `def show_outage_notice():
+    print("Planned outage Saturday, 9 a.m. to noon")
 
 # No call appears below.
 
@@ -585,23 +606,23 @@ git push</pre></li>
 (no output)`;
     const f=$("#defrunfb");
     f.className="mlrk-feedback mlrk-show mlrk-good";
-    f.innerHTML="<strong>Why:</strong> Python has learned the function definition, but the body never executes because the function was never called.";
+    f.innerHTML="<strong>Why:</strong> Python stored the function, but nothing called it, so the body never ran.";
     f.setAttribute("tabindex","-1"); f.focus();
   });
 
   $("#nonerun").addEventListener("click",()=>{
-    $("#noneScreen").textContent = `def announce_copay(base_fee, plan_multiplier):
-    print("Patient owes $" + str(base_fee * plan_multiplier))
+    $("#noneScreen").textContent = `def show_cost(kwh_used, price_per_kwh):
+    print("This month's cost: $" + str(kwh_used * price_per_kwh))
 
-saved = announce_copay(40, 1.2)
+saved = show_cost(300, 0.25)
 print(saved)
 
 [Output]
-Patient owes $48.0
+This month's cost: $75.0
 None`;
     const f=$("#nonefb");
     f.className="mlrk-feedback mlrk-show mlrk-good";
-    f.innerHTML="<strong>Notice both lines:</strong> the dollar amount was printed from inside the function. The call itself, announce_copay(40, 1.2), still evaluates to None because there's no return statement, so that's what saved actually holds.";
+    f.innerHTML="<strong>Notice both lines:</strong> the first line came from the print inside show_cost. The second is what saved holds: None, because show_cost has no return.";
     f.setAttribute("tabindex","-1"); f.focus();
   });
 
@@ -612,21 +633,21 @@ None`;
     fillAttempts++;
     const b1 = $("#blank1").value.trim().toLowerCase();
     const b2 = $("#blank2").value.trim().toLowerCase();
-    const ok = b1==="return" && b2==="bill_amount";
+    const ok = b1==="return" && b2==="march_bill";
     const fb=$("#fillfb");
     if(ok){
       K.Scoring.award("q-fillcode", fillAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> return sends total back out of the function, and bill_amount is the variable that catches that returned value, so print(bill_amount) can show it.";
+      fb.innerHTML="<strong>Correct.</strong> return sends cost back to the caller, and march_bill stores it, so print(march_bill) shows 75.0.";
       fillDone=true;
     } else if(fillAttempts>=2){
       K.Scoring.award("q-fillcode",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> Blank (1) is <code>return</code>. Blank (2) is <code>bill_amount</code>, the variable that stored the function's returned value.";
+      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> Blank (1) is <code>return</code>. Blank (2) is <code>march_bill</code>, the variable that stores the returned value.";
       fillDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite yet.</strong> One more try. Look at which keyword sends a value out of a function, and which variable on the next line actually caught that value.";
+      fb.innerHTML="<strong>Not quite yet.</strong> One more try. Which keyword sends a value out of a function? Which variable on the left of the = catches it?";
     }
     fb.setAttribute("tabindex","-1"); fb.focus();
   });
@@ -638,29 +659,29 @@ None`;
     predictAttempts++;
     const p1 = parseFloat($("#predict1").value);
     const p2 = parseFloat($("#predict2").value);
-    const ok = p1===60 && p2===67.5;
+    const ok = p1===50 && p2===45;
     const fb=$("#predictfb");
     if(ok){
       K.Scoring.award("q-predict", predictAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> calculate_copay(30, 2) returns 30 * 2 = 60. calculate_copay(45, 1.5) returns 45 * 1.5 = 67.5. Same function, same formula, two different results because the arguments changed.";
+      fb.innerHTML="<strong>Correct.</strong> 200 * 0.25 is 50.0, and 90 * 0.5 is 45.0. Same function, different arguments, different results.";
       predictDone=true;
     } else if(predictAttempts>=2){
       K.Scoring.award("q-predict",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> calculate_copay(30, 2) returns 60. calculate_copay(45, 1.5) returns 67.5.";
+      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> energy_cost(200, 0.25) returns 50.0. energy_cost(90, 0.5) returns 45.0.";
       predictDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite yet.</strong> One more try. The function's whole body is a single line: return base_fee * plan_multiplier.";
+      fb.innerHTML="<strong>Not quite yet.</strong> One more try. The body is one line: return kwh_used * price_per_kwh. Multiply the two arguments.";
     }
     fb.setAttribute("tabindex","-1"); fb.focus();
   });
 
   const AI_PROMPTS = [
-    "Think about a task you do the same way every time but with different details, like packing a lunch with whatever's in the fridge that day. What stays exactly the same, and what changes each time, the way arguments change between function calls?",
-    "If you had to explain the difference between return and print to a friend using something from daily life, like handing someone an actual object versus just describing it out loud, what would you compare it to?",
-    "Where have you already relied on something working the same way every time it's used, no matter what input it's given, like a calculator button? How is that like a function?"
+    "Think about a task you do the same way every time but with different details, like packing a lunch with whatever's in the fridge. What stays the same, and what changes each time, the way arguments change between calls?",
+    "How would you explain return versus print to a friend? Try comparing handing someone an object with just describing it out loud.",
+    "What do you use that works the same way every time, whatever you put in, like a calculator button? How is that like a function?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");

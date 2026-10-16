@@ -23,7 +23,7 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Inside the Inside</h1>
-<p class="mlrk-lead">A game has 3 worlds, and each world has 4 checkpoints. At every checkpoint the game asks a second question: is the player carrying a key, and is it the right color? Code repeats inside repetition and decides inside a decision all the time, and two rules are enough to say exactly what it prints before you run it.</p>
+<p class="mlrk-lead">A video game has 3 worlds, and each world has 4 checkpoints. At every checkpoint, the game asks: is the player carrying a key? If yes, it asks a second question: is it the right color? This is code that repeats inside a repeat and decides inside a decision. Two rules are enough to say exactly what it prints before you run it.</p>
 <div class="mlrk-meta">
   <span class="mlrk-pill">~38–42 minutes</span>
   <span class="mlrk-pill">Interactive</span>
@@ -58,8 +58,8 @@
 
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
-<p>Picture the game: 3 worlds, 4 checkpoints in each. One loop over the worlds does not reach all 12 checkpoints. You play checkpoints 1, 2, 3, 4 of World 1, then checkpoints 1, 2, 3, 4 of World 2, then the same four in World 3.</p>
-<p>The code that does that is a <strong>nested loop</strong>: a loop written inside another loop's <strong>loop body</strong>, which is the indented code a loop runs each time around. The loop on the outside counts the worlds. The loop inside it counts the checkpoints, and it runs all the way through on every single pass of the outer one.</p>
+<p>One loop over the 3 worlds does not reach all 12 checkpoints. The player clears checkpoints 1 through 4 of World 1, then 1 through 4 of World 2, then 1 through 4 of World 3.</p>
+<p>Code that does this is a <strong>nested loop</strong>: a loop written inside another loop's <strong>loop body</strong>, the indented code a loop runs on each pass. The outer loop counts the worlds. The inner loop counts the checkpoints, and it runs all the way through on every pass of the outer loop.</p>
 
 <svg class="mlrk-illustration" viewBox="0 0 640 210" role="img" aria-labelledby="mapTitle mapDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="mapTitle">Game map: three worlds, each with four checkpoints</title>
@@ -95,44 +95,44 @@
   </g>
 </svg>
 
-<p>Now add the key. At each checkpoint the game asks "is the player carrying a key?" Only when the answer is yes does it ask the second question, "is it the right color?" That second question is a <strong>nested conditional</strong>: a decision written inside one branch of another decision. The inner question is reached only when the outer branch holding it is the branch that runs.</p>
-<p>Two rules do almost all of the work in this reading:</p>
+<p>Now add the key. The game asks "is it the right color?" only when the answer to "is the player carrying a key?" is yes. That second question is a <strong>nested conditional</strong>: a decision written inside one branch of another decision. Python reaches the inner question only when it runs the outer branch that holds it.</p>
+<p>Two rules cover every trace in this reading:</p>
 <ol>
   <li>An inner loop finishes every one of its iterations before the outer loop advances by one.</li>
-  <li>An inner conditional runs only when execution enters the outer branch that contains it.</li>
+  <li>An inner conditional runs only when Python enters the outer branch that contains it.</li>
 </ol>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> almost any real dataset has structure inside structure. A file has rows, and each row carries several values of its own. A sales report has regions, and each region has its own months. "Go through every row, then check a few things about that row" is a nested loop wrapped around a nested conditional, and tracing one out loud is one of the most common warm-up questions in a technical screen.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to trace a single loop and a single conditional. Here you combine two of them. The same shape scales up: walking a grid cell by cell, checking several fields on every record in a file, and grouping records by category before summarizing inside each group.</p>
+<p><strong>Why this matters:</strong> most real data has structure inside structure. A file has rows, and each row holds several values. A sales report has regions, and each region has its own months. "Go through every row, then check a few things about that row" is a loop wrapped around a nested conditional. Tracing code like that out loud is a common warm-up question in technical screens.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to trace a single loop and a single conditional. Here you put one inside another. The same shape scales up: walking a grid cell by cell, checking several fields on every record in a file, and grouping records by category before summarizing each group.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before nesting</h2>
-<p>Four skills carry the rest of this reading: the <code>range()</code> function, comparison operators, how a single conditional picks one branch, and tuple unpacking. Answer one question on each before going further.</p>
+<p>This reading builds on four prerequisite skills: the <code>range()</code> function, comparison operators, how a single conditional picks one branch, and tuple unpacking. Answer one question on each.</p>
 <div class="mlrk-card" id="card-recall"><p><strong>How many values does <code>range(5)</code> produce?</strong></p>
 <button type="button" class="mlrk-choice" data-a="4">4</button>
 <button type="button" class="mlrk-choice" data-a="5">5</button>
 <button type="button" class="mlrk-choice" data-a="6">6</button>
 <div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-compare" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>wait_days = 25</code>. What does <code>wait_days &gt;= 30</code> evaluate to?</p>
+<div class="mlrk-card" id="card-compare" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>games_played = 8</code>. What does <code>games_played &gt;= 10</code> evaluate to?</p>
 <button type="button" class="mlrk-choice" data-a="false">False</button>
 <button type="button" class="mlrk-choice" data-a="true">True</button>
 <button type="button" class="mlrk-choice" data-a="error">Python raises an error, because <code>&gt;=</code> cannot compare two numbers</button>
 <div id="comparefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-single" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a single conditional, with nothing nested inside it, where <code>temp = 72</code>:</p>
-<div class="mlrk-code"><div class="mlrk-screen">if temp &gt; 80:
-    print("hot")
-elif temp &gt; 60:
-    print("mild")
+<div class="mlrk-card" id="card-single" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a music app labels each song by length. This single conditional has nothing nested inside it, and <code>song_minutes = 5</code>:</p>
+<div class="mlrk-code"><div class="mlrk-screen">if song_minutes &gt; 6:
+    print("long track")
+elif song_minutes &gt; 3:
+    print("standard track")
 else:
-    print("cool")</div></div>
-<p><strong>What prints?</strong> 72 is greater than 60 as well as being less than 80, so think about how many branches actually run.</p>
-<button type="button" class="mlrk-choice" data-a="mild">mild</button>
-<button type="button" class="mlrk-choice" data-a="hot">hot</button>
-<button type="button" class="mlrk-choice" data-a="cool">cool</button>
+    print("short track")</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="mild">standard track</button>
+<button type="button" class="mlrk-choice" data-a="hot">long track</button>
+<button type="button" class="mlrk-choice" data-a="cool">short track</button>
 <div id="singlefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-tuple" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>pair = ("SMS", False)</code>, then <code>channel, enabled = pair</code>. What is <code>enabled</code>?</p>
@@ -141,7 +141,7 @@ else:
 <button type="button" class="mlrk-choice" data-a="tuple">The whole tuple, ("SMS", False)</button>
 <div id="tuplefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-callout mlrk-callout-blue">Nesting changes none of these four skills. <code>range()</code>, comparisons, single conditionals, and tuple unpacking all show up again in the tracing practice, working exactly as they work here. Get each one right on its own first.</div>
+<div class="mlrk-callout mlrk-callout-blue">Nesting changes none of these four skills. Each one works inside nested code exactly as it works here.</div>
 </section>
 
 <section class="mlrk-section">
@@ -160,7 +160,7 @@ else:
 
 <section class="mlrk-section">
 <h2>4. One complete inner run per outer iteration</h2>
-<p>The game plays all four of a world's checkpoints before the next world starts. Here are the first eight steps, in the order the game takes them:</p>
+<p>The player clears all four of a world's checkpoints before the next world starts. These are the first eight steps, in order:</p>
 <div class="trace">
   <div class="step">World 1<br>Checkpoint 1</div><div class="step">World 1<br>Checkpoint 2</div>
   <div class="step">World 1<br>Checkpoint 3</div><div class="step">World 1<br>Checkpoint 4</div>
@@ -176,7 +176,7 @@ else:
 
 <section class="mlrk-section">
 <h2>5. Predict the total, then check</h2>
-<p>A music app builds a coverage report for its editorial team. For each of its 3 playlist categories, it prints one line per mood tag, and there are 4 mood tags. Call this the <strong>playlist report</strong>:</p>
+<p>A music streaming app builds a report for its editors. For each of 3 playlist categories, it prints one line per mood tag, and there are 4 mood tags. This is the <strong>playlist report</strong>:</p>
 <div class="mlrk-code"><div class="mlrk-screen">for category in range(3):
     for mood in range(4):
         print(f"Category {category}, Mood {mood}")</div>
@@ -191,13 +191,13 @@ else:
   <p class="mlrk-outlabel">Output</p>
   <div class="mlrk-code"><div id="loopOut" class="mlrk-screen mlrk-out"></div></div>
 </div>
-<p style="margin-top:1.2rem">Twelve lines is a lot to hold in your head at once. Step through the playlist report one printed line at a time. The highlighted box shows which category and mood the loops are on right now, and each row of four boxes is one complete run of the inner loop.</p>
+<p style="margin-top:1.2rem">Twelve lines is a lot to hold in your head. Step through the playlist report one line at a time. The highlighted box shows which category and mood the loops are on. Each row of four boxes is one complete run of the inner loop.</p>
 <div id="tracestep"></div>
 </section>
 
 <section class="mlrk-section">
 <h2>6. Sort by scope: outer iteration vs. inner iteration</h2>
-<p>Here is the playlist report again, so you can read it while you sort:</p>
+<p>Here is the playlist report again:</p>
 <div class="mlrk-code"><div class="mlrk-screen">for category in range(3):
     for mood in range(4):
         print(f"Category {category}, Mood {mood}")</div></div>
@@ -238,16 +238,16 @@ else:
 
 <section class="mlrk-section">
 <h2>8. Nested conditionals are gated decisions</h2>
-<p>A public health clinic schedules appointments in two steps. First it asks whether the patient is eligible for this clinic at all. Only when the answer is yes does it ask how long the patient has been waiting, which decides whether they get a priority slot.</p>
+<p>A youth basketball league picks its playoff players in two steps. First it asks whether the player is on an active roster. Only when the answer is yes does it ask whether the player has played at least 10 games.</p>
 <div class="mlrk-gate-diagram">
-  <div class="mlrk-gate-outer">Outer question: is the patient eligible?
+  <div class="mlrk-gate-outer">Outer question: is the player on an active roster?
     <div class="mlrk-gate-connector">reached only when the answer above is TRUE</div>
-    <div class="mlrk-gate-inner">Inner question: has the patient waited 30 or more days?</div>
+    <div class="mlrk-gate-inner">Inner question: has the player played 10 or more games?</div>
   </div>
-  <p class="mlrk-gate-skip">When the outer answer is <strong>no</strong>, Python never reaches the inner question. It is skipped, not evaluated and found false.</p>
+  <p class="mlrk-gate-skip">When the outer answer is <strong>no</strong>, Python never reaches the inner question. Python skips it. It does not check it and find it False.</p>
 </div>
-<div class="mlrk-card" id="card-gate" style="margin-top:1rem"><p><strong>If the patient is not eligible, what happens to the wait-time check?</strong></p>
-<button type="button" class="mlrk-choice" data-a="skip">It is skipped. The outer condition is false, so execution never enters the block that holds the inner check.</button>
+<div class="mlrk-card" id="card-gate" style="margin-top:1rem"><p><strong>If the player is not on an active roster, what happens to the games-played check?</strong></p>
+<button type="button" class="mlrk-choice" data-a="skip">It is skipped. The outer condition is False, so Python never enters the block that holds the inner check.</button>
 <button type="button" class="mlrk-choice" data-a="check">It still runs, because every <code>if</code> must be evaluated somewhere.</button>
 <button type="button" class="mlrk-choice" data-a="error">Python raises an error, since the inner check was never reached.</button>
 <div id="gatefb" class="mlrk-feedback" tabindex="-1"></div></div>
@@ -255,22 +255,22 @@ else:
 
 <section class="mlrk-section">
 <h2>9. Trace the branch that actually runs</h2>
-<p>Here is the clinic's two-step decision as code. Call it the <code>patient_status</code> example:</p>
-<div class="mlrk-code"><div class="mlrk-screen">patient_status = "ELIGIBLE"
-wait_days = 12
+<p>Here is the league's two-step decision as code. This is the <code>roster_status</code> example:</p>
+<div class="mlrk-code"><div class="mlrk-screen">roster_status = "ACTIVE"
+games_played = 8
 
-if patient_status == "ELIGIBLE":
-    if wait_days &gt;= 30:
-        print("priority slot")
+if roster_status == "ACTIVE":
+    if games_played &gt;= 10:
+        print("playoff eligible")
     else:
-        print("standard slot")
+        print("needs more games")
 else:
-    print("not eligible yet")</div>
+    print("not on a roster")</div>
 <div class="mlrk-actions"><button type="button" id="condrun" class="mlrk-btn">Reveal the output</button></div></div>
-<div class="mlrk-card" id="card-cond" style="margin-top:1rem"><p><strong>What does the <code>patient_status</code> example print?</strong></p>
-<button type="button" class="mlrk-choice" data-a="standard"><code>standard slot</code></button>
-<button type="button" class="mlrk-choice" data-a="priority"><code>priority slot</code></button>
-<button type="button" class="mlrk-choice" data-a="ineligible"><code>not eligible yet</code></button>
+<div class="mlrk-card" id="card-cond" style="margin-top:1rem"><p><strong>What does the <code>roster_status</code> example print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="standard"><code>needs more games</code></button>
+<button type="button" class="mlrk-choice" data-a="priority"><code>playoff eligible</code></button>
+<button type="button" class="mlrk-choice" data-a="ineligible"><code>not on a roster</code></button>
 <div id="condfb" class="mlrk-feedback" tabindex="-1"></div></div>
 <div id="condOutWrap" hidden>
   <p class="mlrk-outlabel">Output</p>
@@ -280,7 +280,7 @@ else:
 
 <section class="mlrk-section">
 <h2>10. Fill in the blank</h2>
-<p>Here is the playlist report with one function name removed from both loops. Both loops need the same function to generate the numbers they count through.</p>
+<p>This copy of the playlist report is missing one function name, in both loops. Both loops use the same function to make the numbers they count through.</p>
 <div class="mlrk-code"><div class="mlrk-screen">for category in ____(3):
     for mood in ____(4):
         print(category, mood)</div></div>
@@ -296,7 +296,7 @@ else:
 <h2>11. Select all that apply</h2>
 <div class="mlrk-card"><p><strong>Select every one of these four statements that is true about nested loops and nested conditionals.</strong></p>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> Once the outer loop finishes its first iteration, the inner loop's range is used up for the rest of the program.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> An inner conditional can only run if execution has entered its outer branch.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> An inner conditional can only run if Python has entered its outer branch.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Nesting is limited to loops. Conditionals cannot be nested inside other conditionals.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> The number of times the inner body runs equals outer count times inner count.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
@@ -306,7 +306,7 @@ else:
 
 <section class="mlrk-section">
 <h2>12. Combine repetition and decisions</h2>
-<p>A loop can visit every item while a nested conditional decides what happens to that one item. A notification service does exactly that with a list of channel settings. Call this the <code>alerts</code> example:</p>
+<p>A loop can visit every item while a nested conditional decides what happens to each one. A notification service does this with a list of channel settings. This is the <code>alerts</code> example:</p>
 <div class="mlrk-code"><div class="mlrk-screen">alerts = [("EMAIL", True), ("SMS", False)]
 
 for channel, enabled in alerts:
@@ -323,17 +323,17 @@ for channel, enabled in alerts:
 
 <section class="mlrk-section">
 <h2>13. Order the trace steps</h2>
-<p>An inner message never appears and you do not know why. Build the sequence you would follow to find out:</p>
-<ol>
+<p>An inner message never appears, and you do not know why. Build the sequence you would follow to find out:</p>
+<ol class="mlrk-steplist">
   <li>Click the steps in the order you would do them.</li>
   <li>Click a step again to remove it if you change your mind.</li>
-  <li>Press "Check my order" when you are ready. This is a self-check, so correctness earns no points.</li>
+  <li>Press "Check my order." This is a self-check, so correctness earns no points.</li>
 </ol>
 <ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="outer"><span class="mlrk-order-num"></span> Find the outermost loop or conditional first.</li>
-  <li class="mlrk-orderitem" data-step="enter"><span class="mlrk-order-num"></span> Check whether execution actually enters that outer branch or iteration.</li>
-  <li class="mlrk-orderitem" data-step="inside"><span class="mlrk-order-num"></span> Only then look at what is nested inside it.</li>
-  <li class="mlrk-orderitem" data-step="repeat"><span class="mlrk-order-num"></span> Repeat the same check for any further nesting inside that.</li>
+  <li class="mlrk-orderitem" data-step="inside"><span class="mlrk-order-num"></span> Look at the code nested inside that outer branch or iteration.</li>
+  <li class="mlrk-orderitem" data-step="outer"><span class="mlrk-order-num"></span> Find the outermost loop or conditional.</li>
+  <li class="mlrk-orderitem" data-step="repeat"><span class="mlrk-order-num"></span> Repeat the same check for any deeper nesting.</li>
+  <li class="mlrk-orderitem" data-step="enter"><span class="mlrk-order-num"></span> Check whether Python actually enters that outer branch or iteration.</li>
 </ul>
 <div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
 <div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
@@ -341,7 +341,7 @@ for channel, enabled in alerts:
 
 <section class="mlrk-section">
 <h2>14. Watch: nested loops, visually</h2>
-<p>This is a short watch, about five minutes. As you watch, notice two things: the moment the inner loop finishes a full run before the outer loop advances by one, and how the video keeps track of which iteration each loop is on right now.</p>
+<p>This is a short watch, about five minutes. As you watch, notice two things: when the inner loop finishes a full run before the outer loop moves on, and how the video tracks which iteration each loop is on.</p>
 <div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=qwvswinpu2s" target="_blank" rel="noopener">Watch on YouTube</a>
 <div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which part of the video matched, or did not match, how you were already picturing the inner loop finishing before the outer one advances?</strong></p>
@@ -352,9 +352,9 @@ for channel, enabled in alerts:
 <section class="mlrk-section">
 <h2>15. How this shows up in interviews</h2>
 <div class="mlrk-callout mlrk-callout-green">
-<p>"What does this nested loop print?" is one of the most common warm-up questions in technical screens, for data roles and software engineering roles alike. Interviewers listen for <em>how</em> you trace it, not just the final number. Saying "the inner loop finishes before the outer one advances" out loud is exactly what they want to hear.</p>
-<p>Nested conditionals show up as spot-the-bug questions. You are handed a few lines where an inner message never fires, and asked to find the reason live. Tracing from the outside in, the same habit you practiced in the order-the-steps activity, is the expected method.</p>
-<p>Nested loops are also where the cost of a program starts to multiply. Two loops of the same length over 10 items run the inner body 100 times. Over 20 items they run it 400 times, so doubling the input multiplies the work by four. Interviewers often follow a nested-loop trace question by asking how the work grows when the input doubles.</p>
+<p>"What does this nested loop print?" is a common warm-up question in technical screens, for data and software engineering roles alike. Interviewers listen to <em>how</em> you trace it, not just the final number. Saying "the inner loop finishes before the outer one moves on" out loud is what they want to hear.</p>
+<p>Nested conditionals show up as spot-the-bug questions. You get a few lines where an inner message never prints, and you find the reason live. The expected method is tracing from the outside in, the habit from the order-the-steps activity.</p>
+<p>Nested loops are also where the cost of a program starts to multiply. Two loops over the same 10 items run the inner body 100 times. Over 20 items they run it 400 times, so doubling the input makes four times the work. Interviewers often follow a nested-loop trace by asking how the work grows when the input doubles.</p>
 </div>
 <div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: three outer iterations, three inner iterations each, one <code>print</code> per inner iteration. How many lines print in total?</strong></p>
 <button type="button" class="mlrk-choice" data-a="9">9</button>
@@ -373,7 +373,7 @@ for channel, enabled in alerts:
 
 <section class="mlrk-section">
 <h2>17. Summary &amp; critical thinking</h2>
-<p>Two habits carried this whole reading. Count a nested loop by following complete runs of the inner loop, and trace a nested conditional from the outside in to find which branch execution can actually reach.</p>
+<p>Two habits from this reading: count a nested loop by following complete runs of the inner loop, and trace a nested conditional from the outside in to find which branches Python can reach.</p>
 <div class="mlrk-card" id="card-bridge"><p><strong>New situation:</strong> a support system checks every ticket. Only tickets labeled <code>"URGENT"</code> get a second check for whether the customer is currently on a live chat. For one ticket, what should you trace first?</p>
 <button type="button" class="mlrk-choice" data-a="label">Whether the ticket enters the <code>"URGENT"</code> outer branch.</button>
 <button type="button" class="mlrk-choice" data-a="waiting">Whether the customer is on live chat, always first.</button>
@@ -385,7 +385,7 @@ for channel, enabled in alerts:
 
 <section class="mlrk-section">
 <h2>18. Thinking ahead</h2>
-<p>Repetition with a decision nested inside it reappears soon in bigger forms: walking a grid cell by cell, checking several fields on every record in a file, and grouping records by category before summarizing inside each group. All three lean on the same two rules you just practiced.</p>
+<p>Loops with decisions nested inside them come back in bigger forms: walking a grid cell by cell, checking several fields on every record in a file, and grouping records by category before summarizing each group. All three use the same two rules.</p>
 </section>
 
 <section class="mlrk-section">
@@ -493,14 +493,14 @@ git push</pre></li>
               6:"The stop value 5 is not included, so there are five values, not six."}});
 
   K.quiz({id:"q-compare", buttonSelector:"#card-compare .mlrk-choice", feedbackSelector:"#comparefb", correct:"false",
-    feedback:{false:"25 is not greater than or equal to 30, so this comparison evaluates to False.",
-              true:"25 is less than 30, so this comparison is False.",
-              error:"Comparing two numbers with >= is ordinary Python, and it produces True or False."}});
+    feedback:{false:"8 is not 10 or more, so the comparison is False.",
+              true:"8 is less than 10, so the comparison is False.",
+              error:"Comparing two numbers with >= is ordinary Python. It gives True or False."}});
 
   K.quiz({id:"q-single", buttonSelector:"#card-single .mlrk-choice", feedbackSelector:"#singlefb", correct:"mild",
-    feedback:{mild:"Python checks branches top to bottom and stops at the first true one. temp > 80 is false, so it moves to elif temp > 60, which is true. mild prints, and else never runs.",
-              hot:"temp > 80 is false, because 72 is not greater than 80, so that branch never runs.",
-              cool:"Python found a true branch, elif temp > 60, before it ever reached else, so else is skipped."}});
+    feedback:{mild:"song_minutes > 6 is False, so Python checks the elif. 5 > 3 is True, so standard track prints and Python stops.",
+              hot:"song_minutes > 6 is False, because 5 is not greater than 6.",
+              cool:"Python found a True branch, song_minutes > 3, so it never reaches else."}});
 
   K.quiz({id:"q-tuple", buttonSelector:"#card-tuple .mlrk-choice", feedbackSelector:"#tuplefb", correct:"false",
     feedback:{false:"channel, enabled = pair unpacks the tuple by position: channel gets \"SMS\", enabled gets False.",
@@ -524,18 +524,18 @@ git push</pre></li>
               6:"Six is how often print(\"play\") runs. The less-indented line runs once per outer iteration."}});
 
   K.quiz({id:"q-gate", buttonSelector:"#card-gate .mlrk-choice", feedbackSelector:"#gatefb", correct:"skip",
-    feedback:{skip:"The wait-time check lives inside the eligible branch, so Python cannot reach it when the outer condition is false.",
-              check:"Python evaluates only the code inside the branch execution actually enters, so an unreachable if is never evaluated.",
-              error:"Skipping an unreachable inner branch is normal control flow, and Python raises nothing."}});
+    feedback:{skip:"The games-played check sits inside the active-roster branch, so Python cannot reach it when the outer condition is False.",
+              check:"Python only runs code inside a branch it enters. An if it never reaches is never checked.",
+              error:"Skipping an inner check is normal control flow. Python raises nothing."}});
 
   K.quiz({id:"q-cond", buttonSelector:"#card-cond .mlrk-choice", feedbackSelector:"#condfb", correct:"standard",
-    feedback:{standard:"patient_status == \"ELIGIBLE\" is true, so Python enters that branch. Then 12 >= 30 is false, so the inner else prints standard slot.",
-              priority:"Python does enter the eligible branch, but 12 is not 30 or more, so the inner if is false.",
-              ineligible:"patient_status == \"ELIGIBLE\" is true, so the outer else branch is skipped."},
+    feedback:{standard:"roster_status == \"ACTIVE\" is True, so Python enters that branch. Then 8 >= 10 is False, so the inner else prints needs more games.",
+              priority:"Python does enter the ACTIVE branch, but 8 is not 10 or more, so the inner if is False.",
+              ineligible:"roster_status == \"ACTIVE\" is True, so Python skips the outer else."},
     onDone(){revealCond()}});
 
   K.quiz({id:"q-combo", buttonSelector:"#card-combo .mlrk-choice", feedbackSelector:"#combofb", correct:"no", maxAttempts:1,
-    feedback:{no:"For the SMS item, channel == \"EMAIL\" is false, so execution never reaches the nested enabled check.",
+    feedback:{no:"For the SMS item, channel == \"EMAIL\" is False, so Python never reaches the nested enabled check.",
               yes:"The loop does visit every item, but the outer if still decides which nested code is reached, and it is false for SMS."}});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"9",
@@ -552,12 +552,12 @@ git push</pre></li>
     {value:"a", label:"Once the outer loop finishes its first iteration, the inner loop's range is used up for the rest of the program.", correct:false,
       hint:"Think about what happens to mood when category moves from 0 to 1 in the playlist report. Does the inner loop's range get reused, or used up?",
       explain:"The inner loop gets a completely fresh run, starting from its first iteration again, every time the outer loop advances."},
-    {value:"b", label:"An inner conditional can only run if execution has entered its outer branch.", correct:true,
-      hint:"Compare this with the clinic's two-step decision. Does the same gating rule hold here?",
-      explain:"This is the gating rule the clinic's eligibility check demonstrates."},
+    {value:"b", label:"An inner conditional can only run if Python has entered its outer branch.", correct:true,
+      hint:"Compare this with the roster_status example. Does the same gating rule hold here?",
+      explain:"This is the gating rule the roster_status example shows: the games-played check runs only for an ACTIVE player."},
     {value:"c", label:"Nesting is limited to loops. Conditionals cannot be nested inside other conditionals.", correct:false,
-      hint:"The clinic nests a wait-time check inside an eligibility check. Does that match this statement?",
-      explain:"Conditionals nest inside conditionals the same way loops nest inside loops, which is exactly what the clinic's two-step decision does."},
+      hint:"The roster_status example puts a games-played check inside a roster check. Does that match this statement?",
+      explain:"Conditionals nest inside conditionals the same way loops nest inside loops, as the roster_status example shows."},
     {value:"d", label:"The number of times the inner body runs equals outer count times inner count.", correct:true,
       hint:"Compare this with the playlist report's 3 categories and 4 mood tags.",
       explain:"Outer count times inner count. The playlist report's 3 categories and 4 mood tags gave 12 printed lines."}
@@ -569,6 +569,7 @@ git push</pre></li>
     chip2:{expectedId:"zoneOuter", label:"moving on to the next category", expectedLabel:"Runs once per OUTER iteration"}
   }});
   K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["outer","enter","inside","repeat"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  // The HTML lists these steps shuffled on purpose; correctOrder above is the real sequence.
   K.flipCards("#vocab", "act-flip-vocab");
   K.traceStepper("#tracestep", {steps:[
     {cell:"category 0, mood 0", line:"Category 0, Mood 0"},
@@ -610,7 +611,7 @@ Category 2, Mood 3`;
   $("#looprun").addEventListener("click", revealLoop);
 
   function revealCond(){
-    $("#condOut").textContent = "standard slot";
+    $("#condOut").textContent = "needs more games";
     $("#condOutWrap").hidden = false;
   }
   $("#condrun").addEventListener("click", revealCond);
@@ -640,7 +641,7 @@ Category 2, Mood 3`;
   });
 
   const AI_PROMPTS = [
-    "Think about a daily routine that only makes sense in a certain order, like checking whether a store is open before checking whether an item is in stock. Where is the outer condition in that routine?",
+    "Think about a daily routine that only makes sense in a certain order, like checking whether a friend is free tonight before asking which movie they want to see. Where is the outer condition in that routine?",
     "If you had to explain \"the inner loop finishes before the outer one advances\" to a friend using something from your own day, what would you compare it to?",
     "Where have you seen nested decision-making in real life, like a form that only asks a follow-up question when you answer yes to the first one?"
   ];

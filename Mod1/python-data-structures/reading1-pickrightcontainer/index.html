@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-illustration{width:100%;max-width:680px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;display:block}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
 @media(max-width:650px){.mlrk-illustration{max-width:100%}}
 </style>
@@ -13,7 +13,7 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Pick the Right Container</h1>
-<p class="mlrk-lead">A city's 311 non-emergency line logs hundreds of requests a day: potholes, broken streetlights, noise complaints. The dispatch software behind it has to hold four very different kinds of data at once: a queue of open requests that dispatchers reorder all day, a fixed geographic point that must never move, a lookup from case number to the technician assigned, and the set of case numbers already closed today so the daily count never counts one case twice. Python doesn't hand you one all-purpose "list of stuff." It hands you four, and each one enforces a different set of rules.</p>
+<p class="mlrk-lead">A food delivery app juggles four kinds of data every night. A courier's list of stops changes as new orders come in. A finished delivery's record should never change. Each order code has to point to the courier carrying it. And the app has to know which orders were already refunded, so no order gets refunded twice. Python gives you four containers for jobs like these, and each one follows different rules.</p>
 <div class="mlrk-meta">
   <span class="mlrk-pill">~40–42 minutes</span>
   <span class="mlrk-pill">Interactive</span>
@@ -34,7 +34,7 @@
 <section class="mlrk-section">
   <div class="mlrk-callout mlrk-callout-green">
     <p><strong>Skills you'll practice in this reading:</strong></p>
-    <p><strong>Algorithmic Complexity (Big-O)</strong> — comparing two approaches to the same problem by how their cost grows as the amount of data grows, backed by your own code or example, not just naming the pattern from memory. Choosing the right container is a direct, hands-on rehearsal of that comparison.</p>
+    <p><strong>Algorithmic Complexity (Big-O)</strong> — comparing two approaches to the same problem by how their cost grows as the amount of data grows, backed by your own code or example, not just naming the pattern from memory.</p>
   </div>
 </section>
 
@@ -48,139 +48,146 @@
 
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
-<p>Picture the dispatch board behind that 311 line. Open requests sit in a queue that staff reorder constantly: an urgent gas-leak report jumps ahead of a routine graffiti report, and finished items drop off the top. That queue needs to preserve order and change freely. In Python, that's a <strong>list</strong>: an ordered, changeable collection written with square brackets, <code>[ ]</code>.</p>
+<p>Start with a courier's route for the evening. The stops come in order. A new stop gets added at the end, and a stop can move up the route when its food is getting cold. The route has to keep its order and change freely. In Python, that is a <strong>list</strong>: an ordered, changeable collection written with square brackets, <code>[ ]</code>.</p>
 
-<svg class="mlrk-illustration" viewBox="0 0 700 220" role="img" aria-labelledby="boardTitle boardDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="boardTitle">A dispatch board holding four different kinds of case data</title>
-  <desc id="boardDesc">On the left, three stacked ticket cards numbered 1, 2, 3 that can be reordered. Next, a locked box holding one fixed coordinate pair that never changes. Next, a case number card connected to a technician-name card, showing a key looking up a value. On the right, a loose cluster of five checked circles representing unique closed case numbers with no fixed order.</desc>
+<svg class="mlrk-illustration" viewBox="0 0 700 190" role="img" aria-labelledby="boardTitle boardDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="boardTitle">Four kinds of data in a food delivery app</title>
+  <desc id="boardDesc">On the left, a courier route of three stacked stops that can be reordered. Next, a locked box holding a delivered order's code and drop-off time, which never change. Next, an order code box with an arrow down to a courier name box, showing a key that looks up a value. On the right, a loose cluster of five checked circles standing for refunded orders, with no duplicates and no fixed order.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-    <text x="80" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Open queue</text>
+    <text x="85" y="18" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Courier route</text>
     <g fill="#FFFCF7" stroke="#264326" stroke-width="2.5">
-      <rect x="15" y="30" width="130" height="34" rx="8"/>
-      <rect x="15" y="70" width="130" height="34" rx="8"/>
-      <rect x="15" y="110" width="130" height="34" rx="8"/>
+      <rect x="20" y="30" width="130" height="34" rx="8"/>
+      <rect x="20" y="70" width="130" height="34" rx="8"/>
+      <rect x="20" y="110" width="130" height="34" rx="8"/>
     </g>
-    <g font-size="15" font-weight="700" fill="#261F1D" text-anchor="middle">
-      <text x="80" y="52">1</text><text x="80" y="92">2</text><text x="80" y="132">3</text>
+    <g font-size="16" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="85" y="53">Stop 1</text><text x="85" y="93">Stop 2</text><text x="85" y="133">Stop 3</text>
     </g>
-    <polygon points="153,84 161,84 157,76" fill="#264326"/>
-    <polygon points="153,90 161,90 157,98" fill="#264326"/>
-    <text x="80" y="160" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">reorder anytime, in place</text>
+    <polygon points="158,84 166,84 162,76" fill="#264326"/>
+    <polygon points="158,90 166,90 162,98" fill="#264326"/>
+    <text x="85" y="170" text-anchor="middle" font-size="15" font-weight="600" fill="#264326">reorder anytime</text>
 
-    <text x="240" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Fixed zone point</text>
-    <rect x="222" y="30" width="36" height="22" rx="4" fill="#2274B5"/>
-    <path d="M231,30 v-9 a9,9 0 0 1 18,0 v9" fill="none" stroke="#2274B5" stroke-width="4"/>
-    <rect x="175" y="54" width="130" height="76" rx="10" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-    <text x="240" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">(40.71, -73.99)</text>
-    <text x="240" y="150" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">never changes</text>
+    <text x="262" y="18" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Delivered order</text>
+    <rect x="244" y="34" width="36" height="22" rx="4" fill="#2274B5"/>
+    <path d="M253,34 v-7 a9,9 0 0 1 18,0 v7" fill="none" stroke="#2274B5" stroke-width="4"/>
+    <rect x="197" y="58" width="130" height="86" rx="10" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="262" y="94" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">D-5520</text>
+    <text x="262" y="120" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">7:42 PM</text>
+    <text x="262" y="170" text-anchor="middle" font-size="15" font-weight="600" fill="#264326">never changes</text>
 
-    <text x="400" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Case lookup</text>
-    <rect x="345" y="34" width="110" height="36" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="400" y="57" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">Case C-4471</text>
-    <polygon points="396,76 404,76 404,86 412,86 400,100 388,86 396,86" fill="#264326"/>
-    <rect x="345" y="102" width="110" height="36" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="400" y="125" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">Tech: J. Alvarez</text>
-    <text x="400" y="160" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">look up instantly by case #</text>
+    <text x="440" y="18" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Order lookup</text>
+    <rect x="375" y="30" width="130" height="38" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="440" y="55" text-anchor="middle" font-size="15" font-weight="700" fill="#261F1D">key: D-5521</text>
+    <polygon points="436,72 444,72 444,82 452,82 440,96 428,82 436,82" fill="#264326"/>
+    <rect x="375" y="100" width="130" height="38" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="440" y="125" text-anchor="middle" font-size="15" font-weight="700" fill="#261F1D">value: Noor</text>
+    <text x="440" y="170" text-anchor="middle" font-size="15" font-weight="600" fill="#264326">find by order code</text>
 
-    <text x="575" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Closed today</text>
+    <text x="611" y="18" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Refunded today</text>
     <g fill="#FECC5B" stroke="#83671C" stroke-width="2.5">
-      <circle cx="520" cy="62" r="20"/><circle cx="566" cy="45" r="20"/><circle cx="612" cy="64" r="20"/>
-      <circle cx="540" cy="105" r="20"/><circle cx="588" cy="108" r="20"/>
+      <circle cx="565" cy="56" r="20"/><circle cx="611" cy="44" r="20"/><circle cx="657" cy="58" r="20"/>
+      <circle cx="585" cy="102" r="20"/><circle cx="633" cy="104" r="20"/>
     </g>
     <g fill="none" stroke="#83671C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="512,62 518,69 530,54"/>
-      <polyline points="558,45 564,52 576,37"/>
-      <polyline points="604,64 610,71 622,56"/>
-      <polyline points="532,105 538,112 550,97"/>
-      <polyline points="580,108 586,115 598,100"/>
+      <polyline points="557,56 563,63 575,48"/>
+      <polyline points="603,44 609,51 621,36"/>
+      <polyline points="649,58 655,65 667,50"/>
+      <polyline points="577,102 583,109 595,94"/>
+      <polyline points="625,104 631,111 643,96"/>
     </g>
-    <text x="575" y="150" text-anchor="middle" font-size="13" font-weight="600" fill="#264326">no duplicates, any order</text>
+    <text x="611" y="170" text-anchor="middle" font-size="15" font-weight="600" fill="#264326">no duplicates, any order</text>
   </g>
 </svg>
 
-<p>Now the fixed point. Every zone in the city has one already-surveyed <code>(latitude, longitude)</code> pair marking its inspection boundary, and that pair should never be edited by accident: swap in a new coordinate and every past inspection record tied to it becomes meaningless. That's a <strong>tuple</strong>: an ordered collection that cannot be changed after it's created, written with parentheses, <code>( )</code>.</p>
-<p>Next, the lookup. A dispatcher doesn't want to scan every open case to find who's assigned to case C-4471; they want to type the case number and get the technician back immediately. That's a <strong>dict</strong>: a collection of key/value pairs, written with curly braces, <code>{ }</code>, where each key maps to exactly one value.</p>
-<p>Finally, today's closed cases. The daily report only needs to know <em>whether</em> a case number has already been closed, never how many times or in what order. Adding the same case number twice should not create a duplicate. That's a <strong>set</strong>: a collection of unique elements with no meaningful order, also written with curly braces when it's non-empty.</p>
+<p>Next, a delivered order. Once order D-5520 is dropped off at 7:42 PM, that record is final. If code changed it by accident, the app's delivery history would no longer match what happened. That is a <strong>tuple</strong>: an ordered collection that cannot change after it's created, written with parentheses, <code>( )</code>.</p>
+<p>Then the lookup. A customer asks where order D-5521 is. The app should not check every active order to find out. It should go straight from the order code to the courier's name. That is a <strong>dictionary</strong>, or <code>dict</code>: a collection of pairs, written with curly braces, <code>{ }</code>. Each pair has a <strong>key</strong>, the label you look up by, and a <strong>value</strong>, the data stored under that key. Here the key is the order code and the value is the courier's name. Each key appears only once.</p>
+<p>Last, refunds. The app only needs to know whether an order has already been refunded. Adding the same order code a second time should change nothing. That is a <strong>set</strong>: a collection of unique values with no fixed order, also written with curly braces.</p>
+<p>All four are <strong>data structures</strong>: containers that hold many values under one name, each with its own rules about order, duplicates, and change. A container you can change after you create it is <strong>mutable</strong>. One you can't change is <strong>immutable</strong>. Lists, dictionaries, and sets are mutable. Tuples are immutable.</p>
 
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> "which container fits this problem" is one of the most common early questions in a data-role technical screen, and getting it wrong outside of an interview has real consequences: tracking "case numbers already seen" in a list instead of a set is a classic real-world bug, because checking membership in a list gets slower as it grows and duplicate entries can sneak in silently, quietly producing a wrong daily count.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to store a single value in a variable and repeat an action with a loop. This reading is about storing many values at once and matching the container to the rules your problem actually needs. Once choosing among these four feels automatic, the next idea builds directly on it: comparing containers by speed, not just by shape, since some lookups stay fast no matter how much data piles up, and others slow down as the pile grows.</p>
+<p><strong>Why this matters:</strong> "Which data structure would you use here?" is a common early interview question for data roles. Outside interviews, the wrong choice causes real bugs. If refunded orders are tracked in a list, nothing stops the same order from going in twice, so a refund report can count one order two times. A list also gets slower to search as it grows.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already store single values in variables and repeat steps with loops. This reading is about storing many values at once and picking the container whose rules fit the job. The choice also affects speed: some containers find an item in one step no matter how much they hold, and others slow down as they grow.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before choosing containers</h2>
-<p class="mlrk-small">A few foundational skills get reused heavily later in this reading: basic assignment syntax, comparing values for equality, and looping over a collection one item at a time. Test each one below before moving on.</p>
+<p>This reading reuses skills from earlier. These four questions check them: reading a list item by its position, reassigning a variable, looping over a collection, and comparing two values for equality.</p>
 
-<div class="mlrk-card" id="card-recall"><p><strong>Which symbol assigns a value to a variable in Python?</strong></p>
-<button type="button" class="mlrk-choice" data-a="eq"><code>=</code></button>
-<button type="button" class="mlrk-choice" data-a="eqeq"><code>==</code></button>
-<button type="button" class="mlrk-choice" data-a="colon"><code>:=</code> only</button>
+<div class="mlrk-card" id="card-recall"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">stops = ["Elm St", "Pine Ave", "Oak Rd"]
+print(stops[1])</div></div>
+<p><strong>What prints?</strong></p>
+<button type="button" class="mlrk-choice" data-a="pine"><code>Pine Ave</code></button>
+<button type="button" class="mlrk-choice" data-a="elm"><code>Elm St</code></button>
+<button type="button" class="mlrk-choice" data-a="oak"><code>Oak Rd</code></button>
 <div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-reassign" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">count = 3
-count = count + 2
-print(count)</div></div>
+<div class="mlrk-code"><div class="mlrk-screen">tip = 3
+tip = tip + 2
+print(tip)</div></div>
 <p><strong>What prints?</strong></p>
 <button type="button" class="mlrk-choice" data-a="5">5</button>
 <button type="button" class="mlrk-choice" data-a="3">3</button>
 <button type="button" class="mlrk-choice" data-a="32">32</button>
 <div id="reassignfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-loop" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a dispatcher needs to check every case number in a list, one at a time, to see whether any of them matches a search term. Which control structure repeats an action once for each item in a collection?</p>
+<div class="mlrk-card" id="card-loop" style="margin-top:.8rem"><p><strong>Scenario check:</strong> the app needs to check every order code in a list, one at a time.</p>
+<p><strong>Which tool repeats a step once for each item in a collection?</strong></p>
 <button type="button" class="mlrk-choice" data-a="for">A <code>for</code> loop</button>
 <button type="button" class="mlrk-choice" data-a="if">An <code>if</code> statement</button>
 <button type="button" class="mlrk-choice" data-a="print">The <code>print()</code> function</button>
 <div id="loopfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-equality" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> before Python can tell you whether a value already exists inside a collection, what must it be able to do with two values?</p>
+<div class="mlrk-card" id="card-equality" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> before Python can tell you whether a value is already in a collection, what must it be able to do with two values?</p>
 <button type="button" class="mlrk-choice" data-a="compare">Compare them for equality</button>
 <button type="button" class="mlrk-choice" data-a="sort">Sort them alphabetically</button>
 <button type="button" class="mlrk-choice" data-a="convert">Convert them both to strings</button>
 <div id="equalityfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">None of this changes once containers are introduced: assignment, equality, and loops all work exactly the same way inside a list, tuple, dict, or set as they do on their own. Get each one right in isolation first.</div>
 </section>
 
 <section class="mlrk-section">
 <h2>3. Technical vocabulary</h2>
-<p>Flip each card before the matching practice below.</p>
+<p>Flip each card before the practice that follows.</p>
 <div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>list</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>List</strong><br>Ordered and mutable (changeable). Written with square brackets, <code>[ ]</code>.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>tuple</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Tuple</strong><br>Ordered and immutable: once created, its elements cannot be reassigned. Written with parentheses, <code>( )</code>.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>dict</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Dict</strong><br>Stores key/value pairs. Each key maps to exactly one value. Written with curly braces, <code>{ }</code>.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>set</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Set</strong><br>Stores unique elements with no guaranteed order. Duplicates are automatically dropped.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>mutable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Mutable</strong><br>Can be changed after creation, such as adding, removing, or replacing elements.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>hashable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Hashable</strong><br>A value Python can reduce to a stable hash. Dict keys and set elements must be hashable, which is why they must also be immutable.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Data structure</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Data structure</strong><br>A container that holds many values under one name, with rules about order, duplicates, and change.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>List</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>List</strong><br>Ordered and mutable. Allows duplicates. Written with square brackets, <code>[ ]</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Tuple</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Tuple</strong><br>Ordered and immutable: once created, its items can't be reassigned. Written with parentheses, <code>( )</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Dictionary (dict)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Dictionary (dict)</strong><br>Stores key/value pairs. Each key appears once and maps to one value. Written with curly braces, <code>{ }</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Set</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Set</strong><br>Stores unique values with no fixed order. Adding a value that's already there changes nothing.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Key and value</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Key and value</strong><br>The two halves of a dictionary pair. The key is the label you look up by. The value is the data stored under it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Mutable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Mutable</strong><br>Can be changed after it's created: items added, removed, or replaced. Lists, dicts, and sets are mutable.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Immutable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Immutable</strong><br>Can't be changed after it's created. Tuples, strings, and numbers are immutable.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Hashable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Hashable</strong><br>Has a fixed fingerprint, called a hash, that never changes. Dict keys and set values must be hashable, so they must be immutable.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>4. Container matcher</h2>
-<p>Referring back to the dispatch board from section 1, match each situation to the container built for it.</p>
-<div class="mlrk-card" id="card-match-a"><p><strong>A. A queue of open help-desk tickets that staff may reorder throughout the day.</strong></p>
+<p>Each situation comes from the same delivery app. Match it to the container built for it.</p>
+<div class="mlrk-card" id="card-match-a"><p><strong>A. A customer's cart, where items get added and removed before checkout.</strong></p>
 <button type="button" class="mlrk-choice" data-a="list">list</button>
 <button type="button" class="mlrk-choice" data-a="tuple">tuple</button>
 <button type="button" class="mlrk-choice" data-a="dict">dict</button>
 <button type="button" class="mlrk-choice" data-a="set">set</button>
 <div id="matchafb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-match-b" style="margin-top:.8rem"><p><strong>B. A fixed (latitude, longitude) pair marking a survey point that will never change.</strong></p>
+<div class="mlrk-card" id="card-match-b" style="margin-top:.8rem"><p><strong>B. A posted rating, stored as (order code, stars), that should never be edited.</strong></p>
 <button type="button" class="mlrk-choice" data-a="list">list</button>
 <button type="button" class="mlrk-choice" data-a="tuple">tuple</button>
 <button type="button" class="mlrk-choice" data-a="dict">dict</button>
 <button type="button" class="mlrk-choice" data-a="set">set</button>
 <div id="matchbfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-match-c" style="margin-top:.8rem"><p><strong>C. A lookup from case number to the technician currently assigned.</strong></p>
+<div class="mlrk-card" id="card-match-c" style="margin-top:.8rem"><p><strong>C. A way to find the delivery fee for any zip code.</strong></p>
 <button type="button" class="mlrk-choice" data-a="list">list</button>
 <button type="button" class="mlrk-choice" data-a="tuple">tuple</button>
 <button type="button" class="mlrk-choice" data-a="dict">dict</button>
 <button type="button" class="mlrk-choice" data-a="set">set</button>
 <div id="matchcfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-match-d" style="margin-top:.8rem"><p><strong>D. The unique case numbers already closed today, so the daily count never counts one case twice.</strong></p>
+<div class="mlrk-card" id="card-match-d" style="margin-top:.8rem"><p><strong>D. The customers who have used a one-time promo code, so no one can use it twice.</strong></p>
 <button type="button" class="mlrk-choice" data-a="list">list</button>
 <button type="button" class="mlrk-choice" data-a="tuple">tuple</button>
 <button type="button" class="mlrk-choice" data-a="dict">dict</button>
@@ -190,18 +197,17 @@ print(count)</div></div>
 
 <section class="mlrk-section">
 <h2>5. Predict, then run</h2>
-<p>This browser activity simulates small Python snippets rather than executing real Python, so you can focus entirely on the rules each container enforces.</p>
-
 <div class="mlrk-card" id="card-tuple-predict"><p><strong>Predict first:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">point = (4, 9)
-point[0] = 7</div></div>
-<p><strong>What happens when the second line runs?</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">rating = ("D-5520", 4)
+rating[1] = 5</div></div>
+<p><strong>What happens when <code>rating[1] = 5</code> runs?</strong></p>
 <button type="button" class="mlrk-choice" data-a="error">Python raises a <code>TypeError</code>: tuples don't support item assignment.</button>
-<button type="button" class="mlrk-choice" data-a="change">point becomes <code>(7, 9)</code>.</button>
-<button type="button" class="mlrk-choice" data-a="newtuple">Python quietly builds a new tuple and assigns it to point.</button>
+<button type="button" class="mlrk-choice" data-a="change">rating becomes <code>("D-5520", 5)</code>.</button>
+<button type="button" class="mlrk-choice" data-a="newtuple">Python quietly builds a new tuple and assigns it to rating.</button>
 <div id="tuplepredictfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-code" style="margin-top:1rem"><div id="simScreen" class="mlrk-screen">Choose a snippet below to see what actually happens.</div>
+<p style="margin-top:1rem">Each Run button shows a short snippet and the output Python gives for it. Try all three: one for a list, one for a tuple, and one for a set.</p>
+<div class="mlrk-code"><div id="simScreen" class="mlrk-screen">Press a Run button to see the snippet and what Python prints.</div>
 <div class="mlrk-actions">
   <button type="button" data-sim="list" class="mlrk-btn">Run: list.append</button>
   <button type="button" data-sim="tuple" class="mlrk-btn">Run: tuple item assignment</button>
@@ -212,11 +218,11 @@ point[0] = 7</div></div>
 
 <section class="mlrk-section">
 <h2>6. A curly-brace surprise</h2>
-<div class="mlrk-card" id="card-emptyset"><p><strong>True or false:</strong> writing <code>tickets = {}</code> creates an empty set.</p>
+<div class="mlrk-card" id="card-emptyset"><p><strong>True or false:</strong> writing <code>refunded = {}</code> creates an empty set.</p>
 <button type="button" class="mlrk-choice" data-a="false">False</button>
 <button type="button" class="mlrk-choice" data-a="true">True</button>
 <div id="emptysetfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>Empty curly braces default to an empty dict, since dict came first and <code>{}</code> was already taken. There's a dedicated function for an empty set instead.</p>
+<p>Empty curly braces make an empty dictionary. Python had dictionaries before it had sets, so <code>{}</code> was already taken. An empty set needs a built-in function instead.</p>
 <div class="mlrk-code"><div class="mlrk-screen">mystery = {}
 print(type(mystery))
 
@@ -232,21 +238,22 @@ print(type(mystery))
 
 <section class="mlrk-section">
 <h2>7. Hashable or not?</h2>
-<div class="mlrk-card" id="card-hash"><p><strong>Which value is the safest choice for a dictionary key?</strong></p>
-<button type="button" class="mlrk-choice" data-a="string"><code>"case-4471"</code></button>
-<button type="button" class="mlrk-choice" data-a="list"><code>["case", 4471]</code></button>
-<button type="button" class="mlrk-choice" data-a="dict"><code>{"case": 4471}</code></button>
+<div class="mlrk-card" id="card-hash"><p><strong>Which value can be a dictionary key?</strong></p>
+<button type="button" class="mlrk-choice" data-a="string"><code>"D-5520"</code></button>
+<button type="button" class="mlrk-choice" data-a="list"><code>["D", 5520]</code></button>
+<button type="button" class="mlrk-choice" data-a="dict"><code>{"order": 5520}</code></button>
 <div id="hashfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>Strings and tuples of hashable values are immutable, so Python can safely compute a stable hash for them once and reuse it. Lists, dicts, and sets are mutable, so they can never be dict keys or set elements.</p>
-<div class="mlrk-card" id="card-gotcha" style="margin-top:.8rem"><p><strong>Tricky case:</strong> <code>coords = (1, [2, 3])</code>. The tuple itself can't be reassigned. Is <code>coords</code> still safe to use as a dict key?</p>
-<button type="button" class="mlrk-choice" data-a="no">No, it contains a mutable list, so it isn't hashable even though the tuple can't be reassigned.</button>
-<button type="button" class="mlrk-choice" data-a="yes">Yes, a tuple is always hashable no matter what it contains.</button>
+<p>Python stores each dictionary key and set value by its hash, a fixed fingerprint. That only works if the value can never change. Strings, numbers, and tuples of hashable values are immutable, so they are hashable. Lists, dicts, and sets are mutable, so they can't be dictionary keys or set values.</p>
+<div class="mlrk-card" id="card-gotcha" style="margin-top:.8rem"><p><strong>Tricky case:</strong> <code>pair = (1, [2, 3])</code>. The tuple itself can't be reassigned.</p>
+<p><strong>Can <code>pair</code> be a dictionary key?</strong></p>
+<button type="button" class="mlrk-choice" data-a="no">No. It holds a mutable list, so it isn't hashable, even though the tuple can't be reassigned.</button>
+<button type="button" class="mlrk-choice" data-a="yes">Yes. A tuple is always hashable, whatever it holds.</button>
 <div id="gotchafb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>8. Sort by mutability</h2>
-<p>Drag each structure into the zone that describes it, then use the self-check button to confirm your matches.</p>
+<p>Drag each container into the zone that describes it, then check your matches.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
   <span id="chip1" class="mlrk-draggable">list</span>
@@ -265,12 +272,12 @@ print(type(mystery))
 
 <section class="mlrk-section">
 <h2>9. Order the steps: how a set catches a duplicate</h2>
-<p>Click steps, in order, to build the sequence Python actually follows when you add a value to a set. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness, and it's exactly why a set's contents never come out in insertion order.</p>
+<p>Click the steps in the order Python follows when you add a value to a set. Click a step again to remove it, then press "Check my order." This is a self-check, not graded. These steps also explain why a set doesn't keep the order you added things in.</p>
 <ul class="mlrk-orderlist" id="ordersteps">
   <li class="mlrk-orderitem" data-step="hash"><span class="mlrk-order-num"></span> Python computes a hash of the new value.</li>
   <li class="mlrk-orderitem" data-step="locate"><span class="mlrk-order-num"></span> Python uses that hash to find where an equal value would already be stored.</li>
   <li class="mlrk-orderitem" data-step="compare"><span class="mlrk-order-num"></span> If a matching value is already there, the add does nothing: no duplicate is created.</li>
-  <li class="mlrk-orderitem" data-step="insert"><span class="mlrk-order-num"></span> If nothing matches, the new value is stored at that hash-based location.</li>
+  <li class="mlrk-orderitem" data-step="insert"><span class="mlrk-order-num"></span> If nothing matches, Python stores the new value at that hash-based spot.</li>
 </ul>
 <div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
 <div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
@@ -278,27 +285,28 @@ print(type(mystery))
 
 <section class="mlrk-section">
 <h2>10. Predict the total, then trace a dict build</h2>
-<div class="mlrk-code"><div class="mlrk-screen">records = [("C-4471", "open"), ("C-4482", "closed"), ("C-4493", "open")]
-status = {}
+<div class="mlrk-code"><div class="mlrk-screen">ratings = [("D-5520", 4), ("D-5531", 5), ("D-5547", 3)]
+stars = {}
 
-for case_id, state in records:
-    status[case_id] = state</div></div>
-<div class="mlrk-card" id="card-dictcount" style="margin-top:1rem"><p><strong>Before tracing below: how many key/value pairs will <code>status</code> hold once the loop finishes?</strong></p>
+for order_code, score in ratings:
+    stars[order_code] = score</div></div>
+<div class="mlrk-card" id="card-dictcount" style="margin-top:1rem"><p><strong>How many key/value pairs will <code>stars</code> hold once the loop finishes?</strong></p>
 <button type="button" class="mlrk-choice" data-a="3">3</button>
 <button type="button" class="mlrk-choice" data-a="6">6</button>
 <button type="button" class="mlrk-choice" data-a="1">1</button>
 <div id="dictcountfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p style="margin-top:1.2rem">Each pass unpacks one tuple into two names and adds one entry to the dict. Click through it yourself below.</p>
+<p style="margin-top:1.2rem">Each pass unpacks one tuple into two names, <code>order_code</code> and <code>score</code>, and adds one key/value pair to <code>stars</code>. Click through the loop to check your answer.</p>
 <div id="tracestep"></div>
 </section>
 
 <section class="mlrk-section">
 <h2>11. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about list/tuple/dict/set.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A list can contain duplicate values.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Once a tuple is created, the individual elements inside it can be reassigned to new values.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Dictionary keys must be unique; assigning to an existing key overwrites its value instead of creating a second entry.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A set preserves the exact order elements were added in, and code should rely on that order.</label>
+<div class="mlrk-card"><p><strong>Select every TRUE statement about lists, tuples, dictionaries, and sets.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A list can hold the same value more than once.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Once a tuple is created, you can reassign the items inside it.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Dictionary keys are unique: assigning to a key that already exists replaces its value instead of adding a second entry.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A set keeps values in the order you added them, so code can rely on that order.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> Keeping order codes in one list and courier names in a second list, matched by position, is as safe as using a dictionary.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
@@ -306,10 +314,10 @@ for case_id, state in records:
 
 <section class="mlrk-section">
 <h2>12. Watch: choosing among Python's containers</h2>
-<p>As you watch, notice how the video demonstrates the same rules practiced above: order and duplicates in a list, a locked-in tuple, and a set that drops repeats automatically.</p>
+<p>As you watch, notice the same rules you practiced here: order and duplicates in a list, a locked tuple, and a set that drops repeats.</p>
 <div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=h-zcj4DmqHk" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which container from the video felt least intuitive to you before this reading, and what changed?</strong></p>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which container felt least clear to you before this reading, and what changed?</strong></p>
 <textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
 </div>
 </section>
@@ -317,11 +325,12 @@ for case_id, state in records:
 <section class="mlrk-section">
 <h2>13. How this shows up in interviews</h2>
 <div class="mlrk-callout mlrk-callout-green">
-<p>"Which data structure would you use for X, and why" is one of the most common warm-up questions in a data-role technical screen. Interviewers are listening for the reasoning, not just the final word: naming the property that actually matters (order, mutability, keyed lookup, uniqueness) out loud is what separates a strong answer from a guess.</p>
-<p>For data roles specifically, a common trap is picking a list to track "values already seen" while deduplicating or cleaning a dataset: it works on small data but silently gets slower and can let duplicates slip through the moment a comparison is written wrong. Naming a set as the fix, unprompted, is a strong signal.</p>
-<p>For software-engineering-leaning roles, expect a follow-up like "why can't a list be a dict key" or "what happens if you try to mutate a tuple you got back from a function." Being able to answer with hashability and immutability, not just "because Python says so," is what the interviewer is actually checking for.</p>
+<p>"Which data structure would you use for this, and why?" is a common warm-up in data-role interviews. Interviewers listen for the reason. Name the rule that matters: order, change, lookup by key, or uniqueness.</p>
+<p>For data roles, a common trap is tracking "values already seen" in a list while cleaning a dataset. It works on small data. But the list gets slower to search as it grows, and duplicates slip in if one comparison is written wrong. Naming a set as the fix, without being asked, is a strong signal.</p>
+<p>For software roles, expect follow-ups like "Why can't a list be a dictionary key?" A strong answer uses hashability and immutability, not "because Python says so."</p>
 </div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: you need to check whether a user ID has already been processed, and this check will run thousands of times against a growing collection. Which container keeps that check fast?</strong></p>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: the app checks whether a promo code was already used. The check runs thousands of times a night, and the collection of used codes keeps growing.</strong></p>
+<p><strong>Which container keeps that check fast?</strong></p>
 <button type="button" class="mlrk-choice" data-a="set">A set</button>
 <button type="button" class="mlrk-choice" data-a="list">A list</button>
 <button type="button" class="mlrk-choice" data-a="tuple">A tuple</button>
@@ -331,11 +340,11 @@ for case_id, state in records:
 <section class="mlrk-section">
 <h2>14. Debugging habit + reflection</h2>
 <div class="mlrk-card" id="card-debug"><p><strong>Your code crashes with <code>TypeError: unhashable type: 'list'</code> on a line that builds a dictionary. What should you check first?</strong></p>
-<button type="button" class="mlrk-choice" data-a="key">Whether the value being used as a dict key is actually a list instead of a string, tuple, or number.</button>
+<button type="button" class="mlrk-choice" data-a="key">Whether a key is a list instead of a string, tuple, or number.</button>
 <button type="button" class="mlrk-choice" data-a="value">Whether the dictionary's values are the wrong data type.</button>
 <button type="button" class="mlrk-choice" data-a="import">Whether a missing import is causing the error.</button>
 <div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>Your decision rule:</strong> in 1-2 sentences, describe the questions you'd ask yourself to choose between a list, tuple, dict, and set for a new problem.</label>
+<label for="strategy"><strong>Your decision rule:</strong> in 1-2 sentences, list the questions you'd ask to choose between a list, tuple, dictionary, and set.</label>
 <textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I ask whether..."></textarea>
 <p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
 <div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
@@ -343,19 +352,20 @@ for case_id, state in records:
 
 <section class="mlrk-section">
 <h2>15. Summary &amp; critical thinking</h2>
-<p>Four questions carried this whole reading: does order matter, does it need to change after creation, do you need to look values up by a label instead of a position, and must every item stay unique? Answering those four questions in order gets you to the right container almost every time.</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a ride-share app needs to track a driver's current fixed (vehicle plate, color) pair, a live queue of incoming ride requests, a lookup from rider ID to trip details, and the set of trip IDs already completed today. Which pairing is strongest?</p>
-<button type="button" class="mlrk-choice" data-a="right">tuple for the plate/color pair, list for the request queue, dict for the rider lookup, set for completed trip IDs</button>
-<button type="button" class="mlrk-choice" data-a="alllist">A list for everything, since a list can technically hold any kind of value</button>
-<button type="button" class="mlrk-choice" data-a="swapped">list for the plate/color pair, set for the request queue</button>
+<p>Four questions carried this reading. Does order matter? Does the data need to change after it's created? Do you look items up by a label instead of a position? Must every item be unique? Answer them, and the right container usually follows.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a concert venue's app tracks four things. Each ticket has a fixed (section, seat) pair. Fans wait in a live queue for merch pickup. Staff look up a ticket holder's name by ticket code. And the app keeps the song titles fans requested, each listed once.</p>
+<p><strong>Which pairing is strongest?</strong></p>
+<button type="button" class="mlrk-choice" data-a="right">tuple for (section, seat), list for the merch queue, dict for the ticket lookup, set for requested songs</button>
+<button type="button" class="mlrk-choice" data-a="alllist">A list for everything, since a list can hold any kind of value</button>
+<button type="button" class="mlrk-choice" data-a="swapped">list for (section, seat), set for the merch queue</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> what question would you ask first when deciding between a dict and a set for a new problem?</label>
+<label for="clue"><strong>In your own words:</strong> what question would you ask first when choosing between a dictionary and a set?</label>
 <textarea id="clue" class="mlrk-response" data-save></textarea>
 </section>
 
 <section class="mlrk-section">
 <h2>16. Thinking ahead</h2>
-<p>The same four questions keep mattering as data gets more complex: a list of dicts is how most real-world records get modeled (one dict per row, all held in a list), and a dict of lists shows up constantly for grouping related items under a shared key. Once containers get chosen correctly and automatically, the next layer is comparing them by speed: some lookups stay fast no matter how much data piles up, while others slow down as the pile grows, and knowing which is which changes how code gets written at real scale.</p>
+<p>The same four questions matter as data gets more complex. Most real records are stored as a list of dicts, one dict per row. A dict of lists groups related items under one key. And speed becomes part of the choice: some containers find an item in one step no matter how much they hold, while others slow down as they grow.</p>
 </section>
 
 <section class="mlrk-section">
@@ -456,101 +466,104 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"eq",
-    feedback:{eq:"A single = assigns a value to a variable name.",
-              eqeq:"== compares two values for equality. It doesn't assign anything.",
-              colon:":= is the walrus operator, used for assigning inside an expression. Plain assignment uses a single =."}});
+  K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"pine",
+    feedback:{pine:"Right. Python counts positions from 0, so stops[1] is the second item, \"Pine Ave\".",
+              elm:"\"Elm St\" is stops[0]. Positions start at 0, so index 1 is the second item.",
+              oak:"\"Oak Rd\" is at index 2, the third position. Index 1 is the second item."}});
 
   K.quiz({id:"q-reassign", buttonSelector:"#card-reassign .mlrk-choice", feedbackSelector:"#reassignfb", correct:"5",
-    feedback:{5:"count starts at 3, then gets reassigned to count + 2, which is 5.",
-              3:"The second line reassigns count to a new value. It doesn't stay at 3.",
-              32:"Python adds the numbers rather than joining them as text, so this isn't string concatenation."}});
+    feedback:{5:"Right. tip starts at 3, then tip = tip + 2 reassigns it to 5.",
+              3:"The second line reassigns tip to a new value, so it doesn't stay at 3.",
+              32:"tip holds numbers, so + adds them. It would only join them like text if they were strings."}});
 
   K.quiz({id:"q-loop", buttonSelector:"#card-loop .mlrk-choice", feedbackSelector:"#loopfb", correct:"for",
-    feedback:{for:"A for loop naturally repeats an action once for each item already in a collection.",
-              if:"An if statement picks a branch once. It doesn't repeat over a collection on its own.",
-              print:"print() displays a value. It has no repeating behavior of its own."}});
+    feedback:{for:"Right. A for loop runs its body once for each item in a collection.",
+              if:"An if statement chooses a branch once. It doesn't repeat over a collection.",
+              print:"print() displays a value. It doesn't repeat anything on its own."}});
 
   K.quiz({id:"q-equality", buttonSelector:"#card-equality .mlrk-choice", feedbackSelector:"#equalityfb", correct:"compare",
-    feedback:{compare:"Checking membership means asking, for each existing item, is this equal to the value I'm looking for.",
-              sort:"Sorting isn't required to check membership. Comparing values for equality is.",
-              convert:"Converting to strings isn't how membership checks work in general, and it can even hide real differences between values."}});
+    feedback:{compare:"Right. Checking membership means asking, for each stored item, whether it equals the value you're looking for.",
+              sort:"Sorting isn't needed to check membership. Comparing values for equality is.",
+              convert:"Membership checks don't convert values to strings. Doing that could even make 5 and \"5\" look equal when they aren't."}});
 
   K.quiz({id:"q-match-a", buttonSelector:"#card-match-a .mlrk-choice", feedbackSelector:"#matchafb", correct:"list",
-    feedback:{list:"Order matters here, and the queue changes throughout the day, so a mutable ordered list fits.",
-              tuple:"A tuple would make reordering or adding new tickets awkward, since it can't be changed after creation.",
-              dict:"This is about sequence, not a key/value lookup.",
-              set:"A set doesn't preserve a meaningful position, and this queue's order matters."}});
+    feedback:{list:"Right. The cart changes until checkout and keeps items in order, so a mutable, ordered list fits.",
+              tuple:"A tuple can't change after it's created, so adding or removing cart items would fail.",
+              dict:"Nothing here is looked up by a label. The cart is just items in order.",
+              set:"A set would drop a second order of the same item, and a customer may want two."}});
 
   K.quiz({id:"q-match-b", buttonSelector:"#card-match-b .mlrk-choice", feedbackSelector:"#matchbfb", correct:"tuple",
-    feedback:{tuple:"A fixed, ordered pair that should never change is the classic tuple use case.",
-              list:"A list allows mutation this fixed point doesn't need and shouldn't get by accident.",
-              dict:"Labeled fields could work in another design, but this is just a fixed ordered pair.",
-              set:"A set would drop the meaningful order of latitude and longitude."}});
+    feedback:{tuple:"Right. A fixed, ordered pair that should never be edited is what a tuple is for.",
+              list:"A list can be changed, and this rating should never be edited by accident.",
+              dict:"Labeled fields could work in another design, but this is a small fixed pair in a set order.",
+              set:"A set has no fixed order, so you couldn't tell which value is the order code and which is the stars."}});
 
   K.quiz({id:"q-match-c", buttonSelector:"#card-match-c .mlrk-choice", feedbackSelector:"#matchcfb", correct:"dict",
-    feedback:{dict:"A dict maps each case number (key) directly to its assigned technician (value).",
-              list:"A list would force scanning every case to find the right one.",
-              tuple:"A tuple is a fixed sequence, not a keyed lookup.",
-              set:"A set stores unique elements, not case-to-technician pairs."}});
+    feedback:{dict:"Right. A dict maps each zip code (the key) to its delivery fee (the value).",
+              list:"A list would make you check items one by one to find the right zip code.",
+              tuple:"A tuple is a fixed sequence. It doesn't look up a value by a label.",
+              set:"A set stores single values, not zip-code-to-fee pairs."}});
 
   K.quiz({id:"q-match-d", buttonSelector:"#card-match-d .mlrk-choice", feedbackSelector:"#matchdfb", correct:"set",
-    feedback:{set:"A set drops duplicates automatically and checks membership quickly, which is exactly what avoiding a double count needs.",
-              list:"A list keeps duplicates unless you manage that yourself.",
-              tuple:"A tuple is immutable and doesn't help with deduplication.",
-              dict:"A dict could model this, but it would store values you don't actually need here."}});
+    feedback:{set:"Right. A set keeps each customer once and answers \"already used?\" quickly.",
+              list:"A list lets the same customer go in twice unless your code checks first.",
+              tuple:"A tuple can't grow, and this collection gains a customer each time the code is used.",
+              dict:"A dict would work, but it stores a value for each customer that this check doesn't need."}});
 
   K.quiz({id:"q-tuple-predict", buttonSelector:"#card-tuple-predict .mlrk-choice", feedbackSelector:"#tuplepredictfb", correct:"error",
-    feedback:{error:"Tuples are immutable, so assigning to an index raises a TypeError instead of changing the tuple.",
-              change:"Tuples don't allow item assignment at all, so point never becomes (7, 9).",
-              newtuple:"Python doesn't silently build a replacement tuple here. It raises an error on that line."}});
+    feedback:{error:"Right. Tuples are immutable, so assigning to an index raises a TypeError.",
+              change:"Tuples don't allow item assignment, so rating never becomes (\"D-5520\", 5).",
+              newtuple:"Python doesn't build a replacement tuple on its own. It raises an error on that line."}});
 
   K.quiz({id:"q-emptyset", buttonSelector:"#card-emptyset .mlrk-choice", feedbackSelector:"#emptysetfb", correct:"false", maxAttempts:1,
-    feedback:{false:"Empty curly braces create an empty dict, not an empty set. Python needed {} for dict first.",
-              true:"{} is reserved for an empty dict. An empty set needs a dedicated function instead."}});
+    feedback:{false:"Right. Empty curly braces create an empty dict, not an empty set.",
+              true:"{} creates an empty dict. An empty set needs a built-in function instead."}});
 
   K.quiz({id:"q-hash", buttonSelector:"#card-hash .mlrk-choice", feedbackSelector:"#hashfb", correct:"string",
-    feedback:{string:"Strings are immutable and hashable, so they work safely as dict keys.",
-              list:"Lists are mutable, so Python won't allow them as dict keys.",
-              dict:"Dicts are mutable, so they can't be dict keys either."}});
+    feedback:{string:"Right. Strings are immutable and hashable, so they work as dict keys.",
+              list:"Lists are mutable, so Python won't accept one as a dict key.",
+              dict:"Dicts are mutable, so a dict can't be a key in another dict."}});
 
   K.quiz({id:"q-gotcha", buttonSelector:"#card-gotcha .mlrk-choice", feedbackSelector:"#gotchafb", correct:"no", maxAttempts:1,
-    feedback:{no:"The tuple itself can't be reassigned, but the list living inside it can still change, and that makes the whole tuple unhashable.",
-              yes:"A tuple is only hashable if every value inside it is also hashable. A list inside breaks that."}});
+    feedback:{no:"Right. The tuple can't be reassigned, but the list inside it can still change. That makes the whole tuple unhashable.",
+              yes:"A tuple is hashable only if every value inside it is hashable. The list inside pair breaks that."}});
 
   K.quiz({id:"q-dictcount", buttonSelector:"#card-dictcount .mlrk-choice", feedbackSelector:"#dictcountfb", correct:"3",
-    feedback:{3:"records has three tuples, and the loop adds one key/value pair per tuple: three entries in status.",
-              6:"That would double-count. Each tuple contributes exactly one key and one value to the same dict.",
-              1:"The loop runs once per tuple in records, not just once overall."}});
+    feedback:{3:"Right. ratings has three tuples, and each pass adds one key/value pair, so stars holds three.",
+              6:"Each tuple adds one pair, made of one key and one value. Counting keys and values separately doubles it.",
+              1:"The loop runs once for each tuple in ratings, not once overall."}});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"set",
-    feedback:{set:"A set checks membership in roughly constant time regardless of how large it gets, which is exactly what a growing, repeated check needs.",
-              list:"A list has to scan further and further as it grows, so this check gets slower over time.",
-              tuple:"A tuple is fixed once created, so it's a poor fit for a collection that keeps growing."}});
+    feedback:{set:"Right. A set checks membership in about the same time however large it gets.",
+              list:"A list has to check further and further as it grows, so this check gets slower every night.",
+              tuple:"A tuple can't grow after it's created, so it can't hold a collection that keeps gaining codes."}});
 
   K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"key",
-    feedback:{key:"\"unhashable type: 'list'\" points directly at what's being used as a key. A list can't be one.",
-              value:"Dictionary values can be almost any type, including lists. The error is about the key, not the value.",
-              import:"This error is about hashability, not a missing import."}});
+    feedback:{key:"Right. \"unhashable type: 'list'\" points at the key. A list can't be one.",
+              value:"Dict values can be almost any type, lists included. The error is about the key.",
+              import:"This error is about hashability. A missing import raises a different error."}});
 
   K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"right",
-    feedback:{right:"Each container matches the property that actually matters: a fixed pair, a changing ordered queue, a keyed lookup, and unique membership.",
-              alllist:"A list could technically hold any value, but it wouldn't enforce the rules this data actually needs, like guaranteed uniqueness or a locked-in pair.",
-              swapped:"Swapping list and set here loses exactly what each property needs: the plate/color pair should be locked, and the queue's order should be preserved."}});
+    feedback:{right:"Right. Each container matches the rule that matters: a fixed pair, a changing ordered queue, a keyed lookup, and unique values.",
+              alllist:"A list can hold anything, but it won't enforce the rules this data needs, like unique songs or a locked seat.",
+              swapped:"That swap breaks both: the seat pair could be edited by accident, and a set would lose the queue's order."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"A list can contain duplicate values.", correct:true,
-      hint:"Think back to section 5's list demo. Did appending a repeated value get rejected?",
-      explain:"Lists place no restriction on duplicates. The same value can appear as many times as it's added."},
-    {value:"b", label:"Once a tuple is created, the individual elements inside it can be reassigned to new values.", correct:false,
-      hint:"Revisit section 5's tuple prediction. What actually happened on point[0] = 7?",
-      explain:"A tuple's elements cannot be reassigned after creation. Attempting it raises a TypeError, as practiced in section 5."},
-    {value:"c", label:"Dictionary keys must be unique; assigning to an existing key overwrites its value instead of creating a second entry.", correct:true,
-      hint:"Think about section 10's dict build. If the same case_id appeared twice in records, would status end up with two entries for it?",
-      explain:"A dict key can only map to one value at a time. Assigning to an existing key replaces that value rather than adding a duplicate key."},
-    {value:"d", label:"A set preserves the exact order elements were added in, and code should rely on that order.", correct:false,
-      hint:"Think back to section 9's order-the-steps activity. Is a set's storage location based on insertion order, or on a hash?",
-      explain:"A set's storage is based on each value's hash, not insertion order, which is why section 9's steps never mention position."}
+    {value:"a", label:"A list can hold the same value more than once.", correct:true,
+      hint:"Does anything in a list's rules stop the same value from going in twice?",
+      explain:"Lists allow duplicates. A value can appear as many times as you add it."},
+    {value:"b", label:"Once a tuple is created, you can reassign the items inside it.", correct:false,
+      hint:"Look back at section 5's prediction. What happened on rating[1] = 5?",
+      explain:"A tuple's items can't be reassigned. Trying it raises a TypeError, as section 5 showed."},
+    {value:"c", label:"Dictionary keys are unique: assigning to a key that already exists replaces its value instead of adding a second entry.", correct:true,
+      hint:"In section 10's loop, if \"D-5520\" appeared twice in ratings, would stars end up with two entries for it?",
+      explain:"Each key maps to one value. Assigning to an existing key replaces the value."},
+    {value:"d", label:"A set keeps values in the order you added them, so code can rely on that order.", correct:false,
+      hint:"In section 9's steps, does a set decide where to store a value by insertion order, or by its hash?",
+      explain:"A set stores each value by its hash, not by when it was added, so its order can't be relied on."},
+    {value:"e", label:"Keeping order codes in one list and courier names in a second list, matched by position, is as safe as using a dictionary.", correct:false,
+      hint:"If you delete an item from the first list and forget the second, what keeps the two lined up?",
+      explain:"Nothing keeps two separate lists in step. Delete from one, and every pair after that point is mismatched with no error. A dictionary stores each key with its value, so they can't drift apart."}
   ]});
 
   K.dragDrop("#dragarea", "act-drag-mutability");
@@ -563,9 +576,9 @@ git push</pre></li>
   K.orderSteps("#ordersteps", {id:"act-order-hash", correctOrder:["hash","locate","compare","insert"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
   K.flipCards("#vocab", "act-flip-vocab");
   K.traceStepper("#tracestep", {steps:[
-    {cell:"unpack #1: C-4471, open", line:"status = {'C-4471': 'open'}"},
-    {cell:"unpack #2: C-4482, closed", line:"status = {'C-4471': 'open', 'C-4482': 'closed'}"},
-    {cell:"unpack #3: C-4493, open", line:"status = {'C-4471': 'open', 'C-4482': 'closed', 'C-4493': 'open'}"}
+    {cell:"pass 1: D-5520, 4", line:"stars = {'D-5520': 4}"},
+    {cell:"pass 2: D-5531, 5", line:"stars = {'D-5520': 4, 'D-5531': 5}"},
+    {cell:"pass 3: D-5547, 3", line:"stars = {'D-5520': 4, 'D-5531': 5, 'D-5547': 3}"}
   ]});
 
   K.video({id:"act-video", elementId:"ytplayer", videoId:"h-zcj4DmqHk"});
@@ -574,9 +587,9 @@ git push</pre></li>
   K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
 
   const SIM_OUTPUT = {
-    list: {ok:true, code:'colors = ["cyan", "magenta"]\ncolors.append("yellow")\nprint(colors)\n\n[Output]\n[\'cyan\', \'magenta\', \'yellow\']', note:"List: append works because lists are mutable, so the same list grows in place."},
-    tuple: {ok:false, code:'settings = (1920, 1080)\nsettings[0] = 1280\n\n[Output]\nTypeError: \'tuple\' object does not support item assignment', note:"Tuple: item assignment fails because tuples are immutable."},
-    set: {ok:true, code:'tags = {"new", "priority"}\ntags.add("priority")\nprint(len(tags))\n\n[Output]\n2', note:"Set: adding a value that's already present doesn't create a duplicate, so the length stays 2."}
+    list: {ok:true, code:'stops = ["Elm St", "Pine Ave"]\nstops.append("Oak Rd")\nprint(stops)\n\n[Output]\n[\'Elm St\', \'Pine Ave\', \'Oak Rd\']', note:"List: append works because lists are mutable. The same list grows in place."},
+    tuple: {ok:false, code:'delivered = ("D-5520", "7:42 PM")\ndelivered[1] = "7:50 PM"\n\n[Output]\nTypeError: \'tuple\' object does not support item assignment', note:"Tuple: item assignment fails because tuples are immutable."},
+    set: {ok:true, code:'refunded = {"D-5520", "D-5531"}\nrefunded.add("D-5520")\nprint(len(refunded))\n\n[Output]\n2', note:"Set: adding a value that's already there creates no duplicate, so the length stays 2."}
   };
   const simSeen = {list:false, tuple:false, set:false};
   const markSim = K.activity("act-sim-run", () => Object.values(simSeen).every(Boolean));
@@ -599,24 +612,24 @@ git push</pre></li>
     if(ok){
       K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> set() creates an empty set. Curly braces alone default to a dict.";
+      fb.innerHTML="<strong>Correct.</strong> set() creates an empty set. Curly braces alone make a dict.";
       blankDone=true;
     } else if(blankAttempts>=2){
       K.Scoring.award("q-blank",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing function is <code>set()</code>.";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The function is <code>set()</code>.";
       blankDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+      fb.innerHTML="<strong>Not quite.</strong> The function has the same name as the container it creates. Try once more.";
     }
     fb.setAttribute("tabindex","-1");fb.focus();
   });
 
   const AI_PROMPTS = [
-    "Think about a junk drawer versus a labeled toolbox versus a numbered locker versus a guest list at the door. Which of those four matches which Python container, and why?",
-    "If you had to explain \"a dict looks things up by label, a list looks things up by position\" to a friend using something from your own daily life, what would you compare it to?",
-    "Where have you already used something like a set in real life, a collection where duplicates just don't make sense, like a guest list or a list of allergies?"
+    "Think about a junk drawer, a labeled toolbox, a numbered locker row, and a guest list. Which one matches which Python container, and why?",
+    "How would you explain \"a dict finds things by label, a list finds things by position\" to a friend, using something from your daily life?",
+    "Where have you used something like a set in real life, a collection where duplicates make no sense, like a list of allergies?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");

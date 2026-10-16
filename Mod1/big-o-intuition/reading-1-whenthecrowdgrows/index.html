@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:640px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-illustration{width:100%;max-width:640px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;display:block}
 .biggrow-compare{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 .biggrow-stat{background:var(--mlrk-white);border:1px solid var(--mlrk-divider-on-light);border-radius:14px;padding:1rem}
 .biggrow-big{font-size:2.1rem;font-weight:800;color:var(--mlrk-bg-brand-deep)}
@@ -19,7 +19,7 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>When the Crowd Grows</h1>
-<p class="mlrk-lead">A food-pantry network's front desk needs to answer one question fast, over and over: is this household already registered? At a single site with 200 households on a paper binder, flipping through page by page barely takes a moment. Once the network shares one roster across 200,000 households citywide, the way that lookup is built decides whether the answer still comes back instantly, or takes longer with every new household added. This reading builds a precise way to describe that difference.</p>
+<p class="mlrk-lead">An airline's check-in kiosk does one job all day: find this traveler's booking. When the airline held 200 bookings, checking them one by one took no time at all. Now it holds 200,000. The way the kiosk searches decides whether the answer still comes back right away, or takes longer with every booking added. Big-O is the language for describing that difference.</p>
 <div class="mlrk-meta">
   <span class="mlrk-pill">~40–43 minutes</span>
   <span class="mlrk-pill">Interactive</span>
@@ -54,14 +54,14 @@
 
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
-<p>Community Care Coalition runs a weekly food pantry out of a single church basement, with about 200 registered households. Every family that walks in gets checked against a paper binder of registered names, page by page, until a volunteer finds a match, or reaches the end and confirms the household is new. At 200 households, even a worst-case walk through the entire binder barely slows the line down.</p>
-<p>Now the Coalition joins a citywide network of pantry sites sharing one roster of 200,000 households. The check-in code itself never changes; it still just compares one entry to the next until it finds a match. What changes is how much total work that same code has to do before it can answer, and that amount of work grows directly with the size of the roster.</p>
-<p>A second method sidesteps that growth entirely: instead of paging through entries in order, a volunteer types the household's ID number into a system that jumps straight to the matching record, the same way a Python dictionary looks up a value by its key. That lookup does roughly the same small amount of work whether the roster holds 200 households or 200,000.</p>
-<p>Computer scientists have a compact way to name exactly this difference: <strong>Big-O notation</strong>, a shorthand for how the amount of work a piece of code does changes as the size of its input grows. The chart below plots both check-in methods as the roster grows from 200 to 200,000 households.</p>
+<p>A small regional airline starts with one daily flight and about 200 bookings. When a traveler types in a confirmation code, the kiosk checks the first booking, then the second, then the third, until one matches. That method is a <strong>linear scan</strong>. With 200 bookings, even checking every one is quick.</p>
+<p>Over a few years the airline adds routes, and the kiosk now searches 200,000 bookings. The kiosk's code has not changed. It still checks one booking at a time. But its worst case went from 200 checks to 200,000. The work grows with the number of bookings, and that number is the <strong>input size</strong>.</p>
+<p>A second method avoids that growth. The kiosk stores each booking under its confirmation code, so typing the code jumps straight to the right booking. That is a direct <strong>lookup</strong>. It takes about the same small amount of work with 200 bookings or 200,000. A Python dictionary finds values this way, by a key. You don't need to have used one yet. The idea is what matters here.</p>
+<p>Both methods are <strong>algorithms</strong>: step-by-step methods for solving a problem. <strong>Big-O notation</strong> describes how an algorithm's work grows as its input grows. The linear scan is O(n), read "O of n": its work grows with n, the number of items. The direct lookup is O(1): its work stays about the same. The chart plots both as the airline grows from 200 to 200,000 bookings.</p>
 
 <svg class="mlrk-illustration" viewBox="0 0 640 245" role="img" aria-labelledby="growthTitle growthDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="growthTitle">Chart comparing constant-time and linear-time lookups as the roster grows</title>
-  <desc id="growthDesc">A line chart with roster size on the horizontal axis, ranging from 200 to 200,000 households, and worst-case work on the vertical axis. The line labeled O(1) stays flat and low across the entire range. The line labeled O(n) starts at the same low point but climbs steadily as roster size increases, ending far above the O(1) line at 200,000 households.</desc>
+  <title id="growthTitle">Chart comparing a direct lookup and a linear scan as the number of bookings grows</title>
+  <desc id="growthDesc">A line chart with the number of bookings on the horizontal axis, from 200 to 200,000, and worst-case work on the vertical axis. The line labeled O(1) stays flat and low across the whole range. The line labeled O(n) starts at the same low point but climbs steadily, ending far above the O(1) line at 200,000 bookings.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
     <line x1="70" y1="20" x2="70" y2="200" stroke="#B3BBB0" stroke-width="2"/>
     <line x1="70" y1="200" x2="610" y2="200" stroke="#B3BBB0" stroke-width="2"/>
@@ -71,141 +71,154 @@
       <line x1="430" y1="200" x2="430" y2="206"/>
       <line x1="570" y1="200" x2="570" y2="206"/>
     </g>
-    <g font-size="14" fill="#261F1D" text-anchor="middle">
+    <g font-size="16" fill="#261F1D" text-anchor="middle">
       <text x="150" y="222">200</text>
       <text x="290" y="222">2,000</text>
       <text x="430" y="222">20,000</text>
       <text x="570" y="222">200,000</text>
     </g>
-    <text x="340" y="240" text-anchor="middle" font-size="14" fill="#261F1D">Number of registered households (roster size)</text>
-    <text x="26" y="110" font-size="14" fill="#261F1D" transform="rotate(-90 26 110)">Worst-case work</text>
+    <text x="340" y="242" text-anchor="middle" font-size="16" fill="#261F1D">Number of bookings (input size)</text>
+    <text x="26" y="110" font-size="16" fill="#261F1D" text-anchor="middle" transform="rotate(-90 26 110)">Worst-case work</text>
 
     <polyline points="150,182 290,182 430,182 570,182" fill="none" stroke="#264326" stroke-width="4"/>
     <g fill="#264326">
       <circle cx="150" cy="182" r="5"/><circle cx="290" cy="182" r="5"/>
       <circle cx="430" cy="182" r="5"/><circle cx="570" cy="182" r="5"/>
     </g>
-    <text x="480" y="172" font-size="14" font-weight="700" fill="#264326">O(1): stays flat</text>
+    <text x="470" y="170" font-size="16" font-weight="700" fill="#264326">O(1): stays flat</text>
 
     <polyline points="150,182 290,132 430,82 570,32" fill="none" stroke="#2274B5" stroke-width="4"/>
     <g fill="#2274B5">
       <circle cx="150" cy="182" r="5"/><circle cx="290" cy="132" r="5"/>
       <circle cx="430" cy="82" r="5"/><circle cx="570" cy="32" r="5"/>
     </g>
-    <text x="440" y="52" font-size="14" font-weight="700" fill="#2274B5">O(n): climbs with n</text>
+    <text x="180" y="88" font-size="16" font-weight="700" fill="#2274B5">O(n): climbs with n</text>
   </g>
 </svg>
 
-<p>Both lines start in the same place at 200 households. That is the trap: at a small size, checking a binder page by page and jumping straight to a record by ID can feel about the same. The picture only pulls apart once the roster grows, which is exactly what the chart is built to show.</p>
+<p>At 200 bookings, both lines start at the same point. That is why a small test can fool you: both methods feel instant. The difference only shows as the input grows. How an algorithm behaves as its input grows is called its <strong>scale</strong>, and code that stays fast as data grows "scales well."</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> Big-O is one of the most frequently asked-about topics in technical interviews, and it's the actual reasoning behind real decisions — like choosing a dict over a list when a program needs to check membership thousands of times a minute.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to loop over a collection and look a value up by key. This reading gives you precise language for comparing how those two habits scale. That same growth-rate thinking comes back the moment two different working solutions to the same problem get compared side by side.</p>
+<p><strong>Why this matters:</strong> "Explain Big-O" is a common early interview question. On the job, it is how you defend a choice, such as storing records by ID when a program has to find them thousands of times a day.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already write loops and functions that check items one at a time. This reading gives you words for what that habit costs as data grows. The same question comes back every time you choose how to store data: does finding one item stay flat, or grow with the data?</p>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before Big-O</h2>
-<p>A few habits from earlier work get reused throughout this reading: looping over a collection one item at a time, comparing two values for a match, and looking a value up by key. Test each one below before moving on.</p>
+<p>This reading builds on skills you already have. These four questions check them: looping over a list, counting the items a loop checks, returning from a function as soon as it finds an answer, and what a loop does when nothing matches.</p>
 
-<div class="mlrk-card" id="card-recall-loop"><p><strong>Which line checks the items in a list one at a time, in order, until something matches?</strong></p>
-<button type="button" class="mlrk-choice" data-a="loop"><code>for entry in binder:</code></button>
-<button type="button" class="mlrk-choice" data-a="dict"><code>roster[household_id]</code></button>
+<div class="mlrk-card" id="card-recall-loop"><p><strong>Which line checks the items in a list one at a time, in order?</strong></p>
+<button type="button" class="mlrk-choice" data-a="loop"><code>for code in manifest:</code></button>
+<button type="button" class="mlrk-choice" data-a="index"><code>manifest[0]</code></button>
 <button type="button" class="mlrk-choice" data-a="return"><code>return True</code></button>
 <div id="recallloopfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-recall-trace" style="margin-top:.8rem"><p><strong>Coding check:</strong> a binder holds 5 entries. A volunteer checks entry 1, then 2, then 3, and so on. The household they need turns out to be entry 5, the very last one. How many entries get checked in total?</p>
+<div class="mlrk-card" id="card-recall-trace" style="margin-top:.8rem"><p><strong>Counting check:</strong> a kiosk checks a list of 5 bookings one at a time, starting with the first. The match is the 5th booking.</p>
+<p><strong>How many bookings does the kiosk check?</strong></p>
 <button type="button" class="mlrk-choice" data-a="5">5</button>
 <button type="button" class="mlrk-choice" data-a="1">1</button>
 <button type="button" class="mlrk-choice" data-a="4">4</button>
 <div id="recalltracefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-recall-dict" style="margin-top:.8rem"><p><strong>Scenario check:</strong> <code>roster</code> is a Python dictionary keyed by household ID. Which line reaches a specific household's record directly, without checking any other entries first?</p>
-<button type="button" class="mlrk-choice" data-a="direct"><code>roster["H1042"]</code></button>
-<button type="button" class="mlrk-choice" data-a="scan"><code>for h in roster: if h == "H1042": ...</code></button>
-<button type="button" class="mlrk-choice" data-a="neither">Neither; both check every key first</button>
+<div class="mlrk-card" id="card-recall-dict" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">def has_booking(code, manifest):
+    for entry in manifest:
+        if entry == code:
+            return True
+    return False
+
+has_booking("QX7RT2", ["LM2B8K", "QX7RT2", "RT9PW4", "BB4HN1"])</div></div>
+<p><strong>How many times does <code>entry == code</code> run before <code>has_booking</code> returns?</strong></p>
+<button type="button" class="mlrk-choice" data-a="two">2</button>
+<button type="button" class="mlrk-choice" data-a="four">4</button>
+<button type="button" class="mlrk-choice" data-a="one">1</button>
 <div id="recalldictfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-recall-worst" style="margin-top:.8rem"><p><strong>Critical-thinking check:</strong> a volunteer scans a binder for a household that turns out not to be registered at all. Compared to finding a match on the very last entry, how many entries get checked?</p>
-<button type="button" class="mlrk-choice" data-a="same">The same number: every entry, since there is no match to stop on early</button>
+<div class="mlrk-card" id="card-recall-worst" style="margin-top:.8rem"><p><strong>Critical-thinking check:</strong> the kiosk scans a list for a code that is not in it at all.</p>
+<p><strong>Compared with a match on the last booking, how many bookings does it check?</strong></p>
+<button type="button" class="mlrk-choice" data-a="same">The same number: every booking, since there is no match to stop on</button>
 <button type="button" class="mlrk-choice" data-a="fewer">Fewer, because Python stops early once it suspects there's no match</button>
-<button type="button" class="mlrk-choice" data-a="zero">Zero, because a missing household never gets checked</button>
+<button type="button" class="mlrk-choice" data-a="zero">Zero, because a missing code never gets checked</button>
 <div id="recallworstfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">These four habits, looping through a collection, comparing values, looking a value up by key, and reasoning about the worst case, all reappear later in this reading exactly as they work here.</div>
 </section>
 
 <section class="mlrk-section">
 <h2>3. Technical vocabulary</h2>
-<p>Flip each card before the practice below.</p>
+<p>Flip each card. You'll use these terms for the rest of the reading.</p>
 <div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Big-O</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Big-O</strong><br>A shorthand for describing how the amount of work an operation does changes as the size of its input grows.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>O(1)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>O(1), constant time</strong><br>The amount of work stays roughly flat no matter how large the input gets.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>O(n)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>O(n), linear time</strong><br>The amount of work grows in step with the size of the input, called <code>n</code>.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>linear scan</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Linear scan</strong><br>Checking entries one at a time, in order, until a match is found or every entry has been checked.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>worst case</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Worst case</strong><br>The scenario that takes the most work, such as a match on the very last entry, or no match at all.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>key-based lookup</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Key-based lookup</strong><br>Reaching a value directly by its key, the way a Python dict works, instead of scanning entries in order.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Algorithm</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Algorithm</strong><br>A step-by-step method for solving a problem. "Check each booking in order until one matches" is an algorithm.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Input size</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Input size</strong><br>How much data an algorithm works through, such as the number of bookings. Big-O calls it <code>n</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Scale</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Scale</strong><br>How an algorithm behaves as its input size grows from small to very large. Code that stays fast as data grows "scales well."</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Big-O</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Big-O</strong><br>Describes how an algorithm's work grows as the input grows. It is about growth, not seconds.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>O(1)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>O(1), constant time</strong><br>The work stays roughly the same, whatever the input size.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>O(n)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>O(n), linear time</strong><br>The work grows with the number of items, <code>n</code>. Double the items, and the work roughly doubles.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Linear scan</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Linear scan</strong><br>Checks items one at a time until it finds the target, or until it has checked every item.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Lookup</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Lookup</strong><br>Finding one item in a collection. A direct lookup jumps straight to the item by its key, such as a confirmation code, instead of checking items in order.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Worst case</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Worst case</strong><br>The situation that takes the most work. For a linear scan, that is a match on the last item, or no match at all.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Make the network grow</h2>
-<p>Pick a roster size and compare the two check-in methods.</p>
+<h2>4. Make the airline grow</h2>
+<p>Pick a number of bookings and compare the two methods.</p>
 <div class="mlrk-card">
-<label for="roster-size"><strong>Network size:</strong></label>
+<label for="roster-size"><strong>Number of bookings:</strong></label>
 <select id="roster-size">
-  <option value="200">200 households</option>
-  <option value="2000">2,000 households</option>
-  <option value="20000">20,000 households</option>
-  <option value="200000">200,000 households</option>
+  <option value="200">200 bookings</option>
+  <option value="2000">2,000 bookings</option>
+  <option value="20000">20,000 bookings</option>
+  <option value="200000">200,000 bookings</option>
 </select>
 <div class="biggrow-compare" style="margin-top:1rem">
   <div class="biggrow-stat">
     <div class="biggrow-big">O(n)</div>
-    <p>Binder scan, worst-case entries checked: <strong id="linearCount">200</strong></p>
+    <p>Linear scan, worst-case bookings checked: <strong id="linearCount">200</strong></p>
     <div class="biggrow-meter"><div id="linearBar" class="biggrow-fill"></div></div>
   </div>
   <div class="biggrow-stat">
     <div class="biggrow-big">O(1)</div>
-    <p>Key-based lookup cost: <strong>stays flat</strong></p>
+    <p>Direct lookup by confirmation code: <strong>stays flat</strong></p>
     <div class="biggrow-meter"><div class="biggrow-fill" style="width:12%"></div></div>
   </div>
 </div>
 </div>
-<div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem"><strong>Careful:</strong> O(1) does not mean an operation takes zero time or exactly one machine instruction, and O(n) does not mean an operation is automatically slow. Both labels describe <em>how cost scales</em>, not a literal stopwatch reading.</div>
+<div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem"><strong>Careful:</strong> O(1) does not mean zero time, and O(n) does not mean slow. Both labels describe how the cost grows as the input grows, not how many seconds one run takes.</div>
 </section>
 
 <section class="mlrk-section">
 <h2>5. Predict the growth</h2>
-<div class="mlrk-card" id="card-growth"><p><strong>A binder scan may inspect up to 300 entries in the worst case. If the roster doubles to 600 entries, what should you expect?</strong></p>
-<button type="button" class="mlrk-choice" data-a="600">Up to about 600 entries checked</button>
-<button type="button" class="mlrk-choice" data-a="300">Still up to 300 entries checked</button>
-<button type="button" class="mlrk-choice" data-a="2400">Automatically 2,400 entries checked</button>
+<div class="mlrk-card" id="card-growth"><p><strong>A linear scan checks up to 300 bookings in the worst case. The list doubles to 600 bookings.</strong></p>
+<p><strong>What happens to the worst case?</strong></p>
+<button type="button" class="mlrk-choice" data-a="600">Up to 600 bookings checked</button>
+<button type="button" class="mlrk-choice" data-a="300">Still up to 300 bookings checked</button>
+<button type="button" class="mlrk-choice" data-a="2400">Up to 2,400 bookings checked</button>
 <div id="growthfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>6. Debug a common Big-O mistake</h2>
 <div class="mlrk-card" id="card-misconception"><p><strong>A teammate says: "O(n) means the code is slow." What's the best correction?</strong></p>
-<button type="button" class="mlrk-choice" data-a="scale">O(n) describes how cost grows with n; a small O(n) task can still finish almost instantly</button>
-<button type="button" class="mlrk-choice" data-a="always">That's correct. Every O(n) operation is slow</button>
-<button type="button" class="mlrk-choice" data-a="seconds">O(n) means the operation takes exactly n seconds</button>
+<button type="button" class="mlrk-choice" data-a="scale">O(n) describes how cost grows with n. A small O(n) task can still finish almost instantly.</button>
+<button type="button" class="mlrk-choice" data-a="always">That's correct. Every O(n) operation is slow.</button>
+<button type="button" class="mlrk-choice" data-a="seconds">O(n) means the operation takes exactly n seconds.</button>
 <div id="misfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>7. Classify the lookup habit</h2>
-<div class="mlrk-card" id="card-classify"><p><strong>A volunteer retrieves a record with <code>roster["H1042"]</code>, where <code>roster</code> is a Python dictionary. Which description matches this lookup's intuition?</strong></p>
-<button type="button" class="mlrk-choice" data-a="one">O(1): the lookup cost stays roughly flat as the dictionary grows</button>
-<button type="button" class="mlrk-choice" data-a="n">O(n): Python must check every key from the beginning first</button>
-<button type="button" class="mlrk-choice" data-a="instant">O(1), which means it takes literally no time at all</button>
+<h2>7. Classify the lookup</h2>
+<p>In Python, <code>bookings["QX7RT2"]</code> asks a dictionary named <code>bookings</code> for the booking stored under the key <code>"QX7RT2"</code>.</p>
+<div class="mlrk-card" id="card-classify"><p><strong>Which description fits <code>bookings["QX7RT2"]</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="one">O(1): the cost stays roughly flat as the dictionary grows</button>
+<button type="button" class="mlrk-choice" data-a="n">O(n): Python checks every key from the beginning first</button>
+<button type="button" class="mlrk-choice" data-a="instant">O(1), which means it takes no time at all</button>
 <div id="classfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>8. Trace the worst case, one entry at a time</h2>
-<p>A brand-new front-desk volunteer scans a binder of 8 entries. The household they're looking for, <code>"H1042"</code>, turns out to be the very last entry. Click through the scan below.</p>
+<h2>8. Trace the worst case, one booking at a time</h2>
+<p>A commuter flight has 8 bookings. The kiosk scans them for <code>"QX7RT2"</code>, which is the last one. Click through the scan.</p>
 <div id="tracestep"></div>
-<div class="mlrk-card" id="card-worstcase" style="margin-top:1rem"><p><strong>True or false: in the worst case, a linear scan over n entries may need to check all n of them before it can answer.</strong></p>
+<div class="mlrk-card" id="card-worstcase" style="margin-top:1rem"><p><strong>True or false: in the worst case, a linear scan over n items checks all n of them before it can answer.</strong></p>
 <button type="button" class="mlrk-choice" data-a="true">True</button>
 <button type="button" class="mlrk-choice" data-a="false">False</button>
 <div id="worstcasefb" class="mlrk-feedback" tabindex="-1"></div></div>
@@ -213,13 +226,13 @@
 
 <section class="mlrk-section">
 <h2>9. Fill in the blank</h2>
-<p>A colleague is documenting the two check-in methods:</p>
-<div class="mlrk-code"><div class="mlrk-screen"># Method A: check every entry in the binder until a match turns up
-# Method B: household = roster["H1042"]
+<p>A teammate is writing notes on the kiosk's two methods:</p>
+<div class="mlrk-code"><div class="mlrk-screen"># Method A: check each booking in order until one matches
+# Method B: booking = bookings["QX7RT2"]
 
-Method B reaches the record directly because roster is a Python ____
-that maps each key straight to its value, instead of a list that has
-to be scanned in order.</div></div>
+Method B jumps straight to the booking because bookings is a
+Python ____: it stores each value under a key, so there is
+nothing to scan.</div></div>
 <div class="mlrk-fillblank">
   <label for="blankinput">Type the missing data type:</label>
   <input type="text" id="blankinput" autocomplete="off">
@@ -230,15 +243,15 @@ to be scanned in order.</div></div>
 
 <section class="mlrk-section">
 <h2>10. Sort by growth pattern</h2>
-<p>Drag each operation into the zone matching its growth pattern, then use the self-check button to confirm your matches.</p>
+<p>Drag each operation into the zone that matches its growth pattern, then check your matches.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">Looking up <code>roster["H1042"]</code> by key</span>
-  <span id="chip2" class="mlrk-draggable">Scanning the binder from page one until a match turns up</span>
+  <span id="chip1" class="mlrk-draggable">Looking up <code>bookings["QX7RT2"]</code> by its key</span>
+  <span id="chip2" class="mlrk-draggable">Checking the bookings from the first one until a match turns up</span>
 </div>
 <div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>O(1), stays flat as the roster grows</strong></p><div class="mlrk-dropzone" id="zoneConstant"></div></div>
-  <div><p class="mlrk-small"><strong>O(n), grows with the roster</strong></p><div class="mlrk-dropzone" id="zoneLinear"></div></div>
+  <div><p class="mlrk-small"><strong>O(1), stays flat as bookings grow</strong></p><div class="mlrk-dropzone" id="zoneConstant"></div></div>
+  <div><p class="mlrk-small"><strong>O(n), grows with the bookings</strong></p><div class="mlrk-dropzone" id="zoneLinear"></div></div>
 </div>
 <div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
 <div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
@@ -247,11 +260,11 @@ to be scanned in order.</div></div>
 
 <section class="mlrk-section">
 <h2>11. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about Big-O reasoning.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> O(1) means an operation takes zero time and involves no work at all.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> O(n) describes how the number of steps grows as n grows, not a literal speed in seconds.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A dict lookup by key is treated as O(1) because Python does not need to check every existing key first.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Every linear scan is automatically too slow to use in a real system, no matter how small n is.</label>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE about Big-O.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> O(1) means an operation takes zero time.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> O(n) describes how the number of steps grows as n grows, not a speed in seconds.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A dictionary lookup by key is O(1) because Python does not check every key first.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> If code finishes instantly on 50 items, it will stay fast on 5 million.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
@@ -259,11 +272,11 @@ to be scanned in order.</div></div>
 
 <section class="mlrk-section">
 <h2>12. Order the steps</h2>
-<p>Click steps, in order, to build the sequence you'd follow to classify an unfamiliar operation's Big-O. Click a step again to remove it, then press "Check my order" when you're ready. This is a self-check, not graded on correctness.</p>
+<p>Click the steps in the order you'd use to find the Big-O of an unfamiliar algorithm. Click a step again to remove it, then press "Check my order." This is a self-check, not graded.</p>
 <ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="identify"><span class="mlrk-order-num"></span> Identify what <code>n</code> represents in this situation.</li>
+  <li class="mlrk-orderitem" data-step="identify"><span class="mlrk-order-num"></span> Identify what <code>n</code> is in this situation.</li>
   <li class="mlrk-orderitem" data-step="worst"><span class="mlrk-order-num"></span> Work out what happens in the worst case.</li>
-  <li class="mlrk-orderitem" data-step="scale"><span class="mlrk-order-num"></span> Ask whether the amount of work grows with <code>n</code> or stays flat.</li>
+  <li class="mlrk-orderitem" data-step="scale"><span class="mlrk-order-num"></span> Ask whether the work grows with <code>n</code> or stays flat.</li>
   <li class="mlrk-orderitem" data-step="name"><span class="mlrk-order-num"></span> Name the pattern: O(1) if it stays flat, O(n) if it grows with n.</li>
 </ul>
 <div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
@@ -272,10 +285,10 @@ to be scanned in order.</div></div>
 
 <section class="mlrk-section">
 <h2>13. Watch: Big-O notation and time complexity</h2>
-<p>As you watch, notice how the video builds the O(1) versus O(n) distinction from small, concrete examples before naming the pattern, the same order this reading has followed, and listen for how it describes the worst case for a search.</p>
+<p>As you watch, notice how each example counts the steps before naming the pattern. Listen for how the video describes the worst case for a search.</p>
 <div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=XMUe3zFhM5c" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one example from the video that made a growth pattern click for you, and how does it compare to the food-pantry roster example in this reading?</strong></p>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which example from the video made a growth pattern click for you? How does it compare to the airline kiosk?</strong></p>
 <textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
 </div>
 </section>
@@ -283,48 +296,49 @@ to be scanned in order.</div></div>
 <section class="mlrk-section">
 <h2>14. How this shows up in interviews</h2>
 <div class="mlrk-callout mlrk-callout-green">
-<p>Big-O is one of the most frequently tested topics in technical interviews, for data roles and software engineering roles alike. A common opener is a direct question: "What's the time complexity of this lookup, and why?" Interviewers are listening for the reasoning, identifying n, considering the worst case, and naming the pattern, not just a memorized label.</p>
-<p>A very common follow-up in data-heavy interviews is a data-structure choice question: "You need to check membership in a collection thousands of times. Would you use a list or a dict, and why?" The expected answer connects directly back to this reading: a dict keeps each membership check close to O(1), while a list makes each one O(n), and that difference compounds fast once the check happens thousands of times.</p>
+<p>"Explain Big-O" is a common early interview question for data and software roles. A typical opener is "What's the time complexity of this lookup, and why?" Interviewers want the reasoning: what n is, what the worst case is, and whether the work grows or stays flat. A memorized label is not enough.</p>
+<p>A common follow-up: "You need to check whether an item is in a collection thousands of times. Would you use a list or a dictionary?" A strong answer says a dictionary keeps each check close to O(1), while a list makes each one O(n), and that difference adds up when the check repeats thousands of times.</p>
 </div>
 <div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: you need to check membership in a growing collection thousands of times inside a loop. What's the strongest choice?</strong></p>
-<button type="button" class="mlrk-choice" data-a="dict">A dict, since each membership check is roughly O(1), while a list makes each one O(n)</button>
-<button type="button" class="mlrk-choice" data-a="list">A list, since lists preserve insertion order</button>
-<button type="button" class="mlrk-choice" data-a="same">Either one; both take the same number of steps to check membership</button>
+<button type="button" class="mlrk-choice" data-a="dict">A dictionary, since each check is roughly O(1), while a list makes each one O(n)</button>
+<button type="button" class="mlrk-choice" data-a="list">A list, since lists keep items in the order they were added</button>
+<button type="button" class="mlrk-choice" data-a="same">Either one, since both take the same number of steps to check membership</button>
 <div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>15. Explain it without jargon, then debug a symptom</h2>
-<p>If you're stuck explaining the idea, generate a sentence frame instead of staring at a blank box.</p>
+<p>Stuck on how to start? Get a prompt to think from.</p>
 <p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
 <div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
 <label for="explain"><strong>Your turn:</strong> explain the difference between O(1) and O(n) to someone who has never written code.</label>
 <textarea id="explain" class="mlrk-response" data-save placeholder="As the amount of data grows..."></textarea>
 
-<div class="mlrk-card" id="card-debug" style="margin-top:1.2rem"><p><strong>A dict-keyed lookup that should be O(1) keeps getting slower as the roster grows. What should you check first?</strong></p>
-<button type="button" class="mlrk-choice" data-a="check">Whether the lookup is genuinely a direct key access somewhere, and not silently looping over entries to find a match</button>
-<button type="button" class="mlrk-choice" data-a="random">Whether Python's dictionary implementation randomly slows down as it ages</button>
-<button type="button" class="mlrk-choice" data-a="clock">Whether the computer's clock needs to be recalibrated</button>
+<div class="mlrk-card" id="card-debug" style="margin-top:1.2rem"><p><strong>A lookup that should be O(1) keeps getting slower as the bookings grow. What should you check first?</strong></p>
+<button type="button" class="mlrk-choice" data-a="check">Whether the code really jumps to a key, or quietly loops over the bookings to find a match</button>
+<button type="button" class="mlrk-choice" data-a="random">Whether Python dictionaries slow down as they get older</button>
+<button type="button" class="mlrk-choice" data-a="clock">Whether the computer's clock needs to be reset</button>
 <div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>Your trace strategy:</strong> in 1-2 sentences, describe how you'd confirm whether an unfamiliar piece of code is really O(1) or O(n).</label>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I identify what n represents..."></textarea>
+<label for="strategy"><strong>Your trace strategy:</strong> in 1-2 sentences, describe how you'd check whether an unfamiliar piece of code is O(1) or O(n).</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I identify what n is..."></textarea>
 </section>
 
 <section class="mlrk-section">
 <h2>16. Summary &amp; critical thinking</h2>
-<p>Two reasoning habits carried this whole reading: naming what <code>n</code> represents before judging any code's cost, and checking whether that cost grows with n or stays flat as n grows, rather than guessing from how fast a single small run happens to feel.</p>
-<div class="mlrk-card" id="card-bridge"><p><strong>New situation:</strong> a delivery dispatch platform looks up a driver's current status by driver ID, thousands of times per minute, from a driver pool that keeps growing. Which design better supports a lookup cost that stays roughly flat?</p>
-<button type="button" class="mlrk-choice" data-a="key">Store drivers so the unique driver ID can be used as a direct key</button>
-<button type="button" class="mlrk-choice" data-a="scan">Always start at the first driver and compare IDs one by one</button>
-<button type="button" class="mlrk-choice" data-a="same">Both approaches must scale exactly the same way</button>
+<p>Two habits carried this reading. First, name what <code>n</code> is before judging an algorithm's cost. Then ask whether that cost grows with n or stays flat. A fast run on a small input doesn't answer that question.</p>
+<div class="mlrk-card" id="card-bridge"><p><strong>New situation:</strong> a stadium's entry scanners check each ticket code against the night's valid tickets. Ticket sales keep growing, from 5,000 seats to 60,000.</p>
+<p><strong>Which design keeps each check's cost roughly flat?</strong></p>
+<button type="button" class="mlrk-choice" data-a="key">Store the valid tickets so each ticket code works as a direct key</button>
+<button type="button" class="mlrk-choice" data-a="scan">Start at the first ticket and compare codes one by one</button>
+<button type="button" class="mlrk-choice" data-a="same">Both designs scale the same way</button>
 <div id="bridgefb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> what question do you ask yourself first when you need to judge whether a piece of code will still be fast once its input gets much larger?</label>
+<label for="clue"><strong>In your own words:</strong> what question do you ask first when judging whether code will stay fast as its input grows?</label>
 <textarea id="clue" class="mlrk-response" data-save></textarea>
 </section>
 
 <section class="mlrk-section">
 <h2>17. Thinking ahead</h2>
-<p>This same growth reasoning comes back the moment two different working solutions to the same problem get compared side by side, and again anytime a loop sits inside another loop and its own growth rate needs a name. Choosing a data structure for a real project almost always comes down to this exact question: does this operation's cost stay flat, or does it grow with the data, and how often will it run.</p>
+<p>This question comes back every time you choose how to store data: does finding one item stay flat, or grow with the data, and how often will it run? It also comes back when one loop sits inside another. That pattern grows in its own way, and it gets its own Big-O name.</p>
 </section>
 
 <section class="mlrk-section">
@@ -425,24 +439,24 @@ git push</pre></li>
   K.Scoring.renderChip("#scorechip");
 
   K.quiz({id:"q-recall-loop", buttonSelector:"#card-recall-loop .mlrk-choice", feedbackSelector:"#recallloopfb", correct:"loop",
-    feedback:{loop:"A for-loop over the binder checks one entry at a time, in order. That familiar habit is the starting point for the growth question in this reading.",
-              dict:"This expression retrieves a value directly by key. It doesn't loop through entries at all, which is a different habit entirely.",
-              "return":"return exits a function with a value. It doesn't itself check anything, one entry at a time or otherwise."}});
+    feedback:{loop:"Right. A for loop visits each item in manifest in order. That habit is what this reading measures.",
+              index:"manifest[0] reads only the first item. It doesn't move through the rest of the list.",
+              "return":"return True ends a function and hands back a value. It doesn't check any items."}});
 
   K.quiz({id:"q-recall-trace", buttonSelector:"#card-recall-trace .mlrk-choice", feedbackSelector:"#recalltracefb", correct:"5",
-    feedback:{"5":"Checking one entry at a time in order, the volunteer has to look at entries 1 through 5 before reaching the match on entry 5.",
-              "1":"Only checking entry 1 would miss the match entirely. The scan has to keep going until it reaches entry 5.",
-              "4":"Entry 5 itself still has to be checked. Stopping at entry 4 would never confirm the match."}});
+    feedback:{"5":"Right. The kiosk checks bookings 1 through 5. The match is the last one, so every booking gets checked.",
+              "1":"Checking only the first booking misses the match. The scan keeps going until it reaches booking 5.",
+              "4":"Booking 5 still has to be checked. That fifth check is the one that finds the match."}});
 
-  K.quiz({id:"q-recall-dict", buttonSelector:"#card-recall-dict .mlrk-choice", feedbackSelector:"#recalldictfb", correct:"direct",
-    feedback:{direct:"roster[\"H1042\"] reaches that one record directly by key, with no need to look at any other entry first.",
-              scan:"This line loops through every key in roster, comparing each one, which is the scanning habit, not a direct lookup.",
-              neither:"A dict key lookup does not check every existing key first. That's exactly what separates it from a scan."}});
+  K.quiz({id:"q-recall-dict", buttonSelector:"#card-recall-dict .mlrk-choice", feedbackSelector:"#recalldictfb", correct:"two",
+    feedback:{two:"Right. \"LM2B8K\" fails, then \"QX7RT2\" matches and return True ends the function. The last two entries are never checked.",
+              four:"return True ends the function as soon as a match turns up. The loop never reaches \"RT9PW4\" or \"BB4HN1\".",
+              one:"The first entry, \"LM2B8K\", isn't a match, so the loop moves on. The match comes on the second comparison."}});
 
   K.quiz({id:"q-recall-worst", buttonSelector:"#card-recall-worst .mlrk-choice", feedbackSelector:"#recallworstfb", correct:"same",
-    feedback:{same:"With no match anywhere, the scan has no reason to stop early. Every single entry gets checked, the same total as a match on the very last one.",
-              fewer:"Python doesn't guess that a household is missing partway through. It keeps comparing until it has actually checked every entry.",
-              zero:"A missing household still has to be ruled out entry by entry. That ruling-out is exactly what gets checked."}});
+    feedback:{same:"Right. With no match, nothing stops the scan early. It checks every booking, the same as a match on the last one.",
+              fewer:"A scan can't know a code is missing until it has checked every booking. Python never stops early on a guess.",
+              zero:"A missing code still has to be ruled out, one booking at a time. Those checks are the work."}});
 
   K.flipCards("#vocab", "act-flip-vocab");
 
@@ -456,34 +470,34 @@ git push</pre></li>
   updateRoster();
 
   K.quiz({id:"q-growth", buttonSelector:"#card-growth .mlrk-choice", feedbackSelector:"#growthfb", correct:"600",
-    feedback:{"600":"That's the linear pattern: double the roster, and the worst-case number of entries checked roughly doubles too.",
-              "300":"If a match might be anywhere in the roster, doubling the roster increases the worst-case work, it doesn't leave it unchanged.",
-              "2400":"Linear growth tracks n directly here. Doubling 300 gives 600, not four times the original count."}});
+    feedback:{"600":"Right. That's O(n): double the input size, and the worst-case work doubles too.",
+              "300":"The match could be anywhere, including among the 300 new bookings. The worst case grows with the list.",
+              "2400":"Linear growth keeps pace with n. Doubling 300 bookings gives 600 checks, not 2,400."}});
 
   K.quiz({id:"q-misconception", buttonSelector:"#card-misconception .mlrk-choice", feedbackSelector:"#misfb", correct:"scale",
-    feedback:{scale:"Exactly. Big-O describes how cost changes as input grows, not whether one particular run feels fast or slow.",
-              always:"A linear scan over three or four entries can be extremely quick. O(n) is about the growth pattern, not a guaranteed slowdown.",
-              seconds:"n represents the size of the input here, not a count of seconds."}});
+    feedback:{scale:"Right. Big-O describes how cost grows as the input grows, not how fast one run feels.",
+              always:"A linear scan over five items finishes almost instantly. O(n) names a growth pattern, not a speed.",
+              seconds:"n is the input size, such as the number of bookings. It isn't a count of seconds."}});
 
   K.quiz({id:"q-classify", buttonSelector:"#card-classify .mlrk-choice", feedbackSelector:"#classfb", correct:"one",
-    feedback:{one:"Right. A dict key lookup is modeled as constant time: growth in the dictionary's size does not require a proportional scan.",
-              n:"A normal dict key lookup is not modeled as checking every existing key from the start. That's the scanning pattern, not the key-based one.",
-              instant:"Constant time means the cost stays roughly flat as the data grows, not that the operation takes zero time."}});
+    feedback:{one:"Right. A dictionary jumps to the key, so the cost stays roughly flat as bookings grows.",
+              n:"A dictionary doesn't check every key from the start. Checking in order would be a linear scan.",
+              instant:"O(1) means the cost stays roughly flat as data grows. The lookup still takes some time."}});
 
   K.traceStepper("#tracestep", {steps:[
-    {cell:"entry 1", line:"Check entry 1: no match"},
-    {cell:"entry 2", line:"Check entry 2: no match"},
-    {cell:"entry 3", line:"Check entry 3: no match"},
-    {cell:"entry 4", line:"Check entry 4: no match"},
-    {cell:"entry 5", line:"Check entry 5: no match"},
-    {cell:"entry 6", line:"Check entry 6: no match"},
-    {cell:"entry 7", line:"Check entry 7: no match"},
-    {cell:"entry 8", line:"Check entry 8: MATCH — H1042 found"}
+    {cell:"booking 1", line:"Check booking 1: no match"},
+    {cell:"booking 2", line:"Check booking 2: no match"},
+    {cell:"booking 3", line:"Check booking 3: no match"},
+    {cell:"booking 4", line:"Check booking 4: no match"},
+    {cell:"booking 5", line:"Check booking 5: no match"},
+    {cell:"booking 6", line:"Check booking 6: no match"},
+    {cell:"booking 7", line:"Check booking 7: no match"},
+    {cell:"booking 8", line:"Check booking 8: match, QX7RT2 found"}
   ]});
 
   K.quiz({id:"q-worstcase", buttonSelector:"#card-worstcase .mlrk-choice", feedbackSelector:"#worstcasefb", correct:"true", maxAttempts:1,
-    feedback:{"true":"That's the worst case by definition: the match (or the confirmation that there is no match) is the last thing the scan finds.",
-              "false":"The trace above needed all 8 entries checked before finding the match. That is exactly what the worst case describes."}});
+    feedback:{"true":"Right. In the worst case the match is the last item, or there is no match, so all n items get checked.",
+              "false":"The trace checked all 8 bookings before it found the match. That is the worst case."}});
 
   K.Scoring.register("q-blank",1,"quiz");
   let blankAttempts=0, blankDone=false;
@@ -496,39 +510,39 @@ git push</pre></li>
     if(ok){
       K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> roster is a dict, so a key access like roster[\"H1042\"] reaches the record directly.";
+      fb.innerHTML="<strong>Correct.</strong> bookings is a dictionary (dict), so bookings[\"QX7RT2\"] reaches the booking directly.";
       blankDone=true;
     } else if(blankAttempts>=2){
       K.Scoring.award("q-blank",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing word is <code>dict</code> (a Python dictionary).";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing word is <code>dictionary</code>, written <code>dict</code> in Python.";
       blankDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+      fb.innerHTML="<strong>Not quite.</strong> Look at how section 7 describes <code>bookings</code>, then try once more.";
     }
     fb.setAttribute("tabindex","-1");fb.focus();
   });
 
   K.dragDrop("#dragarea", "act-drag-growth");
   K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneConstant", label:"Looking up roster[\"H1042\"] by key", expectedLabel:"O(1), stays flat as the roster grows"},
-    chip2:{expectedId:"zoneLinear", label:"Scanning the binder from page one", expectedLabel:"O(n), grows with the roster"}
+    chip1:{expectedId:"zoneConstant", label:"Looking up bookings[\"QX7RT2\"] by its key", expectedLabel:"O(1), stays flat as bookings grow"},
+    chip2:{expectedId:"zoneLinear", label:"Checking the bookings from the first one", expectedLabel:"O(n), grows with the bookings"}
   }});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"O(1) means an operation takes zero time and involves no work at all.", correct:false,
-      hint:"Think about what O(1) actually claims: is it about the amount of time in an absolute sense, or about how that time changes as the input grows?",
-      explain:"O(1) means the cost stays roughly flat as input grows, not that the operation is instant or free."},
-    {value:"b", label:"O(n) describes how the number of steps grows as n grows, not a literal speed in seconds.", correct:true,
-      hint:"This is the same misconception check practiced in section 6. Does it hold here too?",
-      explain:"This is the exact correction practiced with the teammate's comment in section 6."},
-    {value:"c", label:"A dict lookup by key is treated as O(1) because Python does not need to check every existing key first.", correct:true,
-      hint:"Section 7 classified this exact kind of lookup. What did that section conclude?",
-      explain:"This matches the roster[\"H1042\"] classification from section 7."},
-    {value:"d", label:"Every linear scan is automatically too slow to use in a real system, no matter how small n is.", correct:false,
-      hint:"Section 6 covered a very similar overstatement about O(n). Does a small linear scan actually behave that way?",
-      explain:"A linear scan over a handful of entries can be extremely fast. O(n) describes growth, not a guaranteed slowdown."}
+    {value:"a", label:"O(1) means an operation takes zero time.", correct:false,
+      hint:"Does O(1) describe an amount of time, or how the time changes as the input grows?",
+      explain:"O(1) means the cost stays roughly flat as input grows. The operation still takes some time."},
+    {value:"b", label:"O(n) describes how the number of steps grows as n grows, not a speed in seconds.", correct:true,
+      hint:"Compare this with the teammate's claim in section 6.",
+      explain:"This is the correction from section 6: O(n) describes growth, not seconds."},
+    {value:"c", label:"A dictionary lookup by key is O(1) because Python does not check every key first.", correct:true,
+      hint:"Section 7 classified this kind of lookup.",
+      explain:"This matches the bookings[\"QX7RT2\"] classification in section 7."},
+    {value:"d", label:"If code finishes instantly on 50 items, it will stay fast on 5 million.", correct:false,
+      hint:"Look at where the two lines in the section 1 chart start, and where they end.",
+      explain:"On a small input, a scan and a lookup both feel instant. Only growth shows the difference, so a quick small test says nothing about scale."}
   ]});
 
   K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["identify","worst","scale","name"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
@@ -537,14 +551,14 @@ git push</pre></li>
   K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"dict",
-    feedback:{dict:"Right. Repeated membership checks against a dict stay close to O(1) each, while the same checks against a list are each O(n), and that gap compounds fast at scale.",
-              list:"Insertion order is a real property of lists, but it doesn't help with the cost of a membership check, which is the question being asked here.",
-              same:"The two do not scale the same way. A dict's membership check stays flat as the collection grows; a list's does not."}});
+    feedback:{dict:"Right. Each check against a dictionary stays close to O(1), and each check against a list is O(n). Thousands of checks make that gap large.",
+              list:"Lists do keep their order, but order doesn't make a membership check cheaper. That cost is what the question asks about.",
+              same:"They don't scale the same way. A dictionary's check stays flat as the collection grows, and a list's grows with it."}});
 
   const AI_PROMPTS = [
-    "Think of something you look up constantly in daily life where you go straight to it, like a favorite app on your phone's home screen, versus something you'd have to search for. Where's the O(1) habit and where's the O(n) habit?",
-    "If you had to explain \"the cost stays flat no matter how big the pile gets\" to a friend using something from your own life, what would you compare it to?",
-    "Where have you seen a system get slower as it grew, like a search bar that used to feel instant? What might that tell you about how it was built?"
+    "Think of something you find instantly every day, like an app on your home screen, and something you have to search for. Which one is the O(1) habit, and which is O(n)?",
+    "How would you explain \"the work stays the same no matter how big the pile gets\" to a friend, using something from your own life?",
+    "Where have you seen a search get slower as more stuff piled up? What does that tell you about how it searches?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
@@ -555,16 +569,16 @@ git push</pre></li>
   K.freeResponse({id:"resp-explain", selector:"#explain", minWords:10});
 
   K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"check",
-    feedback:{check:"Start by confirming the lookup really is a direct key access. A loop hiding inside a function that looks like a lookup is the most common way an intended O(1) operation quietly turns into O(n).",
-              random:"Python's dict implementation does not randomly slow down. If performance is degrading, something in the code's actual behavior changed.",
-              clock:"The system clock has nothing to do with how many steps a lookup takes. Look at the code path itself."}});
+    feedback:{check:"Right. A loop hidden inside a function, or in used on a list, turns an O(1) lookup into an O(n) scan.",
+              random:"Python dictionaries don't slow down with age. If the cost grows with the data, the code is doing more work per lookup.",
+              clock:"The clock doesn't change how many steps a lookup takes. Look at what the code does."}});
 
   K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
 
   K.quiz({id:"q-bridge", buttonSelector:"#card-bridge .mlrk-choice", feedbackSelector:"#bridgefb", correct:"key",
-    feedback:{key:"Using the driver's unique ID as a key supports a direct lookup whose cost stays flat as the driver pool grows.",
-              scan:"Starting from the first driver every time means the worst-case work grows right along with the size of the driver pool.",
-              same:"The whole point of comparing these two designs is that they scale differently as the pool of drivers grows."}});
+    feedback:{key:"Right. A direct lookup by ticket code stays roughly flat as ticket sales grow.",
+              scan:"Starting from the first ticket every time means the worst case grows with every ticket sold.",
+              same:"They don't. The scan grows with the number of tickets, and the direct lookup stays flat."}});
 
   K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
 

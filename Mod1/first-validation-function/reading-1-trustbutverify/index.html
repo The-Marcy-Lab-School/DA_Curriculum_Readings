@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-illustration{width:100%;max-width:720px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;display:block}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:11rem}
 .contract-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin:1rem 0}
@@ -17,9 +17,9 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>What Goes In, What Comes Out</h1>
-<p class="mlrk-lead">Every evening, a community food bank's loading dock logs each donation drop-off as a single line of text: who dropped it off, and how many pounds came in. Most nights the log is clean. Some nights a volunteer forgets to write down a weight, or a driver scribbles "heavy" instead of a number. Before any of that data gets summarized into a weekly report, something has to look at every line and decide, one at a time, whether it's usable or whether a human needs to look at it. That single job, and only that job, belongs to one function &mdash; and this reading is about designing that function well, not just making it run.</p>
+<p class="mlrk-lead">A high school's front office types each course enrollment form into a text file, one form per line. Most lines are fine. Some are missing a field. Some have "10th" where the grade level should be a plain number. Before anyone builds class lists from the file, one function checks every line and reports which lines can't be used, and why. That function has one job, and this page walks through designing it.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~36&ndash;40 minutes</span>
+  <span class="mlrk-pill">~37&ndash;40 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -52,76 +52,83 @@
 
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
-<p>Picture that loading dock's log file. Every line should look like <code>"DROPOFF|D118|42"</code>: an action, a donor ID, and a weight in pounds, separated by <code>|</code>. Before anyone tallies tonight's total weight or emails a thank-you receipt, one function needs to walk through every line and answer a narrow question: is this line usable, and if not, exactly why? Nothing else. Not printing a summary, not tallying pounds, not deciding what to do about a bad line &mdash; just checking, and reporting back.</p>
+<p>Each line in the office's file should look like <code>"S-2041|10|Biology"</code>: a student ID, a grade level, and a course, separated by <code>|</code>. A file like this, with one record per line, is a <strong>batch file</strong>. A program checks it one line at a time.</p>
+<p><strong>Validation</strong> means checking data against rules before you use it. It answers one question: does this input meet our rules? The office has three rules for each line:</p>
+<ol class="mlrk-steplist">
+<li>The line has exactly 3 fields.</li>
+<li>The grade level is a whole number.</li>
+<li>The grade level is between 9 and 12.</li>
+</ol>
+<p>A line that passes every rule is <strong>valid input</strong>. A line that breaks any rule is <strong>invalid input</strong>. Some invalid lines are also <strong>malformed input</strong>: they don't have the right shape at all. <code>"S-2042|Chemistry"</code> has 2 fields instead of 3, so the program can't even find the grade level to check it.</p>
 
-<svg class="mlrk-illustration" viewBox="0 0 720 250" role="img" aria-labelledby="fnIntroTitle fnIntroDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="fnIntroTitle">Raw donation log lines passing through one validating function into two outcomes</title>
-  <desc id="fnIntroDesc">On the left, four raw log lines stacked as cards. An arrow leads into a box labeled the validating function. Two arrows lead out of that box: one to a small pile labeled looks fine, and one to a pile labeled flagged, with example reasons "wrong number of fields" and "weight is not a number" attached.</desc>
+<svg class="mlrk-illustration" viewBox="0 0 720 270" role="img" aria-labelledby="fnIntroTitle fnIntroDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="fnIntroTitle">Four enrollment form lines passing through one validating function into two groups</title>
+  <desc id="fnIntroDesc">On the left, four form lines stacked as cards. An arrow leads into a box labeled the validating function. Two arrows lead out: one to a box labeled valid input, 2 of 4 lines, and one to a box labeled invalid, with a reason, listing line 2 expected 3 fields, malformed input, and line 3 grade 10th is not a number.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-    <text x="90" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Raw log lines</text>
+    <text x="105" y="22" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Form lines</text>
     <g fill="#FFFCF7" stroke="#264326" stroke-width="2.5">
-      <rect x="15" y="30" width="150" height="34" rx="8"/>
-      <rect x="15" y="70" width="150" height="34" rx="8"/>
-      <rect x="15" y="110" width="150" height="34" rx="8"/>
-      <rect x="15" y="150" width="150" height="34" rx="8"/>
+      <rect x="4" y="34" width="202" height="36" rx="8"/>
+      <rect x="4" y="76" width="202" height="36" rx="8"/>
+      <rect x="4" y="118" width="202" height="36" rx="8"/>
+      <rect x="4" y="160" width="202" height="36" rx="8"/>
     </g>
-    <g font-size="12.5" font-weight="600" fill="#261F1D" text-anchor="middle" font-family="Consolas, Monaco, monospace">
-      <text x="90" y="52">DROPOFF|D118|42</text>
-      <text x="90" y="92">DROPOFF|D204</text>
-      <text x="90" y="132">DROPOFF|D205|heavy</text>
-      <text x="90" y="172">DROPOFF|D207|9</text>
+    <g font-size="15" font-weight="600" fill="#261F1D" text-anchor="middle" font-family="Consolas, Monaco, monospace">
+      <text x="105" y="57">S-2041|10|Biology</text>
+      <text x="105" y="99">S-2042|Chemistry</text>
+      <text x="105" y="141">S-2043|10th|Algebra</text>
+      <text x="105" y="183">S-2046|11|History</text>
     </g>
 
-    <polygon points="172,98 210,98 210,90 232,105 210,120 210,112 172,112" fill="#264326"/>
+    <polygon points="212,108 230,108 230,100 249,115 230,130 230,122 212,122" fill="#264326"/>
 
-    <rect x="250" y="60" width="150" height="90" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
-    <text x="325" y="98" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">the validating</text>
-    <text x="325" y="118" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">function</text>
-    <text x="325" y="138" text-anchor="middle" font-size="12" fill="#261F1D">one job: check</text>
+    <rect x="255" y="70" width="160" height="90" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="335" y="102" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">the validating</text>
+    <text x="335" y="122" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">function</text>
+    <text x="335" y="144" text-anchor="middle" font-size="15" fill="#261F1D">one job: check</text>
 
-    <polygon points="405,84 435,84 435,77 450,90 435,103 435,96 405,96" fill="#264326"/>
-    <polygon points="405,126 435,126 435,119 450,132 435,145 435,138 405,138" fill="#264326"/>
+    <polygon points="420,79 445,79 445,72 462,86 445,100 445,93 420,93" fill="#264326"/>
+    <polygon points="420,143 445,143 445,136 462,150 445,164 445,157 420,157" fill="#264326"/>
 
-    <rect x="460" y="20" width="130" height="60" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="525" y="45" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">looks fine</text>
-    <text x="525" y="64" text-anchor="middle" font-size="12" fill="#261F1D">(2 of 4 lines)</text>
+    <rect x="470" y="20" width="240" height="64" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="590" y="47" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">valid input</text>
+    <text x="590" y="70" text-anchor="middle" font-size="15" fill="#261F1D">(2 of 4 lines)</text>
 
-    <rect x="460" y="105" width="230" height="120" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="575" y="128" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">flagged, with a reason</text>
-    <text x="575" y="152" text-anchor="middle" font-size="12" fill="#261F1D">Line 2: wrong number</text>
-    <text x="575" y="169" text-anchor="middle" font-size="12" fill="#261F1D">of fields</text>
-    <text x="575" y="193" text-anchor="middle" font-size="12" fill="#261F1D">Line 3: weight is not</text>
-    <text x="575" y="210" text-anchor="middle" font-size="12" fill="#261F1D">a number</text>
+    <rect x="470" y="104" width="240" height="150" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="590" y="130" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">invalid, with a reason</text>
+    <text x="590" y="157" text-anchor="middle" font-size="15" fill="#261F1D">Line 2: expected 3 fields</text>
+    <text x="590" y="177" text-anchor="middle" font-size="15" fill="#261F1D">(malformed input)</text>
+    <text x="590" y="206" text-anchor="middle" font-size="15" fill="#261F1D">Line 3: grade '10th'</text>
+    <text x="590" y="226" text-anchor="middle" font-size="15" fill="#261F1D">is not a number</text>
   </g>
 </svg>
 
-<p>Two design decisions have to be made before a single line of the loop gets written: what does this function need to receive (its <strong>input</strong>), and what will it hand back to whoever calls it (its <strong>output</strong>)? Those two answers, together, are the function's <strong>contract</strong> &mdash; a promise the rest of the program can rely on without needing to know how the checking actually happens inside.</p>
+<p>Before writing the loop, decide two things: what the function receives (its <strong>input</strong>) and what it hands back (its <strong>output</strong>). Together they are the function's <strong>contract</strong>. The rest of the program relies on the contract without needing to know how the checks work inside.</p>
 
 <div class="contract-grid">
-  <div class="mlrk-card"><strong>IN</strong>The list of raw log lines, exactly as they came off the dock.</div>
-  <div class="mlrk-card"><strong>ONE JOB</strong>Decide whether each line is usable, and why not if it isn't.</div>
-  <div class="mlrk-card"><strong>OUT</strong>A list of problem descriptions &mdash; empty if every line was fine.</div>
+  <div class="mlrk-card"><strong>IN</strong>The list of form lines, exactly as the office typed them.</div>
+  <div class="mlrk-card"><strong>ONE JOB</strong>Decide whether each line is valid, and say why if it isn't.</div>
+  <div class="mlrk-card"><strong>OUT</strong>A list of problem messages, empty if every line is valid.</div>
 </div>
 
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> "write a function that checks a batch of records" is one of the most common warm-up and take-home tasks in a data or software interview, and a shaky answer almost always comes from skipping this contract step, not from getting the loop wrong. A function that quietly mixes in printing, tallying, or deciding what happens next is much harder to test, reuse, or hand off to a teammate than one with exactly one clearly stated job.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to define a function with parameters and a return value, and you already know how to loop through a collection and branch on a condition inside it. This reading is entirely about combining those two skills inside one well-designed function. Once deciding a function's contract before writing its body feels automatic, the same habit keeps paying off: it's exactly how you'd design a second function that does something different with this one's output, or decide when a value needs to be handled the moment it fails rather than checked for in advance.</p>
+<p><strong>Why this matters:</strong> "write a function that checks a batch of records" is a common warm-up and take-home task in data and software interviews. Weak answers usually skip the contract, not the loop. A function that also prints, counts, or decides what happens next is harder to test, reuse, or hand to a teammate than a function with one stated job.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to write a function with parameters and a return value, and how to loop over a list with an <code>if</code> inside. Here you combine them in one function. The same contract-first habit applies when a second function uses this one's output. It also applies when a value can only be checked by attempting an operation and handling the failure.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before combining</h2>
-<p class="mlrk-small">A few earlier skills get reused directly in this reading: what a function's return value actually is, tracing a single (non-nested) loop, picking the right branch of a single conditional, and what <code>str.split()</code> produces. Test each one below before moving on.</p>
+<p>Four skills come back in this reading: what a return value is, tracing a single loop, picking the branch of a conditional, and what <code>str.split()</code> produces. Check each one.</p>
 
-<div class="mlrk-card" id="card-return"><p><strong>Coding check:</strong> a function is defined with a <code>return</code> statement at the end. You call it, but never do anything with what it hands back &mdash; no <code>print()</code>, no assignment.</p>
-<button type="button" class="mlrk-choice" data-a="discard">The return value is produced and then discarded; nothing captured it.</button>
-<button type="button" class="mlrk-choice" data-a="auto">Python automatically prints the return value for you.</button>
-<button type="button" class="mlrk-choice" data-a="error">Python raises an error, since a return value must always be used.</button>
+<div class="mlrk-card" id="card-return"><p><strong>Coding check:</strong> a function ends with a <code>return</code> statement. You call it, but you don't print or store what it hands back. What happens to the return value?</p>
+<button type="button" class="mlrk-choice" data-a="discard">Python produces it and then throws it away, because nothing stored it.</button>
+<button type="button" class="mlrk-choice" data-a="auto">Python prints it for you.</button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error, because a return value must be used.</button>
 <div id="returnfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-loop" style="margin-top:.8rem"><p><strong>Trace check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">for line in ["a", "b", "c", "d"]:
-    print(line)</div></div>
+<div class="mlrk-code"><div class="mlrk-screen">for form in ["S-2041", "S-2042", "S-2043", "S-2044"]:
+    print(form)</div></div>
 <p><strong>How many lines print?</strong></p>
 <button type="button" class="mlrk-choice" data-a="4">4</button>
 <button type="button" class="mlrk-choice" data-a="3">3</button>
@@ -131,7 +138,7 @@
 <div class="mlrk-card" id="card-branch" style="margin-top:.8rem"><p><strong>Scenario check:</strong> <code>count = 3</code>.</p>
 <div class="mlrk-code"><div class="mlrk-screen">if count == 0:
     print("empty")
-elif count < 5:
+elif count &lt; 5:
     print("low")
 else:
     print("plenty")</div></div>
@@ -141,49 +148,50 @@ else:
 <button type="button" class="mlrk-choice" data-a="plenty">plenty</button>
 <div id="branchfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-split" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>"DROPOFF|D204".split("|")</code></p>
+<div class="mlrk-card" id="card-split" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>"S-2042|Chemistry".split("|")</code></p>
 <p><strong>What does this produce?</strong></p>
-<button type="button" class="mlrk-choice" data-a="two">A list of 2 strings: <code>["DROPOFF", "D204"]</code></button>
-<button type="button" class="mlrk-choice" data-a="one">A list of 1 string: <code>["DROPOFF|D204"]</code></button>
-<button type="button" class="mlrk-choice" data-a="three">A list of 3 strings, since split always makes three parts.</button>
+<button type="button" class="mlrk-choice" data-a="two">A list of 2 strings: <code>["S-2042", "Chemistry"]</code></button>
+<button type="button" class="mlrk-choice" data-a="one">A list of 1 string: <code>["S-2042|Chemistry"]</code></button>
+<button type="button" class="mlrk-choice" data-a="three">A list of 3 strings, because split always makes three parts</button>
 <div id="splitfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">Nothing about combining a loop, a conditional, and a function changes how any of these four work on their own &mdash; they show up again below exactly as they work here.</div>
 </section>
 
 <section class="mlrk-section">
 <h2>3. Technical vocabulary</h2>
-<p>Flip each card. These are the terms this reading adds on top of what you already know about functions.</p>
+<p>Flip each card.</p>
 <div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>contract</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Contract</strong><br>The agreement a function keeps with whoever calls it: exactly what it needs as input, and exactly what it hands back as output.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>side effect</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Side effect</strong><br>Anything a function does besides returning a value, like printing to the screen. A function full of side effects is much harder to test on its own.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>single responsibility</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Single responsibility</strong><br>The idea that a function should do one job well, not several unrelated jobs bundled together.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>structure check</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Structure check</strong><br>Confirming a record has the right shape before looking at what's inside it, like counting how many fields a split produced.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>value check</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Value check</strong><br>Confirming a specific field actually holds the kind of value it's supposed to, like a number where a number is expected.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>enumerate()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>enumerate()</strong><br>A built-in function that pairs each item in a collection with a position counter, so a loop receives both without tracking a counter by hand.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>testable in isolation</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Testable in isolation</strong><br>Being able to call a function directly with a small, made-up input and check its return value, without running the rest of the program.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>validation</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Validation</strong><br>Checking data against rules before you use it. It answers: does this input meet our rules?</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>valid input</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Valid input</strong><br>Input that passes every rule, so the program can safely use it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>invalid input</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Invalid input</strong><br>Input that breaks at least one rule. It can have the right shape and still hold a wrong value, like grade 14 when only 9 to 12 is allowed.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>malformed input</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Malformed input</strong><br>Input that doesn't have the expected shape at all, like a line with 2 fields when 3 are required. It is one kind of invalid input.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>batch file</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Batch file</strong><br>A file with one record per line, checked one line at a time.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>contract</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Contract</strong><br>What a function needs as input and what it hands back as output. Callers rely on it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>side effect</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Side effect</strong><br>Anything a function does besides returning a value, such as printing. Side effects make a function harder to test on its own.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>structure check</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Structure check</strong><br>Confirms a record has the right shape before you read what's inside, such as counting the fields after a split.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>value check</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Value check</strong><br>Confirms a field holds an acceptable value, such as a whole number from 9 to 12.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>enumerate()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>enumerate()</strong><br>Adds each item's position as a loop runs, so the loop gets the position and the item together. It counts from 0 unless you pass <code>start=1</code>.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Decide the contract before you decide anything else</h2>
-<p>Before writing a loop or a conditional, the very first design question is: what should this function return when it finds problems?</p>
+<h2>4. Decide the contract first</h2>
+<p>Before you write a loop or a conditional, decide what the function returns when it finds problems.</p>
 <div class="mlrk-card" id="card-contract"><p><strong>Which contract serves the rest of the program best?</strong></p>
-<button type="button" class="mlrk-choice" data-a="list">Return a list of problem descriptions, one per bad line &mdash; an empty list if every line is fine.</button>
-<button type="button" class="mlrk-choice" data-a="print">Print each problem as it's found, and don't return anything in particular.</button>
-<button type="button" class="mlrk-choice" data-a="bool">Return <code>True</code> if every line is fine, <code>False</code> otherwise, with no detail about which line or why.</button>
+<button type="button" class="mlrk-choice" data-a="list">Return a list of problem messages, one per bad line, and an empty list if every line is valid.</button>
+<button type="button" class="mlrk-choice" data-a="print">Print each problem as it's found, and return nothing.</button>
+<button type="button" class="mlrk-choice" data-a="bool">Return <code>True</code> if every line is valid and <code>False</code> otherwise, with no detail.</button>
 <div id="contractfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Sort by contract vs. implementation detail</h2>
-<p>Drag each item into the zone that describes it, then use the self-check button to confirm your matches.</p>
+<h2>5. Sort: contract or implementation detail?</h2>
+<p>Drag each item into the zone that describes it, then press the self-check button.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">the list of raw log lines the function receives</span>
+  <span id="chip1" class="mlrk-draggable">the list of form lines the function receives</span>
   <span id="chip2" class="mlrk-draggable">the list of problem messages the function hands back</span>
-  <span id="chip3" class="mlrk-draggable">the for loop that walks each line one at a time</span>
-  <span id="chip4" class="mlrk-draggable">the if/elif that tells a structure problem from a value problem</span>
+  <span id="chip3" class="mlrk-draggable">the for loop that visits each line</span>
+  <span id="chip4" class="mlrk-draggable">the if/elif chain that picks which problem message to write</span>
 </div>
 <div class="mlrk-grid">
   <div><p class="mlrk-small"><strong>Part of the contract (what a caller needs to know)</strong></p><div class="mlrk-dropzone" id="zoneContract"></div></div>
@@ -196,127 +204,138 @@ else:
 
 <section class="mlrk-section">
 <h2>6. Order the design steps</h2>
-<p>Click steps, in order, to build the sequence of DECISIONS a well-scoped function should follow, before worrying about the code inside it. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<p>Click the design decisions in the order you'd make them, before writing any code. Click a step again to remove it. Press "Check my order" when you're ready. This self-check is not graded.</p>
 <ul class="mlrk-orderlist" id="ordersteps">
   <li class="mlrk-orderitem" data-step="job"><span class="mlrk-order-num"></span> Decide the one job this function is responsible for.</li>
-  <li class="mlrk-orderitem" data-step="input"><span class="mlrk-order-num"></span> Decide what it needs as input &mdash; its parameters.</li>
-  <li class="mlrk-orderitem" data-step="output"><span class="mlrk-order-num"></span> Decide exactly what it will hand back &mdash; its return contract.</li>
-  <li class="mlrk-orderitem" data-step="implementation"><span class="mlrk-order-num"></span> Only now write the loop and conditionals that make that contract true.</li>
+  <li class="mlrk-orderitem" data-step="input"><span class="mlrk-order-num"></span> Decide what it needs as input: its parameters.</li>
+  <li class="mlrk-orderitem" data-step="output"><span class="mlrk-order-num"></span> Decide exactly what it hands back: its return contract.</li>
+  <li class="mlrk-orderitem" data-step="implementation"><span class="mlrk-order-num"></span> Write the loop and conditionals that keep that contract.</li>
 </ul>
 <div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
 <div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
 </section>
 
 <section class="mlrk-section">
-<h2>7. Structure check, then value check</h2>
-<p>With the contract decided, here's the batch this reading uses. A valid line always has exactly 3 fields: action, donor ID, weight.</p>
-<div class="mlrk-code"><div class="mlrk-screen">donations = [
-    "DROPOFF|D118|42",
-    "DROPOFF|D204",
-    "DROPOFF|D205|heavy",
-    "DROPOFF|D207|9"
+<h2>7. Structure check, then value checks</h2>
+<p>Here is the batch the rest of this reading uses. A valid line has exactly 3 fields: student ID, grade level, course.</p>
+<div class="mlrk-code"><div class="mlrk-screen">forms = [
+    "S-2041|10|Biology",
+    "S-2042|Chemistry",
+    "S-2043|10th|Algebra",
+    "S-2044|14|Art",
+    "S-2045|9|History"
 ]</div></div>
-<div class="mlrk-card" id="card-shape" style="margin-top:1rem"><p><strong>Which line fails the structure check &mdash; not the value check?</strong></p>
-<button type="button" class="mlrk-choice" data-a="d204"><code>"DROPOFF|D204"</code></button>
-<button type="button" class="mlrk-choice" data-a="d205"><code>"DROPOFF|D205|heavy"</code></button>
-<button type="button" class="mlrk-choice" data-a="d207"><code>"DROPOFF|D207|9"</code></button>
+<div class="mlrk-card" id="card-shape" style="margin-top:1rem"><p><strong>Which line fails the structure check?</strong></p>
+<button type="button" class="mlrk-choice" data-a="s2042"><code>"S-2042|Chemistry"</code></button>
+<button type="button" class="mlrk-choice" data-a="s2043"><code>"S-2043|10th|Algebra"</code></button>
+<button type="button" class="mlrk-choice" data-a="s2044"><code>"S-2044|14|Art"</code></button>
 <div id="shapefb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p style="margin-top:1rem">A structure check has to run first: if a line doesn't have 3 fields at all, checking <code>fields[2]</code> for its value could fail before the value check ever gets a chance to run.</p>
+<p style="margin-top:1rem">The structure check runs first. On <code>"S-2042|Chemistry"</code>, a value check on <code>fields[1]</code> would treat "Chemistry" as the grade level and report the wrong problem. Reading <code>fields[2]</code> would raise an <code>IndexError</code> and stop the program.</p>
 
-<p style="margin-top:1rem">Writing both checks well needs two small tools. <code>str.isdigit()</code> checks whether a string is made entirely of digits:</p>
-<div class="mlrk-code"><div class="mlrk-screen">"42".isdigit()
+<div class="mlrk-card" id="card-range" style="margin-top:1rem"><p><strong><code>"S-2044|14|Art"</code> has 3 fields, and <code>"14".isdigit()</code> is <code>True</code>. Is this line valid input?</strong></p>
+<button type="button" class="mlrk-choice" data-a="invalid">No. It's invalid input, because 14 breaks the 9 to 12 rule.</button>
+<button type="button" class="mlrk-choice" data-a="valid">Yes. It has 3 fields and a whole number.</button>
+<button type="button" class="mlrk-choice" data-a="malformed">No. It's malformed input, because 14 has the wrong shape.</button>
+<div id="rangefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1rem">Two small tools make these checks easy to write. <code>str.isdigit()</code> checks whether a string is made only of digits:</p>
+<div class="mlrk-code"><div class="mlrk-screen">"10".isdigit()
 [Output] True
 
-"heavy".isdigit()
+"10th".isdigit()
 [Output] False</div></div>
-<p style="margin-top:1rem">And <code>enumerate()</code> hands a loop two things per pass instead of one: a position counter, and the item itself.</p>
-<div class="mlrk-code"><div class="mlrk-screen">for line_number, line in enumerate(donations, start=1):
-    print(line_number, line)</div></div>
-<div class="mlrk-card" id="card-enum" style="margin-top:1rem"><p><strong>Why <code>start=1</code> here, instead of leaving it out?</strong></p>
-<button type="button" class="mlrk-choice" data-a="human">So the reported line numbers match how a human counts lines in a file, starting at 1.</button>
-<button type="button" class="mlrk-choice" data-a="change">So enumerate() changes the values inside donations itself.</button>
-<button type="button" class="mlrk-choice" data-a="required">Because enumerate() cannot run at all without a start argument.</button>
+<p style="margin-top:1rem"><code>enumerate()</code> gives a loop two things on each pass: a position counter and the item itself.</p>
+<div class="mlrk-code"><div class="mlrk-screen">for line_number, form in enumerate(forms, start=1):
+    print(line_number, form)</div></div>
+<div class="mlrk-card" id="card-enum" style="margin-top:1rem"><p><strong>Why pass <code>start=1</code> here?</strong></p>
+<button type="button" class="mlrk-choice" data-a="human">So the reported line numbers match how people count lines in a file, starting at 1.</button>
+<button type="button" class="mlrk-choice" data-a="change">So enumerate() changes the values inside forms.</button>
+<button type="button" class="mlrk-choice" data-a="required">Because enumerate() can't run without a start argument.</button>
 <div id="enumfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-code" style="margin-top:1rem"><div id="traceScreen" class="mlrk-screen">Click "Reveal the full report" to see what find_donation_problems(donations) returns.</div>
+<div class="mlrk-code" style="margin-top:1rem"><div id="traceScreen" class="mlrk-screen">Click "Reveal the full report" to see what find_enrollment_problems(forms) returns.</div>
 <div class="mlrk-actions"><button type="button" id="tracerun" class="mlrk-btn">Reveal the full report</button></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>8. Write the missing pieces yourself</h2>
-<p>Here's the function this reading has been designing toward. Three pieces are missing. Type what belongs in each blank, referring back to the contract you already chose: this function returns a <strong>list</strong> of problems, not a printed message.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def find_donation_problems(records):
+<p>Here is <code>find_enrollment_problems</code>, the function this reading has been designing. Three pieces are missing. Type what belongs in each blank. Remember the contract from section 4: the function returns a <strong>list</strong> of problems.</p>
+<div class="mlrk-code"><div class="mlrk-screen">def find_enrollment_problems(forms):
     problems = []
-    for line_number, line in <span id="blankA-slot">_____</span>(records, start=1):
-        fields = line.split("|")
+    for line_number, form in <span id="blankA-slot">_____</span>(forms, start=1):
+        fields = form.split("|")
 
         if len(fields) != 3:
             problems.append(f"Line {line_number}: expected 3 fields, got {len(fields)}")
-        elif not fields[2].<span id="blankB-slot">_____</span>():
-            problems.append(f"Line {line_number}: weight '{fields[2]}' is not a number")
+        elif not fields[1].<span id="blankB-slot">_____</span>():
+            problems.append(f"Line {line_number}: grade '{fields[1]}' is not a number")
+        elif int(fields[1]) &lt; 9 or int(fields[1]) &gt; 12:
+            problems.append(f"Line {line_number}: grade {fields[1]} is outside 9-12")
 
     return <span id="blankC-slot">_____</span></div></div>
 <div class="mlrk-fillblank">
-  <label for="blankA">Blank 1 &mdash; gives you a position counter alongside each line</label>
+  <label for="blankA">Blank 1: gives you a position counter alongside each line</label>
   <input type="text" id="blankA" autocomplete="off">
 </div>
 <div class="mlrk-fillblank">
-  <label for="blankB">Blank 2 &mdash; string method that checks "is this all digits"</label>
+  <label for="blankB">Blank 2: the string method that checks "is this all digits?"</label>
   <input type="text" id="blankB" autocomplete="off">
 </div>
 <div class="mlrk-fillblank">
-  <label for="blankC">Blank 3 &mdash; what the function's contract says it hands back</label>
+  <label for="blankC">Blank 3: what the contract says the function hands back</label>
   <input type="text" id="blankC" autocomplete="off">
 </div>
 <p><button type="button" id="blankcheck" class="mlrk-btn">Check my code</button></p>
 <div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
 <details class="mlrk-hint"><summary>Need a hint?</summary>
-<p>Blank 1 and blank 2 were both introduced with examples in section 7, right above the "Reveal the full report" button: the tool that hands a loop a position counter alongside each item, and the string method that checks "is this all digits." Blank 3 is just the variable name being built up inside the loop, matching the contract chosen back in section 4.</p>
+<p>Section 7 showed blanks 1 and 2 with examples: the tool that adds a position counter, and the string method that checks for digits. Blank 3 is the name of the list the loop builds.</p>
 </details>
 </section>
 
 <section class="mlrk-section">
 <h2>9. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about designing a function like this one well.</strong></p>
+<div class="mlrk-card"><p><strong>Select every TRUE statement about designing a function like this one.</strong></p>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A function that validates a batch and also prints a running total is doing two jobs, even if the code is short.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Returning a list of problem strings makes the function easier to test, since you can compare the return value directly against what you expect.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> As long as a function eventually returns something, it doesn't matter whether it also prints, logs, or changes something outside itself along the way.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A function's contract only describes its parameters. What it returns is an implementation detail a caller doesn't need to know.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Returning a list of problem messages makes the function easier to test, because you can compare the return value with what you expect.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> As long as a function returns something, it doesn't matter whether it also prints or changes things outside itself.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A function's contract describes only its parameters. Callers don't need to know what it returns.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>10. Debug: where did the other problems go?</h2>
-<p>A teammate wrote this version of the same function:</p>
-<div class="mlrk-code"><div class="mlrk-screen">def find_donation_problems(records):
-    problem = None
-    for line_number, line in enumerate(records, start=1):
-        fields = line.split("|")
+<h2>10. Debug: why is the report empty?</h2>
+<p>A teammate wrote this version of <code>find_enrollment_problems</code>:</p>
+<div class="mlrk-code"><div class="mlrk-screen">def find_enrollment_problems(forms):
+    problems = []
+    for line_number, form in enumerate(forms, start=1):
+        fields = form.split("|")
 
         if len(fields) != 3:
-            problem = f"Line {line_number}: expected 3 fields, got {len(fields)}"
-        elif not fields[2].isdigit():
-            problem = f"Line {line_number}: weight '{fields[2]}' is not a number"
+            problems.append(f"Line {line_number}: expected 3 fields, got {len(fields)}")
+        elif not fields[1].isdigit():
+            problems.append(f"Line {line_number}: grade '{fields[1]}' is not a number")
+        elif int(fields[1]) &lt; 9 or int(fields[1]) &gt; 12:
+            problems.append(f"Line {line_number}: grade {fields[1]} is outside 9-12")
 
-    return problem</div></div>
-<div class="mlrk-card" id="card-debug"><p><strong>Called on the four-line donations batch above, what's actually wrong with this version?</strong></p>
-<button type="button" class="mlrk-choice" data-a="overwrite">Only the last problem found survives; every earlier problem gets overwritten and is lost.</button>
-<button type="button" class="mlrk-choice" data-a="correct">It correctly returns every problem found, just in a different order.</button>
-<button type="button" class="mlrk-choice" data-a="crash">It crashes with an error before it can return anything.</button>
+        return problems</div></div>
+<div class="mlrk-card" id="card-debug"><p><strong>Called on the five-line <code>forms</code> batch from section 7, what does the teammate's version return?</strong></p>
+<button type="button" class="mlrk-choice" data-a="empty">An empty list. <code>return problems</code> is inside the loop, so it runs after line 1, and line 1 is valid.</button>
+<button type="button" class="mlrk-choice" data-a="correct">All three problems, the same as the correct version.</button>
+<button type="button" class="mlrk-choice" data-a="crash">Nothing, because it raises an error first.</button>
 <div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>This is exactly the kind of bug that hides if the function only ever gets run against a whole 400-line file and glanced at once. Calling it directly, by itself, on a tiny made-up batch would show the missing problems immediately.</p>
-<label for="isolate"><strong>Your turn:</strong> what tiny, made-up input would you call this function with, by itself, to catch this bug fast?</label>
-<textarea id="isolate" class="mlrk-response" data-save placeholder="Try describing 2-3 short lines you'd make up, and what you'd expect back."></textarea>
+<p>This bug raises no error. On the real file it reports no problems, so everyone trusts a bad file. If you call the function by itself on a tiny made-up batch, the bug shows up right away.</p>
+<label for="isolate"><strong>Your turn:</strong> what tiny made-up input would you call this function with to catch this bug fast? What would you expect back?</label>
+<textarea id="isolate" class="mlrk-response" data-save placeholder="Describe 2-3 short lines you'd make up, and what you'd expect the function to return."></textarea>
 </section>
 
 <section class="mlrk-section">
 <h2>11. Watch: enumerate() in practice</h2>
-<p>As you watch, notice how the position counter from <code>enumerate()</code> is exactly what turned "weight is not a number" into "Line 3: weight is not a number" in the function above &mdash; a message someone can actually act on in a long file.</p>
+<p>As you watch, notice how the counter from <code>enumerate()</code> turns "grade is not a number" into "Line 3: grade is not a number". In a long file, the line number is what lets someone find and fix the form.</p>
 <div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=-MZiQaNI0QA" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: how does the video's use of enumerate() compare to how it's used inside find_donation_problems above?</strong></p>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: how does the video's use of enumerate() compare with its use in find_enrollment_problems in section 8?</strong></p>
 <textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
 </div>
 </section>
@@ -324,25 +343,25 @@ else:
 <section class="mlrk-section">
 <h2>12. How this shows up in interviews</h2>
 <div class="mlrk-callout mlrk-callout-green">
-<p>"Write a function that validates a batch of records" is one of the most common warm-up or take-home tasks in a data or software technical screen. Interviewers are rarely grading whether the loop compiles on the first try &mdash; they're watching whether you state the contract out loud before writing any code ("this takes a list of strings, and returns a list of problem descriptions") and whether validation logic stays separate from anything that prints, tallies, or decides what happens next.</p>
-<p>A very common follow-up: "how would you test this without running the whole file?" The expected answer is the exact isolation habit practiced in section 10 &mdash; call the function directly with a small, made-up batch and check what it returns.</p>
+<p>In a technical screen, interviewers rarely grade whether your loop runs on the first try. They watch whether you state the contract out loud before coding ("this takes a list of strings and returns a list of problem messages"). They also watch whether the checking stays separate from printing, counting, and deciding what happens next.</p>
+<p>A common follow-up is, "How would you test this without running the whole file?" The expected answer is the habit from section 10: call the function by itself on a small made-up batch and check what it returns.</p>
 </div>
-<div class="mlrk-card" id="card-interview"><p><strong>An interviewer asks you to test your validation function without running a 400-line batch file. What's the strongest answer?</strong></p>
-<button type="button" class="mlrk-choice" data-a="isolate">Call the function directly with a small, hand-built list covering a couple of good and bad lines, and check what it returns.</button>
-<button type="button" class="mlrk-choice" data-a="full">Run the whole program and read through everything it prints.</button>
-<button type="button" class="mlrk-choice" data-a="wait">Explain that testing isn't really possible until the whole project is finished.</button>
+<div class="mlrk-card" id="card-interview"><p><strong>An interviewer asks how you'd test your validation function without running a file of thousands of lines. What's the strongest answer?</strong></p>
+<button type="button" class="mlrk-choice" data-a="isolate">Call the function directly on a small hand-built list with a few valid and invalid lines, and check what it returns.</button>
+<button type="button" class="mlrk-choice" data-a="full">Run the whole program and read everything it prints.</button>
+<button type="button" class="mlrk-choice" data-a="wait">Explain that testing has to wait until the whole project is finished.</button>
 <div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>13. Summary &amp; critical thinking</h2>
-<p>One habit carried this whole reading: decide a function's contract, its one job, its input, and its exact return value, before writing the loop and conditionals that make that contract true. A structure check runs before a value check, and a returned list of specific problems is what makes a function testable on its own, in isolation from the rest of the program.</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a community theater's box office logs each ticket sale as a line: <code>"SALE|show_id|seat_count"</code>. You're asked to write a function that checks a batch of these lines the same way. Before writing any code, what's the first design decision to make?</p>
-<button type="button" class="mlrk-choice" data-a="contract">Decide exactly what the function will take in and hand back.</button>
+<p>One habit carried this reading: decide a function's contract (its one job, its input, and its exact return value) before writing the loop and conditionals. Inside the function, the structure check runs before the value checks. Returning a list of specific problems is what lets you test the function by itself.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a bank exports card payments, one per line: <code>"card_last4|amount_cents|merchant_type"</code>. You're asked to write a function that checks a batch of these lines. What's the first design decision?</p>
+<button type="button" class="mlrk-choice" data-a="contract">Decide exactly what the function takes in and hands back.</button>
 <button type="button" class="mlrk-choice" data-a="loop">Start writing the for loop, since every validator needs one.</button>
-<button type="button" class="mlrk-choice" data-a="print">Decide how the results will be printed to the screen.</button>
+<button type="button" class="mlrk-choice" data-a="print">Decide how to print the results on screen.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> why does deciding a function's return contract before writing its loop make the function easier for someone else (or future you) to reuse?</label>
+<label for="clue"><strong>In your own words:</strong> why does deciding a function's return contract before writing its loop make the function easier for someone else, or future you, to reuse?</label>
 <textarea id="clue" class="mlrk-response" data-save></textarea>
 <p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
 <div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
@@ -350,7 +369,7 @@ else:
 
 <section class="mlrk-section">
 <h2>14. Thinking ahead</h2>
-<p>The same contract-first habit scales in two directions from here. Sometimes the next step is a second function with a completely different job that consumes this one's returned list &mdash; summarizing, reporting, or alerting on data this function already approved, while staying just as narrowly scoped itself. Other times a value fails in a way a plain <code>if</code> check can't safely catch in advance at all, like a conversion that raises an error the instant Python attempts it, which calls for handling the failure directly at the moment it happens rather than checking for it beforehand.</p>
+<p>The contract-first habit grows in two directions. Sometimes a second function takes this one's returned list and does a different job with it, such as summarizing or reporting, while staying just as narrow. Other times a value can't be checked safely in advance. A conversion might raise an error the moment Python attempts it. Then you handle the failure when it happens, instead of checking for it beforehand.</p>
 </section>
 
 <section class="mlrk-section">
@@ -429,7 +448,7 @@ git push</pre></li>
 <ul>
 <li><a href="https://docs.python.org/3/tutorial/controlflow.html#defining-functions" target="_blank" rel="noopener">Python docs: Defining Functions</a> &mdash; the official reference on parameters and structure.</li>
 <li><a href="https://docs.python.org/3/reference/simple_stmts.html#the-return-statement" target="_blank" rel="noopener">Python docs: The return statement</a> &mdash; the official language reference.</li>
-<li><a href="https://docs.python.org/3/library/functions.html#enumerate" target="_blank" rel="noopener">Python docs: enumerate()</a> &mdash; the official reference for the built-in used throughout this reading.</li>
+<li><a href="https://docs.python.org/3/library/functions.html#enumerate" target="_blank" rel="noopener">Python docs: enumerate()</a> &mdash; the official reference for the built-in used in find_enrollment_problems.</li>
 <li><a href="https://www.w3schools.com/python/ref_string_split.asp" target="_blank" rel="noopener">W3Schools: str.split()</a> &mdash; more worked examples of splitting a string into fields.</li>
 </ul>
 </section>
@@ -452,91 +471,100 @@ git push</pre></li>
   K.Scoring.renderChip("#scorechip");
 
   K.quiz({id:"q-return", buttonSelector:"#card-return .mlrk-choice", feedbackSelector:"#returnfb", correct:"discard",
-    feedback:{discard:"A return value only exists where it's captured or used. If nothing catches it, it's produced and then discarded.",
-              auto:"Python never auto-prints a return value on its own. Something has to explicitly print or store it.",
-              error:"An unused return value is completely normal and never raises an error."}});
+    feedback:{discard:"Right. A return value only lasts if something stores or uses it.",
+              auto:"Python never prints a return value on its own. Your code has to print or store it.",
+              error:"Ignoring a return value is normal. It never raises an error."}});
 
-  K.quiz({id:"q-loop", buttonSelector:"#card-loop .mlrk-choice", feedbackSelector:"#loopfb", correct:"4", maxAttempts:1,
+  K.quiz({id:"q-loop", buttonSelector:"#card-loop .mlrk-choice", feedbackSelector:"#loopfb", correct:"4",
     feedback:{"4":"The list has 4 items, so the loop body runs 4 times.",
-              "3":"The list has 4 items, not 3, so the loop runs one more time than that."}});
+              "3":"Count the items again. The list has 4, so the loop runs 4 times.",
+              "1":"A for loop runs its body once per item, not once in total."}});
 
   K.quiz({id:"q-branch", buttonSelector:"#card-branch .mlrk-choice", feedbackSelector:"#branchfb", correct:"low",
-    feedback:{low:"count == 0 is false, but count < 5 is true, so low prints and the else branch is skipped.",
-              empty:"count is 3, not 0, so the first branch is false.",
-              plenty:"Python already found a true branch (count < 5) before ever reaching else, so else never runs."}});
+    feedback:{low:"count == 0 is False, and count < 5 is True, so low prints and Python skips else.",
+              empty:"count is 3, not 0, so the first condition is False.",
+              plenty:"Python already found a True branch, count < 5, so it never reaches else."}});
 
   K.quiz({id:"q-split", buttonSelector:"#card-split .mlrk-choice", feedbackSelector:"#splitfb", correct:"two",
-    feedback:{two:"Splitting on | breaks the string wherever a | appears. There's only one | here, so you get 2 pieces.",
-              one:"split() actually breaks the string apart at every |, so this isn't left as one whole piece.",
-              three:"split() produces one more piece than the number of separators it finds, not always exactly three."}});
+    feedback:{two:"Right. There's one | in the string, so split gives 2 pieces.",
+              one:"split() cuts the string at every |, so it doesn't stay in one piece.",
+              three:"split() gives one more piece than the number of separators. One | means 2 pieces."}});
 
   K.quiz({id:"q-contract", buttonSelector:"#card-contract .mlrk-choice", feedbackSelector:"#contractfb", correct:"list",
-    feedback:{list:"A returned list is real data the rest of the program can count, log, filter, or hand to a report, and it's simple to check by calling the function directly.",
-              print:"Printing is a side effect, not a return value. A caller can't act on plain text sent to a terminal, and a test can't easily check what got printed.",
-              bool:"A single True or False throws away exactly the detail a long batch needs most: which line, and why."}});
+    feedback:{list:"A returned list is data the rest of the program can count, filter, or report. A test can check it directly.",
+              print:"Printing is a side effect. A caller can't act on text sent to the screen, and a test can't easily check it.",
+              bool:"True or False works for checking one line. For a whole batch, it can't say which line failed or why."}});
 
-  K.quiz({id:"q-shape", buttonSelector:"#card-shape .mlrk-choice", feedbackSelector:"#shapefb", correct:"d204",
-    feedback:{d204:"Splitting on | gives only 2 fields here, so this fails the structure check before any value is even looked at.",
-              d205:"This line has all 3 fields. Its problem is the value in one of them, not the count.",
-              d207:"This line has 3 fields and a numeric weight, so it passes both checks."}});
+  K.quiz({id:"q-shape", buttonSelector:"#card-shape .mlrk-choice", feedbackSelector:"#shapefb", correct:"s2042",
+    feedback:{s2042:"Right. Splitting on | gives only 2 fields, so it fails before any value is checked.",
+              s2043:"This line has 3 fields. Its problem is the value \"10th\", not the shape.",
+              s2044:"This line has 3 fields. Its problem is the grade value, not the shape."}});
+
+  K.quiz({id:"q-range", buttonSelector:"#card-range .mlrk-choice", feedbackSelector:"#rangefb", correct:"invalid",
+    feedback:{invalid:"Right. The shape is fine and 14 is a whole number, but it breaks the 9 to 12 rule. That makes it invalid, not malformed.",
+              valid:"Valid input passes every rule. Check rule 3 from section 1 against 14.",
+              malformed:"Malformed means the wrong shape. This line has all 3 fields; only the value breaks a rule."}});
 
   K.quiz({id:"q-enum", buttonSelector:"#card-enum .mlrk-choice", feedbackSelector:"#enumfb", correct:"human",
-    feedback:{human:"Python counts from 0 by default, but the line numbers people expect when they open a file start at 1.",
-              change:"enumerate() only adds a counter alongside each item. It never modifies the collection itself.",
-              required:"enumerate() works fine without start=1; it just starts counting at 0 instead."}});
+    feedback:{human:"Right. enumerate() starts at 0, but people expect the first line of a file to be line 1.",
+              change:"enumerate() only adds a counter. It never changes the list.",
+              required:"enumerate() works without start=1. It just counts from 0."}});
 
-  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"overwrite",
-    feedback:{overwrite:"problem gets reassigned every time a new issue is found, so only the very last one found is still sitting in the variable when the function returns.",
-              correct:"Reassigning the same variable on every match means earlier problems are overwritten, not collected.",
-              crash:"Nothing here raises an error. The bug is silent: it just quietly loses information."}});
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"empty",
+    feedback:{empty:"Right. return problems is indented inside the loop, so the function returns after the first pass. Line 1 is valid, so the list is still empty.",
+              correct:"Look at the indentation of return problems. When does it run?",
+              crash:"Nothing here raises an error. The bug is silent: the function stops early."}});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"isolate",
-    feedback:{isolate:"Calling the function directly with a small, hand-built batch and checking its return value is exactly what a returned-list contract makes possible.",
-              full:"Reading through printed output from the whole program is slow and easy to misread, and it doesn't test the function on its own.",
-              wait:"A well-scoped function with a clear contract can be tested the moment it's written, independent of the rest of the project."}});
+    feedback:{isolate:"Right. A returned-list contract lets you call the function on a small batch and compare the result with what you expect.",
+              full:"Reading printed output from the whole program is slow and easy to misread. It doesn't test the function by itself.",
+              wait:"A function with a clear contract can be tested as soon as it's written."}});
 
   K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"contract",
-    feedback:{contract:"The same habit practiced throughout this reading: decide the input and the exact return value before writing any loop or conditional.",
-              loop:"Writing the loop first, before deciding what the function even returns, is exactly the order this reading argued against.",
-              print:"How results get displayed is a caller's decision, not something the validating function itself should be deciding."}});
+    feedback:{contract:"Right. Decide the input and the exact return value before any loop or conditional.",
+              loop:"Writing the loop before deciding what the function returns is the order this reading argues against.",
+              print:"How results appear is the caller's decision, not the validating function's."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
     {value:"a", label:"A function that validates a batch and also prints a running total is doing two jobs, even if the code is short.", correct:true,
-      hint:"Line count isn't what defines a job. Think about how many different questions the function is answering.",
-      explain:"Validating and tallying are two separate questions, no matter how few lines the code takes."},
-    {value:"b", label:"Returning a list of problem strings makes the function easier to test, since you can compare the return value directly against what you expect.", correct:true,
-      hint:"Think back to section 10's isolation habit. Would that habit work as well if the function only printed instead of returning?",
-      explain:"A returned list can be compared directly in a test. Printed text can't be checked nearly as cleanly."},
-    {value:"c", label:"As long as a function eventually returns something, it doesn't matter whether it also prints, logs, or changes something outside itself along the way.", correct:false,
-      hint:"Revisit section 3's definition of a side effect. Does having extra side effects come free, or does it cost something?",
-      explain:"Extra side effects make a function harder to reuse and test in isolation, even if it still returns a value at the end."},
-    {value:"d", label:"A function's contract only describes its parameters. What it returns is an implementation detail a caller doesn't need to know.", correct:false,
-      hint:"Look back at section 4's contract grid. Which part of IN / ONE JOB / OUT did it leave out?",
-      explain:"The contract grid in section 4 explicitly includes OUT. A caller absolutely needs to know what a function returns."}
+      hint:"A job isn't measured in lines. How many different questions does this function answer?",
+      explain:"Validating and totaling are two separate jobs, however few lines they take."},
+    {value:"b", label:"Returning a list of problem messages makes the function easier to test, because you can compare the return value with what you expect.", correct:true,
+      hint:"Would section 10's test-it-by-itself habit work if the function only printed?",
+      explain:"A returned list can be compared in a test. Printed text can't be checked as easily."},
+    {value:"c", label:"As long as a function returns something, it doesn't matter whether it also prints or changes things outside itself.", correct:false,
+      hint:"Reread the side effect card in section 3. What do side effects cost?",
+      explain:"Side effects make a function harder to reuse and to test by itself, even if it also returns a value."},
+    {value:"d", label:"A function's contract describes only its parameters. Callers don't need to know what it returns.", correct:false,
+      hint:"Look at section 1's contract grid. Which part does this statement leave out?",
+      explain:"The contract grid includes OUT. A caller needs to know what the function returns."}
   ]});
 
   K.dragDrop("#dragarea", "act-drag-contract");
   K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneContract", label:"the list of raw log lines the function receives", expectedLabel:"Part of the contract"},
+    chip1:{expectedId:"zoneContract", label:"the list of form lines the function receives", expectedLabel:"Part of the contract"},
     chip2:{expectedId:"zoneContract", label:"the list of problem messages the function hands back", expectedLabel:"Part of the contract"},
-    chip3:{expectedId:"zoneImpl", label:"the for loop that walks each line one at a time", expectedLabel:"Implementation detail"},
-    chip4:{expectedId:"zoneImpl", label:"the if/elif that tells a structure problem from a value problem", expectedLabel:"Implementation detail"}
+    chip3:{expectedId:"zoneImpl", label:"the for loop that visits each line", expectedLabel:"Implementation detail"},
+    chip4:{expectedId:"zoneImpl", label:"the if/elif chain that picks which problem message to write", expectedLabel:"Implementation detail"}
   }});
   K.orderSteps("#ordersteps", {id:"act-order-design", correctOrder:["job","input","output","implementation"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
   K.flipCards("#vocab", "act-flip-vocab");
 
   function revealTrace(){
-    $("#traceScreen").textContent = `donations = [
-    "DROPOFF|D118|42",
-    "DROPOFF|D204",
-    "DROPOFF|D205|heavy",
-    "DROPOFF|D207|9"
+    $("#traceScreen").textContent = `forms = [
+    "S-2041|10|Biology",
+    "S-2042|Chemistry",
+    "S-2043|10th|Algebra",
+    "S-2044|14|Art",
+    "S-2045|9|History"
 ]
 
-find_donation_problems(donations)
+find_enrollment_problems(forms)
 
 [Returns]
-["Line 2: expected 3 fields, got 2", "Line 3: weight 'heavy' is not a number"]`;
+["Line 2: expected 3 fields, got 2",
+ "Line 3: grade '10th' is not a number",
+ "Line 4: grade 14 is outside 9-12"]`;
   }
   const markTrace = K.activity("act-trace-reveal", () => true);
   $("#tracerun").addEventListener("click", () => { revealTrace(); markTrace(); });
@@ -563,7 +591,7 @@ find_donation_problems(donations)
     if(allOk){
       K.Scoring.award("q-fillfn", fillAttempts === 1 ? 1 : 0.5);
       fb.className = "mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML = "<strong>Correct"+(fillAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> enumerate(records, start=1) numbers each line starting at 1, isdigit() checks the weight field, and returning problems is exactly the list contract chosen in section 4.";
+      fb.innerHTML = "<strong>Correct"+(fillAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> enumerate(forms, start=1) numbers each line from 1, isdigit() checks the grade field, and returning problems keeps the list contract from section 4.";
       fillDone = true;
       $("#blankA-slot").textContent = "enumerate";
       $("#blankB-slot").textContent = "isdigit";
@@ -579,16 +607,17 @@ find_donation_problems(donations)
     } else {
       const wrongCount = results.filter(r => !r.ok).length;
       fb.className = "mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML = "<strong>Not quite yet.</strong> "+wrongCount+" of 3 blanks still need a look. One more try before the answer is shown.";
+      fb.innerHTML = "<strong>Not quite yet.</strong> "+wrongCount+" of 3 blanks still need a look. You have one more try before the answer appears.";
     }
     fb.setAttribute("tabindex","-1"); fb.focus();
   });
 
   const AI_PROMPTS = [
-    "Think of a form you've filled out that only accepted certain kinds of answers, like a phone number field. What was that form's contract: what did it take in, and what did it hand back when something was wrong?",
-    "If you had to explain 'decide the contract before writing the loop' to a friend using something from your own daily life, like following a recipe, what would you compare it to?",
-    "Where have you already seen 'one function, one job' outside of code, like a single kitchen tool built for exactly one task instead of ten?"
+    "Think of a form you've filled out that only accepted certain answers, like a phone number field. What did it take in, and what did it hand back when something was wrong?",
+    "Explain 'decide the contract before writing the loop' to a friend using something from daily life, like following a recipe. What would you compare it to?",
+    "Where have you seen 'one tool, one job' outside of code? How does that make the tool easier to trust?"
   ];
+
   $("#aiprompt").addEventListener("click", () => {
     const box = $("#aipromptbox");
     box.style.display = "block";

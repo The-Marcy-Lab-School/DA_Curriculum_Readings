@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:660px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-illustration{width:100%;max-width:700px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;display:block}
 .eh-flow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.9rem;align-items:stretch;margin:1rem 0}
 .eh-step{border:3px solid var(--mlrk-bg-brand-deep);border-radius:14px;padding:.9rem 1rem;background:var(--mlrk-white)}
 .eh-step p{margin:.35rem 0 0}
@@ -21,9 +21,9 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Try It, Catch It, Keep Going</h1>
-<p class="mlrk-lead">A neighborhood food-share program logs every evening's donation drop-offs to a text file, one line per volunteer entry. Most lines are clean. Then one volunteer mistypes a number, and if the program isn't ready for that, the whole run stops right there — every donation entered after that one bad line never gets recorded. <code>try</code> and <code>except</code> are how you tell Python: attempt the risky step, and if this specific kind of failure happens, handle it and keep going.</p>
+<p class="mlrk-lead">A small hotel's booking script reads each night's online requests from a text file, one request per line. Most lines are clean. Then one guest types "4 nights" where the script expects a plain number. The script stops at that line, and every request after it goes unbooked. <code>try</code> and <code>except</code> let the script attempt the risky step, handle that one failure, and keep going.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~40–43 minutes</span>
+  <span class="mlrk-pill">~42–45 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -56,205 +56,226 @@
 
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
-<p>Picture the food-share program's evening routine. A volunteer named Priya drops off 8 boxes for the produce shelf. A volunteer named Sam drops off 5 boxes for the bakery shelf. Each entry gets typed into a log file as <code>name|shelf_code|box_count</code> — something like <code>"Priya|2|8"</code>. A small program reads every line, looks up which shelf <code>shelf_code</code> points to, converts <code>box_count</code> to a real number, and records the donation.</p>
-<p>Then a volunteer named Marcus fat-fingers his entry: <code>"Marcus|2|eight"</code>. <code>int("eight")</code> cannot produce a number; there is no sensible integer hiding inside that word. If the program has no plan for this, Python raises an exception, and unless something catches it, the program halts immediately. Every donation logged after Marcus's line, including Dana's and anyone who dropped off after her, never gets recorded, even though those lines were perfectly fine.</p>
+<p>Each request line looks like <code>"Okafor|2|DLX"</code>: the guest's name, the number of nights, and a room code. The script splits the line, turns the nights into a number with <code>int()</code>, looks up the nightly rate for the room code, and books the stay.</p>
+<p>Then a request arrives as <code>"Batista|4 nights|STD"</code>. <code>int("4 nights")</code> can't turn that text into a whole number, so Python raises an <strong>exception</strong>: an error event that stops the program unless code catches it. The requests after Batista's are fine, but the script never reaches them.</p>
 
-<svg class="mlrk-illustration" viewBox="0 0 640 300" role="img" aria-labelledby="crashTitle crashDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="crashTitle">Two versions of the same donation log, one without error handling and one with it</title>
-  <desc id="crashDesc">Both versions show four log entries: Priya, Sam, a bad entry from Marcus, and Dana. In the left version, without try/except, the program stops at Marcus's bad entry and Dana's entry is never reached. In the right version, with try/except, the bad entry is caught and Dana's entry still gets processed.</desc>
+<svg class="mlrk-illustration" viewBox="0 0 700 330" role="img" aria-labelledby="crashTitle crashDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="crashTitle">The same four booking requests, run without and with try/except</title>
+  <desc id="crashDesc">Both columns show four requests: Okafor, Hale, a bad request from Batista, and Lindqvist. In the left column, without try/except, the program stops at Batista's request and Lindqvist's request is never reached. In the right column, with try/except, Batista's request is caught and Lindqvist's request is still booked.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-    <text x="150" y="22" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">No try/except</text>
-    <rect x="20" y="34" width="260" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2"/>
-    <text x="150" y="59" text-anchor="middle" font-size="13" fill="#261F1D">Priya | 2 | 8 — recorded</text>
-    <rect x="20" y="80" width="260" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2"/>
-    <text x="150" y="105" text-anchor="middle" font-size="13" fill="#261F1D">Sam | 1 | 5 — recorded</text>
-    <rect x="20" y="126" width="260" height="40" rx="8" fill="#F7DFDF" stroke="#C92929" stroke-width="2.5" stroke-dasharray="5 4"/>
-    <text x="150" y="151" text-anchor="middle" font-size="13" fill="#261F1D">Marcus | 2 | eight — bad entry</text>
-    <rect x="20" y="172" width="260" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2" opacity="0.35"/>
-    <text x="150" y="197" text-anchor="middle" font-size="13" fill="#261F1D" opacity="0.6">Dana | 3 | 6 — never reached</text>
-    <rect x="20" y="228" width="260" height="56" rx="10" fill="#F7DFDF" stroke="#C92929" stroke-width="3"/>
-    <text x="150" y="250" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">PROGRAM STOPS HERE</text>
-    <text x="150" y="270" text-anchor="middle" font-size="12" fill="#261F1D">Traceback prints. Nothing after this line runs.</text>
+    <text x="175" y="24" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">No try/except</text>
+    <rect x="15" y="40" width="320" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2"/>
+    <text x="175" y="66" text-anchor="middle" font-size="15" fill="#261F1D">Okafor | 2 | DLX: booked</text>
+    <rect x="15" y="88" width="320" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2"/>
+    <text x="175" y="114" text-anchor="middle" font-size="15" fill="#261F1D">Hale | 1 | STD: booked</text>
+    <rect x="15" y="136" width="320" height="40" rx="8" fill="#F7DFDF" stroke="#C92929" stroke-width="2.5" stroke-dasharray="5 4"/>
+    <text x="175" y="162" text-anchor="middle" font-size="15" fill="#261F1D">Batista | 4 nights | STD: bad line</text>
+    <rect x="15" y="184" width="320" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2" opacity="0.35"/>
+    <text x="175" y="210" text-anchor="middle" font-size="15" fill="#261F1D" opacity="0.6">Lindqvist | 3 | DLX: never reached</text>
+    <rect x="15" y="236" width="320" height="72" rx="10" fill="#F7DFDF" stroke="#C92929" stroke-width="3"/>
+    <text x="175" y="264" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">PROGRAM STOPS HERE</text>
+    <text x="175" y="292" text-anchor="middle" font-size="15" fill="#261F1D">A traceback prints. Nothing else runs.</text>
 
-    <text x="490" y="22" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">With try/except</text>
-    <rect x="360" y="34" width="260" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2"/>
-    <text x="490" y="59" text-anchor="middle" font-size="13" fill="#261F1D">Priya | 2 | 8 — recorded</text>
-    <rect x="360" y="80" width="260" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2"/>
-    <text x="490" y="105" text-anchor="middle" font-size="13" fill="#261F1D">Sam | 1 | 5 — recorded</text>
-    <rect x="360" y="126" width="260" height="40" rx="8" fill="#FECC5B" stroke="#83671C" stroke-width="2.5" stroke-dasharray="5 4"/>
-    <text x="490" y="151" text-anchor="middle" font-size="13" fill="#261F1D">Marcus | 2 | eight — caught</text>
-    <rect x="360" y="172" width="260" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2"/>
-    <text x="490" y="197" text-anchor="middle" font-size="13" fill="#261F1D">Dana | 3 | 6 — still recorded</text>
-    <rect x="360" y="228" width="260" height="56" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="490" y="250" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">PROGRAM KEEPS GOING</text>
-    <text x="490" y="270" text-anchor="middle" font-size="12" fill="#261F1D">except ValueError logs it. The next line still runs.</text>
+    <text x="525" y="24" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">With try/except</text>
+    <rect x="365" y="40" width="320" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2"/>
+    <text x="525" y="66" text-anchor="middle" font-size="15" fill="#261F1D">Okafor | 2 | DLX: booked</text>
+    <rect x="365" y="88" width="320" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2"/>
+    <text x="525" y="114" text-anchor="middle" font-size="15" fill="#261F1D">Hale | 1 | STD: booked</text>
+    <rect x="365" y="136" width="320" height="40" rx="8" fill="#FECC5B" stroke="#83671C" stroke-width="2.5" stroke-dasharray="5 4"/>
+    <text x="525" y="162" text-anchor="middle" font-size="15" fill="#261F1D">Batista | 4 nights | STD: caught</text>
+    <rect x="365" y="184" width="320" height="40" rx="8" fill="#E9EFEB" stroke="#264326" stroke-width="2"/>
+    <text x="525" y="210" text-anchor="middle" font-size="15" fill="#261F1D">Lindqvist | 3 | DLX: still booked</text>
+    <rect x="365" y="236" width="320" height="72" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="525" y="264" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">PROGRAM KEEPS GOING</text>
+    <text x="525" y="292" text-anchor="middle" font-size="15" fill="#261F1D">except ValueError handles it.</text>
   </g>
 </svg>
 
-<p>That's the whole idea. <strong>try</strong> marks the block containing the operation you're taking a chance on. <strong>except</strong> marks the block that runs only if a specific kind of failure — an <strong>exception</strong> — actually happens inside that <code>try</code>. Nothing else about the rest of the program changes: the lines before the risky operation already ran, and once the matching <code>except</code> finishes, execution moves on to whatever comes after the whole <code>try</code>/<code>except</code> structure.</p>
+<p><strong>Error handling</strong> means deciding, in code, what should happen when an operation fails. In Python you write it with <code>try</code> and <code>except</code>. The <code>try</code> block holds the risky step. The <code>except</code> block runs only if that step raises the exception named after <code>except</code>. When the <code>except</code> block finishes, Python moves on to the first line after the whole <code>try</code>/<code>except</code>.</p>
+<p>Error handling has a partner job, <strong>validation</strong>: checking input against your rules before you use it. Keep the two jobs separate. Validation asks, "Does the input meet our rules?" Error handling asks, "What should happen if an operation fails?" Section 14 has you tell them apart.</p>
 
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> almost no real program only ever receives clean input. A take-home exercise, a production script, an interview live-coding round — all of them eventually hand your code something malformed, and the difference between code that's "done" and code that's actually reliable is whether it can survive that moment without taking the rest of the run down with it.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to check a value <em>before</em> using it, something like <code>if text.isdigit():</code>, and only proceed if it looks safe. Error handling is a second tool for the same underlying problem: instead of inspecting first, you attempt the real operation directly and have a specific plan ready for exactly the ways it can fail. Once this clicks, the same reflex, naming the ways something can go wrong before it goes wrong, is what separates a first draft from code you'd actually trust.</p>
+<p><strong>Why this matters:</strong> real input is never all clean. Guests mistype, forms get copied wrong, and exports arrive with stray text. A script that stops at the first bad line loses every good line after it, and someone has to notice and rerun it. That is why interviewers and code reviewers so often ask, "What happens if this value isn't a number?"</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to check a value before you use it, for example with <code>if text.isdigit():</code>. Error handling is a second tool for the same problem. You attempt the real operation and keep a plan ready for the specific way it can fail. Later, the same habit grows into deciding, for a whole function, which failures to catch and which ones should stay visible as bugs.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before catching</h2>
-<p class="mlrk-small">Four skills are prerequisites for this reading: list indexing, dictionary key lookup, splitting a string into parts, and the <code>.isdigit()</code> check-first habit. Test each one below before moving on.</p>
+<p>This reading uses four skills you already have: list indexing, dictionary lookup, splitting a string, and <code>.isdigit()</code>. Check each one.</p>
 
-<div class="mlrk-card" id="card-index"><p><strong>Recall:</strong> <code>shelves = ["Produce", "Bakery", "Canned Goods"]</code>. What is <code>shelves[1]</code>?</p>
-<button type="button" class="mlrk-choice" data-a="bakery">"Bakery"</button>
-<button type="button" class="mlrk-choice" data-a="produce">"Produce"</button>
-<button type="button" class="mlrk-choice" data-a="canned">"Canned Goods"</button>
+<div class="mlrk-card" id="card-index"><p><strong>Recall:</strong> <code>rooms = ["Standard", "Deluxe", "Suite"]</code>. What is <code>rooms[1]</code>?</p>
+<button type="button" class="mlrk-choice" data-a="deluxe">"Deluxe"</button>
+<button type="button" class="mlrk-choice" data-a="standard">"Standard"</button>
+<button type="button" class="mlrk-choice" data-a="suite">"Suite"</button>
 <div id="indexfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-dict" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>inventory = {"pens": 40, "markers": 12}</code>. What does <code>inventory["markers"]</code> return?</p>
-<button type="button" class="mlrk-choice" data-a="12">12</button>
-<button type="button" class="mlrk-choice" data-a="40">40</button>
-<button type="button" class="mlrk-choice" data-a="markers">"markers"</button>
+<div class="mlrk-card" id="card-dict" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>rates = {"STD": 120, "DLX": 180}</code>. What does <code>rates["DLX"]</code> return?</p>
+<button type="button" class="mlrk-choice" data-a="180">180</button>
+<button type="button" class="mlrk-choice" data-a="120">120</button>
+<button type="button" class="mlrk-choice" data-a="dlx">"DLX"</button>
 <div id="dictfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-split" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>entry = "Priya|2|8"</code>. What does <code>entry.split("|")</code> produce?</p>
-<button type="button" class="mlrk-choice" data-a="three">A list of three strings: ["Priya", "2", "8"]</button>
+<div class="mlrk-card" id="card-split" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>request = "Okafor|2|DLX"</code>. What does <code>request.split("|")</code> produce?</p>
+<button type="button" class="mlrk-choice" data-a="three">A list of three strings: ["Okafor", "2", "DLX"]</button>
 <button type="button" class="mlrk-choice" data-a="one">The original string, unchanged</button>
-<button type="button" class="mlrk-choice" data-a="tuple">A tuple of three integers</button>
+<button type="button" class="mlrk-choice" data-a="tuple">A tuple with the number 2 in the middle</button>
 <div id="splitfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-isdigit" style="margin-top:.8rem"><p><strong>Scenario check:</strong> <code>box_count = "8"</code>. What does <code>box_count.isdigit()</code> evaluate to?</p>
+<div class="mlrk-card" id="card-isdigit" style="margin-top:.8rem"><p><strong>Scenario check:</strong> <code>nights_text = "2"</code>. What does <code>nights_text.isdigit()</code> return?</p>
 <button type="button" class="mlrk-choice" data-a="true">True</button>
 <button type="button" class="mlrk-choice" data-a="false">False</button>
-<button type="button" class="mlrk-choice" data-a="error">Python raises an error, since "8" is text, not a number</button>
+<button type="button" class="mlrk-choice" data-a="error">Python raises an error, because "2" is text, not a number</button>
 <div id="isdigitfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">All four of these already work exactly the way they do here — indexing, dictionary lookup, splitting, and <code>.isdigit()</code> — later in this reading, once things get riskier. Get each one solid in isolation first.</div>
 </section>
 
 <section class="mlrk-section">
 <h2>3. Technical vocabulary</h2>
-<p>Flip each card before the tracing practice below.</p>
+<p>Flip each card before the tracing practice.</p>
 <div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>exception</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Exception</strong><br>A problem Python detects while a program is running. If nothing catches it, Python stops the program right there.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>traceback</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Traceback</strong><br>The multi-line report Python prints when an exception goes uncaught, showing which line raised it.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>try</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>try</strong><br>The block containing the risky operation you want Python to attempt.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>except</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>except</strong><br>The block that runs only if a matching exception happens somewhere inside its try block.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>raise</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>raise</strong><br>Manually triggers an exception yourself, on purpose, when your own code detects a problem worth stopping for.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>ValueError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>ValueError</strong><br>The type is right, but the value can't be used this way. Example: <code>int("eight")</code>.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>TypeError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>TypeError</strong><br>An operation gets a value of a type it can't work with at all. Example: <code>5 + "3"</code>.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>IndexError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>IndexError</strong><br>Code asks a list for a position that doesn't exist.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>KeyError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>KeyError</strong><br>Code asks a dictionary for a key that was never stored in it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>exception</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Exception</strong><br>An error event Python raises while a program runs. If no code catches it, the program stops at that line.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>error handling</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Error handling</strong><br>Deciding in code what should happen when an operation fails, so one failure doesn't stop the whole program. In Python you use <code>try</code> and <code>except</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>traceback</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Traceback</strong><br>The report Python prints when no code catches an exception. It names the exception and the line that raised it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>try</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>try</strong><br>The block that holds the risky step you want Python to attempt.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>except</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>except</strong><br>The block that runs only if its <code>try</code> block raises the exception it names. <code>except ValueError:</code> catches a <code>ValueError</code> and nothing else.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>ValueError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>ValueError</strong><br>Bad value: the operation is right, but it can't use this value. Example: <code>int("4 nights")</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>TypeError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>TypeError</strong><br>Wrong type: the operation can't work with this kind of value at all. Example: <code>2 + "1"</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>NameError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>NameError</strong><br>Unknown name: Python can't find a variable with that name. Example: a typo like <code>totl</code> for <code>total</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>IndexError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>IndexError</strong><br>Missing position: the list has no item at that index.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>KeyError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>KeyError</strong><br>Missing key: the dictionary has no entry for that key.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>4. Check first, or try first?</h2>
-<p>Both approaches solve the same underlying problem: something might not work, and you want to survive that. <strong>Check first</strong> inspects a value before touching it (<code>if text.isdigit():</code>). <strong>Try first</strong> attempts the real operation directly and has a plan ready for how it can fail.</p>
-<div class="mlrk-card" id="card-checktry"><p><strong>A program needs to convert incoming text to an integer, and Python already has a specific, well-known way that conversion can fail. Which approach directly handles that real failure?</strong></p>
-<button type="button" class="mlrk-choice" data-a="try">Attempt <code>int(text)</code> directly, inside a <code>try</code>, and catch <code>ValueError</code>.</button>
-<button type="button" class="mlrk-choice" data-a="never">Never attempt the conversion at all.</button>
-<button type="button" class="mlrk-choice" data-a="bare">Wrap the entire program in one bare <code>except:</code> just in case.</button>
+<p>Both approaches protect a program from bad input. <strong>Check first</strong> inspects the value before using it: <code>if nights_text.isdigit():</code>. <strong>Try first</strong> runs the real operation inside <code>try</code> and handles the failure in <code>except</code>.</p>
+<div class="mlrk-card" id="card-checktry"><p><strong>A script must turn the text in <code>nights_text</code> into an integer. <code>int()</code> raises <code>ValueError</code> when the text isn't a whole number. Which approach handles that failure directly?</strong></p>
+<button type="button" class="mlrk-choice" data-a="try">Run <code>int(nights_text)</code> inside a <code>try</code>, and catch <code>ValueError</code>.</button>
+<button type="button" class="mlrk-choice" data-a="never">Skip the conversion.</button>
+<button type="button" class="mlrk-choice" data-a="bare">Wrap the whole program in one bare <code>except:</code>.</button>
 <div id="checktryfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>5. What Python actually does inside try/except</h2>
-<p>This part is easy to get slightly wrong the first time: an <code>except</code> clause is not a backup step that always runs after <code>try</code>. It only runs if its specific exception actually happens.</p>
+<h2>5. What Python does inside try/except</h2>
+<p>An <code>except</code> block is not a step that always runs after <code>try</code>. It runs only when its exception happens.</p>
 <div class="eh-flow">
-  <div class="eh-step"><strong>1. TRY</strong><p>Python runs the risky line(s) inside <code>try</code>.</p></div>
+  <div class="eh-step"><strong>1. TRY</strong><p>Python runs the lines inside <code>try</code>.</p></div>
   <div class="eh-connector">then</div>
-  <div class="eh-step"><strong>2. DID IT RAISE?</strong><p>No exception: the rest of <code>try</code> finishes, <code>except</code> is skipped entirely.<br>Matching exception: the rest of <code>try</code> is abandoned mid-line, and execution jumps straight into that <code>except</code>.</p></div>
+  <div class="eh-step"><strong>2. DID A LINE RAISE?</strong><p>No: the rest of <code>try</code> runs, and Python skips <code>except</code>.<br>Yes, and it matches: Python leaves <code>try</code> at that line and jumps to that <code>except</code>.</p></div>
 </div>
 <div class="eh-flow" style="grid-template-columns:1fr">
-  <div class="eh-step"><strong>3. CONTINUE</strong><p>Whichever path was taken, once it finishes, execution continues at the first line after the entire <code>try</code>/<code>except</code> structure — not inside it.</p></div>
+  <div class="eh-step"><strong>3. CONTINUE</strong><p>Either way, Python then runs the first line after the whole <code>try</code>/<code>except</code>.</p></div>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>6. Trace a successful attempt</h2>
-<div class="mlrk-code"><div id="successScreen" class="mlrk-screen">count_text = "8"
+<div class="mlrk-code"><div id="successScreen" class="mlrk-screen">nights_text = "3"
 
 try:
-    boxes = int(count_text)
-    print("Boxes:", boxes)
+    nights = int(nights_text)
+    print("Nights:", nights)
 except ValueError:
-    print("Could not read box count.")
+    print("Could not read the number of nights.")
 
-print("Log line finished.")</div>
+print("Request finished.")</div>
 <div class="mlrk-actions"><button type="button" id="successrun" class="mlrk-btn">Reveal simulated output</button></div></div>
 <div class="mlrk-card" id="card-success" style="margin-top:1rem"><p><strong>Before revealing: what prints?</strong></p>
-<button type="button" class="mlrk-choice" data-a="good">Boxes: 8, then Log line finished.</button>
-<button type="button" class="mlrk-choice" data-a="except">Could not read box count., then Log line finished.</button>
+<button type="button" class="mlrk-choice" data-a="good">Nights: 3, then Request finished.</button>
+<button type="button" class="mlrk-choice" data-a="except">Could not read the number of nights., then Request finished.</button>
 <button type="button" class="mlrk-choice" data-a="both">All three print statements run, in order.</button>
 <div id="successfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>7. Trace a caught failure</h2>
-<div class="mlrk-code"><div id="failScreen" class="mlrk-screen">count_text = "eight"
+<div class="mlrk-code"><div id="failScreen" class="mlrk-screen">nights_text = "4 nights"
 
 try:
-    boxes = int(count_text)
-    print("Boxes:", boxes)
+    nights = int(nights_text)
+    print("Nights:", nights)
 except ValueError:
-    print("Could not read box count.")
+    print("Could not read the number of nights.")
 
-print("Log line finished.")</div>
+print("Request finished.")</div>
 <div class="mlrk-actions"><button type="button" id="failrun" class="mlrk-btn">Reveal simulated output</button></div></div>
-<div class="mlrk-card" id="card-fail" style="margin-top:1rem"><p><strong>Which line inside <code>try</code> never finishes successfully this time?</strong></p>
-<button type="button" class="mlrk-choice" data-a="convert"><code>boxes = int(count_text)</code></button>
-<button type="button" class="mlrk-choice" data-a="afterprint"><code>print("Boxes:", boxes)</code></button>
-<button type="button" class="mlrk-choice" data-a="afterall"><code>print("Log line finished.")</code></button>
+<div class="mlrk-card" id="card-fail" style="margin-top:1rem"><p><strong>Which line inside <code>try</code> fails this time?</strong></p>
+<button type="button" class="mlrk-choice" data-a="convert"><code>nights = int(nights_text)</code></button>
+<button type="button" class="mlrk-choice" data-a="afterprint"><code>print("Nights:", nights)</code></button>
+<button type="button" class="mlrk-choice" data-a="afterall"><code>print("Request finished.")</code></button>
 <div id="failfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p class="mlrk-small">Notice <code>print("Boxes:", boxes)</code> never runs at all here — once <code>int(count_text)</code> raises, the rest of that <code>try</code> block is abandoned mid-step, not paused and resumed.</p>
+<p><code>print("Nights:", nights)</code> never runs here. Once <code>int(nights_text)</code> raises, Python leaves the <code>try</code> block at that line. It does not come back to finish it.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>8. Two risky operations need two routes</h2>
-<div class="mlrk-code"><div class="mlrk-screen">entry = "Marcus|9|8"
-shelves = ["Produce", "Bakery", "Canned Goods", "Dairy"]
+<h2>8. Count what a crash costs</h2>
+<p>This loop books every request in <code>requests</code>. It has no <code>try</code>/<code>except</code>.</p>
+<div class="mlrk-code"><div class="mlrk-screen">requests = ["Okafor|2|DLX", "Hale|1|STD", "Batista|4 nights|STD",
+            "Lindqvist|3|DLX", "Moreau|2|STD"]
+
+for request in requests:
+    guest, nights_text, room = request.split("|")
+    nights = int(nights_text)
+    print("Booked", guest, "for", nights, "nights")</div></div>
+<div class="mlrk-card" id="card-crash" style="margin-top:1rem"><p><strong>How many "Booked" lines print before the traceback?</strong></p>
+<button type="button" class="mlrk-choice" data-a="two">2</button>
+<button type="button" class="mlrk-choice" data-a="four">4</button>
+<button type="button" class="mlrk-choice" data-a="zero">0</button>
+<div id="crashfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>When a script crashes partway through a batch, count how many records it handled before it stopped. That number tells you how much of the batch never ran. Here, two good requests were lost along with the bad one.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Two risky steps, two except blocks</h2>
+<div class="mlrk-code"><div class="mlrk-screen">request = "Lindqvist|3|PH"
+rates = {"STD": 120, "DLX": 180}
 
 try:
-    name, shelf_code, count_text = entry.split("|")
-    shelf = shelves[int(shelf_code)]
-    boxes = int(count_text)
-    print(name, "donated", boxes, "boxes to", shelf)
-except IndexError:
-    print("Shelf code out of range for", name)
+    guest, nights_text, room = request.split("|")
+    nights = int(nights_text)
+    total = nights * rates[room]
+    print(guest, "owes", total)
 except ValueError:
-    print("Box count is not a number for", name)</div></div>
-<p>This one <code>try</code> contains two different risky ideas: looking up a shelf by position, and converting text to a number. Different failures deserve different handlers, in whichever order they're written.</p>
-<div class="mlrk-card" id="card-two"><p><strong>With the entry above (<code>shelf_code</code> is <code>"9"</code>, but <code>shelves</code> only has 4 items), which handler runs?</strong></p>
-<button type="button" class="mlrk-choice" data-a="index"><code>except IndexError</code></button>
+    print("Nights is not a whole number for", guest)
+except KeyError:
+    print("Unknown room code for", guest)</div></div>
+<p>This <code>try</code> block holds two risky steps: turning <code>nights_text</code> into a number, and looking up <code>room</code> in <code>rates</code>. Each failure gets its own <code>except</code> block and its own message.</p>
+<div class="mlrk-card" id="card-two"><p><strong><code>rates</code> has no <code>"PH"</code> key. Which <code>except</code> block runs?</strong></p>
+<button type="button" class="mlrk-choice" data-a="key"><code>except KeyError</code></button>
 <button type="button" class="mlrk-choice" data-a="value"><code>except ValueError</code></button>
-<button type="button" class="mlrk-choice" data-a="both">Both handlers, one after another</button>
+<button type="button" class="mlrk-choice" data-a="both">Both blocks, one after the other</button>
 <div id="twofb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>9. Error map: name the failure</h2>
+<h2>10. Error map: name the failure</h2>
 <div class="eh-map">
-<div class="eh-errorcard"><h3>ValueError</h3><p><code>int("eight")</code><br>Right type of operation, but the value itself can't convert.</p></div>
-<div class="eh-errorcard"><h3>IndexError</h3><p><code>shelves[9]</code> when <code>shelves</code> only has 4 items.<br>Asking a list for a position it doesn't have.</p></div>
-<div class="eh-errorcard"><h3>KeyError</h3><p><code>shelf_by_code["Z"]</code> when <code>"Z"</code> was never stored as a key.<br>Asking a dictionary for a key it doesn't have.</p></div>
-<div class="eh-errorcard"><h3>TypeError</h3><p><code>5 + "3 boxes"</code><br>Two values of types that don't work together for that operation.</p></div>
+<div class="eh-errorcard"><h3>ValueError</h3><p><code>int("4 nights")</code><br>The operation is right, but the value can't convert.</p></div>
+<div class="eh-errorcard"><h3>TypeError</h3><p><code>2 + "1"</code><br>A number and a string can't be added together.</p></div>
+<div class="eh-errorcard"><h3>NameError</h3><p><code>print(totl)</code> when only <code>total</code> exists<br>Python can't find that name.</p></div>
+<div class="eh-errorcard"><h3>IndexError</h3><p><code>rooms[5]</code> when <code>rooms</code> has 3 items<br>The list has no item at that position.</p></div>
+<div class="eh-errorcard"><h3>KeyError</h3><p><code>rates["PH"]</code> when <code>"PH"</code> was never stored<br>The dictionary has no entry for that key.</p></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>10. Match each snippet to its exception</h2>
-<p>Drag each code snippet into the exception type it actually raises, then use the self-check button to confirm your matches.</p>
+<h2>11. Match each snippet to its exception</h2>
+<p>Drag each snippet into the exception it raises, then press the self-check button.</p>
 <div id="matcharea">
 <div class="mlrk-drag-source" id="matchsource">
-  <span id="chipA" class="mlrk-draggable"><code>int("twelve")</code></span>
-  <span id="chipB" class="mlrk-draggable"><code>["Bakery","Dairy"][5]</code></span>
-  <span id="chipC" class="mlrk-draggable"><code>{"P":"Produce"}["B"]</code></span>
-  <span id="chipD" class="mlrk-draggable"><code>3 + "boxes"</code></span>
+  <span id="chipA" class="mlrk-draggable"><code>int("12.5")</code></span>
+  <span id="chipB" class="mlrk-draggable"><code>["STD","DLX"][4]</code></span>
+  <span id="chipC" class="mlrk-draggable"><code>{"STD":120}["SUITE"]</code></span>
+  <span id="chipD" class="mlrk-draggable"><code>3 + "nights"</code></span>
+  <span id="chipE" class="mlrk-draggable"><code>print(gest)</code> when only <code>guest</code> exists</span>
 </div>
 <div class="mlrk-grid">
   <div><p class="mlrk-small"><strong>ValueError</strong></p><div class="mlrk-dropzone" id="zoneValue"></div></div>
   <div><p class="mlrk-small"><strong>IndexError</strong></p><div class="mlrk-dropzone" id="zoneIndex"></div></div>
   <div><p class="mlrk-small"><strong>KeyError</strong></p><div class="mlrk-dropzone" id="zoneKey"></div></div>
   <div><p class="mlrk-small"><strong>TypeError</strong></p><div class="mlrk-dropzone" id="zoneType"></div></div>
+  <div><p class="mlrk-small"><strong>NameError</strong></p><div class="mlrk-dropzone" id="zoneName"></div></div>
 </div>
 <div class="mlrk-actions"><button type="button" id="matchcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
 <div id="matchcheckfb" class="mlrk-feedback" tabindex="-1"></div>
@@ -262,12 +283,12 @@ except ValueError:
 </section>
 
 <section class="mlrk-section">
-<h2>11. Type the exception name</h2>
-<p>One more, without any choices to pick from this time.</p>
-<div class="mlrk-code"><div class="mlrk-screen">grades = [88, 91, 79]
-print(grades[5])</div></div>
+<h2>12. Type the exception name</h2>
+<p>This time there are no choices to pick from.</p>
+<div class="mlrk-code"><div class="mlrk-screen">room_codes = ["STD", "DLX", "STE"]
+print(room_codes[3])</div></div>
 <div class="mlrk-fillblank">
-  <label for="blankinput">Type the exact built-in exception name this raises:</label>
+  <label for="blankinput">Type the exact name of the exception this raises:</label>
   <input type="text" id="blankinput" autocomplete="off">
   <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
 </div>
@@ -275,103 +296,109 @@ print(grades[5])</div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>12. Simulator: change the entry, follow the route</h2>
-<p>No Python setup needed. Choose a log entry, predict which route it takes, then run it.</p>
-<label for="case">Log entry:</label>
+<h2>13. Simulator: change the request, follow the route</h2>
+<p><code>process_request(request)</code> runs the code from section 9 on the request you pick. Predict which block runs, then run it.</p>
+<label for="case">Request:</label>
 <select id="case">
-<option value="good">Dana|3|6</option>
-<option value="value">Dana|3|six</option>
-<option value="index">Dana|9|6</option>
+<option value="good">Moreau|2|STD</option>
+<option value="value">Moreau|a couple|STD</option>
+<option value="key">Moreau|2|PH</option>
 </select>
-<button type="button" id="run" class="mlrk-btn">Run process_donation(entry)</button>
+<button type="button" id="run" class="mlrk-btn">Run process_request(request)</button>
 <div class="mlrk-terminal" style="margin-top:.8rem">
-<div class="mlrk-terminal-row"><span class="mlrk-terminal-prompt">$</span><span id="cmd" style="margin-left:.4rem">process_donation(entry)</span></div>
-<pre id="termout" class="mlrk-terminal-log">Choose an entry, predict the route, then run it.</pre>
+<div class="mlrk-terminal-row"><span class="mlrk-terminal-prompt">$</span><span id="cmd" style="margin-left:.4rem">process_request(request)</span></div>
+<pre id="termout" class="mlrk-terminal-log">Pick a request, predict the route, then run it.</pre>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>13. The bare <code>except:</code> trap</h2>
-<div class="mlrk-card" id="card-bare"><p><strong>Why is <code>except ValueError:</code> usually a better choice here than a bare <code>except:</code>?</strong></p>
-<button type="button" class="mlrk-choice" data-a="specific">It recovers from the failure you expected, without silently hiding a completely different, unrelated bug.</button>
-<button type="button" class="mlrk-choice" data-a="short">Bare <code>except:</code> is always better because it's shorter to type.</button>
-<button type="button" class="mlrk-choice" data-a="same">They mean exactly the same thing to Python.</button>
-<div id="barefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<h2>14. Validation or error handling?</h2>
+<p>The hotel books stays of 1 to 30 nights. Two requests break that rule in different ways:</p>
+<ul>
+<li><code>"Hale|45|STD"</code>: <code>int("45")</code> works and gives 45.</li>
+<li><code>"Okafor|2 or 3|DLX"</code>: <code>int("2 or 3")</code> raises <code>ValueError</code>.</li>
+</ul>
+<div class="mlrk-card" id="card-sortjob"><p><strong>Which tool catches the request for 45 nights?</strong></p>
+<button type="button" class="mlrk-choice" data-a="validation">Validation: an <code>if</code> check after the conversion, such as <code>if nights &gt; 30:</code></button>
+<button type="button" class="mlrk-choice" data-a="except">Error handling: <code>except ValueError</code> around <code>int(nights_text)</code></button>
+<button type="button" class="mlrk-choice" data-a="neither">Neither. 45 is a real number, so the request is fine.</button>
+<div id="sortjobfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>The <code>"2 or 3"</code> request is the opposite case. No <code>if</code> on the number can run, because there is no number yet. <code>except ValueError</code> handles it.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>14. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about try/except.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A traceback only prints when an exception is never caught by any matching except.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> If a line inside try raises an exception, the remaining lines in that same try block still run first.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> except ValueError only catches a ValueError — it will not catch a TypeError raised in the same try.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A try block can only ever contain exactly one risky line of code.</label>
+<h2>15. Select all that apply</h2>
+<div class="mlrk-card"><p><strong>Select every TRUE statement about try/except.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A traceback prints only when no matching except catches the exception.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> If a line inside try raises an exception, the rest of that try block still runs first.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> except ValueError catches only a ValueError. It will not catch a KeyError raised in the same try.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A try block can hold only one risky line of code.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>15. Explain the control flow</h2>
+<h2>16. Explain the control flow</h2>
 <p><button type="button" id="hintbtn" class="mlrk-btn">Get an AI-brainstormed sentence starter</button></p>
 <div id="hintbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
-<label for="explain"><strong>In your own words:</strong> when code inside a try raises an exception that matches one of its except clauses, what exactly happens, step by step?</label>
+<label for="explain"><strong>In your own words:</strong> when a line inside a try raises an exception that matches one of its except blocks, what happens, step by step?</label>
 <textarea id="explain" class="mlrk-response" data-save placeholder="First Python tries... If that raises..."></textarea>
 </section>
 
 <section class="mlrk-section">
-<h2>16. Watch: catching specific exceptions</h2>
-<p>As you watch, notice the moment the video reaches for a specific exception type by name instead of a bare <code>except:</code> — and notice what changes about the error message once it's actually caught versus left to crash the program.</p>
+<h2>17. Watch: catching specific exceptions</h2>
+<p>As you watch, notice when the video names a specific exception instead of using a bare <code>except:</code>. Notice, too, how the output changes once the error is caught instead of crashing the program.</p>
 <div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=NIWwJbo-9_8" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching:</strong> what's one thing the video did that matched (or didn't match) how you were already picturing try/except working?</p>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching:</strong> name one thing the video did that matched, or didn't match, how you pictured try/except working.</p>
 <textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>17. How this shows up in interviews</h2>
+<h2>18. How this shows up in interviews</h2>
 <div class="mlrk-callout mlrk-callout-green">
-<p>Take-home exercises and live-coding rounds are graded on more than "does it work on the sample input." A common follow-up is simply: "what happens if this field is missing, or this value isn't a number?" A solution that crashes on that question reads as unfinished, no matter how clean the happy-path code looks.</p>
-<p>In production code review, a bare <code>except:</code> is a well-known red flag, not a shortcut — it can silently swallow a real bug (a typo, a missing import) right alongside the failure you actually meant to handle, which makes the next bug much harder to find. Naming the specific exception you expect is read as a sign you've actually thought about how your code can fail, not just how it succeeds.</p>
+<p>Take-home exercises and live-coding rounds are graded on more than the sample input. A common follow-up is, "What happens if this field is missing, or this value isn't a number?" A solution that crashes on that question looks unfinished.</p>
+<p>In code review, a bare <code>except:</code> is a known red flag. It catches every exception, so it also hides real bugs, such as a typo that raises <code>NameError</code>. Naming the exception you expect shows you thought about how your code can fail.</p>
 </div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> a reviewer asks why your function catches <code>except ValueError:</code> instead of a bare <code>except:</code>. What's the strongest answer?</p>
-<button type="button" class="mlrk-choice" data-a="specific">It recovers from the exact failure this code expects, while letting an unrelated bug stay visible instead of getting hidden.</button>
-<button type="button" class="mlrk-choice" data-a="fewer">Bare except requires fewer characters to type.</button>
-<button type="button" class="mlrk-choice" data-a="same">There's no real difference between the two.</button>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> a reviewer asks why your function uses <code>except ValueError:</code> instead of a bare <code>except:</code>. What's the strongest answer?</p>
+<button type="button" class="mlrk-choice" data-a="specific">It handles the one failure this code expects, and any unrelated bug still shows up instead of being hidden.</button>
+<button type="button" class="mlrk-choice" data-a="fewer">A bare except takes fewer characters to type.</button>
+<button type="button" class="mlrk-choice" data-a="same">The two mean the same thing to Python.</button>
 <div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>18. Summary &amp; critical thinking</h2>
-<p>Two habits carried this whole reading: naming the specific way an operation can fail before you attempt it, and tracing a try/except by asking "did this exact line raise, and if so, which except matches it" rather than assuming every except is a guaranteed fallback step.</p>
-<div class="mlrk-card" id="card-newscenario"><p><strong>New situation:</strong> a community clinic's intake script reads <code>patient_records["insurance_id"]</code> for every walk-in, but some walk-ins don't have insurance on file at all. What's the right instinct?</p>
-<button type="button" class="mlrk-choice" data-a="keyerror">Recognize this can raise a <code>KeyError</code>, and wrap the lookup in a <code>try</code>/<code>except KeyError</code> that handles a missing record on purpose.</button>
-<button type="button" class="mlrk-choice" data-a="ignore">Assume every walk-in will always have an insurance ID on file.</button>
-<button type="button" class="mlrk-choice" data-a="bareexcept">Wrap the entire intake script in one bare <code>except:</code> so nothing can ever crash.</button>
+<h2>19. Summary &amp; critical thinking</h2>
+<p>Two habits carried this reading. First, name the specific way an operation can fail before you attempt it. Second, trace a try/except by asking, "Did this line raise, and if so, which except matches?" An except block is never a step that always runs.</p>
+<div class="mlrk-card" id="card-newscenario"><p><strong>New situation:</strong> a school's enrollment script reads <code>seats_left[course]</code> for each sign-up. Some sign-ups name a course that isn't in <code>seats_left</code>. What's the right plan?</p>
+<button type="button" class="mlrk-choice" data-a="keyerror">Expect a <code>KeyError</code>, and wrap the lookup in <code>try</code>/<code>except KeyError</code> with a clear message for that sign-up.</button>
+<button type="button" class="mlrk-choice" data-a="ignore">Assume every sign-up names a real course.</button>
+<button type="button" class="mlrk-choice" data-a="bareexcept">Wrap the whole script in one bare <code>except:</code> so nothing can crash.</button>
 <div id="newscenariofb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>In your own words:</strong> how would you decide, for a brand-new piece of code, whether a given line needs a try/except at all?</label>
+<label for="strategy"><strong>In your own words:</strong> for a new piece of code, how would you decide whether a line needs a try/except?</label>
 <textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: I'd look for operations that..."></textarea>
 </section>
 
 <section class="mlrk-section">
-<h2>19. Thinking ahead</h2>
-<p>The same reflex practiced here — naming the specific way something can fail, before it fails — keeps showing up as code gets bigger: a function that returns data from an unreliable source, a script that reads a file that might not exist, an API call that might time out. Right now it's one <code>try</code>/<code>except</code> around a couple of lines; later it becomes a habit you apply while designing an entire function, deciding up front which failures are worth catching and which ones should be allowed to surface as real bugs.</p>
+<h2>20. Thinking ahead</h2>
+<p>The same habit, naming how something can fail before it fails, keeps coming back as code grows. A script reads a file that might not exist. A function receives data from a source you don't control. Right now it's one <code>try</code>/<code>except</code> around a couple of lines. Later you'll decide up front, for a whole function, which failures to catch and which ones should surface as real bugs.</p>
 </section>
 
 <section class="mlrk-section">
 <h2>Additional resources</h2>
 <p class="mlrk-small">Not counted in the time estimate above.</p>
 <ul>
-<li><a href="https://docs.python.org/3/tutorial/errors.html" target="_blank" rel="noopener">Python docs: Errors and Exceptions</a> — the official tutorial chapter this reading is based on.</li>
-<li><a href="https://docs.python.org/3/library/exceptions.html" target="_blank" rel="noopener">Python docs: Built-in Exceptions reference</a> — the full list of exception types, for looking one up later.</li>
-<li><a href="https://www.w3schools.com/python/python_try_except.asp" target="_blank" rel="noopener">W3Schools: Python Try Except</a> — more worked examples, including <code>else</code> and <code>finally</code>.</li>
-<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — step through a try/except line by line, visually, with your own examples.</li>
+<li><a href="https://docs.python.org/3/tutorial/errors.html" target="_blank" rel="noopener">Python docs: Errors and Exceptions</a> — the official tutorial chapter on try/except.</li>
+<li><a href="https://docs.python.org/3/library/exceptions.html" target="_blank" rel="noopener">Python docs: Built-in Exceptions reference</a> — every exception type, for looking one up later.</li>
+<li><a href="https://www.w3schools.com/python/python_try_except.asp" target="_blank" rel="noopener">W3Schools: Python Try Except</a> — more examples, including <code>else</code> and <code>finally</code>.</li>
+<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — step through your own try/except line by line.</li>
 </ul>
 </section>
 
 <section class="mlrk-section">
-<h2>20. Your score &amp; keep a copy of your work</h2>
+<h2>21. Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -457,84 +484,90 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-index", buttonSelector:"#card-index .mlrk-choice", feedbackSelector:"#indexfb", correct:"bakery",
-    feedback:{bakery:"Correct. Index 0 is \"Produce\", so index 1 is \"Bakery\".",
-              produce:"\"Produce\" sits at index 0, not index 1.",
-              canned:"\"Canned Goods\" is at index 2, one position further than 1."}});
+  K.quiz({id:"q-index", buttonSelector:"#card-index .mlrk-choice", feedbackSelector:"#indexfb", correct:"deluxe",
+    feedback:{deluxe:"Correct. Index 0 is \"Standard\", so index 1 is \"Deluxe\".",
+              standard:"\"Standard\" is at index 0. Lists count from 0.",
+              suite:"\"Suite\" is at index 2, one position past 1."}});
 
-  K.quiz({id:"q-dict", buttonSelector:"#card-dict .mlrk-choice", feedbackSelector:"#dictfb", correct:"12",
-    feedback:{"12":"Correct. The key \"markers\" maps to the value 12.",
-              "40":"40 is the value stored under the key \"pens\", not \"markers\".",
-              markers:"\"markers\" is the key you looked up, not the value it maps to."}});
+  K.quiz({id:"q-dict", buttonSelector:"#card-dict .mlrk-choice", feedbackSelector:"#dictfb", correct:"180",
+    feedback:{"180":"Correct. The key \"DLX\" maps to the value 180.",
+              "120":"120 is stored under \"STD\", not \"DLX\".",
+              dlx:"\"DLX\" is the key you looked up. A lookup returns the value stored under it."}});
 
   K.quiz({id:"q-split", buttonSelector:"#card-split .mlrk-choice", feedbackSelector:"#splitfb", correct:"three",
-    feedback:{three:"Correct. split(\"|\") breaks the string apart everywhere a pipe appears, producing a list of strings.",
-              one:"split() returns a new list; it doesn't leave the string as one piece.",
-              tuple:"split() always returns a list of strings, never a tuple, and it doesn't convert anything to a number."}});
+    feedback:{three:"Correct. split(\"|\") cuts the string at every pipe and returns a list of strings.",
+              one:"split() returns a new list of pieces. It doesn't hand back the string in one piece.",
+              tuple:"split() always returns a list of strings. It never converts \"2\" into a number."}});
 
   K.quiz({id:"q-isdigit", buttonSelector:"#card-isdigit .mlrk-choice", feedbackSelector:"#isdigitfb", correct:"true",
-    feedback:{"true":"Correct. Every character in \"8\" is a digit, so isdigit() returns True.",
-              "false":"Every character here is a digit character, so this actually returns True.",
-              error:"isdigit() is a normal string method that never raises an error; it just returns True or False."}});
+    feedback:{"true":"Correct. Every character in \"2\" is a digit, so isdigit() returns True.",
+              "false":"isdigit() asks whether every character is a digit. \"2\" is one digit character.",
+              error:"isdigit() is a string method. It never raises an error; it returns True or False."}});
 
   K.quiz({id:"q-checktry", buttonSelector:"#card-checktry .mlrk-choice", feedbackSelector:"#checktryfb", correct:"try",
-    feedback:{try:"Yes. This directly attempts the real operation and has a specific plan for its known failure.",
-              never:"The program still needs the integer, so avoiding the operation doesn't solve the actual task.",
-              bare:"A bare except can hide unrelated bugs alongside the one failure you meant to catch."}});
+    feedback:{try:"Yes. It attempts the real operation and has a plan for its known failure.",
+              never:"The script still needs the number of nights, so skipping the conversion doesn't do the job.",
+              bare:"A bare except also hides unrelated bugs, not just the ValueError you meant to catch."}});
 
   K.quiz({id:"q-success", buttonSelector:"#card-success .mlrk-choice", feedbackSelector:"#successfb", correct:"good",
-    feedback:{good:"Correct. int(\"8\") succeeds, so the rest of try runs and except is skipped entirely.",
-              except:"The except block only runs if ValueError actually occurs. \"8\" converts successfully.",
-              both:"A matching except isn't an extra step after success — it's skipped completely when nothing goes wrong."},
+    feedback:{good:"Correct. int(\"3\") works, so the rest of try runs and Python skips except.",
+              except:"except runs only if ValueError happens. \"3\" converts with no error.",
+              both:"except is not an extra step after success. Python skips it when nothing fails."},
     onDone(){revealSuccess()}});
 
   K.quiz({id:"q-fail", buttonSelector:"#card-fail .mlrk-choice", feedbackSelector:"#failfb", correct:"convert",
-    feedback:{convert:"Right. int(\"eight\") raises ValueError at that exact line, so Python leaves the rest of try immediately.",
-              afterprint:"This line never gets the chance to run — the line above it already raised before reaching this one.",
-              afterall:"This line sits outside the try/except entirely, so it runs once the whole structure finishes, either way."},
+    feedback:{convert:"Right. int(\"4 nights\") raises ValueError on that line, so Python leaves try right there.",
+              afterprint:"This print never runs at all. The conversion before it already raised.",
+              afterall:"This line is outside the try/except. It runs after the whole structure, either way."},
     onDone(){revealFail()}});
 
-  K.quiz({id:"q-two", buttonSelector:"#card-two .mlrk-choice", feedbackSelector:"#twofb", correct:"index",
-    feedback:{index:"Correct. shelves[int(\"9\")] fails first — there is no index 9 in a 4-item list — so IndexError fires before int(count_text) is ever reached.",
-              value:"The conversion of shelf_code never gets that far: the list lookup itself fails first.",
-              both:"Once a matching except runs, Python doesn't keep going back into the try to check for more failures — only one handler runs."}});
+  K.quiz({id:"q-crash", buttonSelector:"#card-crash .mlrk-choice", feedbackSelector:"#crashfb", correct:"two",
+    feedback:{two:"Correct. Okafor and Hale print. int(\"4 nights\") raises ValueError on Batista's request, so Lindqvist and Moreau never run.",
+              four:"The loop doesn't skip the bad request. It stops there, so nothing after Batista runs.",
+              zero:"Okafor and Hale convert fine and print before the loop reaches Batista."}});
 
-  K.quiz({id:"q-bare", buttonSelector:"#card-bare .mlrk-choice", feedbackSelector:"#barefb", correct:"specific",
-    feedback:{specific:"Exactly. A specific handler recovers from the expected problem while unrelated bugs stay visible instead of vanishing silently.",
-              short:"Shorter isn't safer here — a bare handler can quietly swallow a bug you never meant to hide.",
-              same:"A bare except is far broader: it catches essentially anything, not just ValueError."}});
+  K.quiz({id:"q-two", buttonSelector:"#card-two .mlrk-choice", feedbackSelector:"#twofb", correct:"key",
+    feedback:{key:"Correct. int(\"3\") works. Then rates[\"PH\"] raises KeyError, and Python jumps to except KeyError.",
+              value:"int(\"3\") converts fine. The failure comes one line later, at rates[room].",
+              both:"Only one except block runs. When it finishes, Python moves past the whole try/except."}});
+
+  K.quiz({id:"q-sortjob", buttonSelector:"#card-sortjob .mlrk-choice", feedbackSelector:"#sortjobfb", correct:"validation",
+    feedback:{validation:"Right. int(\"45\") raises no exception, so only a rule check can see that 45 breaks the 30-night limit.",
+              except:"int(\"45\") succeeds, so except ValueError never runs. That except catches \"2 or 3\", not 45.",
+              neither:"45 is a real number, but it breaks the 1 to 30 night rule. A number can convert and still break a rule."}});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"specific",
-    feedback:{specific:"This is the answer a reviewer is listening for: precision about what you expect to fail, and why.",
-              fewer:"Character count isn't the actual tradeoff being asked about here.",
-              same:"There's a real difference: scope. A bare except can mask bugs that except ValueError would never touch."}});
+    feedback:{specific:"That is the answer a reviewer wants: you know what you expect to fail, and you leave other bugs visible.",
+              fewer:"Typing length isn't the tradeoff. What each one catches is.",
+              same:"They differ in scope. A bare except catches every exception, including a NameError from a typo."}});
 
   K.quiz({id:"q-newscenario", buttonSelector:"#card-newscenario .mlrk-choice", feedbackSelector:"#newscenariofb", correct:"keyerror",
-    feedback:{keyerror:"Exactly. A missing dictionary key is a specific, nameable failure — plan for it on purpose rather than hoping it never happens.",
-              ignore:"The scenario says some walk-ins don't have insurance on file, so this assumption is already false.",
-              bareexcept:"A bare except would also hide any unrelated bug in the intake script, not just the missing-record case."}});
+    feedback:{keyerror:"Exactly. A missing key is a specific failure you can name, so plan for it on purpose.",
+              ignore:"The scenario says some sign-ups name a course that isn't there, so that assumption is already wrong.",
+              bareexcept:"A bare except would also hide every unrelated bug in the script."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"A traceback only prints when an exception is never caught by any matching except.", correct:true,
-      hint:"Think back to section 1's illustration — which side of it actually printed a traceback?",
-      explain:"A caught exception never produces a traceback; only an uncaught one does."},
-    {value:"b", label:"If a line inside try raises an exception, the remaining lines in that same try block still run first.", correct:false,
-      hint:"Look back at section 7 — did print(\"Boxes:\", boxes) run after the conversion failed?",
-      explain:"The rest of the try block is abandoned immediately once a line raises; it does not finish running first."},
-    {value:"c", label:"except ValueError only catches a ValueError — it will not catch a TypeError raised in the same try.", correct:true,
-      hint:"Section 8 used two separate except clauses for two separate exception types. Why not just one?",
-      explain:"Each except clause matches only its own named exception type, which is exactly why section 8 needed two of them."},
-    {value:"d", label:"A try block can only ever contain exactly one risky line of code.", correct:false,
-      hint:"Section 8's try block had more than one risky line in it. Does that match this statement?",
-      explain:"A try block can contain several risky lines; section 8's try had three, covering two different possible failures."}
+    {value:"a", label:"A traceback prints only when no matching except catches the exception.", correct:true,
+      hint:"Look at section 1's illustration. Which column printed a traceback?",
+      explain:"A caught exception prints no traceback. Only an uncaught one does."},
+    {value:"b", label:"If a line inside try raises an exception, the rest of that try block still runs first.", correct:false,
+      hint:"In section 7, did print(\"Nights:\", nights) run after the conversion failed?",
+      explain:"Python leaves the try block at the line that raised. The rest of the block doesn't run."},
+    {value:"c", label:"except ValueError catches only a ValueError. It will not catch a KeyError raised in the same try.", correct:true,
+      hint:"Section 9 used a separate except block for each exception. Why not one?",
+      explain:"Each except block matches only the exception it names, which is why section 9 needed two."},
+    {value:"d", label:"A try block can hold only one risky line of code.", correct:false,
+      hint:"How many risky lines does section 9's try block hold?",
+      explain:"A try block can hold several risky lines. Section 9's holds two: the conversion and the dictionary lookup."}
   ]});
 
   K.dragDrop("#matcharea", "act-drag-match");
   K.selfCheck({buttonSelector:"#matchcheck", feedbackSelector:"#matchcheckfb", mapping:{
-    chipA:{expectedId:"zoneValue", label:'int("twelve")', expectedLabel:"ValueError"},
-    chipB:{expectedId:"zoneIndex", label:'["Bakery","Dairy"][5]', expectedLabel:"IndexError"},
-    chipC:{expectedId:"zoneKey", label:'{"P":"Produce"}["B"]', expectedLabel:"KeyError"},
-    chipD:{expectedId:"zoneType", label:'3 + "boxes"', expectedLabel:"TypeError"}
+    chipA:{expectedId:"zoneValue", label:'int("12.5")', expectedLabel:"ValueError"},
+    chipB:{expectedId:"zoneIndex", label:'["STD","DLX"][4]', expectedLabel:"IndexError"},
+    chipC:{expectedId:"zoneKey", label:'{"STD":120}["SUITE"]', expectedLabel:"KeyError"},
+    chipD:{expectedId:"zoneType", label:'3 + "nights"', expectedLabel:"TypeError"},
+    chipE:{expectedId:"zoneName", label:'print(gest)', expectedLabel:"NameError"}
   }});
 
   K.flipCards("#vocab", "act-flip-vocab");
@@ -545,36 +578,36 @@ git push</pre></li>
   K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
 
   function revealSuccess(){
-    $("#successScreen").textContent = `count_text = "8"
+    $("#successScreen").textContent = `nights_text = "3"
 
 try:
-    boxes = int(count_text)
-    print("Boxes:", boxes)
+    nights = int(nights_text)
+    print("Nights:", nights)
 except ValueError:
-    print("Could not read box count.")
+    print("Could not read the number of nights.")
 
-print("Log line finished.")
+print("Request finished.")
 
 [Output]
-Boxes: 8
-Log line finished.`;
+Nights: 3
+Request finished.`;
   }
   $("#successrun").addEventListener("click", revealSuccess);
 
   function revealFail(){
-    $("#failScreen").textContent = `count_text = "eight"
+    $("#failScreen").textContent = `nights_text = "4 nights"
 
 try:
-    boxes = int(count_text)
-    print("Boxes:", boxes)
+    nights = int(nights_text)
+    print("Nights:", nights)
 except ValueError:
-    print("Could not read box count.")
+    print("Could not read the number of nights.")
 
-print("Log line finished.")
+print("Request finished.")
 
 [Output]
-Could not read box count.
-Log line finished.`;
+Could not read the number of nights.
+Request finished.`;
   }
   $("#failrun").addEventListener("click", revealFail);
 
@@ -588,38 +621,39 @@ Log line finished.`;
     if(ok){
       K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> grades has only 3 items (indexes 0, 1, 2), and 5 doesn't exist among them.";
+      fb.innerHTML="<strong>Correct.</strong> room_codes has 3 items, at positions 0, 1, and 2. Position 3 doesn't exist.";
       blankDone=true;
     } else if(blankAttempts>=2){
       K.Scoring.award("q-blank",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> It's <code>IndexError</code> — position 5 doesn't exist in a 3-item list.";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> It's <code>IndexError</code>: a 3-item list has no position 3.";
       blankDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> One more try — think about what kind of value 5 is here, and what it's being used for.";
+      fb.innerHTML="<strong>Not quite.</strong> One more try. Count the positions in room_codes, starting from 0. Is there a position 3?";
     }
     fb.setAttribute("tabindex","-1");fb.focus();
   });
 
   const CASES = {
-    good: {entry:"Dana|3|6", out:"Dana donated 6 boxes to Dairy"},
-    value: {entry:"Dana|3|six", out:"Box count is not a number for Dana"},
-    index: {entry:"Dana|9|6", out:"Shelf code out of range for Dana"}
+    good: {entry:"Moreau|2|STD", out:"Moreau owes 240"},
+    value: {entry:"Moreau|a couple|STD", out:"Nights is not a whole number for Moreau"},
+    key: {entry:"Moreau|2|PH", out:"Unknown room code for Moreau"}
   };
   const simActivity = K.activity("act-simulator", () => window.__simRan === true);
   $("#run").addEventListener("click", () => {
     const c = CASES[$("#case").value];
-    $("#termout").textContent = "entry = \""+c.entry+"\"\nprocess_donation(entry)\n\n[Output]\n"+c.out;
+    $("#termout").textContent = "request = \""+c.entry+"\"\nprocess_request(request)\n\n[Output]\n"+c.out;
     window.__simRan = true;
     simActivity();
   });
 
   const AI_PROMPTS = [
-    "Try: “Python starts inside try. If ___ succeeds, then ___. If it raises ___, Python...”",
-    "Describe it like a fork in a hallway: try walks straight ahead; only a matching except is a door that opens.",
-    "Start with the failing line itself: “When this specific line raises an exception, Python immediately...”"
+    "Try: “Python starts inside try. If ___ works, then ___. If it raises ___, Python...”",
+    "Walk through the \"Lindqvist|3|PH\" request from section 9: which lines run, which line raises, and where Python goes next?",
+    "Start with the failing line: “When this line raises an exception, Python immediately...”"
   ];
+
   $("#hintbtn").addEventListener("click", () => {
     const box = $("#hintbox");
     box.style.display = "block";

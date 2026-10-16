@@ -14,7 +14,7 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Who Can See This Variable?</h1>
-<p class="mlrk-lead">A city parking enforcement office runs a small program that calculates the fine for every ticket. Inside one function, a variable holds the fine amount for a split second, does its job, and then is gone completely. Meanwhile, a different variable, set once outside any function, stays available to the whole program for as long as it runs. Two variables, two completely different lifespans, and mixing up which is which is one of the most common early debugging traps in Python.</p>
+<p class="mlrk-lead">A city parking office runs a small program that works out the fine for every ticket. One variable holds a fine only while one function runs, then it is gone. Another variable, set outside every function, lasts as long as the program runs. Mixing up these two kinds of variables is one of the most common early bugs in Python.</p>
 <div class="mlrk-meta">
   <span class="mlrk-pill">~40–44 minutes</span>
   <span class="mlrk-pill">Interactive</span>
@@ -49,108 +49,108 @@
 
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
-<p>The parking office's clerk writes one function to calculate every fine:</p>
+<p>A clerk at the parking office writes one function to work out every fine:</p>
 <div class="mlrk-code"><div class="mlrk-screen">def calculate_fine(base_fine, minutes_over):
     fine = base_fine + (minutes_over * 2)
     return fine
 
 ticket_total = calculate_fine(40, 10)</div></div>
-<p>While <code>calculate_fine</code> is running, it has its own private set of names: the parameters <code>base_fine</code> and <code>minutes_over</code>, and the variable <code>fine</code> created inside its body. The moment the function hits <code>return fine</code> and hands that value back, all three of those names disappear entirely, as if the function were a room that gets torn down the instant its work is done. Only the returned number, now stored in <code>ticket_total</code>, survives outside. This region where a name can be seen and used is called its <strong>scope</strong>, and a name that lives and dies inside one function call has <strong>local scope</strong>.</p>
+<p>While <code>calculate_fine</code> runs, it has its own names: the parameters <code>base_fine</code> and <code>minutes_over</code>, and the variable <code>fine</code> created in its body. When <code>return fine</code> runs, the function hands back the value 60, and all three names stop existing. Only the returned value survives, stored in <code>ticket_total</code>. The part of a program where a name can be seen and used is its <strong>scope</strong>. A name created inside a function is a <strong>local variable</strong>: it exists only inside that function, and only while the function runs.</p>
 
-<svg class="mlrk-illustration" viewBox="0 0 760 350" role="img" aria-labelledby="scopeIntroTitle scopeIntroDesc" xmlns="http://www.w3.org/2000/svg">
+<svg class="mlrk-illustration" viewBox="0 0 760 356" role="img" aria-labelledby="scopeIntroTitle scopeIntroDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="scopeIntroTitle">A function as a walled room that disappears when it returns, versus a global variable that persists outside it</title>
   <desc id="scopeIntroDesc">Two panels sit above a shared strip labeled global scope, which holds daily_fine_cap and tickets_issued and stays the same in both panels. The left panel, labeled while calculate_fine runs, is a solid walled room containing base_fine, minutes_over, and fine. The right panel, labeled after calculate_fine returns, shows the same room now dashed and empty, with its three local names crossed out, while the global strip beneath it is unchanged.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
     <text x="190" y="20" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">WHILE calculate_fine() runs</text>
     <rect x="30" y="30" width="320" height="170" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3" stroke-dasharray="10 6"/>
-    <text x="190" y="55" text-anchor="middle" font-size="12" font-style="italic" fill="#261F1D">local scope — exists only during this call</text>
+    <text x="190" y="57" text-anchor="middle" font-size="16" font-style="italic" fill="#261F1D">local scope: only during this call</text>
     <g fill="#FFFCF7" stroke="#264326" stroke-width="2">
       <rect x="50" y="70" width="120" height="40" rx="10"/>
       <rect x="190" y="70" width="140" height="40" rx="10"/>
       <rect x="120" y="130" width="140" height="40" rx="10"/>
     </g>
-    <g font-size="13" font-weight="700" fill="#261F1D" text-anchor="middle">
-      <text x="110" y="94">base_fine</text>
-      <text x="260" y="94">minutes_over</text>
-      <text x="190" y="154">fine</text>
+    <g font-size="16" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="110" y="96">base_fine</text>
+      <text x="260" y="96">minutes_over</text>
+      <text x="190" y="156">fine</text>
     </g>
 
     <text x="570" y="20" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">AFTER calculate_fine() returns</text>
     <rect x="410" y="30" width="320" height="170" rx="16" fill="#F7DFDF" stroke="#B3BBB0" stroke-width="3" stroke-dasharray="4 6"/>
-    <text x="570" y="55" text-anchor="middle" font-size="12" font-style="italic" fill="#261F1D" fill-opacity="0.55">local scope — torn down, nothing left</text>
+    <text x="570" y="57" text-anchor="middle" font-size="16" font-style="italic" fill="#261F1D" fill-opacity="0.7">local scope: gone after return</text>
     <g fill="none" stroke="#C92929" stroke-width="2.5">
       <path d="M430,70 L550,110 M550,70 L430,110"/>
       <path d="M570,70 L710,110 M710,70 L570,110"/>
       <path d="M500,130 L640,170 M640,130 L500,170"/>
     </g>
-    <g font-size="13" font-weight="700" fill="#261F1D" fill-opacity="0.55" text-anchor="middle">
-      <text x="490" y="94">base_fine</text>
-      <text x="640" y="94">minutes_over</text>
-      <text x="570" y="154">fine</text>
+    <g font-size="16" font-weight="700" fill="#261F1D" fill-opacity="0.7" text-anchor="middle">
+      <text x="490" y="96">base_fine</text>
+      <text x="640" y="96">minutes_over</text>
+      <text x="570" y="156">fine</text>
     </g>
 
-    <rect x="30" y="230" width="700" height="100" rx="16" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
-    <text x="380" y="255" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">GLOBAL SCOPE — created once, exists for the whole program</text>
+    <rect x="30" y="230" width="700" height="112" rx="16" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="380" y="257" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">GLOBAL SCOPE: created once, exists for the whole program</text>
     <g fill="#FFFCF7" stroke="#2274B5" stroke-width="2">
       <rect x="180" y="270" width="180" height="42" rx="10"/>
       <rect x="410" y="270" width="180" height="42" rx="10"/>
     </g>
-    <g font-size="13" font-weight="700" fill="#261F1D" text-anchor="middle">
-      <text x="270" y="296">daily_fine_cap</text>
-      <text x="500" y="296">tickets_issued</text>
+    <g font-size="16" font-weight="700" fill="#261F1D" text-anchor="middle">
+      <text x="270" y="297">daily_fine_cap</text>
+      <text x="500" y="297">tickets_issued</text>
     </g>
-    <text x="380" y="330" text-anchor="middle" font-size="12.5" font-weight="600" fill="#2F5A8B">same two names, unchanged, under both panels above</text>
+    <text x="380" y="331" text-anchor="middle" font-size="16" font-weight="600" fill="#2F5A8B">same two names, unchanged, under both panels</text>
   </g>
 </svg>
 
-<p>Not every variable works this way. <code>daily_fine_cap</code> is created outside every function, directly in the main body of the script. A variable defined at that level has <strong>global scope</strong>: it's created once when the program starts and stays available for the rest of the program's run, including from inside any function that wants to read it.</p>
+<p>Not every variable works this way. <code>daily_fine_cap</code> is created outside every function, in the main body of the script. That makes it a <strong>global variable</strong>. It exists for the whole program, and any function can read it.</p>
 
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> a function that quietly depends on a global variable will pass every test its original author runs, then throw a <code>NameError</code> the moment a teammate imports it into a different file that doesn't happen to define that same global. Reviewers and interviewers watch for exactly this pattern, because it's one of the most common ways "working" code turns out to be fragile the moment it's reused.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to define a function with parameters and hand a value back with <code>return</code>. This reading is about a question that sits underneath all of that: at any given line of code, which variable names actually exist, and which have already vanished? Once that's automatic, you're ready for ideas that lean on it constantly — functions that call other functions, and eventually classes, where every object keeps its own private copy of the same variable names.</p>
+<p><strong>Why this matters:</strong> a function that reads a global variable works fine in the script where it was written. Copy it into a script without that global, and it raises a <code>NameError</code>. Reviewers and interviewers watch for this, because it is a common way that working code breaks when someone reuses it.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to define a function with parameters and hand a value back with <code>return</code>. This reading answers a new question: at a given line of code, which names exist, and which are already gone? Later ideas depend on this answer, such as functions that call other functions, and classes, where each object keeps its own copy of the same variable names.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before scope</h2>
-<p class="mlrk-small">Two already-familiar skills get reused constantly below: knowing what <code>return</code> actually does, and telling a parameter apart from an argument. Test each one before moving on.</p>
+<p>This reading leans on two skills you already have: knowing what <code>return</code> does, and telling a parameter from an argument. Check each one.</p>
 
-<div class="mlrk-card" id="card-recall"><p><strong>What does a <code>return</code> statement actually do?</strong></p>
-<button type="button" class="mlrk-choice" data-a="right">It sends a value back to the exact line that called the function.</button>
-<button type="button" class="mlrk-choice" data-a="print">It displays a value on the screen for a person to read.</button>
-<button type="button" class="mlrk-choice" data-a="end">It only marks where a function's code ends, with no other effect.</button>
+<div class="mlrk-card" id="card-recall"><p><strong>What does a <code>return</code> statement do?</strong></p>
+<button type="button" class="mlrk-choice" data-a="right">It sends a value back to the line that called the function.</button>
+<button type="button" class="mlrk-choice" data-a="print">It shows a value on the screen for a person to read.</button>
+<button type="button" class="mlrk-choice" data-a="end">It only marks where a function's code ends.</button>
 <div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-argp" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">def double(number):
-    return number * 2
+<div class="mlrk-code"><div class="mlrk-screen">def hours_parked(minutes):
+    return minutes / 60
 
-result = double(9)</div></div>
-<p><strong>In this call, what is <code>9</code>?</strong></p>
-<button type="button" class="mlrk-choice" data-a="argument">The argument — the actual value supplied at this call.</button>
-<button type="button" class="mlrk-choice" data-a="parameter">The parameter — the name written in the function's definition.</button>
+result = hours_parked(90)</div></div>
+<p><strong>In this call, what is <code>90</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="argument">The argument: the value passed in at this call.</button>
+<button type="button" class="mlrk-choice" data-a="parameter">The parameter: the name in the function's <code>def</code> line.</button>
 <button type="button" class="mlrk-choice" data-a="return">The return value produced by the function.</button>
 <div id="argpfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-callout mlrk-callout-blue">Nothing about how parameters, arguments, or <code>return</code> work is changing below — this reading adds one new question on top of all of it: where can a given name actually be used, and for how long?</div>
+<div class="mlrk-callout mlrk-callout-blue">Parameters, arguments, and <code>return</code> work the same way below. This reading adds one question: where can a name be used, and for how long?</div>
 </section>
 
 <section class="mlrk-section">
 <h2>3. Technical vocabulary</h2>
 <p>Flip each card before the practice below.</p>
 <div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>scope</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Scope</strong><br>The region of a program where a given variable name can be seen and used.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>local variable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Local variable</strong><br>A variable created inside a function. It exists only while that specific call is running, then is destroyed.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>global variable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Global variable</strong><br>A variable created outside every function, at the top level of a script. It exists for the entire run of the program.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>NameError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>NameError</strong><br>Python's error when code refers to a name that doesn't exist in any scope it can currently see, including a local name from a function call that already ended.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>UnboundLocalError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>UnboundLocalError</strong><br>Python's error when a function assigns to a name anywhere in its body, which makes that name local for the whole function, and then some earlier line tries to read it before it's actually been assigned.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>global keyword</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>global keyword</strong><br>Written inside a function body to tell Python "assign to the actual outside global variable, not a new local one."</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>scope</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Scope</strong><br>The part of a program where a variable name can be seen and used.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>local variable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Local variable</strong><br>A variable created inside a function. Only that function can see it, and it stops existing when the function ends.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>global variable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Global variable</strong><br>A variable created outside every function. Functions can read it, and it exists for the whole program.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>NameError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>NameError</strong><br>Python's error when code uses a name that doesn't exist where the code can see it. One example: a local variable from a function that already ended.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>UnboundLocalError</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>UnboundLocalError</strong><br>Python's error when a function reads a local variable before giving it a value. Assigning to a name anywhere in a function makes that name local for the whole function.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>global keyword</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>global keyword</strong><br>Written inside a function to make an assignment change the outside global variable. It hides what the function depends on, so passing a parameter is usually better.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>4. Watch a local scope come and go</h2>
-<p>Click through <code>calculate_fine(40, 10)</code> one line at a time and notice exactly when each name is created, and when the whole set of them disappears.</p>
+<p>Click through <code>calculate_fine(40, 10)</code> one step at a time. Notice when each name is created, and when they all disappear.</p>
 <div class="mlrk-code"><div class="mlrk-screen">def calculate_fine(base_fine, minutes_over):
     fine = base_fine + (minutes_over * 2)
     return fine
@@ -161,7 +161,7 @@ ticket_total = calculate_fine(40, 10)</div></div>
 
 <section class="mlrk-section">
 <h2>5. Predict: reaching for a local name from outside</h2>
-<p>Same function, but this time look closely at the very last line.</p>
+<p>This is the same function with one new line at the end.</p>
 <div class="mlrk-code"><div id="localScreen" class="mlrk-screen">def calculate_fine(base_fine, minutes_over):
     fine = base_fine + (minutes_over * 2)
     return fine
@@ -170,12 +170,12 @@ ticket_total = calculate_fine(40, 10)
 print(ticket_total)
 print(fine)</div></div>
 <div class="mlrk-fillblank">
-  <label for="predictLocal">Predict, in your own words or by naming an error: what happens on the very last line, <code>print(fine)</code>?</label>
+  <label for="predictLocal">Predict what happens on the last line, <code>print(fine)</code>. Describe it or name the error.</label>
   <input type="text" id="predictLocal" autocomplete="off" placeholder="e.g. an error, or describe what you think happens">
 </div>
 <p><button type="button" id="predictLocalCheck" class="mlrk-btn">Check my prediction</button></p>
 <div id="predictLocalFb" class="mlrk-feedback" tabindex="-1"></div>
-<details class="mlrk-hint"><summary>Need a hint?</summary><p>Look back at section 4's trace. By the time <code>print(fine)</code> runs, has that call's local scope already been torn down?</p></details>
+<details class="mlrk-hint"><summary>Need a hint?</summary><p>Look back at section 4's trace. Does <code>fine</code> still exist when <code>print(fine)</code> runs?</p></details>
 </section>
 
 <section class="mlrk-section">
@@ -187,52 +187,55 @@ def calculate_fine(base_fine, minutes_over):
     return min(fine, daily_fine_cap)
 
 ticket_total = calculate_fine(90, 40)</div></div>
-<div class="mlrk-card" id="card-global" style="margin-top:1rem"><p><strong>What does <code>calculate_fine</code> actually need in order to run correctly here?</strong></p>
-<button type="button" class="mlrk-choice" data-a="both">Both of its parameters, and a <code>daily_fine_cap</code> that already exists outside it.</button>
-<button type="button" class="mlrk-choice" data-a="params">Only <code>base_fine</code> and <code>minutes_over</code>, since those are the only parameters.</button>
-<button type="button" class="mlrk-choice" data-a="none">Nothing beyond what's written inside the function itself.</button>
+<div class="mlrk-card" id="card-global" style="margin-top:1rem"><p><strong>What does <code>calculate_fine</code> need in order to run correctly here?</strong></p>
+<button type="button" class="mlrk-choice" data-a="both">Both of its parameters, plus a <code>daily_fine_cap</code> that already exists outside it.</button>
+<button type="button" class="mlrk-choice" data-a="params">Only <code>base_fine</code> and <code>minutes_over</code>, since those are its parameters.</button>
+<button type="button" class="mlrk-choice" data-a="none">Nothing beyond the code inside the function.</button>
 <div id="globalfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p class="mlrk-callout mlrk-callout-blue"><strong>Key design idea:</strong> the call <code>calculate_fine(90, 40)</code> looks complete, but it hides a real dependency. Nothing about that call reveals that the function also needs <code>daily_fine_cap</code> to already exist somewhere outside it, with a reasonable value.</p>
+<p class="mlrk-callout mlrk-callout-blue"><strong>Key design idea:</strong> the call <code>calculate_fine(90, 40)</code> looks complete, but it hides something the function needs. Nothing in the call shows that <code>daily_fine_cap</code> must already exist outside the function.</p>
 </section>
 
 <section class="mlrk-section">
 <h2>7. Predict: the UnboundLocalError trap</h2>
-<p>A second function tries to count tickets as it goes.</p>
+<p>A second function tries to count tickets as they are issued.</p>
 <div class="mlrk-code"><div class="mlrk-screen">tickets_issued = 0
 
 def issue_ticket():
     tickets_issued = tickets_issued + 1
     return tickets_issued</div></div>
 <div class="mlrk-fillblank">
-  <label for="predictUbl">Predict, in your own words or by naming an error: what happens when Python calls <code>issue_ticket()</code>?</label>
+  <label for="predictUbl">Predict what happens when Python calls <code>issue_ticket()</code>. Describe it or name the error.</label>
   <input type="text" id="predictUbl" autocomplete="off" placeholder="e.g. an error, or describe what you think happens">
 </div>
 <p><button type="button" id="predictUblCheck" class="mlrk-btn">Check my prediction</button></p>
 <div id="predictUblFb" class="mlrk-feedback" tabindex="-1"></div>
-<details class="mlrk-hint"><summary>Need a hint?</summary><p>The line <code>tickets_issued = tickets_issued + 1</code> assigns to <code>tickets_issued</code>. That assignment, anywhere in the function body, is what decides its scope for the <em>entire</em> function, from the very first line.</p></details>
+<details class="mlrk-hint"><summary>Need a hint?</summary><p>The line <code>tickets_issued = tickets_issued + 1</code> assigns to <code>tickets_issued</code>. An assignment anywhere in a function decides that name's scope for the <em>whole</em> function.</p></details>
 </section>
 
 <section class="mlrk-section">
 <h2>8. Fix the trap without hiding the problem</h2>
-<div class="mlrk-card" id="card-fix"><p><strong>Which redesign of <code>issue_ticket</code> keeps the function well-scoped, easy to test on its own, and easy to reuse elsewhere?</strong></p>
+<div class="mlrk-card" id="card-fix"><p><strong>Which redesign of <code>issue_ticket</code> is easiest to test on its own and reuse in another script?</strong></p>
 <button type="button" class="mlrk-choice" data-a="param"><code>def issue_ticket(count): return count + 1</code>, called as <code>tickets_issued = issue_ticket(tickets_issued)</code></button>
-<button type="button" class="mlrk-choice" data-a="globalkw">Add <code>global tickets_issued</code> as the first line inside the function, and leave everything else the same.</button>
-<button type="button" class="mlrk-choice" data-a="rename">Rename the local variable to <code>tickets</code> instead of <code>tickets_issued</code>.</button>
+<button type="button" class="mlrk-choice" data-a="globalkw">Add <code>global tickets_issued</code> as the first line inside the function. Change nothing else.</button>
+<button type="button" class="mlrk-choice" data-a="rename">Rename <code>tickets_issued</code> to <code>tickets</code> inside the function.</button>
 <div id="fixfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>9. Fill in the blank: recognize the syntax anyway</h2>
-<p>Even though section 8 favored the parameter-and-return redesign, you'll still run into the <code>global</code> keyword reading other people's code, so it's worth recognizing on sight.</p>
-<div class="mlrk-code"><div class="mlrk-screen">tickets_issued = 0
+<h2>9. Fill in the blanks: turn the global into a parameter</h2>
+<p>Section 6's <code>calculate_fine</code> read <code>daily_fine_cap</code> from outside. In this version, the cap comes in as a third parameter, so the call shows everything the function needs.</p>
+<div class="mlrk-code"><div class="mlrk-screen">def calculate_fine(base_fine, minutes_over, ____(1)):
+    fine = base_fine + (minutes_over * 2)
+    return min(fine, fine_cap)
 
-def issue_ticket_direct():
-    ____ tickets_issued
-    tickets_issued += 1
-    return tickets_issued</div></div>
+ticket_total = calculate_fine(90, 40, 150)</div></div>
 <div class="mlrk-fillblank">
-  <label for="blankGlobal">Which keyword belongs in the blank, so this function modifies the actual outside variable instead of creating a new local one?</label>
+  <label for="blankGlobal">Blank (1): which parameter name does the body need?</label>
   <input type="text" id="blankGlobal" autocomplete="off">
+</div>
+<div class="mlrk-fillblank">
+  <label for="blankCap2">What number does <code>ticket_total</code> hold? (<code>min</code> returns the smaller of its two values.)</label>
+  <input type="text" id="blankCap2" autocomplete="off">
 </div>
 <p><button type="button" id="blankGlobalCheck" class="mlrk-btn">Check my answer</button></p>
 <div id="blankGlobalFb" class="mlrk-feedback" tabindex="-1"></div>
@@ -240,7 +243,7 @@ def issue_ticket_direct():
 
 <section class="mlrk-section">
 <h2>10. Sort by scope</h2>
-<p>Drag each variable name into the zone that matches how it was created, then use the self-check button to confirm your matches.</p>
+<p>Using the code from sections 4 through 7, drag each name into the zone that matches where it was created. Then check your matches.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
   <span id="chip1" class="mlrk-draggable"><code>base_fine</code></span>
@@ -259,13 +262,13 @@ def issue_ticket_direct():
 
 <section class="mlrk-section">
 <h2>11. Order the steps: a function call's scope lifecycle</h2>
-<p>Click steps, in order, to build the sequence Python actually follows when <code>calculate_fine(40, 10)</code> is called. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<p>Click the steps in the order Python runs them for <code>calculate_fine(40, 10)</code>. Click a step again to remove it. Press "Check my order" when you're done. This self-check is not graded.</p>
 <ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="create"><span class="mlrk-order-num"></span> Python creates a brand-new, empty local scope for this call.</li>
-  <li class="mlrk-orderitem" data-step="assign"><span class="mlrk-order-num"></span> Each parameter name is assigned the value passed in as its matching argument.</li>
-  <li class="mlrk-orderitem" data-step="run"><span class="mlrk-order-num"></span> The function body runs, possibly creating more local variables along the way.</li>
-  <li class="mlrk-orderitem" data-step="return"><span class="mlrk-order-num"></span> The <code>return</code> statement sends a value back out to the line that made the call.</li>
-  <li class="mlrk-orderitem" data-step="destroy"><span class="mlrk-order-num"></span> This call's entire local scope, and every name inside it, is destroyed.</li>
+  <li class="mlrk-orderitem" data-step="create"><span class="mlrk-order-num"></span> Python creates a new, empty local scope for this call.</li>
+  <li class="mlrk-orderitem" data-step="assign"><span class="mlrk-order-num"></span> Each parameter gets the value of its matching argument.</li>
+  <li class="mlrk-orderitem" data-step="run"><span class="mlrk-order-num"></span> The function body runs and may create more local variables.</li>
+  <li class="mlrk-orderitem" data-step="return"><span class="mlrk-order-num"></span> <code>return</code> sends a value back to the line that made the call.</li>
+  <li class="mlrk-orderitem" data-step="destroy"><span class="mlrk-order-num"></span> Every local name from this call stops existing.</li>
 </ul>
 <div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
 <div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
@@ -273,11 +276,11 @@ def issue_ticket_direct():
 
 <section class="mlrk-section">
 <h2>12. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about local and global scope.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A local variable is completely gone once its function call returns, unless its value was returned and saved somewhere.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> If two different functions each create a local variable with the same name, they secretly share one value.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Assigning to a name anywhere in a function's body makes that name local for the entire function, even on lines written above the assignment.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A global variable can only ever be read by the one function it was first used in.</label>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE about local and global scope.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A local variable is gone once its function returns. Only a value that was returned and stored survives.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> If two functions each create a local variable with the same name, they share one value.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Assigning to a name anywhere in a function makes that name local for the whole function, even on lines above the assignment.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A global variable can be read only by the first function that uses it.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
@@ -285,10 +288,10 @@ def issue_ticket_direct():
 
 <section class="mlrk-section">
 <h2>13. Watch: parameters, local variables, and globals side by side</h2>
-<p>As you watch, notice how the video draws parameters and local variables as living only inside a function, and a global variable as sitting completely outside that boundary. Watch for the exact moment it shows what happens to a local name once its function finishes.</p>
+<p>As you watch, notice that the video draws parameters and local variables inside the function, and global variables outside it. Watch for what happens to a local name when its function finishes.</p>
 <div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=3TxcPKu9ec4" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one thing the video's explanation made clearer than it was before, about where a parameter, a local variable, or a global variable actually lives?</strong></p>
+<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what is one thing the video made clearer about where a parameter, a local variable, or a global variable lives?</strong></p>
 <textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
 </div>
 </section>
@@ -296,25 +299,33 @@ def issue_ticket_direct():
 <section class="mlrk-section">
 <h2>14. How this shows up in interviews</h2>
 <div class="mlrk-callout mlrk-callout-green">
-<p>A scope bug, especially a function that accidentally relies on a global variable, is one of the most common early debugging traps a code reviewer sees, and interviewers know it. A live coding round often includes a moment like: "this function works in my file, why does it break in yours?" The honest answer is almost always the same one practiced in section 6: the function secretly depended on a variable that existed only in the original script.</p>
-<p>For software-engineering-leaning roles, expect a direct follow-up: "how would you fix this so it doesn't happen again?" The strong answer is the redesign from section 8, passing the needed value in as a parameter, not adding <code>global</code> to patch over the symptom.</p>
-<p>For data roles, the same trap shows up as a transformation function that quietly reads a shared config variable or a DataFrame defined elsewhere in a notebook, instead of receiving it as an argument. That makes the function impossible to unit test in isolation, which is exactly what a reviewer is checking for when they ask you to write a small, testable function.</p>
+<p>Code reviewers see scope bugs often, especially functions that depend on a global variable. Interviewers know this, so a coding round may ask you to explain why a function stopped working after it was moved. The usual cause is section 6's problem: the function read a variable that existed only in the original script.</p>
+<p>For software engineering roles, expect a follow-up: "How would you fix it?" A strong answer passes the value in as a parameter, as in sections 8 and 9. Adding <code>global</code> only hides the problem.</p>
+<p>For data roles, the same trap shows up in notebooks. A function reads a setting or a table defined in another cell instead of taking it as an argument. You can't test that function on its own, and reviewers notice.</p>
 </div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> a teammate's function passes every test in their own script, but raises a <code>NameError</code> the moment it's copied into a different file. What's the most likely cause?</p>
-<button type="button" class="mlrk-choice" data-a="right">The function reads a global variable that only exists in the original script, and was never passed in as a parameter.</button>
-<button type="button" class="mlrk-choice" data-a="import">Functions cannot be copied between files in Python.</button>
-<button type="button" class="mlrk-choice" data-a="rename">The function's own name needs to be changed before it can run elsewhere.</button>
+<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> "Is it ever reasonable for a function to read a global variable?" Which global is the safest one for a function to read?</p>
+<button type="button" class="mlrk-choice" data-a="right">A constant that never changes, like <code>MINUTES_PER_HOUR = 60</code>.</button>
+<button type="button" class="mlrk-choice" data-a="import">A running count that the program updates after every call.</button>
+<button type="button" class="mlrk-choice" data-a="rename">A value that is different for each call, like one driver's minutes over the limit.</button>
 <div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>15. Debugging habit + reflection</h2>
-<div class="mlrk-card" id="card-debug"><p><strong>You inherit a function that raises a <code>NameError</code> the first time you run it, though the person who wrote it swears it worked fine for them. What should you check first?</strong></p>
-<button type="button" class="mlrk-choice" data-a="right">Whether the function reads a variable that was only ever defined elsewhere in the original author's own script.</button>
-<button type="button" class="mlrk-choice" data-a="syntax">Whether there's a typo in the function's own <code>def</code> line.</button>
-<button type="button" class="mlrk-choice" data-a="restart">Whether restarting your computer will make the missing variable appear.</button>
+<div class="mlrk-card" id="card-debug"><p><strong>A clerk copies <code>late_fee</code> from the parking office's main script into a new script and runs it.</strong></p>
+<div class="mlrk-code"><div class="mlrk-screen">def late_fee(days_late):
+    return days_late * fee_per_day
+
+print(late_fee(3))
+
+[Output]
+NameError: name 'fee_per_day' is not defined</div></div>
+<p><strong>Why does the new script raise this error?</strong></p>
+<button type="button" class="mlrk-choice" data-a="right"><code>late_fee</code> reads <code>fee_per_day</code>, a global that was defined only in the main script.</button>
+<button type="button" class="mlrk-choice" data-a="syntax"><code>days_late</code> is a local variable that was never created.</button>
+<button type="button" class="mlrk-choice" data-a="restart"><code>late_fee</code> must be renamed before it can run in a new script.</button>
 <div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>Your debugging habit:</strong> in 1-2 sentences, describe how you'd check whether an unfamiliar name inside a function is a parameter, a local variable, or a global one.</label>
+<label for="strategy"><strong>Your debugging habit:</strong> in 1-2 sentences, describe how you'd check whether a name inside a function is a parameter, a local variable, or a global variable.</label>
 <textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I'd look for..."></textarea>
 <p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
 <div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
@@ -322,19 +333,19 @@ def issue_ticket_direct():
 
 <section class="mlrk-section">
 <h2>16. Summary &amp; critical thinking</h2>
-<p>Three ideas carried this whole reading: a local variable is created fresh with every function call and destroyed the moment that call returns, a global variable is created once and lasts for the whole program, and assigning to a name anywhere inside a function makes Python treat that name as local for the entire function body, which is exactly what causes an <code>UnboundLocalError</code> when the assignment comes after an attempted read.</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a food pantry's program has a function <code>boxes_for_household(household_size)</code> that creates a local variable <code>num_boxes</code> inside its body and returns it. Right after the call <code>result = boxes_for_household(4)</code>, a teammate tries to log <code>num_boxes</code> directly, on its own line, to send an alert. What happens?</p>
-<button type="button" class="mlrk-choice" data-a="right">It raises a <code>NameError</code>. <code>num_boxes</code> only existed inside the function call; the teammate needs to log <code>result</code> instead.</button>
-<button type="button" class="mlrk-choice" data-a="lastvalue">It logs whatever <code>num_boxes</code> was last computed as, since the function already ran.</button>
-<button type="button" class="mlrk-choice" data-a="zero">It silently logs <code>0</code> instead of raising any error.</button>
+<p>This reading covered three ideas. A local variable is created each time its function runs and stops existing when the function returns. A global variable is created once and lasts for the whole program. Assigning to a name anywhere in a function makes it local for the whole function, which causes an <code>UnboundLocalError</code> if the function reads the name before assigning it.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a phone carrier's program has a function <code>data_overage(gb_used)</code>. Inside it, a local variable <code>extra_gb</code> holds the data used past the plan's limit, and the function returns a charge. The program runs <code>charge = data_overage(18)</code>, and the next line is <code>print(extra_gb)</code>. What happens?</p>
+<button type="button" class="mlrk-choice" data-a="right">A <code>NameError</code>. <code>extra_gb</code> existed only inside the function; only <code>charge</code> exists afterward.</button>
+<button type="button" class="mlrk-choice" data-a="lastvalue">It prints the last value of <code>extra_gb</code>, since the function already ran.</button>
+<button type="button" class="mlrk-choice" data-a="zero">It prints <code>0</code> and raises no error.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> if you inherited a function you'd never seen before and it referenced a name you didn't recognize, what would you check first to figure out whether that name is a parameter, a local variable, or a global variable?</label>
+<label for="clue"><strong>In your own words:</strong> a function you've never seen uses a name you don't recognize. What would you check first to tell whether it's a parameter, a local variable, or a global variable?</label>
 <textarea id="clue" class="mlrk-response" data-save></textarea>
 </section>
 
 <section class="mlrk-section">
 <h2>17. Thinking ahead</h2>
-<p>The habit of asking "which names exist at this exact line, and for how long" keeps paying off well past this reading: it's exactly what's needed to reason about one function calling another, and later, about a class where every object keeps its own private copy of the same variable names, invisible to every other object of that same class.</p>
+<p>Keep asking, "Which names exist at this line, and for how long?" You'll need that question when one function calls another. You'll need it again for classes, where each object keeps its own copy of the same variable names.</p>
 </section>
 
 <section class="mlrk-section">
@@ -436,53 +447,53 @@ git push</pre></li>
   K.Scoring.renderChip("#scorechip");
 
   K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"right",
-    feedback:{right:"return hands a real value back to whatever line made the call, so it can be saved, printed, or used in more math.",
-              print:"print() displays something on screen for a person, but return is what actually hands a value back to the calling code.",
-              end:"return does mark the end of that path through the function, but its main job is sending a value back out."}});
+    feedback:{right:"Right. return hands a value back to the line that made the call, so that line can store it or use it.",
+              print:"That's print(). return hands a value back to the calling code.",
+              end:"return does end the function, but its main job is sending a value back."}});
 
   K.quiz({id:"q-argp", buttonSelector:"#card-argp .mlrk-choice", feedbackSelector:"#argpfb", correct:"argument",
-    feedback:{argument:"9 is the real value supplied at this specific call, which makes it the argument.",
-              parameter:"number is the parameter, the name written in double's own definition. 9 is the argument.",
-              return:"The return value here is 18 (9 * 2), not the 9 that was passed in."}});
+    feedback:{argument:"Right. 90 is the value passed in at this call, so it's the argument.",
+              parameter:"minutes is the parameter, the name in the def line. 90 is the argument.",
+              return:"The return value is 1.5 (90 / 60), not the 90 passed in."}});
 
   K.quiz({id:"q-global", buttonSelector:"#card-global .mlrk-choice", feedbackSelector:"#globalfb", correct:"both",
-    feedback:{both:"The parameters supply base_fine and minutes_over, but the function body also reads daily_fine_cap, which has to already exist outside it.",
-              params:"The call only shows base_fine and minutes_over, but the body still needs daily_fine_cap to exist somewhere outside the function.",
-              none:"The function's body clearly refers to daily_fine_cap, a name it never creates itself."}});
+    feedback:{both:"Right. The parameters cover base_fine and minutes_over, but the body also reads daily_fine_cap from outside.",
+              params:"Look at the return line. The body reads daily_fine_cap, which isn't a parameter.",
+              none:"The body uses daily_fine_cap, a name the function never creates."}});
 
   K.quiz({id:"q-fix", buttonSelector:"#card-fix .mlrk-choice", feedbackSelector:"#fixfb", correct:"param",
-    feedback:{param:"Passing the current count in and returning the updated count keeps the function's real inputs and outputs visible at the call, so it's easy to test with any starting count.",
-              globalkw:"global tickets_issued does fix the UnboundLocalError, but it recreates the exact hidden dependency from section 6: the function secretly needs an outside variable to already exist.",
-              rename:"Renaming the local variable doesn't change that it's still read before being assigned; the UnboundLocalError would still happen."}});
+    feedback:{param:"Right. The count goes in and the new count comes out, so the call shows everything. You can test it with any starting count.",
+              globalkw:"This stops the error, but the function still depends on an outside variable, like section 6.",
+              rename:"The renamed variable is still read before it gets a value, so the same error happens."}});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"right",
-    feedback:{right:"A function that quietly reads a global only defined in its original file will fail with a NameError the moment that global isn't around anymore.",
-              import:"Copying a function into another file is completely normal Python. The problem is what that function secretly depends on, not the copy itself.",
-              rename:"Renaming the function changes nothing about which outside names its body actually reads."}});
+    feedback:{right:"Right. A constant has the same value everywhere, so reading it can't change the answer between calls.",
+              import:"A count that changes between calls makes the function's answer depend on something the call doesn't show. Pass it in and return it.",
+              rename:"A value that changes with each call is exactly what a parameter is for."}});
 
   K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"right",
-    feedback:{right:"A NameError that only shows up in a new environment is the classic signature of a function that secretly depended on a global variable the original file happened to define.",
-              syntax:"A typo in the def line would usually raise a SyntaxError immediately, every time, not a NameError that depends on which file it's run from.",
-              restart:"Restarting a computer doesn't create a missing variable inside a Python script."}});
+    feedback:{right:"Right. fee_per_day was a global in the main script. The new script never created it. A fee_per_day parameter would fix this.",
+              syntax:"days_late is a parameter. The call late_fee(3) gives it the value 3.",
+              restart:"The function's name is fine. The error names fee_per_day, which the new script never created."}});
 
   K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"right",
-    feedback:{right:"num_boxes was local to that one call of boxes_for_household and was destroyed the instant the function returned. Only result, which caught the returned value, is available afterward.",
-              lastvalue:"Local variables aren't remembered between the end of a call and later code; num_boxes simply doesn't exist anymore at that point.",
-              zero:"Python doesn't silently substitute 0 for a missing name. Trying to use num_boxes directly there raises a real NameError."}});
+    feedback:{right:"Right. extra_gb was local to data_overage and stopped existing when it returned. Print charge instead.",
+              lastvalue:"Python doesn't keep local variables after a function ends. extra_gb no longer exists.",
+              zero:"Python never fills in 0 for a missing name. It raises a NameError."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
     {value:"a", label:"A local variable is completely gone once its function call returns, unless its value was returned and saved somewhere.", correct:true,
-      hint:"Revisit section 4's trace and section 5's prediction. Did fine survive after calculate_fine returned?",
-      explain:"This is the exact behavior traced in section 4 and predicted in section 5: the local scope is destroyed on return, and only a returned, saved value survives."},
+      hint:"Look at section 5. Did fine exist after calculate_fine returned?",
+      explain:"Sections 4 and 5 showed this: local names stop existing on return, and only the stored return value survives."},
     {value:"b", label:"If two different functions each create a local variable with the same name, they secretly share one value.", correct:false,
-      hint:"Think about section 4's walled room. Does one function's room have any connection to a different function's room?",
-      explain:"Each function call gets its own separate local scope. Two functions using the same variable name inside their own bodies never share or interfere with each other."},
+      hint:"Think about section 4. Does each call get its own local scope?",
+      explain:"Each call gets its own local scope. Two functions can use the same local name without affecting each other."},
     {value:"c", label:"Assigning to a name anywhere in a function's body makes that name local for the entire function, even on lines written above the assignment.", correct:true,
-      hint:"Revisit section 7's issue_ticket example. Why did reading tickets_issued fail on the very line that also assigned it?",
-      explain:"This is exactly what caused section 7's UnboundLocalError: the assignment made tickets_issued local for the whole function, so even the read on that same line couldn't find a value yet."},
+      hint:"Look at section 7. Why did reading tickets_issued fail on the same line that assigned it?",
+      explain:"This caused section 7's UnboundLocalError. The assignment made tickets_issued local for the whole function, so the read found no value."},
     {value:"d", label:"A global variable can only ever be read by the one function it was first used in.", correct:false,
-      hint:"Look back at section 6. Could any other function in that same script also read daily_fine_cap?",
-      explain:"A global variable is available to every function in the program that wants to read it, not just whichever function happened to use it first."}
+      hint:"Look at section 6. Could another function in that script also read daily_fine_cap?",
+      explain:"Every function in the program can read a global variable."}
   ]});
 
   K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["create","assign","run","return","destroy"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
@@ -496,12 +507,12 @@ git push</pre></li>
   }});
   K.traceStepper("#tracestep", {steps:[
     {cell:"call calculate_fine(40, 10)", line:"calculate_fine(40, 10) is called"},
-    {cell:"local scope created", line:"Python creates a brand-new, empty local scope for this call"},
+    {cell:"local scope created", line:"Python creates a new, empty local scope for this call"},
     {cell:"base_fine = 40 (local)", line:"base_fine = 40 — local to this call"},
     {cell:"minutes_over = 10 (local)", line:"minutes_over = 10 — local to this call"},
     {cell:"fine = 60 (local)", line:"fine = base_fine + (minutes_over * 2), which is fine = 60 — local to this call"},
     {cell:"return 60", line:"return fine sends the value 60 back out of the function"},
-    {cell:"local scope destroyed", line:"This call's local scope — base_fine, minutes_over, and fine — is destroyed. Only the returned value, 60, now stored in ticket_total, survives."}
+    {cell:"local scope destroyed", line:"base_fine, minutes_over, and fine stop existing. Only the returned 60 survives, stored in ticket_total."}
   ]});
 
   K.video({id:"act-video", elementId:"ytplayer", videoId:"3TxcPKu9ec4"});
@@ -531,7 +542,7 @@ print(fine)
 60
 NameError: name 'fine' is not defined`;
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> The first print works fine because ticket_total is a variable in the outer, module-level scope. The second print reaches for fine, a name that only ever existed inside that one call to calculate_fine, so it raises a NameError.";
+      fb.innerHTML="<strong>Correct.</strong> print(ticket_total) works because ticket_total was created outside the function. fine existed only inside calculate_fine, so print(fine) raises a NameError.";
       predictLocalDone=true;
     } else if(predictLocalAttempts>=2){
       K.Scoring.award("q-predictlocal",0);
@@ -547,11 +558,11 @@ print(fine)
 60
 NameError: name 'fine' is not defined`;
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's what actually happens. You'll get it next time.</strong> print(ticket_total) prints 60. print(fine) raises a NameError, because fine was local to that one function call and no longer exists.";
+      fb.innerHTML="<strong>Here's what happens. You'll get it next time.</strong> print(ticket_total) prints 60. print(fine) raises a NameError, because fine was local to calculate_fine and no longer exists.";
       predictLocalDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite yet.</strong> One more try. Think about whether fine still exists by the time Python reaches that last line.";
+      fb.innerHTML="<strong>Not quite yet.</strong> One more try. Does fine still exist when Python reaches the last line?";
     }
     fb.setAttribute("tabindex","-1"); fb.focus();
   });
@@ -562,21 +573,21 @@ NameError: name 'fine' is not defined`;
     if(predictUblDone) return;
     predictUblAttempts++;
     const v = $("#predictUbl").value.trim().toLowerCase();
-    const ok = /unboundlocalerror|error|referenced before assignment|not defined/.test(v);
+    const ok = /unboundlocalerror|error|referenced before assignment|cannot access|not defined/.test(v);
     const fb=$("#predictUblFb");
     if(ok){
       K.Scoring.award("q-predictubl", predictUblAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> Python sees the assignment tickets_issued = ... anywhere in this function and treats tickets_issued as local for the whole function body. That means the read on the right side of that same line looks for a local tickets_issued that hasn't been created yet, and Python raises UnboundLocalError: local variable 'tickets_issued' referenced before assignment.";
+      fb.innerHTML="<strong>Correct.</strong> The assignment makes tickets_issued local for the whole function. So the right side of that line reads a local tickets_issued that has no value yet. Python raises UnboundLocalError: cannot access local variable 'tickets_issued' where it is not associated with a value.";
       predictUblDone=true;
     } else if(predictUblAttempts>=2){
       K.Scoring.award("q-predictubl",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's what actually happens. You'll get it next time.</strong> Calling issue_ticket() raises UnboundLocalError: local variable 'tickets_issued' referenced before assignment, because assigning to tickets_issued anywhere in the function makes it local for the entire function, even before that assignment line runs.";
+      fb.innerHTML="<strong>Here's what happens. You'll get it next time.</strong> Calling issue_ticket() raises UnboundLocalError: cannot access local variable 'tickets_issued' where it is not associated with a value. The assignment makes tickets_issued local for the whole function, so the read finds no value.";
       predictUblDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite yet.</strong> One more try. Look at what the assignment on that line does to tickets_issued's scope for the whole function, not just from that line downward.";
+      fb.innerHTML="<strong>Not quite yet.</strong> One more try. What does the assignment on that line do to the scope of tickets_issued for the whole function?";
     }
     fb.setAttribute("tabindex","-1"); fb.focus();
   });
@@ -586,28 +597,28 @@ NameError: name 'fine' is not defined`;
   $("#blankGlobalCheck").addEventListener("click",()=>{
     if(blankGlobalDone) return;
     blankGlobalAttempts++;
-    const ok = $("#blankGlobal").value.trim().toLowerCase()==="global";
+    const ok = $("#blankGlobal").value.trim()==="fine_cap" && parseFloat($("#blankCap2").value)===150;
     const fb=$("#blankGlobalFb");
     if(ok){
       K.Scoring.award("q-blankglobal", blankGlobalAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> global tickets_issued tells Python to use the actual outside variable for the rest of the function, instead of creating a new local one.";
+      fb.innerHTML="<strong>Correct.</strong> The body uses fine_cap, so that's the parameter. fine is 90 + 80 = 170, and min(170, 150) is 150.";
       blankGlobalDone=true;
     } else if(blankGlobalAttempts>=2){
       K.Scoring.award("q-blankglobal",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The blank is global.";
+      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> The parameter is <code>fine_cap</code>. ticket_total is 150: fine is 90 + (40 * 2) = 170, and min(170, 150) is 150.";
       blankGlobalDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite yet.</strong> One more try. It's the same keyword named on the vocabulary card in section 3.";
+      fb.innerHTML="<strong>Not quite yet.</strong> One more try. Find the name the return line uses. Then work out fine and compare it with the third argument.";
     }
     fb.setAttribute("tabindex","-1"); fb.focus();
   });
 
   const AI_PROMPTS = [
-    "Think about a form at a doctor's office that gets thrown away after your visit, versus a chart the office keeps on file for years. Which one is more like a local variable, and which is more like a global one?",
-    "If you had to explain to a friend why a sticky note on your own desk disappears when you clean it off, but a sign posted in the building lobby stays up for everyone, how would you connect that to local versus global scope?",
+    "Think about a parking meter's time for one car versus the city's posted parking rules. Which one is more like a local variable, and which is more like a global one?",
+    "Think about a receipt printed for one purchase versus a store's posted opening hours. Which one is more like a local variable, and which is more like a global one? Why?",
     "Where have you seen a rule that only applies \"while you're in this one room\" versus a rule that applies \"everywhere in this building, all the time\"? How is that like the difference between local and global scope?"
   ];
   $("#aiprompt").addEventListener("click",()=>{

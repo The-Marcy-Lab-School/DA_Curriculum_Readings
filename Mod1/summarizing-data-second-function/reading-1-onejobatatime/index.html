@@ -4,12 +4,12 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:700px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-illustration{width:100%;max-width:720px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;display:block}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:9rem}
 .contract-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin:1rem 0}
 .contract-grid .mlrk-card{text-align:center}
-.contract-grid .mlrk-card strong{display:block;color:var(--mlrk-bg-brand-deep);margin-bottom:.35rem;font-size:1.05rem}
+.contract-grid .mlrk-card > strong:first-child{display:block;color:var(--mlrk-bg-brand-deep);margin-bottom:.35rem;font-size:1.05rem}
 @media(max-width:650px){.mlrk-illustration{max-width:100%}}
 </style>
 </head><body>
@@ -17,9 +17,10 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>One Job at a Time</h1>
-<p class="mlrk-lead">A car rental company already runs every incoming vehicle-return record through a function that checks it's usable: a real vehicle ID, a fuel reading between 0 and 100. That checking is done and the records are accepted. Now the operations team wants something different from that same batch: a readable report of what came back, which vehicles need fuel before their next rental, and how many vehicles were processed today. Should the function that already checked the data grow to also report on it, or does reporting deserve a function of its own?</p>
+<p class="mlrk-lead">A fitness tracker sends a week of daily step counts to a short Python script. One function has already checked every record: each has a day name and a whole-number step count, and the bad records were set aside. Now the user wants a weekly summary: total steps, and how many days met their step goal. Should the checking function also build that summary, or should the summary get a function of its own?</p>
 <div class="mlrk-meta">
   <span class="mlrk-pill">~45&ndash;48 minutes</span>
+  <span class="mlrk-pill">Includes an 11-minute video</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -38,7 +39,7 @@
 <section class="mlrk-section">
   <div class="mlrk-callout mlrk-callout-green">
     <p><strong>Skills you'll practice in this reading:</strong></p>
-    <p><strong>Functions &amp; Modular Programming</strong> &mdash; breaking a program into well-scoped, reusable functions instead of one long block, and independently debugging code organized that way.</p>
+    <p><strong>Functions &amp; Modular Programming</strong> &mdash; Breaking a program into well-scoped, reusable functions instead of one long block, and independently debugging code organized that way.</p>
   </div>
 </section>
 
@@ -52,124 +53,139 @@
 
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
-<p>Picture that return desk. A separate function has already walked through every incoming record and confirmed each one is usable: a real vehicle ID, a fuel percent between 0 and 100. That function's job ends the moment it says accepted or not. Now a second function needs to start exactly where the first one leaves off, working only with records already known to be good: print a formatted listing of every vehicle, flag any vehicle whose fuel is low enough to need refueling before its next rental, and report how many vehicles came back in total.</p>
-
-<p>Before writing a single loop, this new function needs its own contract: what does it receive, what is its one job, and what does it hand back?</p>
+<p>The checking function in the step tracker is <code>validate_days</code>. Checking that data has the right shape and values before anything uses it is called <strong>validation</strong>. The job of <code>validate_days</code> ends once it decides which records are valid.</p>
+<p>A second function, <code>summarize_steps</code>, starts where <code>validate_days</code> stops. It receives only valid records, so it never asks whether a record is good. That question was already answered. Reporting useful information from data that already passed validation is called <strong>summarizing</strong>.</p>
+<p>Before writing any code, decide the function's contract: what goes in, what its one job is, and what comes out.</p>
 
 <div class="contract-grid">
-  <div class="mlrk-card"><strong>IN</strong>The list of already-accepted return records: vehicle ID and fuel percent.</div>
-  <div class="mlrk-card"><strong>ONE JOB</strong>Report on the accepted batch: a listing, a low-fuel alert, and a total count.</div>
-  <div class="mlrk-card"><strong>OUT</strong>Nothing returned. The job itself is printed output.</div>
+  <div class="mlrk-card"><strong>IN</strong>Two <strong>parameters</strong>: <code>days</code>, a list of valid <code>(day, steps)</code> tuples, and <code>goal</code>, the daily step goal.</div>
+  <div class="mlrk-card"><strong>ONE JOB</strong>Summarize the week: total steps, and the number of days that met the goal.</div>
+  <div class="mlrk-card"><strong>OUT</strong>A <strong>return value</strong>: a summary dict. Printing it is a separate job.</div>
 </div>
 
-<p>That last box is worth pausing on. The validating function's contract was to hand back a list of problems. This function's contract is different: its whole job can be a side effect, printed text, and that's a perfectly complete contract as long as it's decided on purpose, not left as an accident of whatever code got written first.</p>
+<p>The OUT box matters. <code>summarize_steps</code> returns its result instead of printing it. Another function can then print the summary, save it to a file, or compare it with last week's summary. Each of those is its own job, and none of them requires a change to <code>summarize_steps</code>. A function with one job like this is a <strong>single-purpose function</strong>. You can describe its job in one sentence.</p>
 
-<svg class="mlrk-illustration" viewBox="0 0 720 260" role="img" aria-labelledby="jobsTitle jobsDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="jobsTitle">One overloaded function compared to two functions chained together, each with one job</title>
-  <desc id="jobsDesc">On the left, one large box labeled one giant function contains five crowded tasks: check vehicle ID, check fuel range, print listing, print alert, print count. On the right, two smaller connected boxes: validate returns, with one job, check, and an arrow leading to report vehicle returns, with one job, report, labeled as passing only accepted records.</desc>
+<svg class="mlrk-illustration" viewBox="0 0 720 310" role="img" aria-labelledby="jobsTitle jobsDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="jobsTitle">One function doing five jobs, compared with three functions that each do one job</title>
+  <desc id="jobsDesc">On the left, one large box holds five tasks: check day name, check step count, add up steps, count goal days, print the summary. On the right, three connected boxes: validate_days, whose job is to check records, passes valid records to summarize_steps, whose job is to summarize. summarize_steps passes a summary dict to print_week, whose job is to print the summary.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-    <text x="160" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">One giant function</text>
-    <rect x="20" y="30" width="280" height="210" rx="16" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+    <text x="160" y="24" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">One function, five jobs</text>
+    <rect x="10" y="36" width="300" height="270" rx="16" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
     <g fill="#FFFCF7" stroke="#83671C" stroke-width="2">
-      <rect x="38" y="46" width="244" height="30" rx="8"/>
-      <rect x="38" y="84" width="244" height="30" rx="8"/>
-      <rect x="38" y="122" width="244" height="30" rx="8"/>
-      <rect x="38" y="160" width="244" height="30" rx="8"/>
-      <rect x="38" y="198" width="244" height="30" rx="8"/>
+      <rect x="28" y="52" width="264" height="40" rx="8"/>
+      <rect x="28" y="102" width="264" height="40" rx="8"/>
+      <rect x="28" y="152" width="264" height="40" rx="8"/>
+      <rect x="28" y="202" width="264" height="40" rx="8"/>
+      <rect x="28" y="252" width="264" height="40" rx="8"/>
     </g>
-    <g font-size="12.5" font-weight="600" fill="#261F1D" text-anchor="middle">
-      <text x="160" y="66">check vehicle ID</text>
-      <text x="160" y="104">check fuel range</text>
-      <text x="160" y="142">print listing</text>
-      <text x="160" y="180">print alert</text>
-      <text x="160" y="218">print count</text>
+    <g font-size="16" font-weight="600" fill="#261F1D" text-anchor="middle">
+      <text x="160" y="78">check day name</text>
+      <text x="160" y="128">check step count</text>
+      <text x="160" y="178">add up steps</text>
+      <text x="160" y="228">count goal days</text>
+      <text x="160" y="278">print the summary</text>
     </g>
 
-    <text x="560" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Two functions, two jobs</text>
-    <rect x="420" y="34" width="280" height="66" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
-    <text x="560" y="60" text-anchor="middle" font-weight="700" font-size="13.5" fill="#261F1D">validate_returns()</text>
-    <text x="560" y="82" text-anchor="middle" font-size="12.5" fill="#261F1D">one job: check</text>
+    <text x="555" y="24" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Three functions, one job each</text>
+    <rect x="400" y="36" width="310" height="64" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="555" y="62" text-anchor="middle" font-family="Consolas, Monaco, monospace" font-weight="700" font-size="16" fill="#261F1D">validate_days()</text>
+    <text x="555" y="86" text-anchor="middle" font-size="16" fill="#261F1D">job: check records</text>
 
-    <line x1="560" y1="100" x2="560" y2="140" stroke="#264326" stroke-width="3"/>
-    <polygon points="550,132 570,132 560,146" fill="#264326"/>
-    <text x="612" y="122" text-anchor="middle" font-size="11.5" font-weight="600" fill="#264326">passes only</text>
-    <text x="612" y="135" text-anchor="middle" font-size="11.5" font-weight="600" fill="#264326">accepted records</text>
+    <line x1="470" y1="100" x2="470" y2="118" stroke="#264326" stroke-width="3"/>
+    <polygon points="462,116 478,116 470,130" fill="#264326"/>
+    <text x="490" y="121" font-size="16" font-weight="600" fill="#264326">valid records</text>
 
-    <rect x="420" y="150" width="280" height="70" rx="14" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="560" y="178" text-anchor="middle" font-weight="700" font-size="13.5" fill="#261F1D">report_vehicle_returns()</text>
-    <text x="560" y="200" text-anchor="middle" font-size="12.5" fill="#261F1D">one job: report</text>
+    <rect x="400" y="132" width="310" height="64" rx="14" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="555" y="158" text-anchor="middle" font-family="Consolas, Monaco, monospace" font-weight="700" font-size="16" fill="#261F1D">summarize_steps()</text>
+    <text x="555" y="182" text-anchor="middle" font-size="16" fill="#261F1D">job: summarize</text>
+
+    <line x1="470" y1="196" x2="470" y2="214" stroke="#264326" stroke-width="3"/>
+    <polygon points="462,212 478,212 470,226" fill="#264326"/>
+    <text x="490" y="217" font-size="16" font-weight="600" fill="#264326">summary dict</text>
+
+    <rect x="400" y="228" width="310" height="64" rx="14" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="555" y="254" text-anchor="middle" font-family="Consolas, Monaco, monospace" font-weight="700" font-size="16" fill="#261F1D">print_week()</text>
+    <text x="555" y="278" text-anchor="middle" font-size="16" fill="#261F1D">job: print the summary</text>
   </g>
 </svg>
 
+<p>To add up a week of steps, <code>summarize_steps</code> uses an <strong>accumulator</strong>: a variable set before a loop and updated on every pass. After the loop ends, the accumulator holds the answer.</p>
+<div class="mlrk-code"><div class="mlrk-screen">total = 0
+for day, steps in days:
+    total += steps</div></div>
+<p><code>total</code> starts at 0. Each pass adds one day's steps. When the loop runs out of days, <code>total</code> holds the week's steps.</p>
+
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> "write a function that summarizes a batch of already-checked records" is one of the most common second steps in a data or software take-home task, right after a validation function. A shaky answer almost never comes from the loop itself, it comes from the reporting function quietly re-checking things the earlier function already guaranteed, or from mixing reporting with a second unrelated task like logging or notifying someone.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to design a function's contract, and you already know how to write a function that validates a batch and hands back a list of problems. This reading is about writing a second function that starts exactly where that one leaves off: accepted data in, a report out. Once separating those two responsibilities feels automatic, the same instinct keeps paying off as a program grows: instead of one function that keeps absorbing every new requirement, each new job gets its own small function, chained to the ones before it.</p>
+<p><strong>Why this matters:</strong> one long function that checks, summarizes, and prints usually works at first. Trouble starts with the first change request. A new kind of summary means editing the same function that does the checking, so a small edit can break the checks. Reviewers flag this often, in take-home tasks and in code reviews.</p>
+<p><strong>Where you're coming from, where this is headed:</strong> you already know how to write a <strong>function</strong> with parameters and a return value, and how to write a function that checks records. This reading adds a second function that works only on records that passed. Splitting work into small functions, each with one job, is how larger programs stay easy to change: each new request gets a new function instead of a longer old one.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>2. Recall before continuing</h2>
-<p class="mlrk-small">A few earlier skills get reused directly below: f-string interpolation, tuple unpacking, tracing a single loop, and reading a comparison operator carefully. Test each one below before moving on.</p>
+<p>Tuple unpacking, comparisons, dict lookups, and return values are prerequisite skills for this reading. Answer all four questions before moving on.</p>
 
-<div class="mlrk-card" id="card-fstring"><p><strong>Coding check:</strong> <code>vehicle_id = "CX5-204"</code>, <code>fuel_percent = 18</code>.</p>
-<p>What does <code>f"{vehicle_id}: {fuel_percent}% fuel"</code> evaluate to?</p>
-<button type="button" class="mlrk-choice" data-a="filled"><code>CX5-204: 18% fuel</code></button>
-<button type="button" class="mlrk-choice" data-a="literal"><code>vehicle_id: fuel_percent% fuel</code></button>
-<button type="button" class="mlrk-choice" data-a="error">An error, since f-strings can't mix plain text and variables</button>
-<div id="fstringfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-unpack" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>record = ("ACCORD-402", 9)</code>, then <code>vehicle_id, fuel_percent = record</code>.</p>
-<p>What is <code>fuel_percent</code>?</p>
-<button type="button" class="mlrk-choice" data-a="9"><code>9</code></button>
-<button type="button" class="mlrk-choice" data-a="accord"><code>"ACCORD-402"</code></button>
-<button type="button" class="mlrk-choice" data-a="tuple">The whole tuple, <code>("ACCORD-402", 9)</code></button>
+<div class="mlrk-card" id="card-unpack"><p><strong>Coding check:</strong> <code>record = ("Tue", 9120)</code>, then <code>day, steps = record</code>.</p>
+<p>What is <code>steps</code>?</p>
+<button type="button" class="mlrk-choice" data-a="9"><code>9120</code></button>
+<button type="button" class="mlrk-choice" data-a="accord"><code>"Tue"</code></button>
+<button type="button" class="mlrk-choice" data-a="tuple">The whole tuple, <code>("Tue", 9120)</code></button>
 <div id="unpackfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-loopcount" style="margin-top:.8rem"><p><strong>Scenario check:</strong> <code>returns</code> holds 4 tuples.</p>
-<div class="mlrk-code"><div class="mlrk-screen">for vehicle_id, fuel_percent in returns:
-    print(vehicle_id)</div></div>
-<p><strong>How many lines print?</strong></p>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<button type="button" class="mlrk-choice" data-a="8">8</button>
-<div id="loopcountfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-compare" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> <code>fuel_percent = 18</code>. A vehicle needs refueling when its fuel is below a 25% threshold.</p>
-<p><strong>Which comparison correctly checks that?</strong></p>
-<button type="button" class="mlrk-choice" data-a="lt"><code>fuel_percent &lt; 25</code></button>
-<button type="button" class="mlrk-choice" data-a="gt"><code>fuel_percent &gt; 25</code></button>
-<button type="button" class="mlrk-choice" data-a="reversed"><code>25 &lt; fuel_percent</code></button>
+<div class="mlrk-card" id="card-compare" style="margin-top:.8rem"><p><strong>Coding check:</strong> a day meets the goal when its steps are 8,000 or more. A day with exactly 8,000 steps counts.</p>
+<p><strong>Which comparison checks that?</strong></p>
+<button type="button" class="mlrk-choice" data-a="lt"><code>steps &gt;= 8000</code></button>
+<button type="button" class="mlrk-choice" data-a="gt"><code>steps &gt; 8000</code></button>
+<button type="button" class="mlrk-choice" data-a="reversed"><code>steps &lt;= 8000</code></button>
 <div id="comparefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-callout mlrk-callout-blue">Nothing about writing a second function changes how any of these four work on their own, they show up again below exactly as they work here.</div>
+<div class="mlrk-card" id="card-fstring" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>summary = {"total": 38070, "goal_days": 3}</code>.</p>
+<p>What is <code>summary["goal_days"]</code>?</p>
+<button type="button" class="mlrk-choice" data-a="filled"><code>3</code></button>
+<button type="button" class="mlrk-choice" data-a="literal"><code>"goal_days"</code></button>
+<button type="button" class="mlrk-choice" data-a="error">A KeyError</button>
+<div id="fstringfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-loopcount" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> what is <code>result</code> after this code runs?</p>
+<div class="mlrk-code"><div class="mlrk-screen">def add_bonus(steps):
+    print(steps + 500)
+
+result = add_bonus(7000)</div></div>
+<button type="button" class="mlrk-choice" data-a="4"><code>None</code></button>
+<button type="button" class="mlrk-choice" data-a="2"><code>7500</code></button>
+<button type="button" class="mlrk-choice" data-a="8"><code>"7500"</code></button>
+<div id="loopcountfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-callout mlrk-callout-blue"><p>These four work the same way inside a summarizing function as they do on their own. The last one matters most: a function that only prints hands nothing back to the code that called it.</p></div>
 </section>
 
 <section class="mlrk-section">
 <h2>3. Technical vocabulary</h2>
-<p>Flip each card before the activities below.</p>
+<p>Flip all seven cards before the activities in section 4.</p>
 <div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>single-job function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Single-job function</strong><br>A function scoped to one clear responsibility, even when that responsibility naturally produces several related outputs, like a listing, an alert, and a count.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>responsibility leak</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Responsibility leak</strong><br>When a function quietly starts doing a second, unrelated job, like re-checking a value's type after another function already approved it.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>chained functions</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Chained functions</strong><br>Passing the output of one function directly into another, so each function keeps its own single job while the pair together handles the full task.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>threshold check</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Threshold check</strong><br>A condition that decides whether an already-accepted value belongs in an alert, not whether the value itself is valid.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>formatted output</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Formatted output</strong><br>Information arranged into a readable shape for a person or a downstream tool to read.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>side effect</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Side effect</strong><br>Anything a function does besides returning a value, such as printing. A reporting function's whole job can be a side effect.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Function</strong><br>A named, reusable block of code that runs when you call it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>parameter</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Parameter</strong><br>A name in a function's definition that receives a value when the function is called. In <code>summarize_steps(days, goal)</code>, <code>days</code> and <code>goal</code> are parameters.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>return value</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Return value</strong><br>The value a function hands back to the code that called it, using <code>return</code>. A function with no <code>return</code> hands back <code>None</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>accumulator</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Accumulator</strong><br>A variable set before a loop and updated on every pass, like a running total. After the loop, it holds the result.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>validation</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Validation</strong><br>Checking that data has the right shape and values before anything uses it. It decides valid or not.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>single-purpose function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Single-purpose function</strong><br>A function that does one job, which you can describe in one sentence. That job can still produce several related results.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>summarizing</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Summarizing</strong><br>Reporting useful information from data that has already been validated.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>4. Spot the function that's doing too much</h2>
-<p>Job count isn't about how many lines a function has, or even how many things it prints. It's about how many different responsibilities are bundled inside it. Drag each function description into the zone that fits, then use the self-check button to confirm your matches.</p>
+<p>Count jobs, not lines or outputs. A function that produces two related results about the same data still has one job. Drag each function description into the zone that fits, then press the self-check button.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">validate_returns(records) checks that each record has a valid vehicle ID and a fuel percent between 0 and 100, then returns a list of problems.</span>
-  <span id="chip2" class="mlrk-draggable">report_vehicle_returns(records) prints a formatted listing, a low-fuel alert, and a total count for records that were already accepted.</span>
-  <span id="chip3" class="mlrk-draggable">process_returns(records) checks whether each fuel percent is a valid number, prints a formatted listing, and emails a manager whenever a vehicle is overdue.</span>
-  <span id="chip4" class="mlrk-draggable">summarize_and_log(records) builds the report text and also writes that text into a database table.</span>
+  <span id="chip1" class="mlrk-draggable">validate_days(records) decides which records have a day name and a whole-number step count, and returns the valid ones.</span>
+  <span id="chip2" class="mlrk-draggable">summarize_steps(days, goal) adds up the week's steps, counts the days that met the goal, and returns both in a dict.</span>
+  <span id="chip3" class="mlrk-draggable">sync_week(records) checks each step count, prints a weekly listing, and posts the total to a group chat.</span>
+  <span id="chip4" class="mlrk-draggable">summarize_and_save(days) builds the weekly summary and also writes it to a file.</span>
 </div>
 <div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>One job (even with several related outputs)</strong></p><div class="mlrk-dropzone" id="zoneOneJob"></div></div>
-  <div><p class="mlrk-small"><strong>Doing too much (unrelated responsibilities bundled together)</strong></p><div class="mlrk-dropzone" id="zoneTooMuch"></div></div>
+  <div><p class="mlrk-small"><strong>One job (even with several related results)</strong></p><div class="mlrk-dropzone" id="zoneOneJob"></div></div>
+  <div><p class="mlrk-small"><strong>Doing too much (unrelated jobs bundled together)</strong></p><div class="mlrk-dropzone" id="zoneTooMuch"></div></div>
 </div>
 <div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
 <div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
@@ -177,140 +193,148 @@
 </section>
 
 <section class="mlrk-section">
-<h2>5. Order the design steps</h2>
-<p>Click steps, in order, to build the sequence of DECISIONS a well-scoped pipeline of two functions should follow. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
+<h2>5. Order the accumulator steps</h2>
+<p>Put the four steps of a running-total accumulator in order. Click the steps in order. Click a step again to remove it, then press "Check my order." This is a self-check, not graded.</p>
 <ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="validate-first"><span class="mlrk-order-num"></span> Run the validation function on the raw, unchecked records first.</li>
-  <li class="mlrk-orderitem" data-step="pass-accepted"><span class="mlrk-order-num"></span> Pass only the records the validation function accepted into the reporting function.</li>
-  <li class="mlrk-orderitem" data-step="report-without-recheck"><span class="mlrk-order-num"></span> Inside the reporting function, build the listing, alert, and count without re-checking values the validation function already approved.</li>
-  <li class="mlrk-orderitem" data-step="new-function"><span class="mlrk-order-num"></span> If a genuinely new kind of check or output comes up later, give it its own function instead of growing this one.</li>
+  <li class="mlrk-orderitem" data-step="pass-accepted"><span class="mlrk-order-num"></span> Start the loop over <code>days</code>.</li>
+  <li class="mlrk-orderitem" data-step="new-function"><span class="mlrk-order-num"></span> After the loop ends, return <code>total</code>.</li>
+  <li class="mlrk-orderitem" data-step="validate-first"><span class="mlrk-order-num"></span> Set <code>total = 0</code>, before the loop starts.</li>
+  <li class="mlrk-orderitem" data-step="report-without-recheck"><span class="mlrk-order-num"></span> Inside the loop, add this day's steps to <code>total</code>.</li>
 </ul>
 <div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
 <div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Trace the report, one loop at a time</h2>
-<p>Here's the accepted batch this reading uses, already approved by a validation function that isn't shown:</p>
-<div class="mlrk-code"><div class="mlrk-screen">returns = [
-    ("RAV4-118", 62),
-    ("CX5-204", 18),
-    ("CIVIC-311", 74),
-    ("ACCORD-402", 9),
-]
-
-def report_vehicle_returns(returns):
-    for vehicle_id, fuel_percent in returns:
-        print(f"{vehicle_id}: {fuel_percent}% fuel")</div></div>
-<div class="mlrk-card" id="card-trace" style="margin-top:1rem"><p><strong>What is the second line printed?</strong></p>
-<button type="button" class="mlrk-choice" data-a="cx5"><code>CX5-204: 18% fuel</code></button>
-<button type="button" class="mlrk-choice" data-a="rav4"><code>RAV4-118: 62% fuel</code></button>
-<button type="button" class="mlrk-choice" data-a="civic"><code>CIVIC-311: 74% fuel</code></button>
-<div id="tracefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<p style="margin-top:1rem">The full function also adds a low-fuel alert and a total count, still as one reporting job.</p>
-<div class="mlrk-code" style="margin-top:1rem"><div id="revealScreen" class="mlrk-screen">Click "Reveal the full report" to see what report_vehicle_returns(returns) prints.</div>
-<div class="mlrk-actions"><button type="button" id="revealrun" class="mlrk-btn">Reveal the full report</button></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>7. Run it yourself: pick a threshold</h2>
-<p>This page can't execute real Python, so this simulator recomputes the same report logic in JavaScript so you can safely experiment with a different fuel threshold.</p>
-<div class="mlrk-card">
-<label for="threshold"><strong>Refuel threshold:</strong></label> <select id="threshold"><option value="20">below 20%</option><option value="25" selected>below 25%</option><option value="30">below 30%</option></select>
-<p><button type="button" id="run" class="mlrk-btn">Run report_vehicle_returns(returns)</button></p>
-<div class="mlrk-code"><div id="simout" class="mlrk-screen">Choose a threshold, then run the report.</div></div>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>8. Predict the alert</h2>
-<div class="mlrk-card" id="card-alert"><p><strong>Accepted returns show fuel percentages of 62, 18, 74, and 9. Using a 25% threshold, how many vehicles need refueling before their next rental?</strong></p>
-<button type="button" class="mlrk-choice" data-a="2">2 vehicles</button>
-<button type="button" class="mlrk-choice" data-a="3">3 vehicles</button>
-<button type="button" class="mlrk-choice" data-a="1">1 vehicle</button>
-<div id="alertfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>9. Count without manually counting</h2>
-<div class="mlrk-card" id="card-count"><p><strong>The report needs to state how many vehicles were processed. Which expression directly gives that count from the <code>returns</code> list?</strong></p>
-<button type="button" class="mlrk-choice" data-a="len"><code>len(returns)</code></button>
-<button type="button" class="mlrk-choice" data-a="manual">Start a counter at 0 and increment it once per loop pass</button>
-<button type="button" class="mlrk-choice" data-a="attr"><code>returns.length()</code></button>
-<div id="countfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>10. Write the missing pieces yourself</h2>
-<p>Here's the function this reading has been building toward. Three pieces are missing. Type what belongs in each blank.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def report_vehicle_returns(returns):
-    print("Vehicle Return Report")
-    for vehicle_id, fuel_percent in returns:
-        print(f"{vehicle_id}: {fuel_percent}% fuel")
-
-    print()
-    print("Needs refueling before next rental:")
-    for vehicle_id, fuel_percent in <span id="blankA-slot">_____</span>:
-        if fuel_percent <span id="blankB-slot">_____</span> 25:
-            print(f"  {vehicle_id} ({fuel_percent}%)")
-
-    print()
-    print(f"{<span id="blankC-slot">_____</span>(returns)} vehicles processed")</div></div>
+<h2>6. Write the missing pieces yourself</h2>
+<p>Here is <code>summarize_steps</code> with three pieces missing. Type what belongs in each blank.</p>
+<div class="mlrk-code"><div class="mlrk-screen">def summarize_steps(days, goal):
+    total = <span id="blankA-slot">_____</span>
+    goal_days = 0
+    for day, steps in days:
+        total <span id="blankB-slot">_____</span> steps
+        if steps >= goal:
+            goal_days += 1
+    <span id="blankC-slot">_____</span> {"total": total, "goal_days": goal_days}</div></div>
 <div class="mlrk-fillblank">
-  <label for="blankA">Blank 1 &mdash; what the second loop iterates over</label>
+  <label for="blankA">Blank 1 &mdash; the starting value of the running total</label>
   <input type="text" id="blankA" autocomplete="off">
 </div>
 <div class="mlrk-fillblank">
-  <label for="blankB">Blank 2 &mdash; the comparison operator meaning "below the threshold"</label>
+  <label for="blankB">Blank 2 &mdash; the operator that adds this day's steps into <code>total</code></label>
   <input type="text" id="blankB" autocomplete="off">
 </div>
 <div class="mlrk-fillblank">
-  <label for="blankC">Blank 3 &mdash; the built-in function that gives the total number of records</label>
+  <label for="blankC">Blank 3 &mdash; the keyword that hands the summary dict back to the caller</label>
   <input type="text" id="blankC" autocomplete="off">
 </div>
 <p><button type="button" id="blankcheck" class="mlrk-btn">Check my code</button></p>
 <div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
 <details class="mlrk-hint"><summary>Need a hint?</summary>
-<p>Blank 1 is the same parameter name used in the first loop, just above, this function never receives any other collection to loop over. Blank 2 is the comparison operator practiced in section 2's critical-thinking question. Blank 3 is the same built-in used in section 9 to count the batch.</p>
+<p>Blank 1 starts the same way as <code>goal_days</code> on the next line. Blank 2 is the same operator that <code>goal_days</code> uses inside the <code>if</code>. Blank 3 is the keyword that makes a function's result a return value instead of <code>None</code>.</p>
 </details>
 </section>
 
 <section class="mlrk-section">
+<h2>7. Trace the accumulators, one pass at a time</h2>
+<p>Here is one week of valid records, and <code>summarize_steps</code> with one <code>print</code> added inside the loop so you can watch both accumulators change.</p>
+<div class="mlrk-code"><div class="mlrk-screen">days = [
+    ("Mon", 6200),
+    ("Tue", 9120),
+    ("Wed", 8000),
+    ("Thu", 4300),
+    ("Fri", 10450),
+]
+
+def summarize_steps(days, goal):
+    total = 0
+    goal_days = 0
+    for day, steps in days:
+        total += steps
+        if steps >= goal:
+            goal_days += 1
+        print(f"after {day}: total = {total}, goal_days = {goal_days}")
+    return {"total": total, "goal_days": goal_days}
+
+summary = summarize_steps(days, 8000)
+print(summary)</div></div>
+<div class="mlrk-card" id="card-trace" style="margin-top:1rem">
+<label for="tracein"><strong>Type your prediction:</strong> what is <code>total</code> right after the Wed pass?</label>
+<div class="mlrk-fillblank"><input type="text" id="tracein" autocomplete="off" inputmode="numeric"> <button type="button" id="tracecheck" class="mlrk-btn">Check</button></div>
+<div id="tracefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-code" style="margin-top:1rem"><div id="revealScreen" class="mlrk-screen">Press "Show the full output" to see every line the code prints.</div>
+<div class="mlrk-actions"><button type="button" id="revealrun" class="mlrk-btn">Show the full output</button></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Predict with a different goal</h2>
+<div class="mlrk-card" id="card-alert"><p><strong>Same five days: 6200, 9120, 8000, 4300, 10450. The call is now <code>summarize_steps(days, 9000)</code>. What is <code>goal_days</code> in the returned dict?</strong></p>
+<button type="button" class="mlrk-choice" data-a="2">2</button>
+<button type="button" class="mlrk-choice" data-a="3">3</button>
+<button type="button" class="mlrk-choice" data-a="1">1</button>
+<div id="alertfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Run it yourself: change the goal</h2>
+<p>This page can't run Python, so this simulator runs the same <code>summarize_steps</code> logic in JavaScript. Pick a goal and run it. Only the <code>goal</code> argument changes. The function itself stays the same.</p>
+<div class="mlrk-card">
+<label for="threshold"><strong>Daily goal:</strong></label> <select id="threshold"><option value="6000">6000 steps</option><option value="8000" selected>8000 steps</option><option value="10000">10000 steps</option></select>
+<p><button type="button" id="run" class="mlrk-btn">Run summarize_steps(days, goal)</button></p>
+<div class="mlrk-code"><div id="simout" class="mlrk-screen">Choose a goal, then run the function.</div></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Why not just use len()?</h2>
+<div class="mlrk-card" id="card-count"><p><strong><code>summarize_steps</code> needs the number of days that met the goal. Why can't it use <code>len(days)</code> for that?</strong></p>
+<button type="button" class="mlrk-choice" data-a="len"><code>len(days)</code> counts every day. Only a counter that goes up inside the <code>if</code> counts the days that met the goal.</button>
+<button type="button" class="mlrk-choice" data-a="manual"><code>len()</code> only works on strings, not lists.</button>
+<button type="button" class="mlrk-choice" data-a="attr"><code>len(days)</code> adds up the steps instead of counting days.</button>
+<div id="countfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
 <h2>11. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about writing a well-scoped second function.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A function that prints three related things (a listing, an alert, and a count) about the same accepted batch can still be doing one job.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Re-checking whether a value is a valid number is part of a reporting function's job, even when a validation function already approved it.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A threshold check like <code>fuel_percent &lt; 25</code> decides what belongs in an alert. It doesn't decide whether the data itself is valid.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Once a function is written, adding one more small, unrelated task to it is always cheaper than writing a second function.</label>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A function that returns a total and a count about the same valid week can still have one job.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> <code>summarize_steps</code> should re-check that each step count is a whole number, even though <code>validate_days</code> already checked.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> <code>if steps &gt;= goal</code> inside <code>summarize_steps</code> decides what to count. It is not validation.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> An accumulator should be set to 0 inside the loop, so it starts fresh on each pass.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>12. Debug the responsibility leak</h2>
-<p>A teammate writes this version of the reporting function:</p>
-<div class="mlrk-code"><div class="mlrk-screen">def report_vehicle_returns(returns):
-    for vehicle_id, fuel_percent in returns:
+<h2>12. Debug the extra check</h2>
+<p>A teammate writes this version of <code>summarize_steps</code>:</p>
+<div class="mlrk-code"><div class="mlrk-screen">def summarize_steps(days, goal):
+    total = 0
+    goal_days = 0
+    for day, steps in days:
         try:
-            fuel_percent = int(fuel_percent)
+            steps = int(steps)
         except ValueError:
-            print(f"Skipping {vehicle_id}: fuel percent not a number")
+            print(f"Skipping {day}: steps is not a number")
             continue
-        print(f"{vehicle_id}: {fuel_percent}% fuel")</div></div>
-<div class="mlrk-card" id="card-debug"><p><strong>validate_returns(records) already guarantees every fuel_percent is a valid number before this function ever runs. What's the design problem with the code above?</strong></p>
-<button type="button" class="mlrk-choice" data-a="redo">report_vehicle_returns is quietly redoing validation work that validate_returns already finished.</button>
-<button type="button" class="mlrk-choice" data-a="fine">There's no problem. Every function should re-check every value it touches, no matter what already ran before it.</button>
-<button type="button" class="mlrk-choice" data-a="tryexcept">try/except should never appear inside a function that also prints something.</button>
+        total += steps
+        if steps >= goal:
+            goal_days += 1
+    return {"total": total, "goal_days": goal_days}</div></div>
+<div class="mlrk-card" id="card-debug"><p><strong><code>validate_days</code> already guarantees every step count is a whole number. What is the design problem with the teammate's version of <code>summarize_steps</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="redo">It redoes validation that <code>validate_days</code> already finished.</button>
+<button type="button" class="mlrk-choice" data-a="fine">There's no problem. Every function should re-check every value it uses.</button>
+<button type="button" class="mlrk-choice" data-a="tryexcept"><code>try</code>/<code>except</code> is never allowed inside a function that returns a value.</button>
 <div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="isolate" style="display:block;margin-top:1rem"><strong>Your turn:</strong> describe how you'd decide whether a brand-new requirement, like logging failed conversions somewhere, belongs inside report_vehicle_returns or deserves a function of its own.</label>
-<textarea id="isolate" class="mlrk-response" data-save placeholder="Try starting with: I'd ask whether this new requirement is really about..."></textarea>
+<label for="isolate" style="display:block;margin-top:1rem"><strong>Your turn:</strong> a new request arrives: send the user a message after three missed goals in a row. Does that belong inside <code>summarize_steps</code>, or in a function of its own? Explain how you decided.</label>
+<textarea id="isolate" class="mlrk-response" data-save placeholder="Try starting with: I'd ask whether this new request is really about..."></textarea>
 </section>
 
 <section class="mlrk-section">
 <h2>13. Watch: functions in practice</h2>
-<p>As you watch, notice how each function defined in the video is built around a single, clear job, taking specific inputs and producing a specific output or action, the same contract-first habit practiced throughout this reading.</p>
+<p>As you watch, notice which functions in the video return a value and which only print. Then pick one function and describe its job in one sentence.</p>
 <div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=89cGQjB5R4M" target="_blank" rel="noopener">Watch on YouTube</a>
 <div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: pick one function from the video and describe its one job in a single sentence.</strong></p>
@@ -321,25 +345,25 @@ def report_vehicle_returns(returns):
 <section class="mlrk-section">
 <h2>14. How this shows up in interviews</h2>
 <div class="mlrk-callout mlrk-callout-green">
-<p>A shockingly common piece of code review feedback, in data and software roles alike, is some version of "can you split this into two functions?" A function that both validates and reports, or that reports and also logs to a database, is exactly the kind of thing a reviewer flags, not because the code is wrong, but because a change to one responsibility now risks breaking an unrelated one, and because no one can test the reporting logic without also setting up valid data for the validation logic buried inside it.</p>
-<p>Take-home assessments score this directly, too. Plenty of data-role take-home rubrics include a line like "functions have a single, clear responsibility," precisely because a sprawling one-function solution is one of the most common ways an otherwise-correct take-home loses points.</p>
+<p>"Can you split this into two functions?" is common code review feedback in data and software roles. A reviewer flags a function that validates and summarizes because a change to one part can break the other. It is also harder to test: you can't test the summary without also passing data through the checks buried in the same function.</p>
+<p>Take-home rubrics often score this directly, with a line like "each function has a single, clear job."</p>
 </div>
-<div class="mlrk-card" id="card-interview"><p><strong>An interviewer hands you a 90-line function that validates, reports, and emails a summary, and asks how you'd improve it before shipping. What's the strongest answer?</strong></p>
-<button type="button" class="mlrk-choice" data-a="split">Split it into separate functions, one per responsibility, so each one can be tested and changed independently.</button>
-<button type="button" class="mlrk-choice" data-a="leave">Leave it as one function, since it already works and passes the visible test cases.</button>
-<button type="button" class="mlrk-choice" data-a="comment">Add more comments to the existing function so the different sections are easier to find.</button>
+<div class="mlrk-card" id="card-interview"><p><strong>An interviewer shows you a 90-line function that validates records, summarizes them, and emails the summary. They ask how you'd improve it. What's the strongest answer?</strong></p>
+<button type="button" class="mlrk-choice" data-a="split">Split it into separate functions, one per job, so each can be tested and changed on its own.</button>
+<button type="button" class="mlrk-choice" data-a="leave">Leave it as one function, since it already works and passes the tests.</button>
+<button type="button" class="mlrk-choice" data-a="comment">Add comments so each section is easier to find.</button>
 <div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>15. Summary &amp; critical thinking</h2>
-<p>One habit carried this whole reading: once a function has approved a batch of data, a second function can report on it freely, a listing, an alert, a count, without re-checking what the first function already guaranteed. Any genuinely new kind of job that shows up later deserves its own function rather than growing an existing one.</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a tutoring service already has a validated batch of session records (tutor ID, minutes tutored). A second function is asked to print a listing of every session, flag any session logged over 90 minutes for a supervisor to double check, and print the total number of sessions logged today. Which description best fits this second function?</p>
-<button type="button" class="mlrk-choice" data-a="one">It has one reporting job with three related outputs.</button>
-<button type="button" class="mlrk-choice" data-a="three">It has three unrelated jobs because it prints three different things.</button>
-<button type="button" class="mlrk-choice" data-a="recheck">It should re-check that every minutes-tutored value is a real number before reporting on it.</button>
+<p>Once one function has validated the data, a second function can summarize it without re-checking anything. That summarizing function uses accumulators to build its results and returns them, so other functions can print or save them. A new kind of job gets a new function instead of a longer old one.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a podcast team already validates its episode records: a title and a listen count. <code>summarize_episodes(episodes)</code> returns the total listens and the most-listened title. A teammate now wants the host to get that summary by email every Monday. What should the team do?</p>
+<button type="button" class="mlrk-choice" data-a="one">Write a separate function that takes the returned summary and sends the email.</button>
+<button type="button" class="mlrk-choice" data-a="three">Add the email code at the end of <code>summarize_episodes</code>.</button>
+<button type="button" class="mlrk-choice" data-a="recheck">Have <code>summarize_episodes</code> re-check every listen count before emailing.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> how would you decide whether a new piece of logic belongs inside an existing function or deserves a function of its own?</label>
+<label for="clue"><strong>In your own words:</strong> how do you decide whether new code belongs inside an existing function or in a function of its own?</label>
 <textarea id="clue" class="mlrk-response" data-save></textarea>
 <p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
 <div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
@@ -347,7 +371,7 @@ def report_vehicle_returns(returns):
 
 <section class="mlrk-section">
 <h2>16. Thinking ahead</h2>
-<p>The contract-first, one-job habit practiced here keeps scaling as a program grows. A pipeline can chain three or four small functions together instead of two, each one still doing exactly one job, feeding the next. Eventually, related data and the functions that act on it stop getting passed between separate functions altogether and get bundled together into a single object instead, which is the same one-responsibility instinct applied to an entire unit of code rather than just one function.</p>
+<p>The one-job habit grows with a program. A longer pipeline chains several small functions, each doing one job and passing its return value to the next. Later, related data and the functions that act on it get bundled into a single object. That is the same one-job idea applied to a bigger piece of code.</p>
 </section>
 
 <section class="mlrk-section">
@@ -435,6 +459,7 @@ git push</pre></li>
 
 <footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
 
+
 <script src="../../../assets/reading-kit.js"></script>
 <script>
 (function(){
@@ -448,142 +473,166 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-fstring", buttonSelector:"#card-fstring .mlrk-choice", feedbackSelector:"#fstringfb", correct:"filled",
-    feedback:{filled:"An f-string swaps each {name} for that variable's current value, so this becomes CX5-204: 18% fuel.",
-              literal:"The names inside the braces get replaced with the variables' values. They aren't printed as literal text.",
-              error:"Mixing plain text and variables inside an f-string is exactly what f-strings are for. No error here."}});
-
   K.quiz({id:"q-unpack", buttonSelector:"#card-unpack .mlrk-choice", feedbackSelector:"#unpackfb", correct:"9",
-    feedback:{"9":"vehicle_id, fuel_percent = record unpacks the tuple positionally: vehicle_id gets \"ACCORD-402\", fuel_percent gets 9.",
-              accord:"\"ACCORD-402\" is assigned to vehicle_id, the first name, not fuel_percent.",
-              tuple:"Tuple unpacking splits the tuple across both names, so fuel_percent doesn't hold the whole tuple, just its second value."}});
-
-  K.quiz({id:"q-loopcount", buttonSelector:"#card-loopcount .mlrk-choice", feedbackSelector:"#loopcountfb", correct:"4",
-    feedback:{"4":"The loop body runs once per tuple in returns, and returns has 4 tuples, so 4 lines print.",
-              "2":"returns has 4 tuples, not 2, so the loop runs more times than that.",
-              "8":"Nothing here loops twice per record. Each of the 4 tuples produces exactly one printed line."}});
+    feedback:{"9":"Right. Unpacking goes by position: day gets \"Tue\", and steps gets 9120.",
+              accord:"\"Tue\" goes to day, the first name. steps is the second name, so it gets the second value.",
+              tuple:"Unpacking splits the tuple across both names, so steps holds only the second value."}});
 
   K.quiz({id:"q-compare", buttonSelector:"#card-compare .mlrk-choice", feedbackSelector:"#comparefb", correct:"lt",
-    feedback:{lt:"fuel_percent < 25 reads as \"fuel percent is below 25,\" which is exactly what a refuel threshold needs.",
-              gt:"fuel_percent > 25 flags vehicles with plenty of fuel, the opposite of what a refuel alert needs.",
-              reversed:"25 < fuel_percent means the same thing as fuel_percent > 25, still the opposite of a below-threshold check."}});
+    feedback:{lt:"Right. >= is true for 8000 and for any larger number.",
+              gt:"> leaves out exactly 8000, and a day with exactly 8,000 steps should count.",
+              reversed:"<= is true for days at or below 8000, which is the opposite of meeting the goal."}});
+
+  K.quiz({id:"q-fstring", buttonSelector:"#card-fstring .mlrk-choice", feedbackSelector:"#fstringfb", correct:"filled",
+    feedback:{filled:"Right. The key \"goal_days\" looks up its value, 3.",
+              literal:"\"goal_days\" is the key. Looking it up gives the value stored under it.",
+              error:"\"goal_days\" is one of the dict's keys, so there's no KeyError."}});
+
+  K.quiz({id:"q-loopcount", buttonSelector:"#card-loopcount .mlrk-choice", feedbackSelector:"#loopcountfb", correct:"4",
+    feedback:{"4":"Right. add_bonus prints 7500 but has no return, so it hands back None.",
+              "2":"7500 is printed on the screen, but add_bonus never returns it. result gets None.",
+              "8":"print() shows text on the screen. It doesn't hand anything back, so result is None."}});
 
   K.flipCards("#vocab", "act-flip-vocab");
 
   K.dragDrop("#dragarea", "act-drag-jobs");
   K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneOneJob", label:"validate_returns(records) checks fields and returns a list of problems.", expectedLabel:"One job"},
-    chip2:{expectedId:"zoneOneJob", label:"report_vehicle_returns(records) prints a listing, alert, and count.", expectedLabel:"One job"},
-    chip3:{expectedId:"zoneTooMuch", label:"process_returns(records) validates, prints, and emails a manager.", expectedLabel:"Doing too much"},
-    chip4:{expectedId:"zoneTooMuch", label:"summarize_and_log(records) reports and writes to a database.", expectedLabel:"Doing too much"}
+    chip1:{expectedId:"zoneOneJob", label:"validate_days(records) decides which records are valid.", expectedLabel:"One job"},
+    chip2:{expectedId:"zoneOneJob", label:"summarize_steps(days, goal) returns a total and a goal-day count.", expectedLabel:"One job"},
+    chip3:{expectedId:"zoneTooMuch", label:"sync_week(records) checks, prints, and posts to a chat.", expectedLabel:"Doing too much"},
+    chip4:{expectedId:"zoneTooMuch", label:"summarize_and_save(days) summarizes and writes a file.", expectedLabel:"Doing too much"}
   }});
 
   K.orderSteps("#ordersteps", {id:"act-order-chain", correctOrder:["validate-first","pass-accepted","report-without-recheck","new-function"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
 
-  K.quiz({id:"q-trace", buttonSelector:"#card-trace .mlrk-choice", feedbackSelector:"#tracefb", correct:"cx5",
-    feedback:{cx5:"The loop follows list order: RAV4-118 first, CX5-204 second.",
-              rav4:"RAV4-118 is the first record in the list, so it produces the first line, not the second.",
-              civic:"CIVIC-311 is the third record, so it produces the third line."}});
-
-  function revealReport(){
-    $("#revealScreen").textContent = `report_vehicle_returns(returns)
-
-[Output]
-Vehicle Return Report
-RAV4-118: 62% fuel
-CX5-204: 18% fuel
-CIVIC-311: 74% fuel
-ACCORD-402: 9% fuel
-
-Needs refueling before next rental:
-  CX5-204 (18%)
-  ACCORD-402 (9%)
-
-4 vehicles processed`;
-  }
-  const markReveal = K.activity("act-trace-reveal", () => true);
-  $("#revealrun").addEventListener("click", () => { revealReport(); markReveal(); });
-
-  const RETURNS = [["RAV4-118",62],["CX5-204",18],["CIVIC-311",74],["ACCORD-402",9]];
-  const markSim = K.activity("act-sim-run", () => true);
-  $("#run").addEventListener("click", () => {
-    const t = +$("#threshold").value;
-    const lines = ["Vehicle Return Report"];
-    RETURNS.forEach(r => lines.push(`${r[0]}: ${r[1]}% fuel`));
-    lines.push("", "Needs refueling before next rental:");
-    RETURNS.filter(r => r[1] < t).forEach(r => lines.push(`  ${r[0]} (${r[1]}%)`));
-    lines.push("", `${RETURNS.length} vehicles processed`);
-    $("#simout").textContent = lines.join("\n");
-    markSim();
-  });
-
-  K.quiz({id:"q-alert", buttonSelector:"#card-alert .mlrk-choice", feedbackSelector:"#alertfb", correct:"2",
-    feedback:{"2":"18 and 9 are both below 25. 62 and 74 are not, so exactly 2 vehicles need refueling.",
-              "3":"Only two values, 18 and 9, are actually below 25. Double check each one against the threshold.",
-              "1":"Two separate values are below 25: both 18 and 9, not just one of them."}});
-
-  K.quiz({id:"q-count", buttonSelector:"#card-count .mlrk-choice", feedbackSelector:"#countfb", correct:"len",
-    feedback:{len:"len(returns) returns the current number of elements in the list directly.",
-              manual:"A manual counter works, but it's extra code doing something Python's built-in already does in one call.",
-              attr:"Python lists don't have a .length() method. That syntax belongs to other languages, not Python."}});
-
-  const CORRECT_BLANKS = {blankA:"returns", blankB:"<", blankC:"len"};
+  const CORRECT_BLANKS = {blankA:"0", blankB:"+=", blankC:"return"};
   K.Scoring.register("q-fillfn", 1, "quiz");
   let fillAttempts = 0, fillDone = false;
+  function fillSlots(){
+    $("#blankA-slot").textContent = "0";
+    $("#blankB-slot").textContent = "+=";
+    $("#blankC-slot").textContent = "return";
+  }
   $("#blankcheck").addEventListener("click", () => {
     if(fillDone) return;
     fillAttempts++;
     const given = {
-      blankA: $("#blankA").value.trim().toLowerCase(),
-      blankB: $("#blankB").value.trim(),
+      blankA: $("#blankA").value.trim(),
+      blankB: $("#blankB").value.replace(/\s+/g,""),
       blankC: $("#blankC").value.trim().toLowerCase()
     };
-    const results = Object.keys(CORRECT_BLANKS).map(k => ({key:k, ok: given[k] === CORRECT_BLANKS[k]}));
-    const allOk = results.every(r => r.ok);
+    const ok = {blankA: given.blankA === "0", blankB: given.blankB === "+=", blankC: given.blankC === "return"};
     const fb = $("#blankfb");
-    if(allOk){
+    if(ok.blankA && ok.blankB && ok.blankC){
       K.Scoring.award("q-fillfn", fillAttempts === 1 ? 1 : 0.5);
       fb.className = "mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML = "<strong>Correct"+(fillAttempts>1?" (2nd try, 0.5 pt)":" (1st try, 1 pt)")+".</strong> returns is the only collection this function has to loop over, < checks \"below the threshold,\" and len(returns) is the total count printed at the end.";
-      fillDone = true;
-      $("#blankA-slot").textContent = "returns";
-      $("#blankB-slot").textContent = "<";
-      $("#blankC-slot").textContent = "len";
+      fb.innerHTML = "<strong>Correct"+(fillAttempts>1?" (2nd try, 0.5 pt)":" (1st try, 1 pt)")+".</strong> total starts at 0, += adds each day's steps, and return hands the dict back to the caller.";
+      fillDone = true; fillSlots();
     } else if(fillAttempts >= 2){
       K.Scoring.award("q-fillfn", 0);
       fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML = "<strong>Here's the complete function. You'll get it next time.</strong> Blank 1 is <code>returns</code>, blank 2 is <code>&lt;</code>, blank 3 is <code>len</code>.";
-      fillDone = true;
-      $("#blankA-slot").textContent = "returns";
-      $("#blankB-slot").textContent = "<";
-      $("#blankC-slot").textContent = "len";
+      fb.innerHTML = "<strong>Here's the complete function. You'll get it next time.</strong> Blank 1 is <code>0</code>, blank 2 is <code>+=</code>, blank 3 is <code>return</code>.";
+      fillDone = true; fillSlots();
     } else {
-      const wrongCount = results.filter(r => !r.ok).length;
+      const notes = [];
+      if(!ok.blankA) notes.push("Blank 1: a running total needs a starting number.");
+      if(!ok.blankB) notes.push(given.blankB === "=" ? "Blank 2: = would replace total with one day's steps instead of adding to it." : "Blank 2: look at how goal_days grows inside the if.");
+      if(!ok.blankC) notes.push(given.blankC === "print" ? "Blank 3: print shows the dict but hands back None." : "Blank 3: it's the keyword that creates a return value.");
       fb.className = "mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML = "<strong>Not quite yet.</strong> "+wrongCount+" of 3 blanks still need a look. One more try before the answer is shown.";
+      fb.innerHTML = "<strong>Not quite yet.</strong> " + notes.join(" ") + " One more try before the answer is shown.";
     }
     fb.setAttribute("tabindex","-1"); fb.focus();
   });
 
+  K.Scoring.register("q-trace", 1, "quiz");
+  let traceAttempts = 0, traceDone = false;
+  $("#tracecheck").addEventListener("click", () => {
+    if(traceDone) return;
+    const raw = $("#tracein").value.replace(/[,\s]/g,"");
+    if(!raw) { $("#tracein").focus(); return; }
+    traceAttempts++;
+    const fb = $("#tracefb");
+    if(raw === "23320"){
+      K.Scoring.award("q-trace", traceAttempts === 1 ? 1 : 0.5);
+      fb.className = "mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML = "<strong>Correct"+(traceAttempts>1?" (2nd try, 0.5 pt)":" (1st try, 1 pt)")+".</strong> 6200 + 9120 + 8000 = 23320. The accumulator keeps every earlier pass.";
+      traceDone = true;
+    } else if(traceAttempts >= 2){
+      K.Scoring.award("q-trace", 0);
+      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML = "<strong>Here's the answer. You'll get it next time.</strong> After Wed, total is 6200 + 9120 + 8000 = <code>23320</code>.";
+      traceDone = true;
+    } else {
+      let note = "Add every day up to and including Wed. total keeps what the earlier passes added.";
+      if(raw === "15320") note = "15320 is total after Tue. The Wed pass adds 8000 more.";
+      else if(raw === "8000") note = "8000 is Wed's steps alone. total also holds Mon and Tue.";
+      else if(raw === "38070") note = "38070 is the total after Fri, the last pass. Stop at Wed.";
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>Not quite yet.</strong> " + note + " One more try before the answer is shown.";
+    }
+    fb.setAttribute("tabindex","-1"); fb.focus();
+  });
+
+  function revealTrace(){
+    $("#revealScreen").textContent = `summary = summarize_steps(days, 8000)
+print(summary)
+
+[Output]
+after Mon: total = 6200, goal_days = 0
+after Tue: total = 15320, goal_days = 1
+after Wed: total = 23320, goal_days = 2
+after Thu: total = 27620, goal_days = 2
+after Fri: total = 38070, goal_days = 3
+{'total': 38070, 'goal_days': 3}`;
+  }
+  const markReveal = K.activity("act-trace-reveal", () => true);
+  $("#revealrun").addEventListener("click", () => { revealTrace(); markReveal(); });
+
+  const DAYS = [["Mon",6200],["Tue",9120],["Wed",8000],["Thu",4300],["Fri",10450]];
+  const markSim = K.activity("act-sim-run", () => true);
+  $("#run").addEventListener("click", () => {
+    const goal = +$("#threshold").value;
+    let total = 0, goalDays = 0; const met = [];
+    DAYS.forEach(([d, s]) => { total += s; if(s >= goal){ goalDays += 1; met.push(d); } });
+    $("#simout").textContent = `summary = summarize_steps(days, ${goal})
+print(summary)
+
+[Output]
+{'total': ${total}, 'goal_days': ${goalDays}}
+
+# days that met the goal: ${met.length ? met.join(", ") : "none"}`;
+    markSim();
+  });
+
+  K.quiz({id:"q-alert", buttonSelector:"#card-alert .mlrk-choice", feedbackSelector:"#alertfb", correct:"2",
+    feedback:{"2":"Right. Only 9120 and 10450 are 9000 or more. Wed's 8000 no longer counts.",
+              "3":"Check Wed: 8000 >= 9000 is False, so Wed doesn't count with this goal.",
+              "1":"Two days reach 9000: Tue with 9120 and Fri with 10450."}});
+
+  K.quiz({id:"q-count", buttonSelector:"#card-count .mlrk-choice", feedbackSelector:"#countfb", correct:"len",
+    feedback:{len:"Right. len(days) would give 5 every time. goal_days counts only the passes where the if is true.",
+              manual:"len() works on lists too. The problem is what it counts: every day, not only goal days.",
+              attr:"len(days) counts items in the list. It never adds anything up. It just counts all 5 days."}});
+
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"A function that prints three related things (a listing, an alert, and a count) about the same accepted batch can still be doing one job.", correct:true,
-      hint:"Think back to section 4's classification exercise. Did report_vehicle_returns land in the one-job zone despite printing three things?",
-      explain:"Job count is about responsibilities, not output count. All three prints serve the same reporting responsibility."},
-    {value:"b", label:"Re-checking whether a value is a valid number is part of a reporting function's job, even when a validation function already approved it.", correct:false,
-      hint:"Revisit section 12's debug scenario. What was the actual problem with the teammate's code?",
-      explain:"That re-check is exactly the responsibility leak from section 12. It duplicates work the validation function already finished."},
-    {value:"c", label:"A threshold check like fuel_percent < 25 decides what belongs in an alert. It doesn't decide whether the data itself is valid.", correct:true,
-      hint:"Think about the vocabulary term \"threshold check\" from section 3. What does its definition actually say it decides?",
-      explain:"A threshold check filters already-accepted data for a report. It's a different job from confirming the data is usable in the first place."},
-    {value:"d", label:"Once a function is written, adding one more small, unrelated task to it is always cheaper than writing a second function.", correct:false,
-      hint:"Look back at section 14's interview framing. Is a bigger, more tangled function actually cheaper over time?",
-      explain:"Bundling in an unrelated task might save a few minutes now, but it's exactly the pattern code review and take-home rubrics flag later."}
+    {value:"a", label:"A function that returns a total and a count about the same valid week can still have one job.", correct:true,
+      hint:"Look again at the drag-and-drop in section 4. Where did summarize_steps belong?",
+      explain:"Both results serve one job: summarizing the valid week."},
+    {value:"b", label:"summarize_steps should re-check that each step count is a whole number, even though validate_days already checked.", correct:false,
+      hint:"Look again at the teammate's version in section 12. What was wrong with it?",
+      explain:"That re-check repeats validation. validate_days already did that job."},
+    {value:"c", label:"if steps >= goal inside summarize_steps decides what to count. It is not validation.", correct:true,
+      hint:"Validation decides valid or not. What does this if decide?",
+      explain:"Every record is already valid. The if only decides which days count toward goal_days."},
+    {value:"d", label:"An accumulator should be set to 0 inside the loop, so it starts fresh on each pass.", correct:false,
+      hint:"Look again at the order of steps in section 5. Where does total = 0 go?",
+      explain:"Reset inside the loop, total would forget every earlier day and end up holding only the last day's steps."}
   ]});
 
   K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"redo",
-    feedback:{redo:"Exactly. Once validate_returns has approved every fuel_percent, report_vehicle_returns re-converting and re-checking it is duplicated work, not a new responsibility this function needs.",
-              fine:"Repeating the same check in two functions blurs their responsibilities and adds code that can never actually fail if the earlier function is doing its job.",
-              tryexcept:"try/except itself isn't the problem. The problem is using it here to redo a check another function already completed."}});
+    feedback:{redo:"Right. Every step count is already a whole number, so the try/except can never skip anything. It just blurs the two jobs.",
+              fine:"Repeating a check puts the same rule in two places. When the rule changes, someone has to remember to fix both.",
+              tryexcept:"try/except is allowed in any function. The problem is using it here to redo validate_days's job."}});
 
   K.video({id:"act-video", elementId:"ytplayer", videoId:"89cGQjB5R4M"});
   K.freeResponse({id:"resp-isolate", selector:"#isolate", minWords:8});
@@ -591,19 +640,19 @@ Needs refueling before next rental:
   K.freeResponse({id:"resp-clue", selector:"#clue", minWords:8});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"split",
-    feedback:{split:"Separating responsibilities so each piece can be tested and changed on its own is exactly what an interviewer is listening for here.",
-              leave:"Passing visible tests doesn't mean the design is sound. A tangled function is still harder to maintain and extend.",
-              comment:"Comments can help someone find a section, but they don't fix the underlying problem of unrelated jobs sharing one function."}});
+    feedback:{split:"Right. One function per job means each part can be tested and changed without breaking the others.",
+              leave:"Passing tests says the code works today. It says nothing about how hard the next change will be.",
+              comment:"Comments help someone find a section, but the jobs are still tangled together in one function."}});
 
   K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"one",
-    feedback:{one:"Listing, flagging, and counting are all related ways of reporting on the same already-approved batch, exactly like the car rental example.",
-              three:"Several related outputs can still serve one responsibility: reporting on already-accepted data.",
-              recheck:"The later function should trust the validation stage rather than duplicate it, the same lesson from section 12's debug scenario."}});
+    feedback:{one:"Right. Sending an email is a new job. Because summarize_episodes returns its result, a new function can use it without changing it.",
+              three:"Then summarize_episodes would have two jobs, and a change to the email could break the summary.",
+              recheck:"The records are already validated. Re-checking them repeats a finished job."}});
 
   const AI_PROMPTS = [
-    "Think of a job with a narrow, well-defined role, like a cashier who rings up items but doesn't also restock shelves mid-transaction. Where's the equivalent boundary in a function you've written?",
-    "If you had to explain \"one job, even with several outputs\" to a friend using something from daily life, like a single form that asks three related questions, what would you compare it to?",
-    "Where have you already seen a task quietly grow extra, unrelated responsibilities over time, at work, in a group project, or anywhere else, and what would splitting it into two smaller tasks have looked like?"
+    "Think of a job with a clear role, like a referee who calls fouls but doesn't keep the stats. Where is the same boundary in a function you've written?",
+    "Try describing one of your own functions in a single sentence. If you needed \"and\" to join two unrelated tasks, which part would you move out?",
+    "Where have you seen a task slowly collect extra, unrelated duties, at work, in a group project, or at home? What would splitting it into two tasks look like?"
   ];
   $("#aiprompt").addEventListener("click", () => {
     const box = $("#aipromptbox");
