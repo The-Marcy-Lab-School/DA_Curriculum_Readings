@@ -50,11 +50,13 @@
 <section class="mlrk-section">
 <h2>1. Concept overview</h2>
 <p>A clerk at the parking office writes one function to work out every fine:</p>
-<div class="mlrk-code"><div class="mlrk-screen">def calculate_fine(base_fine, minutes_over):
+<div class="mlrk-code" data-file="calculate_fine.py"><div class="mlrk-screen">def calculate_fine(base_fine, minutes_over):
     fine = base_fine + (minutes_over * 2)
     return fine
 
-ticket_total = calculate_fine(40, 10)</div></div>
+ticket_total = calculate_fine(40, 10)
+print(ticket_total)</div></div>
+<div class="mlrk-run" data-file="calculate_fine.py"><pre>60</pre></div>
 <p>While <code>calculate_fine</code> runs, it has its own names: the parameters <code>base_fine</code> and <code>minutes_over</code>, and the variable <code>fine</code> created in its body. When <code>return fine</code> runs, the function hands back the value 60, and all three names stop existing. Only the returned value survives, stored in <code>ticket_total</code>. The part of a program where a name can be seen and used is its <strong>scope</strong>. A name created inside a function is a <strong>local variable</strong>: it exists only inside that function, and only while the function runs.</p>
 
 <svg class="mlrk-illustration" viewBox="0 0 760 356" role="img" aria-labelledby="scopeIntroTitle scopeIntroDesc" xmlns="http://www.w3.org/2000/svg">
@@ -122,10 +124,12 @@ ticket_total = calculate_fine(40, 10)</div></div>
 <div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-argp" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">def hours_parked(minutes):
+<div class="mlrk-code" data-file="hours_parked.py"><div class="mlrk-screen">def hours_parked(minutes):
     return minutes / 60
 
-result = hours_parked(90)</div></div>
+result = hours_parked(90)
+print(result)</div></div>
+<div class="mlrk-run" data-file="hours_parked.py"><pre>1.5</pre></div>
 <p><strong>In this call, what is <code>90</code>?</strong></p>
 <button type="button" class="mlrk-choice" data-a="argument">The argument: the value passed in at this call.</button>
 <button type="button" class="mlrk-choice" data-a="parameter">The parameter: the name in the function's <code>def</code> line.</button>
@@ -151,18 +155,20 @@ result = hours_parked(90)</div></div>
 <section class="mlrk-section">
 <h2>4. Watch a local scope come and go</h2>
 <p>Click through <code>calculate_fine(40, 10)</code> one step at a time. Notice when each name is created, and when they all disappear.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def calculate_fine(base_fine, minutes_over):
+<div class="mlrk-code" data-file="calculate_fine.py"><div class="mlrk-screen">def calculate_fine(base_fine, minutes_over):
     fine = base_fine + (minutes_over * 2)
     return fine
 
-ticket_total = calculate_fine(40, 10)</div></div>
+ticket_total = calculate_fine(40, 10)
+print(ticket_total)</div></div>
+<div class="mlrk-run" data-file="calculate_fine.py"><pre>60</pre></div>
 <div id="tracestep"></div>
 </section>
 
 <section class="mlrk-section">
 <h2>5. Predict: reaching for a local name from outside</h2>
 <p>This is the same function with one new line at the end.</p>
-<div class="mlrk-code"><div id="localScreen" class="mlrk-screen">def calculate_fine(base_fine, minutes_over):
+<div class="mlrk-code" data-file="fine_outside.py" data-expect="NameError"><div id="localScreen" class="mlrk-screen">def calculate_fine(base_fine, minutes_over):
     fine = base_fine + (minutes_over * 2)
     return fine
 
@@ -175,18 +181,25 @@ print(fine)</div></div>
 </div>
 <p><button type="button" id="predictLocalCheck" class="mlrk-btn">Check my prediction</button></p>
 <div id="predictLocalFb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-run" id="localRun" data-file="fine_outside.py" hidden><pre>60
+Traceback (most recent call last):
+  File "fine_outside.py", line 7, in &lt;module&gt;
+    print(fine)
+          ^^^^
+NameError: name 'fine' is not defined</pre></div>
 <details class="mlrk-hint"><summary>Need a hint?</summary><p>Look back at section 4's trace. Does <code>fine</code> still exist when <code>print(fine)</code> runs?</p></details>
 </section>
 
 <section class="mlrk-section">
 <h2>6. A function can read a global without being told to</h2>
-<div class="mlrk-code"><div class="mlrk-screen">daily_fine_cap = 150
+<div class="mlrk-code" data-file="fine_cap_global.py"><div class="mlrk-screen">daily_fine_cap = 150
 
 def calculate_fine(base_fine, minutes_over):
     fine = base_fine + (minutes_over * 2)
     return min(fine, daily_fine_cap)
 
-ticket_total = calculate_fine(90, 40)</div></div>
+ticket_total = calculate_fine(90, 40)
+print(ticket_total)</div></div>
 <div class="mlrk-card" id="card-global" style="margin-top:1rem"><p><strong>What does <code>calculate_fine</code> need in order to run correctly here?</strong></p>
 <button type="button" class="mlrk-choice" data-a="both">Both of its parameters, plus a <code>daily_fine_cap</code> that already exists outside it.</button>
 <button type="button" class="mlrk-choice" data-a="params">Only <code>base_fine</code> and <code>minutes_over</code>, since those are its parameters.</button>
@@ -198,17 +211,27 @@ ticket_total = calculate_fine(90, 40)</div></div>
 <section class="mlrk-section">
 <h2>7. Predict: the UnboundLocalError trap</h2>
 <p>A second function tries to count tickets as they are issued.</p>
-<div class="mlrk-code"><div class="mlrk-screen">tickets_issued = 0
+<div class="mlrk-code" data-file="issue_ticket.py" data-expect="UnboundLocalError"><div class="mlrk-screen">tickets_issued = 0
 
 def issue_ticket():
     tickets_issued = tickets_issued + 1
-    return tickets_issued</div></div>
+    return tickets_issued
+
+print(issue_ticket())</div></div>
 <div class="mlrk-fillblank">
-  <label for="predictUbl">Predict what happens when Python calls <code>issue_ticket()</code>. Describe it or name the error.</label>
+  <label for="predictUbl">Predict what happens when you run <code>python3 issue_ticket.py</code>. Describe it or name the error.</label>
   <input type="text" id="predictUbl" autocomplete="off" placeholder="e.g. an error, or describe what you think happens">
 </div>
 <p><button type="button" id="predictUblCheck" class="mlrk-btn">Check my prediction</button></p>
 <div id="predictUblFb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-run" id="ublRun" data-file="issue_ticket.py" hidden><pre>Traceback (most recent call last):
+  File "issue_ticket.py", line 7, in &lt;module&gt;
+    print(issue_ticket())
+          ~~~~~~~~~~~~^^
+  File "issue_ticket.py", line 4, in issue_ticket
+    tickets_issued = tickets_issued + 1
+                     ^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'tickets_issued' where it is not associated with a value</pre></div>
 <details class="mlrk-hint"><summary>Need a hint?</summary><p>The line <code>tickets_issued = tickets_issued + 1</code> assigns to <code>tickets_issued</code>. An assignment anywhere in a function decides that name's scope for the <em>whole</em> function.</p></details>
 </section>
 
@@ -224,11 +247,12 @@ def issue_ticket():
 <section class="mlrk-section">
 <h2>9. Fill in the blanks: turn the global into a parameter</h2>
 <p>Section 6's <code>calculate_fine</code> read <code>daily_fine_cap</code> from outside. In this version, the cap comes in as a third parameter, so the call shows everything the function needs.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def calculate_fine(base_fine, minutes_over, ____(1)):
+<div class="mlrk-code" data-file="fine_cap_param.py"><div class="mlrk-screen">def calculate_fine(base_fine, minutes_over, ____(1)):
     fine = base_fine + (minutes_over * 2)
     return min(fine, fine_cap)
 
-ticket_total = calculate_fine(90, 40, 150)</div></div>
+ticket_total = calculate_fine(90, 40, 150)
+print(ticket_total)</div></div>
 <div class="mlrk-fillblank">
   <label for="blankGlobal">Blank (1): which parameter name does the body need?</label>
   <input type="text" id="blankGlobal" autocomplete="off">
@@ -313,13 +337,18 @@ ticket_total = calculate_fine(90, 40, 150)</div></div>
 <section class="mlrk-section">
 <h2>15. Debugging habit + reflection</h2>
 <div class="mlrk-card" id="card-debug"><p><strong>A clerk copies <code>late_fee</code> from the parking office's main script into a new script and runs it.</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">def late_fee(days_late):
+<div class="mlrk-code" data-file="late_fee.py" data-expect="NameError"><div class="mlrk-screen">def late_fee(days_late):
     return days_late * fee_per_day
 
-print(late_fee(3))
-
-[Output]
-NameError: name 'fee_per_day' is not defined</div></div>
+print(late_fee(3))</div></div>
+<div class="mlrk-run" data-file="late_fee.py"><pre>Traceback (most recent call last):
+  File "late_fee.py", line 4, in &lt;module&gt;
+    print(late_fee(3))
+          ~~~~~~~~^^^
+  File "late_fee.py", line 2, in late_fee
+    return days_late * fee_per_day
+                       ^^^^^^^^^^^
+NameError: name 'fee_per_day' is not defined</pre></div>
 <p><strong>Why does the new script raise this error?</strong></p>
 <button type="button" class="mlrk-choice" data-a="right"><code>late_fee</code> reads <code>fee_per_day</code>, a global that was defined only in the main script.</button>
 <button type="button" class="mlrk-choice" data-a="syntax"><code>days_late</code> is a local variable that was never created.</button>
@@ -530,33 +559,13 @@ git push</pre></li>
     const fb=$("#predictLocalFb");
     if(ok){
       K.Scoring.award("q-predictlocal", predictLocalAttempts===1?1:0.5);
-      $("#localScreen").textContent = `def calculate_fine(base_fine, minutes_over):
-    fine = base_fine + (minutes_over * 2)
-    return fine
-
-ticket_total = calculate_fine(40, 10)
-print(ticket_total)
-print(fine)
-
-[Output]
-60
-NameError: name 'fine' is not defined`;
+      $("#localRun").hidden=false;
       fb.className="mlrk-feedback mlrk-show mlrk-good";
       fb.innerHTML="<strong>Correct.</strong> print(ticket_total) works because ticket_total was created outside the function. fine existed only inside calculate_fine, so print(fine) raises a NameError.";
       predictLocalDone=true;
     } else if(predictLocalAttempts>=2){
       K.Scoring.award("q-predictlocal",0);
-      $("#localScreen").textContent = `def calculate_fine(base_fine, minutes_over):
-    fine = base_fine + (minutes_over * 2)
-    return fine
-
-ticket_total = calculate_fine(40, 10)
-print(ticket_total)
-print(fine)
-
-[Output]
-60
-NameError: name 'fine' is not defined`;
+      $("#localRun").hidden=false;
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
       fb.innerHTML="<strong>Here's what happens. You'll get it next time.</strong> print(ticket_total) prints 60. print(fine) raises a NameError, because fine was local to calculate_fine and no longer exists.";
       predictLocalDone=true;
@@ -577,11 +586,13 @@ NameError: name 'fine' is not defined`;
     const fb=$("#predictUblFb");
     if(ok){
       K.Scoring.award("q-predictubl", predictUblAttempts===1?1:0.5);
+      $("#ublRun").hidden=false;
       fb.className="mlrk-feedback mlrk-show mlrk-good";
       fb.innerHTML="<strong>Correct.</strong> The assignment makes tickets_issued local for the whole function. So the right side of that line reads a local tickets_issued that has no value yet. Python raises UnboundLocalError: cannot access local variable 'tickets_issued' where it is not associated with a value.";
       predictUblDone=true;
     } else if(predictUblAttempts>=2){
       K.Scoring.award("q-predictubl",0);
+      $("#ublRun").hidden=false;
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
       fb.innerHTML="<strong>Here's what happens. You'll get it next time.</strong> Calling issue_ticket() raises UnboundLocalError: cannot access local variable 'tickets_issued' where it is not associated with a value. The assignment makes tickets_issued local for the whole function, so the read finds no value.";
       predictUblDone=true;

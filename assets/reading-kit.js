@@ -466,8 +466,21 @@
         return n.contents||"";
       },
       echo(args){return args.join(" ")},
-      clear(){log.textContent="";return null}
+      clear(){log.textContent="";return null},
+      // Runs a simulated .py file. A file node's `run` is its output: a
+      // string, or a function (args,state)=>string for output that depends
+      // on earlier commands. The messages match real python3 on macOS/Linux.
+      python3(args){
+        if(!args[0]) return "This simulator runs files. Try: python3 <file>.py";
+        const target=resolve(args[0]);
+        const n=node(target);
+        if(!n||n.type!=="file") return "python3: can't open file '"+target+"': [Errno 2] No such file or directory";
+        if(n.run==null) return "(no output)";
+        const out=typeof n.run==="function"?n.run(args.slice(1),state):n.run;
+        return out===""?"(no output)":out;
+      }
     };
+    builtins.python=builtins.python3;
     function prompt(){promptEl.textContent=(state.cwd)+" $"}
     prompt();
     input.addEventListener("keydown",e=>{
@@ -614,9 +627,44 @@
   }
 
   /* ---------- init ---------- */
+  /* ---------- .py files ----------
+     A code block that is a whole file carries data-file="name.py"; the kit
+     shows the name as a tab. A `.mlrk-run[data-file]` block holds what
+     running that file prints; the kit adds the "$ python3 name.py" line, so
+     every example reads as a file a Fellow could save and run. */
+  function fileTabs(root){
+    $$(".mlrk-code[data-file]",root).forEach(el=>{
+      if($(".mlrk-filename",el)) return;
+      const tab=document.createElement("div");
+      tab.className="mlrk-filename";
+      tab.textContent=el.dataset.file;
+      el.insertBefore(tab,el.firstChild);
+    });
+    $$(".mlrk-run[data-file]",root).forEach(el=>{
+      if($(".mlrk-run-cmd",el)) return;
+      const cmd=document.createElement("div");
+      cmd.className="mlrk-run-cmd";
+      cmd.innerHTML='<span class="mlrk-terminal-prompt">$</span> python3 '+el.dataset.file.replace(/</g,"&lt;");
+      el.insertBefore(cmd,el.firstChild);
+    });
+  }
+  // Show a file's output on demand (a "Run python3 x.py" button).
+  // opts:{button, target, file, output (string or ()=>string), onRun}
+  function runFile(opts){
+    const btn=typeof opts.button==="string"?$(opts.button):opts.button;
+    const out=typeof opts.target==="string"?$(opts.target):opts.target;
+    if(!btn.textContent.trim()) btn.textContent="Run python3 "+opts.file;
+    btn.addEventListener("click",()=>{
+      const text=typeof opts.output==="function"?opts.output():opts.output;
+      out.textContent="$ python3 "+opts.file+"\n"+(text===""?"(no output)":text);
+      if(opts.onRun) opts.onRun();
+    });
+  }
+
   function init(opts){
     // opts:{readingId, title, progressBarSelector, bannerSelector}
     currentReadingId=opts.readingId;currentTitle=opts.title;
+    fileTabs(document);
     const saved=Storage.load(opts.readingId);
     if(saved){
       restore(saved);
@@ -635,7 +683,7 @@
 
   global.ReadingKit={
     init, quiz, selectAll, flipCards, orderSteps, dragDrop, video, freeResponse,
-    activity, terminal, selfCheck, traceStepper, Scoring, Persona, Storage,
+    activity, terminal, runFile, fileTabs, selfCheck, traceStepper, Scoring, Persona, Storage,
     snapshot, toMarkdown, toText, download, restore, wireImport, submitForCredit, buildSubmitURL
   };
 })(window);

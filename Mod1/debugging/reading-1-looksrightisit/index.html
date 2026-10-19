@@ -93,7 +93,7 @@
 <div id="recloopfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-recall-default" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">class Show:
+<div class="mlrk-code" data-file="show_episodes.py"><div class="mlrk-screen">class Show:
     def __init__(self, title, episodes):
         self.title = title
         self.episodes = episodes
@@ -137,14 +137,15 @@ print(night.episodes)</div></div>
 
 <section class="mlrk-section">
 <h2>4. Bug hunt: the session that never got counted</h2>
-<div class="mlrk-code"><div id="bug1Screen" class="mlrk-screen">sessions = [50, 42, 95, 38, 61]
+<div class="mlrk-code" data-file="recap_total.py"><div class="mlrk-screen">sessions = [50, 42, 95, 38, 61]
 total = 0
 
 for i in range(1, len(sessions)):
     total += sessions[i]
 
-print(total)</div>
-<div class="mlrk-actions"><button type="button" id="bug1run" class="mlrk-btn">Reveal what this actually prints</button></div></div>
+print(total)</div></div>
+<div class="mlrk-actions"><button type="button" id="bug1run" class="mlrk-btn" data-reveal="bug1out">Run python3 recap_total.py</button></div>
+<div class="mlrk-run" data-file="recap_total.py" id="bug1out" hidden><pre>236</pre></div>
 <div class="mlrk-card" id="card-bug1" style="margin-top:1rem"><p><strong>Expected behavior:</strong> the total of all five sessions, 286.</p><p><strong>Predict the actual behavior. What does this code print?</strong></p>
 <button type="button" class="mlrk-choice" data-a="236"><code>236</code></button>
 <button type="button" class="mlrk-choice" data-a="286"><code>286</code></button>
@@ -158,7 +159,7 @@ print(total)</div>
 <section class="mlrk-section">
 <h2>5. Bug hunt: the count that vanishes</h2>
 <p>A session of 40 minutes or more counts as a full episode. <code>count_finished</code> should count those sessions.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def count_finished(sessions):
+<div class="mlrk-code" data-file="count_finished.py" data-expect="NameError"><div class="mlrk-screen">def count_finished(sessions):
     finished = 0
     for minutes in sessions:
         if minutes &gt;= 40:
@@ -166,7 +167,13 @@ print(total)</div>
 
 count_finished([50, 42, 95, 38, 61])
 print(finished)</div></div>
-<div class="mlrk-card" id="card-bug2"><p><strong>What happens when this code runs?</strong></p>
+<div class="mlrk-actions"><button type="button" id="bug2run" class="mlrk-btn" data-reveal="bug2out">Run python3 count_finished.py</button></div>
+<div class="mlrk-run" data-file="count_finished.py" id="bug2out" hidden><pre>Traceback (most recent call last):
+  File "count_finished.py", line 8, in &lt;module&gt;
+    print(finished)
+          ^^^^^^^^
+NameError: name 'finished' is not defined</pre></div>
+<div class="mlrk-card" id="card-bug2" style="margin-top:1rem"><p><strong>What happens when this code runs?</strong></p>
 <button type="button" class="mlrk-choice" data-a="nameerror">Python raises <code>NameError: name 'finished' is not defined</code></button>
 <button type="button" class="mlrk-choice" data-a="four">It prints <code>4</code></button>
 <button type="button" class="mlrk-choice" data-a="zero">It prints <code>0</code></button>
@@ -176,7 +183,7 @@ print(finished)</div></div>
 
 <section class="mlrk-section">
 <h2>6. Bug hunt: the attribute that was never there</h2>
-<div class="mlrk-code"><div class="mlrk-screen">class Viewer:
+<div class="mlrk-code" data-file="viewer_hours.py" data-expect="AttributeError"><div class="mlrk-screen">class Viewer:
     def __init__(self, name, minutes_watched):
         self.name = name
         self.minutes_watched = minutes_watched
@@ -186,7 +193,16 @@ print(finished)</div></div>
 
 ana = Viewer("Ana", 286)
 print(ana.hours())</div></div>
-<div class="mlrk-card" id="card-bug3"><p><strong>What happens when <code>ana.hours()</code> runs?</strong></p>
+<div class="mlrk-actions"><button type="button" id="bug3run" class="mlrk-btn" data-reveal="bug3out">Run python3 viewer_hours.py</button></div>
+<div class="mlrk-run" data-file="viewer_hours.py" id="bug3out" hidden><pre>Traceback (most recent call last):
+  File "viewer_hours.py", line 10, in &lt;module&gt;
+    print(ana.hours())
+          ~~~~~~~~~^^
+  File "viewer_hours.py", line 7, in hours
+    return self.minutes_watch / 60
+           ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Viewer' object has no attribute 'minutes_watch'. Did you mean: 'minutes_watched'?</pre></div>
+<div class="mlrk-card" id="card-bug3" style="margin-top:1rem"><p><strong>What happens when <code>ana.hours()</code> runs?</strong></p>
 <button type="button" class="mlrk-choice" data-a="attrerror">Python raises <code>AttributeError: 'Viewer' object has no attribute 'minutes_watch'</code></button>
 <button type="button" class="mlrk-choice" data-a="value">It prints <code>4.766666666666667</code></button>
 <button type="button" class="mlrk-choice" data-a="zero">It prints <code>0</code>, because the attribute has no value yet</button>
@@ -199,12 +215,15 @@ print(ana.hours())</div></div>
 
 <section class="mlrk-section">
 <h2>7. Bug hunt: the error nobody sees</h2>
-<div class="mlrk-code"><div id="bug4Screen" class="mlrk-screen">def session_minutes(session):
+<div class="mlrk-code" data-file="session_minutes.py"><div class="mlrk-screen">def session_minutes(session):
     try:
         return session["end"] - session["start"]
     except:
-        return 0</div>
-<div class="mlrk-actions"><button type="button" id="bug4run" class="mlrk-btn">Reveal what actually happens</button></div></div>
+        return 0
+
+print(session_minutes({"show": "Night Shift", "start": 1200}))</div></div>
+<div class="mlrk-actions"><button type="button" id="bug4run" class="mlrk-btn" data-reveal="bug4out">Run python3 session_minutes.py</button></div>
+<div class="mlrk-run" data-file="session_minutes.py" id="bug4out" hidden><pre>0</pre></div>
 <div class="mlrk-card" id="card-bug4" style="margin-top:1rem"><p><strong>One session record is missing its end time: <code>{"show": "Night Shift", "start": 1200}</code>. What happens when <code>session_minutes</code> runs on it?</strong></p>
 <button type="button" class="mlrk-choice" data-a="silent">It returns <code>0</code> with no error or warning. That session's real minutes disappear from the recap.</button>
 <button type="button" class="mlrk-choice" data-a="crash">Python prints a <code>KeyError</code> traceback and the script stops.</button>
@@ -215,8 +234,16 @@ print(ana.hours())</div></div>
 <section class="mlrk-section">
 <h2>8. Fill in the blank: fix the attribute</h2>
 <p>Fix the <code>hours</code> method from section 6 so it reads the attribute that <code>__init__</code> actually set.</p>
-<div class="mlrk-code"><div class="mlrk-screen">    def hours(self):
-        return self.____ / 60</div></div>
+<div class="mlrk-code" data-file="viewer_hours.py"><div class="mlrk-screen">class Viewer:
+    def __init__(self, name, minutes_watched):
+        self.name = name
+        self.minutes_watched = minutes_watched
+
+    def hours(self):
+        return self.____ / 60
+
+ana = Viewer("Ana", 286)
+print(ana.hours())</div></div>
 <div class="mlrk-fillblank">
   <label for="blankinput">Type the missing attribute name:</label>
   <input type="text" id="blankinput" autocomplete="off">
@@ -432,23 +459,25 @@ git push</pre></li>
     feedback:{"236":"Right. range(1, 5) produces 1, 2, 3, 4, so index 0, the 50-minute session, is never added. 286 minus 50 is 236.",
               "286":"286 is the expected behavior. The loop starts at index 1, so the actual behavior is different.",
               error:"range(1, 5) only produces valid indexes for a five-item list, so nothing crashes. The bug is silent."},
-    onDone(){revealBug1()}});
+    onDone(){reveal("bug1out")}});
 
   K.quiz({id:"q-bug2", buttonSelector:"#card-bug2 .mlrk-choice", feedbackSelector:"#bug2fb", correct:"nameerror",
     feedback:{nameerror:"Right. finished exists only inside count_finished. The last line runs outside the function, where no finished exists.",
               four:"Four sessions do reach 40 minutes, but that count stays inside the function. The last line can't see it.",
-              zero:"There is no finished outside the function, not even one set to 0, so Python can't print anything."}});
+              zero:"There is no finished outside the function, not even one set to 0, so Python can't print anything."},
+    onDone(){reveal("bug2out")}});
 
   K.quiz({id:"q-bug3", buttonSelector:"#card-bug3 .mlrk-choice", feedbackSelector:"#bug3fb", correct:"attrerror",
     feedback:{attrerror:"Right. __init__ set minutes_watched, but hours reads minutes_watch. That attribute was never set.",
               value:"4.766666666666667 is 286 / 60, the expected behavior. Check the attribute name hours reads.",
-              zero:"Python never fills in 0 for a missing attribute. It raises an AttributeError."}});
+              zero:"Python never fills in 0 for a missing attribute. It raises an AttributeError."},
+    onDone(){reveal("bug3out")}});
 
   K.quiz({id:"q-bug4", buttonSelector:"#card-bug4 .mlrk-choice", feedbackSelector:"#bug4fb", correct:"silent",
     feedback:{silent:"Right. The bare except: catches the KeyError for the missing \"end\" key and returns 0. Nothing is printed.",
               crash:"The except: block catches the KeyError before it can stop the script.",
               default:"Nothing in this code supplies an end time. It returns 0 and moves on."},
-    onDone(){revealBug4()}});
+    onDone(){reveal("bug4out")}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
     {value:"b", label:"Code that runs without an error has proven its logic is correct.", correct:false,
@@ -506,33 +535,10 @@ git push</pre></li>
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 
-  function revealBug1(){
-    $("#bug1Screen").textContent = `sessions = [50, 42, 95, 38, 61]
-total = 0
-
-for i in range(1, len(sessions)):
-    total += sessions[i]
-
-print(total)
-
-[Output]
-236`;
-  }
-  $("#bug1run").addEventListener("click", revealBug1);
-
-  function revealBug4(){
-    $("#bug4Screen").textContent = `def session_minutes(session):
-    try:
-        return session["end"] - session["start"]
-    except:
-        return 0
-
-print(session_minutes({"show": "Night Shift", "start": 1200}))
-
-[Output]
-0`;
-  }
-  $("#bug4run").addEventListener("click", revealBug4);
+  // "Run python3 name.py" buttons show the file's real output, already on the page.
+  function reveal(id){ document.getElementById(id).hidden = false; }
+  document.querySelectorAll("[data-reveal]").forEach(btn =>
+    btn.addEventListener("click", () => reveal(btn.dataset.reveal)));
 
   K.Scoring.register("q-blank",1,"quiz");
   let blankAttempts=0, blankDone=false;

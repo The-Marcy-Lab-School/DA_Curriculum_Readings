@@ -117,9 +117,9 @@
 
 <p>That is the core difference from a Python list. A list is one contiguous block: Python can compute exactly where element <code>7</code> lives with simple arithmetic on the starting address, no matter how big the list is. A linked list has no such shortcut. Each node can live anywhere, and the only way to reach the fifth node is to start at the first one and follow "next" four times. That is called <strong>traversal</strong>, and it is the price a linked list pays for something a list cannot offer as cheaply: changing what sits in the middle without moving anything else around it (more on that soon).</p>
 
-<p>Here is that exact three-node chain in Python, built with a small class that holds a value and a "next" reference:</p>
+<p>Here are the first three songs of that chain in Python, built with a small class that holds a value and a "next" reference:</p>
 
-<div class="mlrk-code"><div class="mlrk-screen">class Node:
+<div class="mlrk-code" data-file="song_chain.py"><div class="mlrk-screen">class Node:
     def __init__(self, value):
         self.value = value
         self.next = None
@@ -131,7 +131,15 @@ head.next = second
 third = Node("Song C")
 second.next = third
 
-# head -&gt; "Song A" -&gt; "Song B" -&gt; "Song C" -&gt; None</div></div>
+# head -&gt; "Song A" -&gt; "Song B" -&gt; "Song C" -&gt; None
+print(head.value)
+print(head.next.value)
+print(head.next.next.value)
+print(head.next.next.next)</div></div>
+<div class="mlrk-run" data-file="song_chain.py" style="margin-top:.6rem"><pre>Song A
+Song B
+Song C
+None</pre></div>
 
 <p>Compare that to the one-line list version, <code>queue = ["Song A", "Song B", "Song C"]</code>. The list version is shorter to write and lets you jump straight to <code>queue[2]</code>. The linked version took more setup and can only be reached by starting at <code>head</code>. Cheap random access versus cheap insertion and removal is the entire trade-off, and it is why both structures exist side by side rather than one replacing the other.</p>
 
@@ -146,7 +154,7 @@ second.next = third
 <p class="mlrk-small">A few skills get reused heavily later in this reading: indexing into a sequence, a while loop that stops on its own when a condition changes, what <code>None</code> actually represents, and what really happens when one variable is assigned to another. Test each one below before moving on.</p>
 
 <div class="mlrk-card" id="card-prereq-index"><p><strong>Quick recall:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">playlist = ["Song A", "Song B", "Song C"]
+<div class="mlrk-code" data-file="playlist_pick.py"><div class="mlrk-screen">playlist = ["Song A", "Song B", "Song C"]
 print(playlist[1])</div></div>
 <p><strong>What prints?</strong></p>
 <button type="button" class="mlrk-choice" data-a="b">Song B</button>
@@ -167,7 +175,7 @@ print(playlist[1])</div></div>
 <div id="prereqnonefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-prereq-ref" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">a = [1, 2, 3]
+<div class="mlrk-code" data-file="shared_list.py"><div class="mlrk-screen">a = [1, 2, 3]
 b = a
 b.append(4)
 print(a)</div></div>
@@ -400,8 +408,13 @@ print(a)</div></div>
   </g>
 </svg>
 
-<p>Here is the full function, with one line hidden. That hidden line is the actual reversal: the moment <code>curr</code>'s pointer gets redirected backward instead of forward.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def reverse_linked_list(head):
+<p>Here is the full function in <code>reverse_list.py</code>, with one line hidden. That hidden line is the actual reversal: the moment <code>curr</code>'s pointer gets redirected backward instead of forward.</p>
+<div class="mlrk-code" data-file="reverse_list.py"><div class="mlrk-screen">class Node:
+    def __init__(self, value):
+        self.value = value
+        self.next = None
+
+def reverse_linked_list(head):
     prev = None
     curr = head
     while curr:
@@ -409,7 +422,14 @@ print(a)</div></div>
         ____________________
         prev = curr
         curr = next_node
-    return prev  # prev is the new head</div></div>
+    return prev  # prev is the new head
+
+head = Node(10)
+head.next = Node(20)
+head.next.next = Node(30)
+
+new_head = reverse_linked_list(head)
+print(new_head.value, new_head.next.value, new_head.next.next.value)</div></div>
 <div class="mlrk-fillblank">
   <label for="revblankinput">Type the missing line of code:</label>
   <input type="text" id="revblankinput" autocomplete="off" placeholder="e.g. curr.next = ...">
@@ -425,6 +445,8 @@ print(a)</div></div>
 
 <p style="margin-top:1.2rem">Now trace it for real, one full pass of the loop at a time.</p>
 <div id="reversetrace"></div>
+<p style="margin-top:1rem">With the missing line filled in, the file prints the reversed list:</p>
+<div class="mlrk-run" data-file="reverse_list.py"><pre>30 20 10</pre></div>
 
 <div class="mlrk-card" id="card-why-temp" style="margin-top:1.2rem"><p><strong>Right before the hidden line runs, why did the function already save <code>next_node = curr.next</code>?</strong></p>
 <button type="button" class="mlrk-choice" data-a="lose">Because the hidden line overwrites curr.next, and without saving it first, the rest of the original list would become unreachable.</button>

@@ -19,7 +19,7 @@
 <h1>Make It Survive</h1>
 <p class="mlrk-lead">A school's rooftop weather station measures rain and wind every hour. A short Python script keeps each hour's numbers in a dictionary. The script works all day. Then the laptop restarts overnight, and in the morning every reading is gone. The sensor measured the rain, but the numbers only lived inside the running script. To keep data after a program closes, the program has to write that data to a file, in a format it can read back later.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~40–44 minutes</span>
+  <span class="mlrk-pill">~42–46 minutes</span>
   <span class="mlrk-pill">Includes a 6-minute video</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
@@ -149,13 +149,13 @@
 
 <section class="mlrk-section">
 <h2>4. Three shapes, three formats</h2>
-<p>All three formats store plain text. They differ in the shape of data each one fits. Here is one hour's reading written three ways:</p>
-<div class="mlrk-code"><div class="mlrk-screen">JSON:  {"hour": 7, "rain_mm": 1.2}
-
-CSV:   hour,rain_mm
-       7,1.2
-
-TXT:   7:00 rain 1.2 mm</div></div>
+<p>All three formats store plain text. They differ in the shape of data each one fits. Here is one hour's reading saved as three files:</p>
+<div class="mlrk-grid">
+<div class="mlrk-code" data-file="hour7.json"><div class="mlrk-screen">{"hour": 7, "rain_mm": 1.2}</div></div>
+<div class="mlrk-code" data-file="hour7.csv"><div class="mlrk-screen">hour,rain_mm
+7,1.2</div></div>
+<div class="mlrk-code" data-file="hour7.txt"><div class="mlrk-screen">7:00 rain 1.2 mm</div></div>
+</div>
 <p>JSON labels every value. CSV writes the labels once, in the header row. TXT uses whatever layout you choose.</p>
 <div class="mlrk-grid">
 <div class="mlrk-card mlrk-format-card"><h3>JSON</h3><p><strong>Shape:</strong> nested keys, values, and arrays.</p><p><strong>Fits:</strong> one record with structure inside it, like a sensor with a list of today's alerts.</p></div>
@@ -187,11 +187,18 @@ TXT:   7:00 rain 1.2 mm</div></div>
 <li><code>"a"</code> (append) keeps what is already there and adds to the end.</li>
 <li>With no mode, <code>open()</code> reads the file (<code>"r"</code>).</li>
 </ul>
-<p>The weather script should add one line to <code>rain_log.txt</code> every hour. Here is the first version someone wrote. The script runs this block once an hour, with a new <code>hour_line</code> each time.</p>
-<div class="mlrk-code"><div id="writeScreen" class="mlrk-screen">hour_line = "6:00 rain 0.4 mm\n"
+<p>The weather script should add one line to <code>rain_log.txt</code> every hour. Here is the first version someone wrote. The real script runs once an hour. In this file, each pass of the loop stands in for one of those hourly runs, and the last two lines print what the file holds afterward.</p>
+<div class="mlrk-code" data-file="log_rain.py"><div class="mlrk-screen">hour_lines = ["6:00 rain 0.4 mm\n", "7:00 rain 1.2 mm\n", "8:00 rain 0.9 mm\n"]
 
-with open("rain_log.txt", "w") as f:
-    f.write(hour_line)</div><div class="mlrk-actions"><button type="button" id="overwrite" class="mlrk-btn">Show the file after the 6:00, 7:00, and 8:00 runs</button></div></div>
+# Each pass of the loop stands in for one hourly run.
+for hour_line in hour_lines:
+    with open("rain_log.txt", "w") as f:
+        f.write(hour_line)
+
+with open("rain_log.txt") as f:
+    print(f.read())</div></div>
+<div class="mlrk-actions"><button type="button" id="overwrite" class="mlrk-btn">Run python3 log_rain.py</button></div>
+<div class="mlrk-run" id="overwritewrap" hidden><pre id="overwriteout"></pre></div>
 <div class="mlrk-card" id="card-write" style="margin-top:1rem"><p><strong>The file should keep every hour's line. Which change fixes the script?</strong></p>
 <button type="button" class="mlrk-choice" data-a="replaced">Open the file with <code>"a"</code> instead of <code>"w"</code>.</button>
 <button type="button" class="mlrk-choice" data-a="kept">Open the file with <code>"r"</code> instead of <code>"w"</code>.</button>
@@ -202,8 +209,11 @@ with open("rain_log.txt", "w") as f:
 <section class="mlrk-section">
 <h2>6. Reading it back</h2>
 <p><code>f.read()</code> returns the whole file as one string. Every value read from a text file starts as a string, even one that looks like a number. Your code decides when that text becomes a number.</p>
-<p>The file <code>rain_total.txt</code> contains <code>1.5</code> and nothing else.</p>
-<div class="mlrk-code"><div class="mlrk-screen">with open("rain_total.txt") as f:
+<p>This file writes <code>1.5</code> and nothing else to <code>rain_total.txt</code>, then reads it back.</p>
+<div class="mlrk-code" data-file="read_total.py"><div class="mlrk-screen">with open("rain_total.txt", "w") as f:
+    f.write("1.5")
+
+with open("rain_total.txt") as f:
     total = f.read()
 
 print(total * 2)</div></div>
@@ -211,16 +221,17 @@ print(total * 2)</div></div>
 <button type="button" class="mlrk-choice" data-a="convert">3.0</button>
 <button type="button" class="mlrk-choice" data-a="retrieve">1.51.5</button>
 <button type="button" class="mlrk-choice" data-a="keepalive">A TypeError</button>
-<div id="readfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div id="readfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-run" data-file="read_total.py" id="readrun" hidden><pre>1.51.5</pre></div></div>
 </section>
 
 <section class="mlrk-section">
 <h2>7. Predict, then check: will it survive the round trip?</h2>
-<p>For each of the three round-trip snippets in this section, predict what happens before you answer. The real output appears after you answer.</p>
+<p>For each of the three round-trip files in this section, predict what happens before you answer. The real output appears after you answer.</p>
 
 <div class="mlrk-card">
 <p><strong>Round 1: integer keys</strong></p>
-<div class="mlrk-code"><div id="round1Screen" class="mlrk-screen">import json
+<div class="mlrk-code" data-file="round_trip_keys.py" data-expect="KeyError"><div id="round1Screen" class="mlrk-screen">import json
 
 rain = {6: 0.4, 7: 1.2}
 
@@ -236,11 +247,16 @@ print(restored[7])</div></div>
 <button type="button" class="mlrk-choice round1" data-a="keyerror">It raises a KeyError, because the key is now the string "7".</button>
 <button type="button" class="mlrk-choice round1" data-a="typeerror">It raises a TypeError, because a dict can't be loaded from JSON.</button>
 <div id="round1fb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-run" data-file="round_trip_keys.py" id="round1run" hidden><pre>Traceback (most recent call last):
+  File "round_trip_keys.py", line 11, in &lt;module&gt;
+    print(restored[7])
+          ~~~~~~~~^^^
+KeyError: 7</pre></div>
 </div>
 
 <div class="mlrk-card" style="margin-top:1rem">
 <p><strong>Round 2: tuple values</strong></p>
-<div class="mlrk-code"><div id="round2Screen" class="mlrk-screen">import json
+<div class="mlrk-code" data-file="round_trip_tuple.py"><div id="round2Screen" class="mlrk-screen">import json
 
 reading = {"rain_mm": 1.2, "wind": (18, "NW")}
 
@@ -256,12 +272,13 @@ print(restored["wind"] == (18, "NW"))</div></div>
 <button type="button" class="mlrk-choice round2" data-a="list">False</button>
 <button type="button" class="mlrk-choice round2" data-a="str">A TypeError</button>
 <div id="round2fb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-run" data-file="round_trip_tuple.py" id="round2run" hidden><pre>False</pre></div>
 </div>
 
 <div class="mlrk-card" style="margin-top:1rem">
 <p><strong>Round 3: a date value</strong></p>
 <p><code>date(2026, 10, 3)</code> is Python's built-in way to store a calendar date.</p>
-<div class="mlrk-code"><div id="round3Screen" class="mlrk-screen">import json
+<div class="mlrk-code" data-file="save_date.py" data-expect="TypeError"><div id="round3Screen" class="mlrk-screen">import json
 from datetime import date
 
 reading = {"rain_mm": 1.2, "day": date(2026, 10, 3)}
@@ -273,19 +290,58 @@ with open("reading.json", "w") as f:
 <button type="button" class="mlrk-choice round3" data-a="typeerror">It raises a TypeError, because JSON has no date type.</button>
 <button type="button" class="mlrk-choice round3" data-a="empty">It saves <code>"day"</code> as an empty string.</button>
 <div id="round3fb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-run" data-file="save_date.py" id="round3run" hidden><pre>Traceback (most recent call last):
+  File "save_date.py", line 7, in &lt;module&gt;
+    json.dump(reading, f)
+    ~~~~~~~~~^^^^^^^^^^^^
+  ...
+TypeError: Object of type date is not JSON serializable</pre></div>
+<p class="mlrk-small">The real traceback also lists a few lines from inside Python's <code>json</code> module, shortened to <code>...</code> here. Read the first frame (your line) and the last line (the error).</p>
+</div>
+
+<div class="mlrk-card" style="margin-top:1rem">
+<p><strong>Try it: save in one run, load in the next</strong></p>
+<p>Real programs split the round trip across two runs. <code>save_rain.py</code> writes the hourly dictionary to <code>rain.json</code>. <code>load_rain.py</code> runs later and rebuilds it.</p>
+<div class="mlrk-code" data-file="save_rain.py"><div class="mlrk-screen">import json
+
+rain = {6: (0.4, 12), 7: (1.2, 18)}
+
+with open("rain.json", "w") as f:
+    json.dump(rain, f)
+
+print("Saved", len(rain), "hours to rain.json")</div></div>
+<div class="mlrk-code" data-file="load_rain.py" style="margin-top:.8rem"><div class="mlrk-screen">import json
+
+with open("rain.json") as f:
+    rain = json.load(f)
+
+print("Loaded:", rain)
+print("Hour 7:", rain["7"])</div></div>
+<p style="margin-top:.8rem">Type these commands in the terminal, one at a time: <code>ls</code>, <code>python3 load_rain.py</code> (no file saved yet), <code>python3 save_rain.py</code>, <code>cat rain.json</code>, then <code>python3 load_rain.py</code> again. Look at the keys and values in <code>rain.json</code>.</p>
+<div class="mlrk-terminal" id="rainterminal">
+  <div class="mlrk-terminal-log" aria-live="polite">This simulated terminal starts in the weather-station folder. Nothing has been saved yet.</div>
+  <div class="mlrk-terminal-row">
+    <span class="mlrk-terminal-prompt" aria-hidden="true">$</span>
+    <input type="text" class="mlrk-terminal-input" aria-label="Terminal command input" autocomplete="off" spellcheck="false">
+  </div>
+</div>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>8. Typed practice: name the two functions</h2>
-<p>Each blank in this snippet needs the name of a <code>json</code> function.</p>
-<div class="mlrk-code"><div class="mlrk-screen">import json
+<p>Each blank in this file needs the name of a <code>json</code> function.</p>
+<div class="mlrk-code" data-file="save_and_load.py"><div class="mlrk-screen">import json
+
+rain = {6: 0.4, 7: 1.2}
 
 with open("rain.json", "w") as f:
     json.____(rain, f)
 
 with open("rain.json") as f:
-    restored = json.____(f)</div></div>
+    restored = json.____(f)
+
+print(restored)</div></div>
 <div class="mlrk-fillblank">
   <label for="blank1">First blank (writes a Python value into the open file):</label>
   <input type="text" id="blank1" autocomplete="off">
@@ -359,7 +415,7 @@ with open("rain.json") as f:
 <section class="mlrk-section">
 <h2>14. Debugging habit + reflection</h2>
 <div class="mlrk-card" id="card-debug"><p><strong>An AI assistant suggests this text for a JSON file you will save by hand:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">{
+<div class="mlrk-code" data-file="station.json"><div class="mlrk-screen">{
     'sensor': 'roof',
     'online': True,
 }</div></div>
@@ -525,7 +581,8 @@ git push</pre></li>
   K.quiz({id:"q-read", buttonSelector:"#card-read .mlrk-choice", feedbackSelector:"#readfb", correct:"retrieve",
     feedback:{retrieve:"Right. total holds the string \"1.5\", and multiplying a string by 2 repeats it. float(total) * 2 would give 3.0.",
               convert:"That would need a number. f.read() returns the string \"1.5\", and the code never converts it.",
-              keepalive:"A string times a whole number is allowed in Python. It repeats the string instead of raising an error."}});
+              keepalive:"A string times a whole number is allowed in Python. It repeats the string instead of raising an error."},
+    onDone(){$("#readrun").hidden=false}});
 
   K.quiz({id:"q-round1", buttonSelector:".round1", feedbackSelector:"#round1fb", correct:"keyerror",
     feedback:{works:"JSON keys are always strings, so the key 7 was saved as \"7\". restored[7] finds no match.",
@@ -623,71 +680,40 @@ git push</pre></li>
               tuple:"CSV stores numbers as text, and your code converts them back. The real problem is the nested list.",
               fails:"CSV has no way to nest a list inside a row. Each cell holds one flat value."}});
 
-  function revealWrite(){
-    $("#writeScreen").textContent = `hour_line = "8:00 rain 0.9 mm\\n"
+  K.runFile({button:"#overwrite", target:"#overwriteout", file:"log_rain.py", output:"8:00 rain 0.9 mm", onRun(){
+    $("#overwritewrap").hidden=false;
+  }});
+  function revealWrite(){$("#overwrite").click()}
+  function revealRound1(){$("#round1run").hidden=false}
+  function revealRound2(){$("#round2run").hidden=false}
+  function revealRound3(){$("#round3run").hidden=false}
 
-with open("rain_log.txt", "w") as f:
-    f.write(hour_line)
-
-[rain_log.txt after the 6:00, 7:00, and 8:00 runs]
-8:00 rain 0.9 mm`;
-  }
-  $("#overwrite").addEventListener("click", revealWrite);
-
-  function revealRound1(){
-    $("#round1Screen").textContent = `import json
-
-rain = {6: 0.4, 7: 1.2}
-
-with open("rain.json", "w") as f:
-    json.dump(rain, f)
-
-with open("rain.json") as f:
-    restored = json.load(f)
-
-print(restored)
-print(restored[7])
-
-[Output]
-{'6': 0.4, '7': 1.2}
-Traceback (most recent call last):
-  ...
-KeyError: 7`;
-  }
-
-  function revealRound2(){
-    $("#round2Screen").textContent = `import json
-
-reading = {"rain_mm": 1.2, "wind": (18, "NW")}
-
-with open("reading.json", "w") as f:
-    json.dump(reading, f)
-
-with open("reading.json") as f:
-    restored = json.load(f)
-
-print(restored["wind"])
-print(restored["wind"] == (18, "NW"))
-
-[Output]
-[18, 'NW']
-False`;
-  }
-
-  function revealRound3(){
-    $("#round3Screen").textContent = `import json
-from datetime import date
-
-reading = {"rain_mm": 1.2, "day": date(2026, 10, 3)}
-
-with open("reading.json", "w") as f:
-    json.dump(reading, f)
-
-[Output]
-Traceback (most recent call last):
-  ...
-TypeError: Object of type date is not JSON serializable`;
-  }
+  const SAVE_RAIN = $("[data-file='save_rain.py'] .mlrk-screen").textContent;
+  const LOAD_RAIN = $("[data-file='load_rain.py'] .mlrk-screen").textContent;
+  const DIR = "/home/fellow/weather-station";
+  const fs = {
+    "/":{type:"dir",children:["home"]},
+    "/home":{type:"dir",children:["fellow"]},
+    "/home/fellow":{type:"dir",children:["weather-station"]},
+    [DIR]:{type:"dir",children:["load_rain.py","save_rain.py"]},
+    [DIR+"/save_rain.py"]:{type:"file",contents:SAVE_RAIN,run(){
+      if(!fs[DIR+"/rain.json"]){
+        fs[DIR+"/rain.json"]={type:"file",contents:'{"6": [0.4, 12], "7": [1.2, 18]}'};
+        fs[DIR].children.push("rain.json"); fs[DIR].children.sort();
+      }
+      return "Saved 2 hours to rain.json";
+    }},
+    [DIR+"/load_rain.py"]:{type:"file",contents:LOAD_RAIN,run(){
+      if(!fs[DIR+"/rain.json"]) return [
+        "Traceback (most recent call last):",
+        '  File "load_rain.py", line 3, in <module>',
+        '    with open("rain.json") as f:',
+        "         ~~~~^^^^^^^^^^^^^",
+        "FileNotFoundError: [Errno 2] No such file or directory: 'rain.json'"].join("\n");
+      return "Loaded: {'6': [0.4, 12], '7': [1.2, 18]}\nHour 7: [1.2, 18]";
+    }}
+  };
+  K.terminal("#rainterminal", {id:"act-terminal-roundtrip", minCommands:4, startPath:DIR, filesystem:fs});
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
   $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));

@@ -110,9 +110,20 @@
 </svg>
 
 <p>To add up a week of steps, <code>summarize_steps</code> uses an <strong>accumulator</strong>: a variable set before a loop and updated on every pass. After the loop ends, the accumulator holds the answer.</p>
-<div class="mlrk-code"><div class="mlrk-screen">total = 0
+<div class="mlrk-code" data-file="total_steps.py"><div class="mlrk-screen">days = [
+    ("Mon", 6200),
+    ("Tue", 9120),
+    ("Wed", 8000),
+    ("Thu", 4300),
+    ("Fri", 10450),
+]
+
+total = 0
 for day, steps in days:
-    total += steps</div></div>
+    total += steps
+
+print(total)</div></div>
+<div class="mlrk-run" data-file="total_steps.py"><pre>38070</pre></div>
 <p><code>total</code> starts at 0. Each pass adds one day's steps. When the loop runs out of days, <code>total</code> holds the week's steps.</p>
 
 <div class="mlrk-callout mlrk-callout-blue">
@@ -147,14 +158,17 @@ for day, steps in days:
 <div id="fstringfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-loopcount" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> what is <code>result</code> after this code runs?</p>
-<div class="mlrk-code"><div class="mlrk-screen">def add_bonus(steps):
+<div class="mlrk-code" data-file="add_bonus.py"><div class="mlrk-screen">def add_bonus(steps):
     print(steps + 500)
 
-result = add_bonus(7000)</div></div>
+result = add_bonus(7000)
+print(result)</div></div>
 <button type="button" class="mlrk-choice" data-a="4"><code>None</code></button>
 <button type="button" class="mlrk-choice" data-a="2"><code>7500</code></button>
 <button type="button" class="mlrk-choice" data-a="8"><code>"7500"</code></button>
-<div id="loopcountfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div id="loopcountfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-run" data-file="add_bonus.py" id="bonusrun" hidden><pre>7500
+None</pre></div></div>
 
 <div class="mlrk-callout mlrk-callout-blue"><p>These four work the same way inside a summarizing function as they do on their own. The last one matters most: a function that only prints hands nothing back to the code that called it.</p></div>
 </section>
@@ -208,14 +222,24 @@ result = add_bonus(7000)</div></div>
 <section class="mlrk-section">
 <h2>6. Write the missing pieces yourself</h2>
 <p>Here is <code>summarize_steps</code> with three pieces missing. Type what belongs in each blank.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def summarize_steps(days, goal):
+<div class="mlrk-code" data-file="summarize_steps.py"><div class="mlrk-screen">days = [
+    ("Mon", 6200),
+    ("Tue", 9120),
+    ("Wed", 8000),
+    ("Thu", 4300),
+    ("Fri", 10450),
+]
+
+def summarize_steps(days, goal):
     total = <span id="blankA-slot">_____</span>
     goal_days = 0
     for day, steps in days:
         total <span id="blankB-slot">_____</span> steps
         if steps >= goal:
             goal_days += 1
-    <span id="blankC-slot">_____</span> {"total": total, "goal_days": goal_days}</div></div>
+    <span id="blankC-slot">_____</span> {"total": total, "goal_days": goal_days}
+
+print(summarize_steps(days, 8000))</div></div>
 <div class="mlrk-fillblank">
   <label for="blankA">Blank 1 &mdash; the starting value of the running total</label>
   <input type="text" id="blankA" autocomplete="off">
@@ -238,7 +262,7 @@ result = add_bonus(7000)</div></div>
 <section class="mlrk-section">
 <h2>7. Trace the accumulators, one pass at a time</h2>
 <p>Here is one week of valid records, and <code>summarize_steps</code> with one <code>print</code> added inside the loop so you can watch both accumulators change.</p>
-<div class="mlrk-code"><div class="mlrk-screen">days = [
+<div class="mlrk-code" data-file="trace_steps.py"><div class="mlrk-screen">days = [
     ("Mon", 6200),
     ("Tue", 9120),
     ("Wed", 8000),
@@ -263,8 +287,8 @@ print(summary)</div></div>
 <div class="mlrk-fillblank"><input type="text" id="tracein" autocomplete="off" inputmode="numeric"> <button type="button" id="tracecheck" class="mlrk-btn">Check</button></div>
 <div id="tracefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-code" style="margin-top:1rem"><div id="revealScreen" class="mlrk-screen">Press "Show the full output" to see every line the code prints.</div>
-<div class="mlrk-actions"><button type="button" id="revealrun" class="mlrk-btn">Show the full output</button></div></div>
+<div class="mlrk-actions" style="margin-top:1rem"><button type="button" id="revealrun" class="mlrk-btn">Run python3 trace_steps.py</button></div>
+<div class="mlrk-run" id="revealwrap" hidden><pre id="revealScreen"></pre></div>
 </section>
 
 <section class="mlrk-section">
@@ -278,11 +302,30 @@ print(summary)</div></div>
 
 <section class="mlrk-section">
 <h2>9. Run it yourself: change the goal</h2>
-<p>This page can't run Python, so this simulator runs the same <code>summarize_steps</code> logic in JavaScript. Pick a goal and run it. Only the <code>goal</code> argument changes. The function itself stays the same.</p>
+<p>Pick a goal. The file below changes to use that goal in its call. Then run it and compare. Only the <code>goal</code> argument changes. The function itself stays the same.</p>
 <div class="mlrk-card">
 <label for="threshold"><strong>Daily goal:</strong></label> <select id="threshold"><option value="6000">6000 steps</option><option value="8000" selected>8000 steps</option><option value="10000">10000 steps</option></select>
-<p><button type="button" id="run" class="mlrk-btn">Run summarize_steps(days, goal)</button></p>
-<div class="mlrk-code"><div id="simout" class="mlrk-screen">Choose a goal, then run the function.</div></div>
+<div class="mlrk-code" data-file="weekly_summary.py" style="margin-top:.8rem"><div id="simcode" class="mlrk-screen">days = [
+    ("Mon", 6200),
+    ("Tue", 9120),
+    ("Wed", 8000),
+    ("Thu", 4300),
+    ("Fri", 10450),
+]
+
+def summarize_steps(days, goal):
+    total = 0
+    goal_days = 0
+    for day, steps in days:
+        total += steps
+        if steps >= goal:
+            goal_days += 1
+    return {"total": total, "goal_days": goal_days}
+
+summary = summarize_steps(days, <span id="simgoal" style="color:var(--mlrk-gold-500);font-weight:700">8000</span>)
+print(summary)</div></div>
+<p><button type="button" id="run" class="mlrk-btn">Run python3 weekly_summary.py</button></p>
+<div class="mlrk-run" id="simwrap" hidden><pre id="simout"></pre></div>
 </div>
 </section>
 
@@ -310,7 +353,15 @@ print(summary)</div></div>
 <section class="mlrk-section">
 <h2>12. Debug the extra check</h2>
 <p>A teammate writes this version of <code>summarize_steps</code>:</p>
-<div class="mlrk-code"><div class="mlrk-screen">def summarize_steps(days, goal):
+<div class="mlrk-code" data-file="teammate_summary.py"><div class="mlrk-screen">days = [
+    ("Mon", 6200),
+    ("Tue", 9120),
+    ("Wed", 8000),
+    ("Thu", 4300),
+    ("Fri", 10450),
+]
+
+def summarize_steps(days, goal):
     total = 0
     goal_days = 0
     for day, steps in days:
@@ -322,8 +373,11 @@ print(summary)</div></div>
         total += steps
         if steps >= goal:
             goal_days += 1
-    return {"total": total, "goal_days": goal_days}</div></div>
-<div class="mlrk-card" id="card-debug"><p><strong><code>validate_days</code> already guarantees every step count is a whole number. What is the design problem with the teammate's version of <code>summarize_steps</code>?</strong></p>
+    return {"total": total, "goal_days": goal_days}
+
+print(summarize_steps(days, 8000))</div></div>
+<div class="mlrk-run" data-file="teammate_summary.py"><pre>{'total': 38070, 'goal_days': 3}</pre></div>
+<div class="mlrk-card" id="card-debug" style="margin-top:1rem"><p><strong><code>validate_days</code> already guarantees every step count is a whole number. What is the design problem with the teammate's version of <code>summarize_steps</code>?</strong></p>
 <button type="button" class="mlrk-choice" data-a="redo">It redoes validation that <code>validate_days</code> already finished.</button>
 <button type="button" class="mlrk-choice" data-a="fine">There's no problem. Every function should re-check every value it uses.</button>
 <button type="button" class="mlrk-choice" data-a="tryexcept"><code>try</code>/<code>except</code> is never allowed inside a function that returns a value.</button>
@@ -491,7 +545,8 @@ git push</pre></li>
   K.quiz({id:"q-loopcount", buttonSelector:"#card-loopcount .mlrk-choice", feedbackSelector:"#loopcountfb", correct:"4",
     feedback:{"4":"Right. add_bonus prints 7500 but has no return, so it hands back None.",
               "2":"7500 is printed on the screen, but add_bonus never returns it. result gets None.",
-              "8":"print() shows text on the screen. It doesn't hand anything back, so result is None."}});
+              "8":"print() shows text on the screen. It doesn't hand anything back, so result is None."},
+    onDone(){$("#bonusrun").hidden=false}});
 
   K.flipCards("#vocab", "act-flip-vocab");
 
@@ -573,36 +628,29 @@ git push</pre></li>
     fb.setAttribute("tabindex","-1"); fb.focus();
   });
 
-  function revealTrace(){
-    $("#revealScreen").textContent = `summary = summarize_steps(days, 8000)
-print(summary)
-
-[Output]
-after Mon: total = 6200, goal_days = 0
+  const markReveal = K.activity("act-trace-reveal", () => true);
+  K.runFile({button:"#revealrun", target:"#revealScreen", file:"trace_steps.py", output:
+`after Mon: total = 6200, goal_days = 0
 after Tue: total = 15320, goal_days = 1
 after Wed: total = 23320, goal_days = 2
 after Thu: total = 27620, goal_days = 2
 after Fri: total = 38070, goal_days = 3
-{'total': 38070, 'goal_days': 3}`;
-  }
-  const markReveal = K.activity("act-trace-reveal", () => true);
-  $("#revealrun").addEventListener("click", () => { revealTrace(); markReveal(); });
+{'total': 38070, 'goal_days': 3}`, onRun(){ $("#revealwrap").hidden=false; markReveal(); }});
 
-  const DAYS = [["Mon",6200],["Tue",9120],["Wed",8000],["Thu",4300],["Fri",10450]];
+  // Real output of weekly_summary.py for each goal (run with python3).
+  const SIM_OUTPUT = {
+    "6000":"{'total': 38070, 'goal_days': 4}",
+    "8000":"{'total': 38070, 'goal_days': 3}",
+    "10000":"{'total': 38070, 'goal_days': 1}"
+  };
   const markSim = K.activity("act-sim-run", () => true);
-  $("#run").addEventListener("click", () => {
-    const goal = +$("#threshold").value;
-    let total = 0, goalDays = 0; const met = [];
-    DAYS.forEach(([d, s]) => { total += s; if(s >= goal){ goalDays += 1; met.push(d); } });
-    $("#simout").textContent = `summary = summarize_steps(days, ${goal})
-print(summary)
-
-[Output]
-{'total': ${total}, 'goal_days': ${goalDays}}
-
-# days that met the goal: ${met.length ? met.join(", ") : "none"}`;
-    markSim();
+  $("#threshold").addEventListener("change", () => {
+    $("#simgoal").textContent = $("#threshold").value;
+    $("#simwrap").hidden = true;
   });
+  K.runFile({button:"#run", target:"#simout", file:"weekly_summary.py",
+    output:() => SIM_OUTPUT[$("#threshold").value],
+    onRun(){ $("#simgoal").textContent = $("#threshold").value; $("#simwrap").hidden=false; markSim(); }});
 
   K.quiz({id:"q-alert", buttonSelector:"#card-alert .mlrk-choice", feedbackSelector:"#alertfb", correct:"2",
     feedback:{"2":"Right. Only 9120 and 10450 are 9000 or more. Wed's 8000 no longer counts.",

@@ -15,6 +15,9 @@ import json
 import ssl
 import urllib.request
 import urllib.error
+import subprocess
+import tempfile
+from html.parser import HTMLParser
 from pathlib import Path
 
 _INSECURE_CTX = ssl.create_default_context()
@@ -494,6 +497,135 @@ def _default_caption_language(body):
     return tracks[index].get("languageCode")
 
 
+# Modules whose Python examples must be real .py files (SKILL.md, "Python
+# examples are .py files"). Angelica, 2026-10-18: Mod 1 examples must be
+# things a Fellow could type into a .py file, or simulations of running one.
+PY_FILE_MODULES = {"Mod1"}
+_PY_HINT = re.compile(r'^\s*(def |class |import |from \w+ import|print\(|for |while |if |return |\w+\s*=[^=])', re.M)
+_BLANK = re.compile(r'_{3,}')
+
+
+class _FileBlocks(HTMLParser):
+    """Collect, in page order, every `.mlrk-code` and `.mlrk-run` element:
+    its attributes and its full text (nested tags included)."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.blocks, self._stack = [], []
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        cls = (a.get("class") or "").split()
+        for s in self._stack:
+            s["depth"] += 1
+        if "mlrk-code" in cls or "mlrk-run" in cls:
+            self._stack.append({"kind": "run" if "mlrk-run" in cls else "code", "attrs": a,
+                                "text": [], "depth": 1, "line": self.getpos()[0]})
+
+    def handle_endtag(self, tag):
+        for s in list(self._stack):
+            s["depth"] -= 1
+            if s["depth"] == 0:
+                self._stack.remove(s)
+                self.blocks.append(s)
+        self.blocks.sort(key=lambda b: b["line"])
+
+    def handle_data(self, data):
+        for s in self._stack:
+            s["text"].append(data)
+
+
+def _norm(text):
+    lines = [l.rstrip() for l in text.strip("\n").splitlines()]
+    return "\n".join(lines).strip()
+
+
+def check_py_files(path, html):
+    """Every Python example in a PY_FILE_MODULES reading is a file a Fellow
+    could save and run with `python3 <name>.py`. This runs each one, in page
+    order, in one scratch folder (so a data file shown on the page, or one an
+    earlier script writes, is there for a later script), and checks that:
+    - each Python block names its file (data-file="name.py");
+    - it runs, or raises exactly the error its data-expect names;
+    - it prints something (a .py file shows nothing without print());
+    - a `.mlrk-run` output block matches what the file really prints;
+    - nothing shows a REPL prompt or a function call typed at a shell `$`."""
+    parts = Path(path).resolve().relative_to(Path(__file__).resolve().parent.parent).parts
+    if not parts or parts[0] not in PY_FILE_MODULES:
+        return []
+    findings = []
+    body = re.sub(r"<script.*?</script>", "", html, flags=re.S)
+    if re.search(r"(^|\n)\s*(&gt;&gt;&gt;|>>>) ", body):
+        findings.append(("ERROR", "a `>>>` REPL prompt appears — show a .py file and its `python3` output instead"))
+    for m in re.finditer(r"\$\s*(?:<[^>]+>\s*)*([A-Za-z_]\w*)\(", body):
+        findings.append(("ERROR", f"a shell `$` prompt is followed by a Python call `{m.group(1)}(` — a terminal runs `python3 <file>.py`, not a function"))
+    for m in re.finditer(r'"\$ ?([A-Za-z_]\w*)\(', html):
+        findings.append(("ERROR", f"a script builds simulator text with `$ {m.group(1)}(` — simulate `$ python3 <file>.py` instead"))
+
+    parser = _FileBlocks()
+    parser.feed(html)
+    files = {}  # name -> (status, stdout, stderr last line) of the latest run
+    with tempfile.TemporaryDirectory() as d:
+        for b in parser.blocks:
+            if b["kind"] == "code" and not b["attrs"].get("data-file", "").endswith(".py") and b["attrs"].get("data-file"):
+                Path(d, b["attrs"]["data-file"]).write_text(_norm("".join(b["text"])) + "\n")
+        for b in parser.blocks:
+            text, name, where = "".join(b["text"]), b["attrs"].get("data-file", ""), f"line {b['line']}"
+            if b["kind"] == "code":
+                if not name:
+                    first = text.strip().splitlines()[0] if text.strip() else ""
+                    if _PY_HINT.search(text) and not re.match(r"(cd|git|mv|ls|pwd|mkdir|python3?)\b", first):
+                        findings.append(("ERROR", f"{where}: a Python code block names no file — add data-file=\"<name>.py\" so it reads as a file a Fellow could run"))
+                    continue
+                if not name.endswith(".py"):
+                    continue
+                if "[Output]" in text:
+                    findings.append(("ERROR", f"{where} ({name}): output is written inside the code block — put it in a `.mlrk-run data-file=\"{name}\"` block"))
+                    continue
+                if _BLANK.search(text):
+                    files[name] = None  # fill-in-the-blank: verified by hand
+                    continue
+                src = Path(d, name)
+                src.write_text(_norm(text) + "\n")
+                try:
+                    r = subprocess.run([sys.executable, "-I", name], capture_output=True, text=True,
+                                       timeout=5, cwd=d, input="")
+                except subprocess.TimeoutExpired:
+                    findings.append(("ERROR", f"{where} ({name}): still running after 5 seconds"))
+                    continue
+                err = r.stderr.strip().splitlines()[-1] if r.stderr.strip() else ""
+                expect = b["attrs"].get("data-expect")
+                if expect:
+                    if r.returncode == 0:
+                        findings.append(("ERROR", f"{where} ({name}): data-expect=\"{expect}\" but the file runs without an error"))
+                    elif not err.startswith(expect):
+                        findings.append(("ERROR", f"{where} ({name}): expected {expect}, but running it gives `{err}`"))
+                elif r.returncode != 0:
+                    findings.append(("ERROR", f"{where} ({name}): running it fails with `{err}`. If that is the lesson, add data-expect=\"{err.split(':')[0]}\"; otherwise make the file complete"))
+                elif not r.stdout.strip():
+                    findings.append(("WARN", f"{where} ({name}): runs but prints nothing — call the function and print() what the reading talks about"))
+                files[name] = (r.returncode, r.stdout, err)
+            else:
+                if "data-live" in b["attrs"] or not name:
+                    continue
+                if name not in files:
+                    findings.append(("WARN", f"{where}: output for {name}, but no code block for {name} comes before it"))
+                    continue
+                if files[name] is None:
+                    continue
+                code, out, err = files[name]
+                shown = _norm(text)
+                actual = _norm(out)
+                if code != 0:
+                    if err not in shown:
+                        findings.append(("ERROR", f"{where} ({name}): the shown output should end with the real error `{err}`"))
+                    if actual and not shown.startswith(actual):
+                        findings.append(("ERROR", f"{where} ({name}): the lines printed before the error don't match a real run:\n      {actual!r}"))
+                elif shown != (actual or "(no output)"):
+                    findings.append(("ERROR", f"{where} ({name}): shown output differs from a real run.\n      shown:  {shown!r}\n      actual: {actual!r}"))
+    return findings
+
+
 def check_video_embeddable(html, skip_network=False):
     ids = re.findall(r'videoId\s*:\s*"([A-Za-z0-9_-]{6,})"', html)
     if not ids or skip_network:
@@ -666,6 +798,7 @@ def run(path, skip_links=False):
     findings += check_gendered_pronouns(prose)
     findings += check_british_spellings(prose)
     findings += check_quest_vocabulary(path, html)
+    findings += check_py_files(path, html)
     findings += check_video_language(html, skip_network=skip_links)
     findings += check_video_embeddable(html, skip_network=skip_links)
     findings += check_video_duration(html, skip_network=skip_links)

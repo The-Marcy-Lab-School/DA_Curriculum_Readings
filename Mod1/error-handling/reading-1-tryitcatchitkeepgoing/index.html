@@ -171,7 +171,7 @@
 
 <section class="mlrk-section">
 <h2>6. Trace a successful attempt</h2>
-<div class="mlrk-code"><div id="successScreen" class="mlrk-screen">nights_text = "3"
+<pre class="mlrk-code" data-file="read_nights.py">nights_text = "3"
 
 try:
     nights = int(nights_text)
@@ -179,9 +179,11 @@ try:
 except ValueError:
     print("Could not read the number of nights.")
 
-print("Request finished.")</div>
-<div class="mlrk-actions"><button type="button" id="successrun" class="mlrk-btn">Reveal simulated output</button></div></div>
-<div class="mlrk-card" id="card-success" style="margin-top:1rem"><p><strong>Before revealing: what prints?</strong></p>
+print("Request finished.")</pre>
+<div class="mlrk-actions"><button type="button" id="successrun" class="mlrk-btn">Run python3 read_nights.py</button></div>
+<div class="mlrk-run" data-file="read_nights.py" id="successout" hidden><pre>Nights: 3
+Request finished.</pre></div>
+<div class="mlrk-card" id="card-success" style="margin-top:1rem"><p><strong>Before you run it: what prints?</strong></p>
 <button type="button" class="mlrk-choice" data-a="good">Nights: 3, then Request finished.</button>
 <button type="button" class="mlrk-choice" data-a="except">Could not read the number of nights., then Request finished.</button>
 <button type="button" class="mlrk-choice" data-a="both">All three print statements run, in order.</button>
@@ -190,7 +192,7 @@ print("Request finished.")</div>
 
 <section class="mlrk-section">
 <h2>7. Trace a caught failure</h2>
-<div class="mlrk-code"><div id="failScreen" class="mlrk-screen">nights_text = "4 nights"
+<pre class="mlrk-code" data-file="read_nights_bad.py">nights_text = "4 nights"
 
 try:
     nights = int(nights_text)
@@ -198,8 +200,10 @@ try:
 except ValueError:
     print("Could not read the number of nights.")
 
-print("Request finished.")</div>
-<div class="mlrk-actions"><button type="button" id="failrun" class="mlrk-btn">Reveal simulated output</button></div></div>
+print("Request finished.")</pre>
+<div class="mlrk-actions"><button type="button" id="failrun" class="mlrk-btn">Run python3 read_nights_bad.py</button></div>
+<div class="mlrk-run" data-file="read_nights_bad.py" id="failout" hidden><pre>Could not read the number of nights.
+Request finished.</pre></div>
 <div class="mlrk-card" id="card-fail" style="margin-top:1rem"><p><strong>Which line inside <code>try</code> fails this time?</strong></p>
 <button type="button" class="mlrk-choice" data-a="convert"><code>nights = int(nights_text)</code></button>
 <button type="button" class="mlrk-choice" data-a="afterprint"><code>print("Nights:", nights)</code></button>
@@ -211,24 +215,30 @@ print("Request finished.")</div>
 <section class="mlrk-section">
 <h2>8. Count what a crash costs</h2>
 <p>This loop books every request in <code>requests</code>. It has no <code>try</code>/<code>except</code>.</p>
-<div class="mlrk-code"><div class="mlrk-screen">requests = ["Okafor|2|DLX", "Hale|1|STD", "Batista|4 nights|STD",
+<pre class="mlrk-code" data-file="book_requests.py" data-expect="ValueError">requests = ["Okafor|2|DLX", "Hale|1|STD", "Batista|4 nights|STD",
             "Lindqvist|3|DLX", "Moreau|2|STD"]
 
 for request in requests:
     guest, nights_text, room = request.split("|")
     nights = int(nights_text)
-    print("Booked", guest, "for", nights, "nights")</div></div>
-<div class="mlrk-card" id="card-crash" style="margin-top:1rem"><p><strong>How many "Booked" lines print before the traceback?</strong></p>
+    print("Booked", guest, "for", nights, "nights")</pre>
+<div class="mlrk-card" id="card-crash" style="margin-top:1rem"><p><strong>You run <code>python3 book_requests.py</code>. How many "Booked" lines print before the traceback?</strong></p>
 <button type="button" class="mlrk-choice" data-a="two">2</button>
 <button type="button" class="mlrk-choice" data-a="four">4</button>
 <button type="button" class="mlrk-choice" data-a="zero">0</button>
 <div id="crashfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-run" data-file="book_requests.py" id="crashout" hidden style="margin-top:1rem"><pre>Booked Okafor for 2 nights
+Booked Hale for 1 nights
+Traceback (most recent call last):
+  File "book_requests.py", line 6, in &lt;module&gt;
+    nights = int(nights_text)
+ValueError: invalid literal for int() with base 10: '4 nights'</pre></div>
 <p>When a script crashes partway through a batch, count how many records it handled before it stopped. That number tells you how much of the batch never ran. Here, two good requests were lost along with the bad one.</p>
 </section>
 
 <section class="mlrk-section">
 <h2>9. Two risky steps, two except blocks</h2>
-<div class="mlrk-code"><div class="mlrk-screen">request = "Lindqvist|3|PH"
+<pre class="mlrk-code" data-file="room_total.py">request = "Lindqvist|3|PH"
 rates = {"STD": 120, "DLX": 180}
 
 try:
@@ -239,13 +249,14 @@ try:
 except ValueError:
     print("Nights is not a whole number for", guest)
 except KeyError:
-    print("Unknown room code for", guest)</div></div>
+    print("Unknown room code for", guest)</pre>
 <p>This <code>try</code> block holds two risky steps: turning <code>nights_text</code> into a number, and looking up <code>room</code> in <code>rates</code>. Each failure gets its own <code>except</code> block and its own message.</p>
 <div class="mlrk-card" id="card-two"><p><strong><code>rates</code> has no <code>"PH"</code> key. Which <code>except</code> block runs?</strong></p>
 <button type="button" class="mlrk-choice" data-a="key"><code>except KeyError</code></button>
 <button type="button" class="mlrk-choice" data-a="value"><code>except ValueError</code></button>
 <button type="button" class="mlrk-choice" data-a="both">Both blocks, one after the other</button>
 <div id="twofb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-run" data-file="room_total.py" id="twoout" hidden style="margin-top:1rem"><pre>Unknown room code for Lindqvist</pre></div>
 </section>
 
 <section class="mlrk-section">
@@ -285,30 +296,44 @@ except KeyError:
 <section class="mlrk-section">
 <h2>12. Type the exception name</h2>
 <p>This time there are no choices to pick from.</p>
-<div class="mlrk-code"><div class="mlrk-screen">room_codes = ["STD", "DLX", "STE"]
-print(room_codes[3])</div></div>
+<pre class="mlrk-code" data-file="room_codes.py" data-expect="IndexError">room_codes = ["STD", "DLX", "STE"]
+print(room_codes[3])</pre>
 <div class="mlrk-fillblank">
-  <label for="blankinput">Type the exact name of the exception this raises:</label>
+  <label for="blankinput">Type the exact name of the exception <code>python3 room_codes.py</code> raises:</label>
   <input type="text" id="blankinput" autocomplete="off">
   <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
 </div>
 <div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-run" data-file="room_codes.py" id="blankout" hidden style="margin-top:1rem"><pre>Traceback (most recent call last):
+  File "room_codes.py", line 2, in &lt;module&gt;
+    print(room_codes[3])
+          ~~~~~~~~~~^^^
+IndexError: list index out of range</pre></div>
 </section>
 
 <section class="mlrk-section">
 <h2>13. Simulator: change the request, follow the route</h2>
-<p><code>process_request(request)</code> runs the code from section 9 on the request you pick. Predict which block runs, then run it.</p>
+<p><code>process_request.py</code> is the code from section 9 with the request you pick written into it. Predict which block runs, then run the file.</p>
 <label for="case">Request:</label>
 <select id="case">
 <option value="good">Moreau|2|STD</option>
 <option value="value">Moreau|a couple|STD</option>
 <option value="key">Moreau|2|PH</option>
 </select>
-<button type="button" id="run" class="mlrk-btn">Run process_request(request)</button>
-<div class="mlrk-terminal" style="margin-top:.8rem">
-<div class="mlrk-terminal-row"><span class="mlrk-terminal-prompt">$</span><span id="cmd" style="margin-left:.4rem">process_request(request)</span></div>
-<pre id="termout" class="mlrk-terminal-log">Pick a request, predict the route, then run it.</pre>
-</div>
+<div class="mlrk-code" data-file="process_request.py" style="margin-top:.8rem"><pre id="simcode" class="mlrk-screen" style="min-height:0">request = "Moreau|2|STD"
+rates = {"STD": 120, "DLX": 180}
+
+try:
+    guest, nights_text, room = request.split("|")
+    nights = int(nights_text)
+    total = nights * rates[room]
+    print(guest, "owes", total)
+except ValueError:
+    print("Nights is not a whole number for", guest)
+except KeyError:
+    print("Unknown room code for", guest)</pre></div>
+<div class="mlrk-actions"><button type="button" id="run" class="mlrk-btn">Run python3 process_request.py</button></div>
+<div class="mlrk-run" data-file="process_request.py" id="simout" hidden><pre id="termout">Moreau owes 240</pre></div>
 </section>
 
 <section class="mlrk-section">
@@ -524,12 +549,14 @@ git push</pre></li>
   K.quiz({id:"q-crash", buttonSelector:"#card-crash .mlrk-choice", feedbackSelector:"#crashfb", correct:"two",
     feedback:{two:"Correct. Okafor and Hale print. int(\"4 nights\") raises ValueError on Batista's request, so Lindqvist and Moreau never run.",
               four:"The loop doesn't skip the bad request. It stops there, so nothing after Batista runs.",
-              zero:"Okafor and Hale convert fine and print before the loop reaches Batista."}});
+              zero:"Okafor and Hale convert fine and print before the loop reaches Batista."},
+    onDone(){$("#crashout").hidden = false}});
 
   K.quiz({id:"q-two", buttonSelector:"#card-two .mlrk-choice", feedbackSelector:"#twofb", correct:"key",
     feedback:{key:"Correct. int(\"3\") works. Then rates[\"PH\"] raises KeyError, and Python jumps to except KeyError.",
               value:"int(\"3\") converts fine. The failure comes one line later, at rates[room].",
-              both:"Only one except block runs. When it finishes, Python moves past the whole try/except."}});
+              both:"Only one except block runs. When it finishes, Python moves past the whole try/except."},
+    onDone(){$("#twoout").hidden = false}});
 
   K.quiz({id:"q-sortjob", buttonSelector:"#card-sortjob .mlrk-choice", feedbackSelector:"#sortjobfb", correct:"validation",
     feedback:{validation:"Right. int(\"45\") raises no exception, so only a rule check can see that 45 breaks the 30-night limit.",
@@ -577,38 +604,10 @@ git push</pre></li>
   K.freeResponse({id:"resp-explain", selector:"#explain", minWords:10});
   K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
 
-  function revealSuccess(){
-    $("#successScreen").textContent = `nights_text = "3"
-
-try:
-    nights = int(nights_text)
-    print("Nights:", nights)
-except ValueError:
-    print("Could not read the number of nights.")
-
-print("Request finished.")
-
-[Output]
-Nights: 3
-Request finished.`;
-  }
+  function revealSuccess(){ $("#successout").hidden = false; }
   $("#successrun").addEventListener("click", revealSuccess);
 
-  function revealFail(){
-    $("#failScreen").textContent = `nights_text = "4 nights"
-
-try:
-    nights = int(nights_text)
-    print("Nights:", nights)
-except ValueError:
-    print("Could not read the number of nights.")
-
-print("Request finished.")
-
-[Output]
-Could not read the number of nights.
-Request finished.`;
-  }
+  function revealFail(){ $("#failout").hidden = false; }
   $("#failrun").addEventListener("click", revealFail);
 
   K.Scoring.register("q-blank",1,"quiz");
@@ -623,11 +622,13 @@ Request finished.`;
       fb.className="mlrk-feedback mlrk-show mlrk-good";
       fb.innerHTML="<strong>Correct.</strong> room_codes has 3 items, at positions 0, 1, and 2. Position 3 doesn't exist.";
       blankDone=true;
+      $("#blankout").hidden=false;
     } else if(blankAttempts>=2){
       K.Scoring.award("q-blank",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
       fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> It's <code>IndexError</code>: a 3-item list has no position 3.";
       blankDone=true;
+      $("#blankout").hidden=false;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
       fb.innerHTML="<strong>Not quite.</strong> One more try. Count the positions in room_codes, starting from 0. Is there a position 3?";
@@ -635,15 +636,24 @@ Request finished.`;
     fb.setAttribute("tabindex","-1");fb.focus();
   });
 
+  // Each "out" is the real output of python3 process_request.py with that request written in.
   const CASES = {
     good: {entry:"Moreau|2|STD", out:"Moreau owes 240"},
     value: {entry:"Moreau|a couple|STD", out:"Nights is not a whole number for Moreau"},
     key: {entry:"Moreau|2|PH", out:"Unknown room code for Moreau"}
   };
   const simActivity = K.activity("act-simulator", () => window.__simRan === true);
+  const SIM_TEMPLATE = $("#simcode").textContent;
+  function showSimFile(){
+    const c = CASES[$("#case").value];
+    $("#simcode").textContent = SIM_TEMPLATE.replace("Moreau|2|STD", c.entry);
+    $("#simout").hidden = true;
+  }
+  $("#case").addEventListener("change", showSimFile);
   $("#run").addEventListener("click", () => {
     const c = CASES[$("#case").value];
-    $("#termout").textContent = "request = \""+c.entry+"\"\nprocess_request(request)\n\n[Output]\n"+c.out;
+    $("#termout").textContent = c.out;
+    $("#simout").hidden = false;
     window.__simRan = true;
     simActivity();
   });

@@ -56,7 +56,7 @@
 <p>The fraud team stores each flagged account as a record: the account number and the reason it was flagged. The team tried two ways to answer the question "is this account flagged?"</p>
 
 <h3>Way 1: linear search</h3>
-<div class="mlrk-code"><div class="mlrk-screen">flagged = [
+<div class="mlrk-code" data-file="find_flag_linear.py"><div class="mlrk-screen">flagged = [
     {"account": "6614", "reason": "chargeback"},
     {"account": "2203", "reason": "stolen card"},
     {"account": "4471", "reason": "chargeback"},
@@ -70,20 +70,25 @@ def find_flag_linear(flagged, account):
 
 print(find_flag_linear(flagged, "4471"))
 print(find_flag_linear(flagged, "9004"))</div></div>
-<p class="mlrk-small"><strong>Output</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">{'account': '4471', 'reason': 'chargeback'}
-None</div></div>
+<div class="mlrk-run" data-file="find_flag_linear.py"><pre>{'account': '4471', 'reason': 'chargeback'}
+None</pre></div>
 <p><code>find_flag_linear</code> is a <strong>linear search</strong>. It checks the records one at a time, in order, until one matches. To find <code>"4471"</code>, it checked all three records, because <code>"4471"</code> is last. To learn that <code>"9004"</code> is not flagged, it also checked all three. Nothing let it stop early. A missing value is the <strong>worst case</strong> for a linear search: the most work the search can do.</p>
 <p>The number of records is the <strong>input size</strong>, written <em>n</em>. With 3 records, the worst case is 3 checks. With 400,000 records, it is 400,000 checks for every transaction. When the work grows in step with <em>n</em>, the cost is <strong>O(n)</strong>.</p>
 
 <h3>Way 2: dictionary lookup</h3>
-<div class="mlrk-code"><div class="mlrk-screen">flags_by_account = {record["account"]: record for record in flagged}
+<p>Same records, stored a second way:</p>
+<div class="mlrk-code" data-file="find_flag_dict.py"><div class="mlrk-screen">flagged = [
+    {"account": "6614", "reason": "chargeback"},
+    {"account": "2203", "reason": "stolen card"},
+    {"account": "4471", "reason": "chargeback"},
+]
+
+flags_by_account = {record["account"]: record for record in flagged}
 
 print(flags_by_account.get("4471"))
 print(flags_by_account.get("9004"))</div></div>
-<p class="mlrk-small"><strong>Output</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">{'account': '4471', 'reason': 'chargeback'}
-None</div></div>
+<div class="mlrk-run" data-file="find_flag_dict.py"><pre>{'account': '4471', 'reason': 'chargeback'}
+None</pre></div>
 <p><code>flags_by_account</code> is a dict keyed by account number. <code>.get("4471")</code> jumps straight to that key instead of walking through the records. <code>.get()</code> returns <code>None</code> when the key is missing, so both ways give the same answers. This is a <strong>dictionary lookup</strong>. It takes about one step whether the dict holds 3 accounts or 400,000. That cost is <strong>O(1) average-case</strong>.</p>
 <p>The dict has a cost too. Building <code>flags_by_account</code> loops over every record once, which is O(n). The team pays that cost once, when the service starts. After that, every transaction gets the fast lookup.</p>
 
@@ -138,15 +143,15 @@ None</div></div>
 <h2>2. Recall before lookups matter</h2>
 <p>This reading uses four skills you already have: what <code>in</code> returns, looping through a list with an <code>if</code>, what <code>in</code> does on a list, and how many items a search must check. Test each one first.</p>
 
-<div class="mlrk-card" id="card-recall-returns"><p><strong>What does this expression evaluate to?</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">"H-204" in ["H-100", "H-204", "H-310"]</div></div>
+<div class="mlrk-card" id="card-recall-returns"><p><strong>What does this file print?</strong></p>
+<div class="mlrk-code" data-file="membership_check.py"><div class="mlrk-screen">print("H-204" in ["H-100", "H-204", "H-310"])</div></div>
 <button type="button" class="mlrk-choice" data-a="true"><code>True</code></button>
 <button type="button" class="mlrk-choice" data-a="false"><code>False</code></button>
 <button type="button" class="mlrk-choice" data-a="index">The index <code>1</code></button>
 <div id="recallreturnsfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-recall-trace" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">found = False
+<div class="mlrk-code" data-file="found_entry.py"><div class="mlrk-screen">found = False
 for entry in ["A", "B", "C"]:
     if entry == "B":
         found = True
@@ -279,14 +284,20 @@ print(found)</div></div>
 <section class="mlrk-section">
 <h2>9. Typed check: make it fast</h2>
 <p>The fraud service builds <code>flags_by_account</code> once at startup, then looks up an account on every transaction.</p>
-<div class="mlrk-code"><div class="mlrk-screen">flagged = load_flagged_records()   # a list of 400,000 records
+<div class="mlrk-code" data-file="block_flagged.py"><div class="mlrk-screen"># In production, flagged holds 400,000 records.
+flagged = [
+    {"account": "6614", "reason": "chargeback"},
+    {"account": "2203", "reason": "stolen card"},
+    {"account": "4471", "reason": "chargeback"},
+]
 
 flags_by_account = {record["account"]: record for record in flagged}
 
 # runs on every transaction:
+account_number = "4471"
 record = flags_by_account.____(account_number)
 if record is not None:
-    block_transaction()</div></div>
+    print("Blocked:", account_number, record["reason"])</div></div>
 <div class="mlrk-fillblank">
   <label for="blankinput">Type the dict method that looks up a key and returns <code>None</code> when the key is missing:</label>
   <input type="text" id="blankinput" autocomplete="off">
@@ -460,7 +471,7 @@ git push</pre></li>
   K.Scoring.renderChip("#scorechip");
 
   K.quiz({id:"q-recall-returns", buttonSelector:"#card-recall-returns .mlrk-choice", feedbackSelector:"#recallreturnsfb", correct:"true",
-    feedback:{"true":"Right. \"H-204\" is in the list, so the expression is True.",
+    feedback:{"true":"Right. \"H-204\" is in the list, so the file prints True.",
               "false":"\"H-204\" is the second item in the list, so the answer is not False.",
               index:"in returns True or False, not a position. The .index() method returns a position."}});
 

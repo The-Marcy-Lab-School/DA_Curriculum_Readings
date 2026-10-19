@@ -90,6 +90,54 @@ English **audio** (the default caption track's `languageCode` — an English
 title proves nothing), and embeddable. Over 12 warns, over 20 fails, and the
 verified duration goes into the displayed time estimate.
 
+## Python examples are .py files (added 2026-10-18)
+
+Angelica: Mod 1 examples must be "what they could type in a .py file, or
+simulations based on .py files." A Fellow should be able to copy any example
+into a file, run `python3 <name>.py`, and see exactly what the reading shows.
+This applies to every reading under a module in `PY_FILE_MODULES` in
+`qa/reading_qa.py` (Mod 1 now), and `check_py_files` enforces it by running
+every block.
+
+- **Every Python code block names its file**: `<pre class="mlrk-code" data-file="energy_bill.py">`
+  (or the same attribute on a `div.mlrk-code`). The kit shows the name as a tab.
+  Pick a plain snake_case name that says what the file does.
+- **The file runs on its own, top to bottom.** It defines every name it uses,
+  calls the functions it defines, and `print()`s what the reading talks about.
+  A bare expression like `"10".isdigit()` prints nothing in a .py file. That is
+  a REPL habit, so wrap it in `print()`.
+- **Building on an earlier file**: repeat the file in full with the new lines
+  added (same `data-file`), or say "add these lines to the end of `pets.py`"
+  and show the whole file once more right after. Never a fragment that only
+  runs if the reader mentally pastes it onto something else.
+- **Output is a run block, never text inside the code block**:
+  `<div class="mlrk-run" data-file="energy_bill.py"><pre>75.0
+130.0</pre></div>`. The kit adds the `$ python3 energy_bill.py` line. The
+  output must be what the file really prints, and QA compares them.
+- **A file that is meant to fail** carries `data-expect="NameError"` (the
+  exception name). Its run block shows the real traceback as Python prints it
+  for `python3 <name>.py`, ending in the real error line.
+- **Data files** the code reads are shown as their own block,
+  `<div class="mlrk-code" data-file="rides.csv">`. QA writes them into the
+  same folder, so `open("rides.csv")` works there just as it would on a laptop.
+- **Fill-in-the-blank** files keep their `____` blanks (QA skips running them).
+  Run the completed version yourself before shipping.
+- **Simulations simulate running a file**:
+  - A reveal button is `ReadingKit.runFile({button, target, file, output})`,
+    labeled "Run python3 name.py". Its output panel starts with the command.
+  - A terminal is `ReadingKit.terminal()`. Give each file node `contents` (for
+    `cat`) and `run` (what `python3 name.py` prints, a string or a function), so
+    a Fellow types `ls`, `cat name.py` and `python3 name.py`.
+  - A "pick an input, see the result" simulator shows the file with the chosen
+    value written into it, then that file's run output.
+  - Never a `$` prompt followed by a Python call (`$ process_request(r)`), and
+    never a `>>>` prompt.
+  - QA cannot run JavaScript-built output, so run each variant as a real file
+    and paste the real output.
+- **Inline `<code>` in prose and in quiz answer choices can stay a single
+  expression** (`range(3)`, `total += 1`). Any snippet longer than one line is a
+  file.
+
 ## Source of truth: the decks, the labs repo, the projects repo (added 2026-10-15)
 
 A reading is built around what is **actually taught now**. The decks are

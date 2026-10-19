@@ -115,9 +115,9 @@
 <div id="recallmodfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-recall-index" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">scores = [10, 20, 30, 40]
+<div class="mlrk-code" data-file="scores.py"><div class="mlrk-screen">scores = [10, 20, 30, 40]
 print(scores[2])</div></div>
-<p><strong>What prints?</strong></p>
+<p><strong>What prints when you run <code>python3 scores.py</code>?</strong></p>
 <button type="button" class="mlrk-choice" data-a="30">30</button>
 <button type="button" class="mlrk-choice" data-a="20">20</button>
 <button type="button" class="mlrk-choice" data-a="40">40</button>
@@ -294,17 +294,20 @@ print(scores[2])</div></div>
 <section class="mlrk-section">
 <h2>7. The classic interview problem: Two Sum</h2>
 <p>A compliance analyst is reviewing a batch of transaction amounts, looking for any two transactions that add up exactly to a flagged total, a pattern worth a closer look. This is the "Two Sum" problem, one of the most commonly asked coding-interview questions there is, precisely because it has a slow, obvious solution and a fast one that depends entirely on understanding hash maps.</p>
-<div class="mlrk-code"><div class="mlrk-screen">amounts = [4200, 1900, 3300, 1100, 2200]
-target = 5500</div></div>
+<p>Both versions below use the same batch: <code>amounts = [4200, 1900, 3300, 1100, 2200]</code> and <code>target = 5500</code>.</p>
 
 <h3 style="margin-top:1.4rem">The brute-force approach</h3>
 <p>The obvious plan: check every possible pair of amounts, one against another, until two of them add up to the target.</p>
-<div class="mlrk-code"><div class="mlrk-screen">for i in range(len(amounts)):
+<div class="mlrk-code" data-file="two_sum_brute.py"><div class="mlrk-screen">amounts = [4200, 1900, 3300, 1100, 2200]
+target = 5500
+
+for i in range(len(amounts)):
     for j in range(i + 1, len(amounts)):
         if amounts[i] + amounts[j] == target:
             print(i, j)</div></div>
+<div class="mlrk-run" data-file="two_sum_brute.py"><pre>2 4</pre></div>
 <p>This works, but it checks every pair, which is a nested loop: for each amount, it compares against every other amount that comes after it.</p>
-<div class="mlrk-card" id="card-twosum-complexity"><p><strong>Predict:</strong> if the number of transactions in the list doubles, what happens to the number of pairwise comparisons the brute-force version above has to make?</p>
+<div class="mlrk-card" id="card-twosum-complexity"><p><strong>Predict:</strong> if the number of transactions in the list doubles, what happens to the number of pairwise comparisons <code>two_sum_brute.py</code> has to make?</p>
 <button type="button" class="mlrk-choice" data-a="quad">It roughly quadruples, since nested loops compare every item against every other item.</button>
 <button type="button" class="mlrk-choice" data-a="double">It roughly doubles, since there's just one more pass to run.</button>
 <button type="button" class="mlrk-choice" data-a="same">It stays about the same either way.</button>
@@ -312,7 +315,7 @@ target = 5500</div></div>
 
 <h3 style="margin-top:1.4rem">The hash-map approach</h3>
 <p>Instead of comparing every pair, walk through the list once. For each amount, ask: "have I already seen the other number that, added to this one, hits the target?" A dict answers that question in roughly constant time.</p>
-<div class="mlrk-code"><div class="mlrk-screen">amounts = [4200, 1900, 3300, 1100, 2200]
+<div class="mlrk-code" data-file="two_sum_seen.py"><div class="mlrk-screen">amounts = [4200, 1900, 3300, 1100, 2200]
 target = 5500
 seen = {}
 
@@ -322,6 +325,7 @@ for i, amount in enumerate(amounts):
         print(seen[complement], i)
         break
     seen[amount] = i</div></div>
+<div class="mlrk-run" data-file="two_sum_seen.py"><pre>2 4</pre></div>
 <p><code>seen</code> maps an amount already visited to its index. At every step, checking <code>complement in seen</code> is a hash-map lookup, not a scan back through everything visited so far. That's what turns a nested loop into a single pass.</p>
 
 <p style="margin-top:1rem">Click through below to watch <code>seen</code> build up exactly as the loop runs.</p>

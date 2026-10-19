@@ -99,11 +99,11 @@
 <p class="mlrk-small">A few skills get reused heavily later in this reading: what a function's <code>return</code> value actually is, comparing two numbers to find the larger one, and the basic idea of a function calling itself. Test each one below before moving on.</p>
 
 <div class="mlrk-card" id="card-return"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">def add_one(n):
+<pre class="mlrk-code" data-file="add_one.py">def add_one(n):
     return n + 1
 
 result = add_one(4)
-print(result)</div></div>
+print(result)</pre>
 <p><strong>What prints?</strong></p>
 <button type="button" class="mlrk-choice" data-a="5">5</button>
 <button type="button" class="mlrk-choice" data-a="4">4</button>
@@ -337,15 +337,34 @@ print(result)</div></div>
 <p><strong>Now the way code actually computes it (recursion, re-explained):</strong> a function can't "look at the picture." It only ever knows about one node at a time, plus whatever its children's own results were. So the rule becomes recursive: the depth of a node is 1 (for itself) plus whichever of its two children reports back the bigger depth. A node with no child on one side just treats that missing side as depth 0. The recursion bottoms out at the leaves, which have no children at all, so both sides come back as 0 and the leaf reports depth 1.</p>
 </div>
 
-<div class="mlrk-code"><div class="mlrk-screen">def max_depth(node):
+<p>Here is that rule as code in <code>max_depth.py</code>. The lines at the bottom build the folder tree from section 5, so the file runs on its own.</p>
+<pre class="mlrk-code" data-file="max_depth.py"># Each Node holds a name and up to two children.
+class Node:
+    def __init__(self, name, left=None, right=None):
+        self.name = name
+        self.left = left
+        self.right = right
+
+
+def max_depth(node):
     if node is None:
         return 0
     left = max_depth(node.left)
     right = max_depth(node.right)
-    return 1 + max(left, right)</div></div>
+    return 1 + max(left, right)
+
+
+# The project folder from section 5
+helpers = Node("helpers.py")
+utils = Node("utils/", left=helpers)
+src = Node("src/", left=utils)
+readme = Node("README.md")
+project = Node("project/", left=src, right=readme)
+
+print(max_depth(project))</pre>
 
 <div class="mlrk-fillblank">
-  <label for="blankinput">Complete the last line: <code>return 1 + max(left, ____)</code></label>
+  <label for="blankinput">Complete the last line of <code>max_depth</code>: <code>return 1 + max(left, ____)</code></label>
   <input type="text" id="blankinput" autocomplete="off">
   <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
 </div>

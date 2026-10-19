@@ -107,15 +107,19 @@
 <section class="mlrk-section">
 <h2>2. Concept overview: a function that calls itself</h2>
 <p>Start as small as possible. Here's a function that counts down from a number to zero:</p>
-<div class="mlrk-code"><div id="countdownScreen" class="mlrk-screen">def countdown(n):
+<div class="mlrk-code" data-file="countdown.py"><div id="countdownScreen" class="mlrk-screen">def countdown(n):
     if n == 0:
         print("Liftoff!")
         return
     print(n)
     countdown(n - 1)
 
-countdown(3)</div>
-<div class="mlrk-actions"><button type="button" id="countdownrun" class="mlrk-btn">Reveal simulated output</button></div></div>
+countdown(3)</div></div>
+<div class="mlrk-actions"><button type="button" id="countdownrun" class="mlrk-btn">Run python3 countdown.py</button></div>
+<div class="mlrk-run" id="countdownRun" data-file="countdown.py" hidden><pre>3
+2
+1
+Liftoff!</pre></div>
 
 <div class="mlrk-card" id="card-countdown" style="margin-top:1rem"><p><strong>Predict first:</strong> what happens when <code>countdown(3)</code> runs?</p>
 <button type="button" class="mlrk-choice" data-a="stops">It prints 3, 2, 1, then "Liftoff!", and stops there.</button>
@@ -170,7 +174,7 @@ countdown(3)</div>
 <p class="mlrk-small">Three skills get leaned on heavily later in this reading: how a function's <code>return</code> value can be used inside a larger expression, how <code>if</code>/<code>else</code> picks a branch, and comparing values for equality. Test each one below before moving on.</p>
 
 <div class="mlrk-card" id="card-recall"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">def double(x):
+<div class="mlrk-code" data-file="double.py"><div class="mlrk-screen">def double(x):
     return x * 2
 
 result = 3 + double(5)
@@ -264,12 +268,12 @@ print(result)</div></div>
 <button type="button" class="mlrk-choice" data-a="24">24</button>
 <div id="predictcallsfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-code" style="margin-top:1rem"><div class="mlrk-screen">def factorial(n):
+<div class="mlrk-code" data-file="factorial.py" style="margin-top:1rem"><div class="mlrk-screen">def factorial(n):
     if n == 1:
         return 1
     return n * factorial(n - 1)
 
-factorial(4)</div></div>
+print(factorial(4))</div></div>
 
 <div id="stackvis" class="mlrk-stackwrap"></div>
 <div class="mlrk-actions">
@@ -302,11 +306,15 @@ factorial(4)</div></div>
 <section class="mlrk-section">
 <h2>8. Predict the output: same shape, different input</h2>
 <p>Here's a recursive function that adds up every number in a list, one item at a time:</p>
-<div class="mlrk-code"><div class="mlrk-screen">def sum_list(numbers):
+<div class="mlrk-code" data-file="sum_list.py"><div class="mlrk-screen">def sum_list(numbers):
     if len(numbers) == 0:
         return 0
-    return numbers[0] + sum_list(numbers[1:])</div></div>
-<p>Its base case is an empty list, since the sum of nothing is 0. Its recursive case takes the first number and adds it to the sum of everything else in the list, a slightly smaller list each time. Predict the output for each call below.</p>
+    return numbers[0] + sum_list(numbers[1:])
+
+print(sum_list([5]))
+print(sum_list([4, 6, 2]))
+print(sum_list([]))</div></div>
+<p>Its base case is an empty list, since the sum of nothing is 0. Its recursive case takes the first number and adds it to the sum of everything else in the list, a slightly smaller list each time. Predict what each <code>print</code> line shows when you run <code>python3 sum_list.py</code>.</p>
 
 <div class="mlrk-card" id="card-sum1"><p><strong><code>sum_list([5])</code> returns:</strong></p>
 <button type="button" class="mlrk-choice" data-a="5">5</button>
@@ -330,7 +338,7 @@ factorial(4)</div></div>
 <section class="mlrk-section">
 <h2>9. When there's no way out: stack overflow</h2>
 <p>Every recursive function you've seen so far has a base case that the recursive case is guaranteed to reach eventually, because each call moves the input strictly closer to it: <code>n - 1</code> counts down toward 1, an empty list is what <code>numbers[1:]</code> eventually produces. Drop the base case, or write a recursive case that never actually approaches it, and the calls never stop pausing and stacking on top of each other.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def countdown_broken(n):
+<div class="mlrk-code" data-file="countdown_broken.py" data-expect="RecursionError"><div class="mlrk-screen">def countdown_broken(n):
     print(n)
     countdown_broken(n - 1)   # no base case at all
 
@@ -341,6 +349,33 @@ countdown_broken(3)</div></div>
 <button type="button" class="mlrk-choice" data-a="silent">Python silently stops after a few calls with no error at all.</button>
 <button type="button" class="mlrk-choice" data-a="loops">It loops back to <code>countdown_broken(3)</code> once it hits a negative number.</button>
 <div id="overflowfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div id="overflowRun" hidden>
+<div class="mlrk-run"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> python3 countdown_broken.py</div><pre>3
+2
+1
+0
+-1
+-2
+...
+-994
+-995
+Traceback (most recent call last):
+  File "countdown_broken.py", line 5, in &lt;module&gt;
+    countdown_broken(3)
+    ~~~~~~~~~~~~~~~~^^^
+  File "countdown_broken.py", line 3, in countdown_broken
+    countdown_broken(n - 1)   # no base case at all
+    ~~~~~~~~~~~~~~~~^^^^^^^
+  File "countdown_broken.py", line 3, in countdown_broken
+    countdown_broken(n - 1)   # no base case at all
+    ~~~~~~~~~~~~~~~~^^^^^^^
+  File "countdown_broken.py", line 3, in countdown_broken
+    countdown_broken(n - 1)   # no base case at all
+    ~~~~~~~~~~~~~~~~^^^^^^^
+  [Previous line repeated 996 more times]
+RecursionError: maximum recursion depth exceeded</pre></div>
+<p class="mlrk-small">The file printed 999 numbers before Python stopped it. The middle 991 are cut here.</p>
+</div>
 
 <p>Select every true statement about recursion below.</p>
 <div class="mlrk-card">
@@ -389,22 +424,36 @@ countdown_broken(3)</div></div>
   <text x="320" y="272" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#2274B5">Found file's path returns back up through every waiting call</text>
 </svg>
 
-<p>Now try writing the recursive step yourself. Here's a simplified <code>search_folder</code> in pseudocode:</p>
-<div class="mlrk-code"><div class="mlrk-screen">def search_folder(folder, target_name):
-    for item in folder.contents:
-        if item.is_file and item.name == target_name:
-            return item                      # base case: found it
-        if item.is_folder:
-            found = ____(item, target_name)  # what goes here?
+<p>Now try writing the recursive step yourself. Here's a simplified <code>search_folder</code>. Each folder is a dictionary with a name and a list of contents, and the function returns the path to the file it finds:</p>
+<div class="mlrk-code" data-file="search_folder.py"><div class="mlrk-screen">documents = {"name": "Documents", "is_folder": True, "contents": [
+    {"name": "notes.txt", "is_folder": False},
+    {"name": "Projects", "is_folder": True, "contents": [
+        {"name": "2026", "is_folder": True, "contents": [
+            {"name": "report.pdf", "is_folder": False},
+        ]},
+    ]},
+]}
+
+def search_folder(folder, target_name):
+    for item in folder["contents"]:
+        if not item["is_folder"] and item["name"] == target_name:
+            return folder["name"] + "/" + item["name"]   # base case: found it
+        if item["is_folder"]:
+            found = ____(item, target_name)              # what goes here?
             if found:
-                return found
-    return None                              # base case: not in this branch</div></div>
+                return folder["name"] + "/" + found
+    return None                                          # base case: not in this branch
+
+print(search_folder(documents, "report.pdf"))
+print(search_folder(documents, "budget.xlsx"))</div></div>
 <div class="mlrk-fillblank">
   <label for="blankinput">Type the missing call:</label>
   <input type="text" id="blankinput" autocomplete="off" placeholder="e.g. some_function(args)">
   <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
 </div>
 <div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-run" id="searchRun" data-file="search_folder.py" hidden><pre>Documents/Projects/2026/report.pdf
+None</pre></div>
 
 <div class="mlrk-card" id="card-realuse" style="margin-top:1rem"><p><strong>Why can't a single, non-nested loop replace <code>search_folder</code> here?</strong></p>
 <button type="button" class="mlrk-choice" data-a="unknown">The folder structure can be arbitrarily deep, and a loop can't call itself to go one level deeper on demand the way a function can.</button>
@@ -616,7 +665,8 @@ git push</pre></li>
   K.quiz({id:"q-overflow", buttonSelector:"#card-overflow .mlrk-choice", feedbackSelector:"#overflowfb", correct:"overflow",
     feedback:{overflow:"With no base case, every call makes another call. Stack frames keep piling up until Python hits its recursion limit and raises a RecursionError, the stack overflow this whole reading has been building toward.",
               silent:"Python doesn't silently give up. Running out of stack space raises a real, visible error.",
-              loops:"Nothing about hitting a low number makes Python treat this call specially. It keeps recursing straight through negative numbers."}});
+              loops:"Nothing about hitting a low number makes Python treat this call specially. It keeps recursing straight through negative numbers."},
+    onDone(){ $("#overflowRun").hidden=false; }});
 
   K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"crash",
     feedback:{crash:"That's the honest, correct answer, and exactly what a stack overflow / RecursionError is: unstoppable stacking with nowhere for it to resolve.",
@@ -656,22 +706,8 @@ git push</pre></li>
   K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
   K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
 
-  function revealCountdown(){
-    $("#countdownScreen").textContent = `def countdown(n):
-    if n == 0:
-        print("Liftoff!")
-        return
-    print(n)
-    countdown(n - 1)
+  function revealCountdown(){ $("#countdownRun").hidden=false; }
 
-countdown(3)
-
-[Output]
-3
-2
-1
-Liftoff!`;
-  }
   $("#countdownrun").addEventListener("click", revealCountdown);
 
   /* ---- interactive call-stack stepper for factorial(4) ---- */
@@ -735,11 +771,13 @@ Liftoff!`;
     const fb=$("#blankfb");
     if(ok){
       K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      $("#searchRun").hidden=false;
       fb.className="mlrk-feedback mlrk-show mlrk-good";
       fb.innerHTML="<strong>Correct.</strong> search_folder(item, target_name) is the recursive call: the same function, aimed at the subfolder one level down.";
       blankDone=true;
     } else if(blankAttempts>=2){
       K.Scoring.award("q-blank",0);
+      $("#searchRun").hidden=false;
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
       fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing call is <code>search_folder(item, target_name)</code>: the function calling itself on the subfolder it just found.";
       blankDone=true;
