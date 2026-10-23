@@ -123,13 +123,64 @@
     }
   };
 
+  /* ---------- shuffling ----------
+     The learner audit (2026-10-23) found the right answer was option A in 199
+     of 205 quizzes, and order-the-steps lists rendered already solved. Each
+     activity now shuffles its own pieces on load. The nodes keep their slots
+     on the page (anything between them stays put); only which node sits in
+     which slot changes. Opt out per activity with opts.shuffle:false. */
+  function shuffleSlots(nodes){
+    nodes=nodes.filter((n,i)=>n&&n.parentNode&&nodes.indexOf(n)===i);
+    if(nodes.length<2) return nodes;
+    const order=nodes.slice();
+    for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]]}
+    const marks=nodes.map(n=>{const m=document.createComment("slot");n.parentNode.insertBefore(m,n);return m});
+    nodes.forEach(n=>n.remove());
+    marks.forEach((m,i)=>{m.parentNode.insertBefore(order[i],m);m.remove()});
+    return order;
+  }
+
+  /* ---------- "answer first" gates ----------
+     A button with data-after="<activity id>" stays locked until that
+     question or activity is finished, so a Run button can't show the answer
+     before the learner predicts. Pages can also call ReadingKit.markDone(id)
+     from their own fill-in handlers. */
+  const doneIds=new Set();
+  function markDone(id){
+    if(!id||doneIds.has(id)) return;
+    doneIds.add(id);
+    $$('[data-after="'+id+'"]').forEach(unlock);
+    document.dispatchEvent(new CustomEvent("mlrk:done",{detail:{id}}));
+  }
+  function unlock(el){
+    el.disabled=false;el.removeAttribute("aria-disabled");
+    const note=el.nextElementSibling;
+    if(note&&note.classList.contains("mlrk-lock-note")) note.remove();
+  }
+  function wireGates(root){
+    $$("[data-after]",root).forEach(el=>{
+      if(doneIds.has(el.dataset.after)){unlock(el);return}
+      if(el.dataset.gated) return;
+      el.dataset.gated="1";
+      el.disabled=true;el.setAttribute("aria-disabled","true");
+      const note=document.createElement("span");
+      note.className="mlrk-lock-note";
+      note.textContent=el.dataset.afterNote||"Answer the question first. Then you can run it.";
+      el.insertAdjacentElement("afterend",note);
+    });
+  }
+
   /* ---------- quiz (single-answer, radio-style) ---------- */
   function quiz(opts){
     // opts: {id, buttonSelector, feedbackSelector, correct, feedback:{value:text}, onDone,
     //        maxAttempts (default 2 — use 1 for true/false or A-or-B questions, where a
-    //        "second try" is a guaranteed freebie with only two options)}
+    //        "second try" is a guaranteed freebie with only two options),
+    //        answerLabel (optional; defaults to the correct button's own text),
+    //        shuffle (default true)}
     const buttons=$$(opts.buttonSelector);
+    if(opts.shuffle!==false) shuffleSlots(buttons);
     const fb=$(opts.feedbackSelector);
+    const correctBtn=buttons.find(b=>b.dataset.a===opts.correct);
     const maxAttempts=opts.maxAttempts||2;
     let attempts=0,done=false;
     Scoring.register(opts.id,1,"quiz");
@@ -149,8 +200,14 @@
       } else if(attempts>=maxAttempts){
         Scoring.award(opts.id,0);
         fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+        // Show the answer as the learner saw it, never the internal key
+        // ("eq", "halfway"), and drop the "Right." that opens the feedback
+        // written for a correct click.
+        const label=opts.answerLabel||(correctBtn?correctBtn.innerHTML.trim():opts.correct);
+        const why=(opts.feedback[opts.correct]||"").replace(/^\s*(Right|Correct|Yes|Exactly|Yep)[.!,]\s*/i,"");
+        if(correctBtn) correctBtn.dataset.picked="correct";
         fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The correct choice was: "+
-          (opts.answerLabel||opts.correct)+". "+(opts.feedback[opts.correct]||"");
+          '<span class="mlrk-answer">'+label+"</span>. "+why;
         done=true;
         buttons.forEach(b=>b.disabled=true);
       } else {
@@ -160,7 +217,7 @@
       }
       fb.setAttribute("tabindex","-1");fb.focus();
       persist();
-      if(done && opts.onDone) opts.onDone();
+      if(done){markDone(opts.id);if(opts.onDone) opts.onDone();}
     }));
   }
 
@@ -172,6 +229,10 @@
   function selectAll(opts){
     // opts: {id, boxSelector, submitSelector, feedbackSelector, options:[...], maxAttempts}
     const boxes=$$(opts.boxSelector);
+    if(opts.shuffle!==false){
+      const rows=boxes.map(b=>b.closest("label")||b.parentNode);
+      if(new Set(rows).size===rows.length) shuffleSlots(rows);
+    }
     const submitBtn=$(opts.submitSelector);
     const fb=$(opts.feedbackSelector);
     const maxAttempts=opts.maxAttempts||2;
@@ -203,6 +264,7 @@
       }
       fb.setAttribute("tabindex","-1");fb.focus();
       persist();
+      if(done) markDone(opts.id);
     });
   }
 
@@ -213,7 +275,7 @@
     let awarded=false;
     return function markIfComplete(){
       if(awarded) return;
-      if(checkComplete()){Scoring.award(id,1);awarded=true;persist()}
+      if(checkComplete()){Scoring.award(id,1);awarded=true;persist();markDone(id)}
     };
   }
 
@@ -231,7 +293,13 @@
   function orderSteps(container,opts){
     // opts:{id, correctOrder:[stepIds in right order], feedbackSelector, checkSelector}
     const el=typeof container==="string"?$(container):container;
-    const items=$$(".mlrk-orderitem",el);
+    let items=$$(".mlrk-orderitem",el);
+    if(opts.shuffle!==false&&items.length>1){
+      // never leave the list already in the right order
+      const solved=()=>JSON.stringify($$(".mlrk-orderitem",el).map(i=>i.dataset.step))===JSON.stringify(opts.correctOrder);
+      for(let tries=0;tries<10&&(tries===0||solved());tries++) shuffleSlots($$(".mlrk-orderitem",el));
+      items=$$(".mlrk-orderitem",el);
+    }
     const fb=$(opts.feedbackSelector);
     const checkBtn=$(opts.checkSelector);
     let picked=[];
@@ -353,18 +421,46 @@
     render();
   }
 
-  /* drag-and-drop matching: draggable chips into labeled dropzones */
-  function dragDrop(container,activityId){
+  /* drag-and-drop matching: draggable chips into labeled dropzones.
+     Mouse drag only worked on desktop, so a phone user couldn't earn the
+     point. Tap (or Enter/Space) a chip to pick it up, then tap a box to put
+     it there; tap the chip's starting area to put it back. */
+  function dragDrop(container,activityId,opts){
+    opts=opts||{};
     const el=typeof container==="string"?$(container):container;
     const draggables=$$(".mlrk-draggable",el);
     const zones=$$(".mlrk-dropzone",el);
+    if(opts.shuffle!==false) shuffleSlots(draggables);
+    const homes=new Map(draggables.map(d=>[d,d.parentNode]));
     const mark=activity(activityId,()=>draggables.every(d=>d.closest(".mlrk-dropzone")));
+    let held=null;
+    function hold(chip){
+      if(held) held.removeAttribute("data-held"),held.setAttribute("aria-pressed","false");
+      held=(held===chip)?null:chip;
+      if(held) held.dataset.held="1",held.setAttribute("aria-pressed","true");
+      zones.forEach(z=>z.classList.toggle("mlrk-target",!!held));
+    }
+    function place(target){
+      if(!held) return;
+      target.appendChild(held);
+      hold(held);mark();persist();
+    }
+    if(!$(".mlrk-drag-help",el)){
+      const help=document.createElement("p");
+      help.className="mlrk-drag-help";
+      help.textContent="Drag each chip into a box. On a phone, tap a chip, then tap the box it belongs in.";
+      el.insertBefore(help,el.firstChild);
+    }
     draggables.forEach(d=>{
       d.setAttribute("draggable","true");
+      d.setAttribute("role","button");d.setAttribute("tabindex","0");d.setAttribute("aria-pressed","false");
       d.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain",d.id);d.setAttribute("aria-grabbed","true")});
       d.addEventListener("dragend",()=>d.setAttribute("aria-grabbed","false"));
+      d.addEventListener("click",e=>{e.stopPropagation();hold(d)});
+      d.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();hold(d)}});
     });
     zones.forEach(z=>{
+      z.setAttribute("tabindex","0");
       z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("mlrk-over")});
       z.addEventListener("dragleave",()=>z.classList.remove("mlrk-over"));
       z.addEventListener("drop",e=>{
@@ -373,6 +469,12 @@
         const chip=document.getElementById(id);
         if(chip){z.appendChild(chip);mark();persist()}
       });
+      z.addEventListener("click",()=>place(z));
+      z.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();place(z)}});
+    });
+    new Set(homes.values()).forEach(home=>{
+      if(home.classList&&home.classList.contains("mlrk-dropzone")) return;
+      home.addEventListener("click",e=>{if(e.target===home) place(home)});
     });
   }
 
@@ -410,12 +512,24 @@
     // opts:{id, selector, minWords}
     const el=$(opts.selector);
     Scoring.register(opts.id,1,"response");
+    const min=opts.minWords||8;
     let awarded=false;
-    el.addEventListener("input",()=>{
+    // The word minimum used to be invisible, so learners didn't know a short
+    // answer earned nothing. Show it, and show when the box has counted.
+    const counter=document.createElement("p");
+    counter.className="mlrk-wordcount";
+    counter.setAttribute("aria-live","polite");
+    el.insertAdjacentElement("afterend",counter);
+    function update(){
       const words=el.value.trim().split(/\s+/).filter(Boolean).length;
-      if(!awarded && words>=(opts.minWords||8)){Scoring.award(opts.id,1);awarded=true}
-      persist();
-    });
+      if(!awarded && words>=min){Scoring.award(opts.id,1);awarded=true;markDone(opts.id)}
+      counter.textContent=words>=min
+        ? words+" words. This answer counts toward your score."
+        : words+" of "+min+" words. Write at least "+min+" words for this to count.";
+      counter.classList.toggle("mlrk-wordcount-done",words>=min);
+    }
+    el.addEventListener("input",()=>{update();persist()});
+    update();
   }
 
   /* ---------- terminal simulator ----------
@@ -535,11 +649,12 @@
   }
   function restore(data){
     if(!data||!data.responses) return;
+    // restore the score first: the input events below can trigger a save
+    if(data.scoreDetail) Object.assign(Scoring.items,data.scoreDetail);
     for(const [k,v] of Object.entries(data.responses)){
       const el=document.getElementById(k);
-      if(el) el.value=v;
+      if(el){el.value=v;el.dispatchEvent(new Event("input"));}
     }
-    if(data.scoreDetail) Object.assign(Scoring.items,data.scoreDetail);
   }
   function wireImport(fileInputSelector,onLoaded){
     const input=$(fileInputSelector);
@@ -649,9 +764,11 @@
     });
   }
   // Show a file's output on demand (a "Run python3 x.py" button).
-  // opts:{button, target, file, output (string or ()=>string), onRun}
+  // opts:{button, target, file, output (string or ()=>string), onRun,
+  //       after (activity id: keep the button locked until it's answered)}
   function runFile(opts){
     const btn=typeof opts.button==="string"?$(opts.button):opts.button;
+    if(opts.after){btn.dataset.after=opts.after;wireGates(btn.parentNode)}
     const out=typeof opts.target==="string"?$(opts.target):opts.target;
     if(!btn.textContent.trim()) btn.textContent="Run python3 "+opts.file;
     btn.addEventListener("click",()=>{
@@ -665,6 +782,7 @@
     // opts:{readingId, title, progressBarSelector, bannerSelector}
     currentReadingId=opts.readingId;currentTitle=opts.title;
     fileTabs(document);
+    wireGates(document);
     const saved=Storage.load(opts.readingId);
     if(saved){
       restore(saved);
@@ -683,7 +801,8 @@
 
   global.ReadingKit={
     init, quiz, selectAll, flipCards, orderSteps, dragDrop, video, freeResponse,
-    activity, terminal, runFile, fileTabs, selfCheck, traceStepper, Scoring, Persona, Storage,
+    activity, terminal, runFile, fileTabs, markDone, wireGates, shuffleSlots,
+    selfCheck, traceStepper, Scoring, Persona, Storage,
     snapshot, toMarkdown, toText, download, restore, wireImport, submitForCredit, buildSubmitURL
   };
 })(window);
