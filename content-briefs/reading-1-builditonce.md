@@ -5,7 +5,7 @@
 - **Skills (skills.json):** functions-modular-programming
 - **Audience:** data + software engineering
 - **Complexity flag:** complex (functions)
-- **Estimated time:** 49 minutes (pill: ~48-52), unchanged by the 2026-10-16 revision
+- **Estimated time:** 21 minutes (pill: ~20-23), cut from 49 in the 2026-10-23 content pass; the optional video is excluded
 
 ## Sources (see SKILL.md, "Source of truth")
 - **Drive decks read (2026-10-16):** Functions, Parameters & Return Values; Local vs. Global Variables & Scope; Recall & Practice: Loops, Conditionals, Functions (slides and speaker notes).
@@ -24,44 +24,56 @@
 - **Quest Vocabulary Mission terms this reading owes:** Function, Parameter, Argument, Return Value (Local Variable, Global Variable, Scope are carried by the scope reading).
 
 ## Prepare
-- **Data Challenge move:** predict a function's result by hand before running it → section 9 predictions on `energy_cost`.
-- **Data Challenge move:** spot that a print-only function hands back None → section 10.
-- **Project roadblock / common mistake defused:** code that runs without an error can still be wrong → section 16 (`return` indented inside a loop). One long script vs. functions → section 12.
+- **Data Challenge move:** predict a function's result by hand before running it: typed predictions on `predict_cost.py`.
+- **Data Challenge move:** spot that a print-only function hands back None: `show_cost.py`.
+- **Project roadblock defused:** code that runs without an error can still be wrong: `return` indented inside a loop (`week_loads.py`, then the fixed file).
 - **Confirmed:** the reading works no Data Challenge step and solves no part of the project.
 
+## Structure (2026-10-23 content pass, from the learner audit)
+1. The same math in many places (hook, intro diagram, how the examples run)
+2. Recall: 2 predict questions (update a variable; if/elif/else)
+3. Define it once, call it many times (`wash_cost.py`, predict `closing_notice.py`)
+4. Parameters, arguments, return value (`machine_label.py`, fill-in `visit_total.py`, typed predict `predict_cost.py`)
+5. return vs. print (`show_cost.py`, `return_cost.py`, `week_loads.py`)
+6. Mixed check (select-all)
+7. Wrap-up: 3 bullets, dryer question, one interview line, one next-idea line
+8. Reflection (one box, starter, optional AI prompt)
+9. Key terms review (flip cards)
+10. Go further: optional video, not timed or scored
+- **Syntax taught here (ledger):** `+` joining strings, `str()`, f-strings, `+=`, each with a "New in this file" note.
+- **Graded items:** 12 (was 22). Cut: separate vocab-first section, order-the-steps, print/return drag, why-split quiz, interviews section, thinking ahead, trace stepper, three extra text boxes.
+
 ## Real-world scenario for this reading
-- **Domain:** business ops / utilities
-- **Scenario:** a small electric co-op bills each household monthly: kWh used times price per kWh, written once as `energy_cost(kwh_used, price_per_kwh)`.
-- **Why it fits:** every Fellow has seen a utility bill; the math is one multiplication, so the function shape stays in front.
-- Replaced on 2026-10-16: the community health clinic co-pay scenario (overlapped a project scenario).
+- **Domain:** small business
+- **Scenario:** a laundromat: loads times price per load, written once as `wash_cost(loads, price_per_load)`; washer labels; closing notice; weekly load total; dryer totals in the new-situation question.
+- **Why it fits:** familiar, 6th-grade words, one multiplication keeps the function shape in front.
+- Replaced on 2026-10-23: the electric co-op / kWh scenario (unfamiliar words flagged in the learner audit). Earlier, 2026-10-16: the clinic co-pay scenario (project overlap).
 
 ## Vocabulary list
-- function, define, call, parameter, argument, return value
+- Key terms review cards at the end: Function, Parameter, Argument, Return Value, plus define and call
 
 ## Activity rotation
-- [x] flip cards
-- [x] quiz (radio) with feedback on every choice
+- [x] quiz (radio) with feedback on every choice, shuffled by the kit
 - [x] select-all-that-apply
-- [x] drag-and-drop matching (print vs. return)
-- [x] order-the-steps (what happens on a call)
-- [x] fill-in-the-blank code
-- [x] trace stepper
-- [x] video reflection prompt
+- [x] fill-in-the-blank code (says which blank is wrong)
+- [x] typed predictions
+- [x] flip cards (review)
+- [x] reflection box
 
 ## Video pick
+- **Placement:** optional "Go further" section, plain embed, not in the time estimate or the score.
 - **Title/channel/length:** Functions in Python are easy — Bro Code, 10:38 (638 s, verified 2026-10-16)
 - **Link:** https://www.youtube.com/watch?v=89cGQjB5R4M
 - **Why this one:** reputable channel, covers define vs. call, parameters and return.
 
 ## Interview relevance
-- "Can you turn this into a function?"; "What does this return if the condition is never met?"; data roles: a function that takes a column and threshold.
+- One line in the wrap-up: turn repeated lines into a function that returns its answer.
 
 ## AI integration
-- AI-brainstormed reflection prompt button in section 16.
+- Optional AI-brainstormed prompt button inside the reflection box.
 
 ## Additional resources
 - Python docs: Defining Functions; W3Schools: Python Functions; Python Tutor.
 
 ## Critical thinking / summary questions
-- Bakery order totals: one function that returns the total vs. printing vs. hardcoding.
-- If you inherited an unfamiliar function, what would you check first to find its parameters and return value?
+- Dryer totals: one function that returns the total vs. printing vs. copying the math.

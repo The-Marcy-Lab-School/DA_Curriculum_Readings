@@ -4,7 +4,7 @@
 - **Skill tags (from taxonomy.json):** oop-design
 - **Audience:** data + software engineering
 - **Complexity flag:** complex (OOP)
-- **Estimated time:** 48 minutes (pill ~46–50), unchanged. Includes the 13:50 video.
+- **Estimated time:** 22 minutes (pill ~21–24), excluding the optional 13:50 video. Cut from 48 in the 2026-10-23 content pass (learner audit). Read SECOND in Quest 1.8, after Meet the Objects.
 
 ## Sources (see SKILL.md, "Source of truth")
 - **Drive decks read:** "Magic Methods — What __init__/__str__/__repr__ Actually Mean" (slides + speaker notes), read 2026-10-16.
@@ -24,47 +24,45 @@
 - **Quest Vocabulary Mission terms this reading owes:** `__str__`, `__repr__` (the rest are carried by the other Quest 1.8 reading).
 
 ## Prepare (what this reading rehearses, on its own examples)
-- **Data Challenge move:** predict each display path before running it (single print, `repr()`, list) → sections 5–7, 9, 12, 13 order-the-steps, 14 simulator.
-- **Project roadblock / common mistake defused:** testing only the happy path (common mistake #4) → the list gotcha and the "predict, then run all three" steps.
+- **Data Challenge move:** predict each display path before running it (print, `repr()`, list, fallback) → sections 3–5, each a predict-then-run file.
+- **Project roadblock defused:** testing only the happy path → the list case and the fallback case.
 - **Confirmed:** the reading works no Data Challenge step and solves no part of the project.
 
 ## Real-world scenario for this reading
-- **Domain:** veterinary clinic (business ops)
-- **Scenario:** a vet clinic's scheduling script prints `Pet` objects for a developer (precise) and for owner reminder texts (friendly). Fill-in uses an `Appointment` class. Summary transfer uses a community-garden `Plot`.
+- **Domain:** pet-sitting app (everyday services). Changed from a vet clinic, which sat too close to the off-limits clinic project domain.
+- **Scenario:** a pet-sitting app prints `Pet` objects for owners (friendly) and for programmers (exact). Fill-in uses a `Visit` class. New-situation question stays in the scenario: a list of `Sitter` objects.
 - **Why it fits:** two real audiences for one object, without leaning on any lab domain.
 
 ## Prereq recall
-- `__init__`, attribute access, f-strings, why one object might need two descriptions.
+- Attribute access (`pet_check.py`), f-strings (`feed_note.py`). `__init__` is assumed from the first Quest 1.8 reading, never named.
+
+## Structure (content pass, 2026-10-23)
+1. Hook + one object, two readers + SVG (default representation, magic method bolded)
+2. Recall (2)
+3. `__str__`: `pet_default.py` (live output, address varies) then `pet_str.py` predict/run
+4. `__repr__`: quotes-inside-f-string note, `pet_repr.py` predict/run, fill-in `visit.py` with numbered steps; checker requires the quotes and names the wrong piece
+5. Which one runs: rule grid, `pet_list.py` and `pet_fallback.py` predict/run
+6. Mixed check: drag match (5 chips, incl. fallback)
+7. Wrap-up: 3 bullets, `sitters.py` new situation, one interview line, one next-idea line (`__eq__`)
+8. Reflection + optional AI prompt
+9. Key terms review flip cards (magic method, `__str__`, `__repr__`, default representation). REPL card dropped.
+- Optional video, resources, score/submit block (unchanged).
+- Graded items: 11 (was 20). Cut: `__init__` and "why two" recall, default-predict quiz, select-all, order-steps, simulator, interview section, REPL debug question, video reflection, thinking ahead.
 
 ## Vocabulary list
-- magic method (dunder), `__str__`, `__repr__`, default representation, the REPL.
-
-## Activity rotation
-- [x] flip cards
-- [x] quiz (radio) with feedback on every choice
-- [x] select-all-that-apply
-- [x] drag-and-drop matching
-- [x] order-the-steps
-- [x] fill-in-the-blank code
-- [x] code/terminal simulator
-- [x] video reflection prompt
+- magic method (dunder), `__str__`, `__repr__`, default representation (bolded at first use; flip cards at the end for review).
 
 ## Video pick
 - **Title/channel/length:** Python OOP Tutorial 5: Special (Magic/Dunder) Methods — Corey Schafer, 13:50 (verified; English; embeddable)
 - **Link:** https://www.youtube.com/watch?v=3ohzBxoFHAY
 - **Why this one:** reputable, directly on topic. Over the 12-minute guide (QA warns); kept as a deliberate pick.
+- **Placement:** optional \"Go further\" section at the end; not scored, not in the time estimate. Open question: still 13:50, over the ~12-minute guide.
 
 ## Interview relevance
-- "`__str__` vs. `__repr__`?": audience difference plus fallback rule; REPL debugging habit.
+- One sentence in the wrap-up: who reads each method, the fallback rule, and "write `__repr__` if only one".
 
 ## AI integration
-- Random AI-brainstormed reflection prompt in section 17.
+- Optional AI-brainstormed prompt button inside the reflection box.
 
 ## Additional resources
-- Python data model docs, GeeksforGeeks `__repr__`, W3Schools string formatting (unchanged).
-
-## Critical thinking / summary questions
-- Garden `Plot` list print; free response on the question to ask before predicting.
-
-## Thinking ahead
-- `__eq__`, `__lt__`, libraries expecting `__repr__`.
+- Python data model docs, GeeksforGeeks `__repr__`, W3Schools string formatting.

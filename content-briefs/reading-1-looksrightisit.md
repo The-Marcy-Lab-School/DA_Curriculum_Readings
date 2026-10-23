@@ -5,7 +5,7 @@
 - **Skills (skills.json):** attention-to-detail
 - **Audience:** data + software engineering
 - **Complexity flag:** standard
-- **Estimated time:** 36 minutes (~34–37), including the 4:07 video
+- **Estimated time:** 22 minutes (~21–24). The 4:07 video is optional and not counted.
 
 ## Sources (see SKILL.md, "Source of truth")
 - **Drive decks read (2026-10-16):** "Debugging Like a Pro" (slides + speaker notes); "Final Practice Gauntlet" (slides).
@@ -22,27 +22,31 @@
 
 ## Align
 - **Deck definitions:** logic error (runs, wrong result); refactor (improve structure without changing behavior); observe-isolate-validate interview frame; "trace, don't just trust" AI-code habit.
-- **Vocabulary Mission terms owed (all defined on flip cards):** Bug, Logic Error, Off-by-One Error, Scope Bug, Undefined Attribute, Refactor, Expected Behavior, Actual Behavior. Plus Edge Case.
+- **Vocabulary Mission terms owed (bold at first use in the prose, reviewed on flip cards at the end):** Bug, Logic Error, Off-by-One Error, Scope Bug, Undefined Attribute, Refactor, Expected Behavior, Actual Behavior. Plus Edge Case.
 
 ## Prepare (what this reading rehearses, on its own examples)
-- **Expected first, then actual:** every bug hunt states the expected behavior before the prediction; order-the-steps covers expected, actual, trace, change one line, verify.
-- **Describe a bug precisely (line, current behavior, intended behavior):** "Describe a bug precisely" free response.
-- **Silent vs. loud bugs:** two crashing bugs (scope, attribute) and two silent ones (off-by-one, bare `except`); summary paragraph contrasts them.
-- **Project roadblocks defused:** "runs without error means correct"; "a variable inside a function is visible outside it".
+- **Expected first, then actual:** every bug file states its expected behavior, then predict → locked Run → output under the code.
+- **Every fix is a file with output:** off-by-one, scope bug, undefined attribute (fill-in), bare `except:` → `except KeyError:`.
+- **Refactor:** tiny before/after files with identical output.
+- **Describe a bug precisely (line, current behavior, intended behavior):** reflection with numbered steps.
+- **Syntax notes:** `range(start, stop)` and `items[i]` ("New in this file"); one-line bare `except:` reminder in recall.
 - **Confirmed:** no bug mirrors the deck, Data Challenge, quest bug hunts or project challenge; works no challenge step.
 
 ## Real-world scenario for this reading
-- **Domain:** business ops / consumer tech (streaming service).
-- **Scenario:** an AI-written script builds each viewer's monthly watch recap. It runs cleanly and prints wrong numbers.
-- **Why it fits:** familiar to most Fellows, and a wrong recap is obviously wrong to the viewer.
+- **Domain:** business ops / consumer tech (streaming app).
+- **Scenario:** AI-written code builds each viewer's monthly summary email. It runs cleanly and prints wrong numbers.
+- **New situation:** a viewer's hand count of finished episodes (12) vs. the email (11).
+
+## Structure (2026-10-23 content pass)
+Hook + goal + visual (expected vs. actual, no answer shown) → recall (2) → off-by-one (predict, trace, fixed file) → crashing bugs: scope + attribute (predict, fixed file, fill-in) → bare `except:` (predict, fixed file) → refactor before/after → select-all → wrap-up (3 bullets, new situation, interview line, next idea) → reflection → key terms flip cards → optional video → resources → score/submit.
 
 ## Prereq recall
-- `range()` stop value; reading an attribute set in `__init__`; `>` on equal values; what a bare `except:` does.
+- `range()` stop value; what a bare `except:` does (with a one-line reminder).
 
 ## Activity rotation
-- [x] flip cards  - [x] quiz with feedback  - [x] select-all  - [x] order-the-steps  - [x] fill-in-the-blank (typed attribute name)  - [x] trace stepper  - [x] reveal-output code  - [x] video reflection
+- [x] flip cards (review)  - [x] quiz with feedback  - [x] select-all  - [x] fill-in-the-blank (typed attribute name, numbered steps)  - [x] trace stepper  - [x] predict → run  - [x] free response  - [x] optional video
 
-## Video pick
+## Video pick (optional, outside the time estimate)
 - **Title/channel/length:** "Debugging with test cases | Intro to CS - Python" — Khan Academy, 4:07 (247 s, verified)
 - **Link:** https://www.youtube.com/watch?v=eNmRjbVIZ0s
 - **Why this one:** expected results for test cases, then narrowing to one function; English caption track first; embeddable. Replaced the earlier VS Code debugger video, which QA failed on its caption-language check.
@@ -56,8 +60,5 @@
 ## Additional resources
 - Python tutorial Errors and Exceptions; W3Schools Python Scope; Hitchhiker's Guide gotchas; Python Tutor.
 
-## Critical thinking / summary questions
-- Museum ticket-scan count one short of the hand count; "ran" vs. "correct".
-
-## Thinking ahead
-- Reviewing others' code, checking AI-written functions, testing before a demo.
+## Wrap-up question
+- Hand count 12 vs. the summary's 11, in the same streaming scenario.

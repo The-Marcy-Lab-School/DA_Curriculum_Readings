@@ -5,7 +5,7 @@
 - **Skills (skills.json):** algorithmic-complexity-big-o
 - **Audience:** data + software engineering
 - **Complexity flag:** complex (data structures)
-- **Estimated time:** 44 minutes (~42–45), including the 8:22 video
+- **Estimated time:** 21 minutes (~20–23). The 8:22 video is optional and not counted.
 
 ## Sources (see SKILL.md, "Source of truth")
 - **Drive decks read (2026-10-16, slides + speaker notes):** "Big-O in Practice: Linear Scan vs. Dict Lookup, With a Partner"; "Final Practice Gauntlet: Mixed HackerRank-Style Review" (slides only, Round 5).
@@ -22,43 +22,37 @@
 
 ## Align
 - **Deck definitions:** linear-scan search (check items one at a time until a match); dict-keyed lookup (jump to a value by key); worst case (maximum work); scaling (how cost changes as data grows); `.get()` returns `None` when a key is missing; building the dict is one O(n) pass; Big-O is not a stopwatch.
-- **Vocabulary Mission terms owed (all defined on flip cards):** Linear Search, Dictionary Lookup, Input Size, O(n), O(1) Average-Case, Scale, Complexity. Plus Worst Case from the deck recap.
+- **Vocabulary Mission terms owed (bold at first use in the prose, reviewed on flip cards at the end):** Linear Search, Dictionary Lookup, Input Size, O(n), O(1) Average-Case, Scale, Complexity. Plus Worst Case from the deck recap.
 
 ## Prepare (what this reading rehearses, on its own examples)
-- **Worst case is the missing value:** trace stepper over 6 accounts + true/false.
-- **Build cost vs. lookup cost:** concept overview paragraph + select-all option.
-- **Big-O vs. seconds:** gold callout; video framing.
-- **When to keep a linear search (tradeoff):** "12 test accounts, once a night" quiz + decision-rule free response.
-- **Project roadblock defused:** confusing Big-O with current speed.
+- **Build once with a plain loop:** `callers_by_phone[record["phone"]] = record["name"]`; no comprehension.
+- **Build cost vs. lookup cost:** paragraph after the build file + select-all option.
+- **`[key]` vs. `.get(key)`:** KeyError file, then a `.get` fill-in with `is None` (one-line note).
+- **When to keep a linear search (tradeoff):** "12 test callers, once a night" quiz + decision-rule reflection.
+- **Growth material:** one-paragraph reminder only (the Big-O quest teaches growth).
 - **Confirmed:** works no Data Challenge step (no comparison counters, no AI multiplier check, no timing) and writes no part of the project reflection.
 
 ## Real-world scenario for this reading
-- **Domain:** finance (fraud operations).
-- **Scenario:** a payments company checks every transaction against its flagged-accounts records. The check that was instant with 20 accounts times out with 400,000.
-- **Why it fits:** everyone has had a card payment checked; the scale jump is easy to picture.
+- **Domain:** business ops / consumer tech (help-line caller screen).
+- **Scenario:** a help line shows the caller's name by looking up the phone number. Instant with 20 saved callers, several seconds with 400,000.
+- **New situation:** "Called before today" check on a collection that grows all day.
 
-## Prereq recall
-- `in` returns a boolean; loop + `if` trace; `in` on a list is a one-at-a-time search; a missing value is compared to every entry.
+## Structure (2026-10-23 content pass)
+Hook + goal + visual → recall (2) → linear search file → build-a-dict file + tradeoff quiz → `[]` vs `.get` (predict, fill-in) → select-all → wrap-up (3 bullets, new situation, interview line, next idea) → reflection → key terms flip cards → optional video → resources → score/submit.
+Every file: predict → locked Run (`data-after`) → output under the code.
 
-## Activity rotation
-- [x] flip cards  - [x] quiz with feedback  - [x] select-all  - [x] drag-and-drop  - [x] order-the-steps  - [x] fill-in-the-blank (typed `get`)  - [x] trace stepper  - [x] size selector  - [x] video reflection
+## Activities
+- [x] flip cards (review)  - [x] quiz with feedback  - [x] select-all  - [x] fill-in-the-blank (typed `get`, numbered steps)  - [x] predict → run  - [x] free response  - [x] optional video
 
-## Video pick
+## Video pick (optional, outside the time estimate)
 - **Title/channel/length:** "Python Dictionary vs Lists Speed Comparison" — Python Esper, 8:22 (502 s, verified)
 - **Link:** https://www.youtube.com/watch?v=hwtre8WkLm4
-- **Why this one:** exactly the list-vs-dict search comparison; English caption track first; embeddable. Small channel, so worth a watch before keeping. Replaced the earlier BugBytes video, which QA failed on its caption-language check.
 
 ## Interview relevance
-- "Why a dict instead of a list here?"; deduplication on a growing dataset; "when would you keep the linear search?"
+- One line in the wrap-up: "Why a dict instead of a list?" Name the one-time build and the O(1) lookups.
 
 ## AI integration
-- AI-brainstormed reflection prompt button (analogies for scan vs. jump).
+- Optional AI-brainstormed prompt button inside the reflection.
 
 ## Additional resources
 - Python docs membership tests; Python tutorial dictionaries; Python Wiki TimeComplexity; Python Morsels time complexities.
-
-## Critical thinking / summary questions
-- Coupon codes already used: list or dict keys/set? "How can two searches return the same answer but scale differently?"
-
-## Thinking ahead
-- Complexity applies to any two working solutions (deduplication, matching records across tables).

@@ -4,7 +4,7 @@
 - **Skill tags (from taxonomy.json):** python-fundamentals
 - **Audience:** data + software engineering
 - **Complexity flag:** complex (functions)
-- **Estimated time:** 45–48 minutes (unchanged; activity count unchanged)
+- **Estimated time:** 20–23 minutes (content pass 2026-10-23; optional video excluded)
 
 ## Sources (see SKILL.md, "Source of truth")
 - **Drive decks read (2026-10-16):** Summarizing Data With a Second Function; Recall & Practice: Functions, Validation, try/except, Serialization (slides + notes)
@@ -25,7 +25,7 @@
 
 ## Prepare
 - **Data Challenge move:** a summarizer built around an accumulator, returning its result, with no validation inside → fill-in-the-blank `summarize_steps`, typed accumulator trace, extra-check debug item.
-- **Project mistake defused:** one long function doing everything → drag-and-drop, interview item, summary scenario.
+- **Project mistake defused:** one long function doing everything → drag-and-drop, summary scenario.
 - **Deliberately not taught here:** the dict accumulator with a key guard (the challenge's core move).
 - **Confirmed:** works no Data Challenge step; solves no part of the project.
 
@@ -34,7 +34,10 @@
 - **Why it fits:** step counts are familiar, and a goal parameter makes "same function, different argument" concrete.
 
 ## Video pick
-- **Functions in Python are easy — Bro Code, 10:38** (verified 638 s, English, embeddable). Unchanged.
+- **Functions in Python are easy — Bro Code, 10:38** (verified 638 s, English, embeddable). Now an optional "Go further" plain iframe at the end: no points, not in the time estimate.
 
 ## Summary scenario
-- Podcast episode summary plus a new email request: a new job gets a new function.
+- Same scenario: the step tracker emails the weekly summary every Monday, so a new job gets a new function.
+
+## Structure (content pass 2026-10-23)
+Hook + goal → recall (2) → one job per function (contract cards, diagram, drag sort) → accumulator (`+=` reminder, predict, fill-in) → trace + change the goal (typed trace, goal predict, goal picker) → don't check twice (`continue` note, debug question) → select-all → wrap-up → one reflection → key-term flip cards → optional video. `days` shown in full once, then on one line. 13 graded items.

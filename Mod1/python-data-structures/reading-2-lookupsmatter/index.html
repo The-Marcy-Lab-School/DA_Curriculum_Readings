@@ -6,21 +6,16 @@
 <style>
 .mlrk-illustration{width:100%;max-width:740px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;display:block}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
-.lookup-compare{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.lookup-stat{background:var(--mlrk-white);border:1px solid var(--mlrk-divider-on-light);border-radius:14px;padding:1rem}
-.lookup-big{font-size:1.9rem;font-weight:800;color:var(--mlrk-bg-brand-deep)}
-.lookup-meter{height:20px;background:var(--mlrk-gray-200);border-radius:999px;overflow:hidden;margin-top:.5rem}
-.lookup-fill{height:100%;background:var(--mlrk-bg-brand-deep);width:8%;transition:width .3s}
-@media(max-width:650px){.mlrk-illustration{max-width:100%}.lookup-compare{grid-template-columns:1fr}}
+@media(max-width:650px){.mlrk-illustration{max-width:100%}}
 </style>
 </head><body>
 
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Lookups Matter</h1>
-<p class="mlrk-lead">A payments company blocks every transaction from an account already flagged for fraud. Each transaction runs one check against the list of flagged accounts. In testing there were 20 flagged accounts, and the check felt instant. In production there are 400,000, and the same check makes payments time out. Nobody changed the logic. What changed is how many accounts the check has to look through, and how those accounts are stored.</p>
+<p class="mlrk-lead">When someone calls a help line, the screen shows the caller's name. The program finds it by looking up the phone number in a list of saved callers. With 20 saved callers, the name appeared at once. With 400,000, people wait several seconds before anyone knows who is calling. The fix is to store the callers a different way.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~42–45 minutes</span>
+  <span class="mlrk-pill">~20–23 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -52,254 +47,173 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Concept overview</h2>
-<p>The fraud team stores each flagged account as a record: the account number and the reason it was flagged. The team tried two ways to answer the question "is this account flagged?"</p>
+<p><strong>Your goal:</strong> build a dict once, then use it to find any caller in about one step. Apps do this all the time, and "Why did you use a dict instead of a list?" is a common interview question. You already know how to search a list and read a dict by its key. This reading puts the two together.</p>
 
-<h3>Way 1: linear search</h3>
-<div class="mlrk-code" data-file="find_flag_linear.py"><div class="mlrk-screen">flagged = [
-    {"account": "6614", "reason": "chargeback"},
-    {"account": "2203", "reason": "stolen card"},
-    {"account": "4471", "reason": "chargeback"},
-]
-
-def find_flag_linear(flagged, account):
-    for record in flagged:
-        if record["account"] == account:
-            return record
-    return None
-
-print(find_flag_linear(flagged, "4471"))
-print(find_flag_linear(flagged, "9004"))</div></div>
-<div class="mlrk-run" data-file="find_flag_linear.py"><pre>{'account': '4471', 'reason': 'chargeback'}
-None</pre></div>
-<p><code>find_flag_linear</code> is a <strong>linear search</strong>. It checks the records one at a time, in order, until one matches. To find <code>"4471"</code>, it checked all three records, because <code>"4471"</code> is last. To learn that <code>"9004"</code> is not flagged, it also checked all three. Nothing let it stop early. A missing value is the <strong>worst case</strong> for a linear search: the most work the search can do.</p>
-<p>The number of records is the <strong>input size</strong>, written <em>n</em>. With 3 records, the worst case is 3 checks. With 400,000 records, it is 400,000 checks for every transaction. When the work grows in step with <em>n</em>, the cost is <strong>O(n)</strong>.</p>
-
-<h3>Way 2: dictionary lookup</h3>
-<p>Same records, stored a second way:</p>
-<div class="mlrk-code" data-file="find_flag_dict.py"><div class="mlrk-screen">flagged = [
-    {"account": "6614", "reason": "chargeback"},
-    {"account": "2203", "reason": "stolen card"},
-    {"account": "4471", "reason": "chargeback"},
-]
-
-flags_by_account = {record["account"]: record for record in flagged}
-
-print(flags_by_account.get("4471"))
-print(flags_by_account.get("9004"))</div></div>
-<div class="mlrk-run" data-file="find_flag_dict.py"><pre>{'account': '4471', 'reason': 'chargeback'}
-None</pre></div>
-<p><code>flags_by_account</code> is a dict keyed by account number. <code>.get("4471")</code> jumps straight to that key instead of walking through the records. <code>.get()</code> returns <code>None</code> when the key is missing, so both ways give the same answers. This is a <strong>dictionary lookup</strong>. It takes about one step whether the dict holds 3 accounts or 400,000. That cost is <strong>O(1) average-case</strong>.</p>
-<p>The dict has a cost too. Building <code>flags_by_account</code> loops over every record once, which is O(n). The team pays that cost once, when the service starts. After that, every transaction gets the fast lookup.</p>
-
-<svg class="mlrk-illustration" viewBox="0 0 760 300" role="img" aria-labelledby="lookupsTitle lookupsDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="lookupsTitle">A linear search compared with a dictionary lookup answering the same question</title>
-  <desc id="lookupsDesc">On the left, six flagged account numbers sit in a row. A magnifying glass is checking the fourth one, and the caption says the records are checked in order, and the worst case checks all six. On the right, a lookup for account 8890 points with one arrow straight to a Flagged result. A cluster of other stored accounts sits nearby and is never checked. The caption says the lookup goes straight to the key, at the same cost for 6 accounts or 6 million.</desc>
+<svg class="mlrk-illustration" viewBox="0 0 760 270" role="img" aria-labelledby="lookupsTitle lookupsDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="lookupsTitle">A linear search compared with a dictionary lookup</title>
+  <desc id="lookupsDesc">On the left, a linear search looks for phone number 555-0199 in a list of four saved callers. Each record is marked "no" as it is checked, and the caption says it checks every record and then returns None. On the right, a dictionary lookup for 555-0113 points with one arrow straight to the name Kim Park. The caption says it goes straight to the key, in about one step.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-    <text x="197" y="22" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">Linear search</text>
-    <g font-size="16" font-weight="700" text-anchor="middle">
-      <rect x="10" y="48" width="54" height="40" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
-      <text x="37" y="74" fill="#261F1D">6614</text>
-      <rect x="74" y="48" width="54" height="40" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
-      <text x="101" y="74" fill="#261F1D">2203</text>
-      <rect x="138" y="48" width="54" height="40" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
-      <text x="165" y="74" fill="#261F1D">8890</text>
-      <rect x="202" y="48" width="54" height="40" rx="8" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
-      <text x="229" y="74" fill="#261F1D">4471</text>
-      <rect x="266" y="48" width="54" height="40" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
-      <text x="293" y="74" fill="#261F1D">1058</text>
-      <rect x="330" y="48" width="54" height="40" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
-      <text x="357" y="74" fill="#261F1D">7732</text>
+    <text x="190" y="24" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">Linear search for 555-0199</text>
+    <g font-size="16" fill="#261F1D">
+      <rect x="30" y="44" width="260" height="34" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+      <text x="46" y="67">555-0142  Ana Ruiz</text>
+      <rect x="30" y="88" width="260" height="34" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+      <text x="46" y="111">555-0178  Sam Lee</text>
+      <rect x="30" y="132" width="260" height="34" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+      <text x="46" y="155">555-0113  Kim Park</text>
+      <rect x="30" y="176" width="260" height="34" rx="8" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+      <text x="46" y="199">555-0120  Lia Chen</text>
     </g>
-    <circle cx="276" cy="20" r="9" fill="none" stroke="#2274B5" stroke-width="3.5"/>
-    <line x1="270" y1="27" x2="236" y2="44" stroke="#2274B5" stroke-width="3" stroke-linecap="round"/>
-    <text x="197" y="128" text-anchor="middle" font-size="16" font-weight="600" fill="#264326">checks records in order</text>
-    <text x="197" y="152" text-anchor="middle" font-size="16" font-weight="600" fill="#264326">worst case: all 6 checked</text>
+    <g font-size="16" font-weight="700" fill="#83671C">
+      <text x="304" y="67">no</text><text x="304" y="111">no</text><text x="304" y="155">no</text><text x="304" y="199">no</text>
+    </g>
+    <text x="190" y="246" text-anchor="middle" font-size="16" font-weight="600" fill="#264326">checks every record, then returns None</text>
 
-    <text x="600" y="22" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">Dictionary lookup</text>
-    <rect x="440" y="48" width="170" height="42" rx="8" fill="#FFFCF7" stroke="#2274B5" stroke-width="2.5"/>
-    <text x="525" y="75" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">.get("8890")</text>
-    <line x1="610" y1="69" x2="632" y2="69" stroke="#264326" stroke-width="4"/>
-    <polygon points="632,61 632,77 646,69" fill="#264326"/>
-    <rect x="648" y="47" width="108" height="44" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="716" y="75" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">Flagged</text>
-    <polyline points="656,70 662,77 673,63" fill="none" stroke="#264326" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-    <g fill="#FECC5B" stroke="#83671C" stroke-width="2">
-      <circle cx="470" cy="160" r="15"/><circle cx="515" cy="190" r="15"/><circle cx="560" cy="150" r="15"/>
-      <circle cx="610" cy="195" r="15"/><circle cx="655" cy="155" r="15"/><circle cx="700" cy="190" r="15"/>
-    </g>
-    <text x="590" y="250" text-anchor="middle" font-size="16" font-weight="600" fill="#264326">goes straight to the key</text>
-    <text x="590" y="276" text-anchor="middle" font-size="16" font-weight="600" fill="#264326">same cost for 6 accounts or 6 million</text>
+    <text x="590" y="24" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">Dictionary lookup</text>
+    <rect x="410" y="104" width="196" height="44" rx="8" fill="#FFFCF7" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="508" y="132" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">.get("555-0113")</text>
+    <line x1="606" y1="126" x2="628" y2="126" stroke="#264326" stroke-width="4"/>
+    <polygon points="628,118 628,134 642,126" fill="#264326"/>
+    <rect x="644" y="104" width="106" height="44" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="697" y="132" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">Kim Park</text>
+    <text x="580" y="246" text-anchor="middle" font-size="16" font-weight="600" fill="#264326">goes straight to the key: about 1 step</text>
   </g>
 </svg>
-
-<div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> a search that slows down as data grows is a common real performance bug. It passes small tests and fails under real traffic. Interviewers also ask about it directly: "Why did you use a dict here instead of a list?"</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to loop over a list and read a dict by key. This reading adds one question to ask about any search: how does its cost grow as the data grows? That question is about <strong>complexity</strong>, and it comes up any time two working solutions get compared.</p>
-</div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall before lookups matter</h2>
-<p>This reading uses four skills you already have: what <code>in</code> returns, looping through a list with an <code>if</code>, what <code>in</code> does on a list, and how many items a search must check. Test each one first.</p>
+<h2>1. Quick recall</h2>
+<p>Two skills you already have come up in this reading: what <code>in</code> does on a list, and reading a dict by its key.</p>
 
-<div class="mlrk-card" id="card-recall-returns"><p><strong>What does this file print?</strong></p>
-<div class="mlrk-code" data-file="membership_check.py"><div class="mlrk-screen">print("H-204" in ["H-100", "H-204", "H-310"])</div></div>
-<button type="button" class="mlrk-choice" data-a="true"><code>True</code></button>
-<button type="button" class="mlrk-choice" data-a="false"><code>False</code></button>
-<button type="button" class="mlrk-choice" data-a="index">The index <code>1</code></button>
-<div id="recallreturnsfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-recall-trace" style="margin-top:.8rem"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code" data-file="found_entry.py"><div class="mlrk-screen">found = False
-for entry in ["A", "B", "C"]:
-    if entry == "B":
-        found = True
-print(found)</div></div>
-<p><strong>What prints?</strong></p>
-<button type="button" class="mlrk-choice" data-a="true"><code>True</code></button>
-<button type="button" class="mlrk-choice" data-a="false"><code>False</code></button>
-<button type="button" class="mlrk-choice" data-a="b"><code>B</code></button>
-<div id="recalltracefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-recall-scan" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a teammate replaces <code>if x in checked_list:</code> with a <code>for</code> loop. The loop compares <code>x</code> to each entry in order and stops at the first match. Compared with the original <code>in</code> on the same list, how much work does the loop do?</p>
-<button type="button" class="mlrk-choice" data-a="same">About the same. <code>in</code> on a list already compares entries one at a time, in order.</button>
-<button type="button" class="mlrk-choice" data-a="less">Far less, because a loop skips most of the comparisons.</button>
-<button type="button" class="mlrk-choice" data-a="more">Far more, because a loop always checks every entry.</button>
-<div id="recallscanfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-recall-worst" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> a list holds 12,000 entries. The value you search for is not in it. How many entries does <code>in</code> compare before it can answer?</p>
+<div class="mlrk-card" id="card-recall-worst"><p><strong>Recall:</strong> a list holds 12,000 phone numbers. The number you search for is not in it. How many numbers does <code>in</code> compare before it can answer?</p>
 <button type="button" class="mlrk-choice" data-a="12000">12,000</button>
 <button type="button" class="mlrk-choice" data-a="0">0</button>
 <button type="button" class="mlrk-choice" data-a="half">About 6,000, half the list</button>
 <div id="recallworstfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1.2rem"><strong>Predict:</strong> what does <code>recall_dict.py</code> print?</p>
+<pre class="mlrk-code" data-file="recall_dict.py">names = {"555-0142": "Ana Ruiz", "555-0178": "Sam Lee"}
+print(names["555-0178"])</pre>
+<button type="button" class="mlrk-btn" data-run="recall_dict.py" data-after="q-recall-dictkey"></button>
+<div class="mlrk-run" data-file="recall_dict.py" hidden><pre>Sam Lee</pre></div>
+<div class="mlrk-card" id="card-recall-dictkey">
+<button type="button" class="mlrk-choice" data-a="sam"><code>Sam Lee</code></button>
+<button type="button" class="mlrk-choice" data-a="key"><code>555-0178</code></button>
+<button type="button" class="mlrk-choice" data-a="ana"><code>Ana Ruiz</code></button>
+<div id="recalldictkeyfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Technical vocabulary</h2>
-<p>Flip each card before the practice that follows.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Linear Search</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Linear search</strong><br>Checking items one at a time, in order, until one matches or none are left. <code>in</code> on a list is a linear search.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Dictionary Lookup</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Dictionary lookup</strong><br>Jumping straight to a value by its key, as in <code>flags_by_account.get("4471")</code>. It works on keys, not values.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Input Size</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Input size (n)</strong><br>How many items the code has to work through. For the fraud check, n is the number of flagged accounts.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Worst Case</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Worst case</strong><br>The input that makes code do the most work. For a linear search, it is a value that is not in the list: every item gets checked.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>O(n)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>O(n)</strong><br>The work grows in step with input size. Double n and the worst case doubles. A linear search is O(n).</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>O(1) Average-Case</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>O(1) average-case</strong><br>A typical operation takes about one step, no matter how large n gets. A dictionary lookup is O(1) on average. A rare lookup can take a little longer, which is why "average-case" is part of the name.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Scale</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Scale</strong><br>How a cost changes as the data grows. Two searches can tie on 10 items and be far apart on 10 million.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Complexity</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Complexity</strong><br>A description of how much work code does as its input grows, written in Big-O, such as O(n) or O(1). It describes growth, not seconds on a clock.</span></button>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>4. The mystery slowdown</h2>
-<div class="mlrk-card" id="card-slowdown"><p><strong>The fraud check passed every test with 20 flagged accounts. With 400,000, the same line, <code>if account_number in flagged_accounts:</code>, starts timing out. Nobody changed the logic. What is the most likely cause?</strong></p>
-<button type="button" class="mlrk-choice" data-a="container"><code>flagged_accounts</code> is a list, so each check is a linear search that grows with the number of flagged accounts.</button>
-<button type="button" class="mlrk-choice" data-a="operator">Python's <code>in</code> operator gets slower the longer a program runs.</button>
-<button type="button" class="mlrk-choice" data-a="servers">The production servers are weaker than the test servers.</button>
-<div id="slowdownfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem"><strong>Big-O is not a stopwatch.</strong> O(1) does not mean instant, and O(n) does not mean slow. On a list of 20 accounts, both searches finish so fast you may not measure a difference. Big-O tells you how the cost changes as the data grows.</div>
-</section>
-
-<section class="mlrk-section">
-<h2>5. As the flagged list grows</h2>
-<p>Pick at least three sizes for the flagged-accounts list. Compare the worst case for a linear search with the cost of a dictionary lookup.</p>
-<div class="mlrk-card">
-<label for="blocklist-size"><strong>Flagged accounts (input size):</strong></label>
-<select id="blocklist-size">
-  <option value="10">10 accounts</option>
-  <option value="1000">1,000 accounts</option>
-  <option value="100000">100,000 accounts</option>
-  <option value="5000000">5,000,000 accounts</option>
-</select>
-<div class="lookup-compare" style="margin-top:1rem">
-  <div class="lookup-stat">
-    <div class="lookup-big">O(n)</div>
-    <p>Linear search, worst-case checks: <strong id="listCount">10</strong></p>
-    <div class="lookup-meter"><div id="listBar" class="lookup-fill"></div></div>
-  </div>
-  <div class="lookup-stat">
-    <div class="lookup-big">O(1)</div>
-    <p>Dictionary lookup: <strong>about 1 step at every size</strong></p>
-    <div class="lookup-meter"><div class="lookup-fill" style="width:10%"></div></div>
-  </div>
-</div>
-</div>
-
-<div class="mlrk-card" id="card-double" style="margin-top:1.2rem"><p><strong>Predict:</strong> a linear search over 3,000 flagged accounts needs up to 3,000 checks. The list doubles to 6,000 accounts. What is the new worst case?</p>
-<button type="button" class="mlrk-choice" data-a="double">Up to about 6,000 checks.</button>
-<button type="button" class="mlrk-choice" data-a="same">Still up to about 3,000 checks.</button>
-<button type="button" class="mlrk-choice" data-a="square">Up to about 9,000,000 checks.</button>
-<div id="doublefb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>6. Read the code: fast or slow?</h2>
-<p>Each of the four lines in this activity asks whether account <code>"4471"</code> is flagged. Drag each line into the zone that matches how its cost grows with input size. Then press the self-check button.</p>
-<div id="dragarea">
-<div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable"><code>flags_by_account.get("4471")</code>, where <code>flags_by_account</code> is a <strong>dict</strong></span>
-  <span id="chip2" class="mlrk-draggable"><code>find_flag_linear(flagged, "4471")</code>, where <code>flagged</code> is a <strong>list</strong></span>
-  <span id="chip3" class="mlrk-draggable"><code>"4471" in flagged_tuple</code>, where <code>flagged_tuple</code> is a <strong>tuple</strong></span>
-  <span id="chip4" class="mlrk-draggable"><code>"4471" in flags_by_account</code>, checking the <strong>dict's keys</strong></span>
-</div>
-<div class="mlrk-grid">
-  <div><p><strong>Stays about the same as the data grows: O(1) average-case</strong></p><div class="mlrk-dropzone" id="zoneFast"></div></div>
-  <div><p><strong>Grows with input size: O(n)</strong></p><div class="mlrk-dropzone" id="zoneSlow"></div></div>
-</div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
-<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-
-<div class="mlrk-card" id="card-dictvalues" style="margin-top:1.2rem"><p><strong>Tricky case:</strong> <code>flagged_owners</code> maps each flagged account number to the owner's name. To check whether a name is flagged, a teammate writes <code>if name in flagged_owners.values():</code>. How does this check scale?</p>
-<button type="button" class="mlrk-choice" data-a="scan">It is O(n). <code>.values()</code> has to be checked one value at a time, like a list.</button>
-<button type="button" class="mlrk-choice" data-a="same">It is O(1), the same as checking a key.</button>
-<button type="button" class="mlrk-choice" data-a="faster">It is faster than a key check, because <code>.values()</code> is sorted.</button>
-<div id="dictvaluesfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>7. Trace a search that finds nothing</h2>
-<p>A list of 6 flagged account numbers is searched for <code>"9004"</code>, which is not in the list. Click through each check.</p>
-<div id="tracestep"></div>
-<div class="mlrk-card" id="card-worstcase-tf" style="margin-top:1rem"><p><strong>True or false:</strong> when the value is not in the list, a linear search checks every item before it can answer.</p>
-<button type="button" class="mlrk-choice" data-a="true">True</button>
-<button type="button" class="mlrk-choice" data-a="false">False</button>
-<div id="worstcasetffb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>8. Order the steps</h2>
-<p>Put the steps of <code>find_flag_linear</code> in order. Click a step again to remove it, then press "Check my order." This self-check is not graded.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="start"><span class="mlrk-order-num"></span> Start at the first record.</li>
-  <li class="mlrk-orderitem" data-step="compare"><span class="mlrk-order-num"></span> Compare its account number to the one you are searching for.</li>
-  <li class="mlrk-orderitem" data-step="match"><span class="mlrk-order-num"></span> If they match, return the record and stop.</li>
-  <li class="mlrk-orderitem" data-step="advance"><span class="mlrk-order-num"></span> If not, move to the next record and compare again.</li>
-  <li class="mlrk-orderitem" data-step="exhausted"><span class="mlrk-order-num"></span> If no records are left, return <code>None</code>.</li>
-</ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>9. Typed check: make it fast</h2>
-<p>The fraud service builds <code>flags_by_account</code> once at startup, then looks up an account on every transaction.</p>
-<div class="mlrk-code" data-file="block_flagged.py"><div class="mlrk-screen"># In production, flagged holds 400,000 records.
-flagged = [
-    {"account": "6614", "reason": "chargeback"},
-    {"account": "2203", "reason": "stolen card"},
-    {"account": "4471", "reason": "chargeback"},
+<h2>2. Search a list, one record at a time</h2>
+<p>The help line saves each caller as a record: a phone number and a name. Here is a short version of the list, with a function that searches it.</p>
+<p><strong>Predict:</strong> what does <code>find_caller_linear.py</code> print?</p>
+<pre class="mlrk-code" data-file="find_caller_linear.py">callers = [
+    {"phone": "555-0142", "name": "Ana Ruiz"},
+    {"phone": "555-0178", "name": "Sam Lee"},
+    {"phone": "555-0113", "name": "Kim Park"},
 ]
 
-flags_by_account = {record["account"]: record for record in flagged}
+def find_caller(callers, phone):
+    for record in callers:
+        if record["phone"] == phone:
+            return record["name"]
+    return None
 
-# runs on every transaction:
-account_number = "4471"
-record = flags_by_account.____(account_number)
-if record is not None:
-    print("Blocked:", account_number, record["reason"])</div></div>
+print(find_caller(callers, "555-0113"))
+print(find_caller(callers, "555-0199"))</pre>
+<button type="button" class="mlrk-btn" data-run="find_caller_linear.py" data-after="q-linear"></button>
+<div class="mlrk-run" data-file="find_caller_linear.py" hidden><pre>Kim Park
+None</pre></div>
+<div class="mlrk-card" id="card-linear">
+<button type="button" class="mlrk-choice" data-a="none"><code>Kim Park</code>, then <code>None</code></button>
+<button type="button" class="mlrk-choice" data-a="error"><code>Kim Park</code>, then an error</button>
+<button type="button" class="mlrk-choice" data-a="both"><code>None</code>, then <code>None</code></button>
+<div id="linearfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1rem"><code>find_caller</code> is a <strong>linear search</strong>: it checks records one at a time, in order, until one matches. To find <code>"555-0113"</code>, it checked all three records, because that number is last. To learn that <code>"555-0199"</code> is not saved, it also checked all three. That is the <strong>worst case</strong>: the number is last, or not there at all.</p>
+<p>The number of records is the <strong>input size</strong>, written <em>n</em>. In the worst case, a linear search checks all <em>n</em> records, so its work grows in step with <em>n</em>. Big-O writes that as <strong>O(n)</strong>. A description like this, of how the work grows as the input grows, is the code's <strong>complexity</strong>. It answers a question about <strong>scale</strong>: what happens to the cost when the data gets much bigger? With 400,000 saved callers, one ring can mean 400,000 checks.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>3. Build a dict once, with a loop</h2>
+<p>A dict stores each value under a key. If the key is the phone number, the program can jump straight to the caller's name. <code>build_caller_dict.py</code> builds that dict from the same list.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>callers_by_phone[record["phone"]] = record["name"]</code> is the <code>d[key] = value</code> you already know. It adds one phone number as a key, with that caller's name as its value. The loop runs this line once for each record.</p></div>
+<p><strong>Predict:</strong> what is the last line of output from <code>build_caller_dict.py</code>?</p>
+<pre class="mlrk-code" data-file="build_caller_dict.py">callers = [
+    {"phone": "555-0142", "name": "Ana Ruiz"},
+    {"phone": "555-0178", "name": "Sam Lee"},
+    {"phone": "555-0113", "name": "Kim Park"},
+]
+
+callers_by_phone = {}
+for record in callers:
+    callers_by_phone[record["phone"]] = record["name"]
+
+print(callers_by_phone)
+print(callers_by_phone["555-0113"])</pre>
+<button type="button" class="mlrk-btn" data-run="build_caller_dict.py" data-after="q-build"></button>
+<div class="mlrk-run" data-file="build_caller_dict.py" hidden><pre>{'555-0142': 'Ana Ruiz', '555-0178': 'Sam Lee', '555-0113': 'Kim Park'}
+Kim Park</pre></div>
+<div class="mlrk-card" id="card-build">
+<button type="button" class="mlrk-choice" data-a="name"><code>Kim Park</code></button>
+<button type="button" class="mlrk-choice" data-a="key"><code>555-0113</code></button>
+<button type="button" class="mlrk-choice" data-a="record"><code>{'phone': '555-0113', 'name': 'Kim Park'}</code></button>
+<div id="buildfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1rem">Building the dict has a cost. The loop visits every record once, which is O(n). The help line pays that cost one time, when the program starts. After that, every call gets the fast lookup.</p>
+<p><strong>When a linear search is still fine:</strong> if you search only once, or the list is tiny, building the dict costs about as much as the search it replaces. A dict pays off when you search many times, or when the list keeps growing.</p>
+
+<div class="mlrk-card" id="card-debug"><p><strong>A test script runs once a night. It checks one phone number against a list of 12 test callers. A teammate wants to build a dict first. What is the best response?</strong></p>
+<button type="button" class="mlrk-choice" data-a="either">Either is fine here. With 12 callers and one search, building the dict costs about as much as the search it replaces.</button>
+<button type="button" class="mlrk-choice" data-a="always">Always build the dict, because a dictionary lookup is faster at every size.</button>
+<button type="button" class="mlrk-choice" data-a="never">Never build a dict for fewer than 1,000 items.</button>
+<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Look up a key: square brackets or <code>.get()</code></h2>
+<p>A <strong>dictionary lookup</strong> finds a value by its key. It takes about one step whether the dict holds 3 callers or 400,000. Big-O writes that as <strong>O(1) average-case</strong>. O(1) means the work stays about the same as <em>n</em> grows. "Average-case" means a rare lookup can take a little longer.</p>
+<p>Square brackets, as in <code>callers_by_phone[phone]</code>, are one way to look up a key. They work when the key is in the dict. A help line also gets calls from new numbers.</p>
+<p><strong>Predict:</strong> what happens when <code>lookup_brackets.py</code> runs?</p>
+<pre class="mlrk-code" data-file="lookup_brackets.py" data-expect="KeyError">callers_by_phone = {"555-0142": "Ana Ruiz", "555-0178": "Sam Lee", "555-0113": "Kim Park"}
+
+print(callers_by_phone["555-0142"])
+print(callers_by_phone["555-0199"])</pre>
+<button type="button" class="mlrk-btn" data-run="lookup_brackets.py" data-after="q-brackets"></button>
+<div class="mlrk-run" data-file="lookup_brackets.py" hidden><pre>Ana Ruiz
+Traceback (most recent call last):
+  File "lookup_brackets.py", line 4, in &lt;module&gt;
+    print(callers_by_phone["555-0199"])
+          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: '555-0199'</pre></div>
+<div class="mlrk-card" id="card-brackets">
+<button type="button" class="mlrk-choice" data-a="keyerror">It prints <code>Ana Ruiz</code>, then stops with a <code>KeyError</code>.</button>
+<button type="button" class="mlrk-choice" data-a="none">It prints <code>Ana Ruiz</code>, then <code>None</code>.</button>
+<button type="button" class="mlrk-choice" data-a="blank">It prints <code>Ana Ruiz</code>, then an empty line.</button>
+<div id="bracketsfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1rem">A new caller is normal, so the program should not crash. The <code>.get()</code> method looks up a key the same way, but it returns <code>None</code> when the key is missing.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>if name is None:</code> checks whether <code>name</code> holds <code>None</code>. Python code uses <code>is</code> to compare with <code>None</code>.</p></div>
+<p><strong>Fill in the blank</strong> so the screen shows "New caller" instead of crashing.</p>
+<pre class="mlrk-code" data-file="caller_screen.py">callers_by_phone = {"555-0142": "Ana Ruiz", "555-0178": "Sam Lee", "555-0113": "Kim Park"}
+
+for phone in ["555-0178", "555-0199"]:
+    name = callers_by_phone.____(phone)
+    if name is None:
+        print(phone, "New caller")
+    else:
+        print(phone, name)</pre>
+<button type="button" class="mlrk-btn" data-run="caller_screen.py" data-after="q-blank" data-after-note="Fill in the blank first. Then you can run it."></button>
+<div class="mlrk-run" data-file="caller_screen.py" hidden><pre>555-0178 Sam Lee
+555-0199 New caller</pre></div>
+<ol class="mlrk-steplist">
+  <li>Find the blank in the line <code>name = callers_by_phone.____(phone)</code>.</li>
+  <li>Type the name of the dict method that returns <code>None</code> for a missing key. Type only the name: no dot, no parentheses.</li>
+  <li>Press <strong>Check</strong>. When it's right, the Run button shows what the file prints.</li>
+</ol>
+<p>Why: with <code>None</code> instead of a crash, the program can treat an unknown number as a new caller.</p>
 <div class="mlrk-fillblank">
-  <label for="blankinput">Type the dict method that looks up a key and returns <code>None</code> when the key is missing:</label>
+  <label for="blankinput">Method name:</label>
   <input type="text" id="blankinput" autocomplete="off">
   <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
 </div>
@@ -307,11 +221,11 @@ if record is not None:
 </section>
 
 <section class="mlrk-section">
-<h2>10. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every TRUE statement about searching for a value.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> The same <code>in</code> syntax works on a list, tuple, dict, and set, but the work underneath can be very different.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Checking whether a value is in a tuple is O(1) on average, like a dict key.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Building <code>flags_by_account</code> loops over every record once, which is O(n). Each lookup after that is O(1) on average.</label>
+<h2>5. Check your understanding</h2>
+<div class="mlrk-card"><p><strong>Select every TRUE statement.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Building <code>callers_by_phone</code> visits every record once, which is O(n). Each lookup after that is O(1) on average.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> <code>callers_by_phone["555-0199"]</code> gives <code>None</code> when that number is not a key.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A linear search over 400,000 saved callers can make 400,000 checks for one call.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> After a linear search finds a match, it keeps checking the rest of the list to be sure.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
@@ -319,61 +233,70 @@ if record is not None:
 </section>
 
 <section class="mlrk-section">
-<h2>11. Watch: list search vs. dictionary lookup</h2>
-<p>As you watch, notice how the gap between the list and the dict changes as the collection grows. The video times its code with a clock. Your own times would differ, but the growth pattern would be the same.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=hwtre8WkLm4" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching:</strong> what did the video show about how the gap between the two searches changes as the data gets bigger?</p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
+<h2>6. Wrap-up</h2>
+<ul>
+<li>A linear search checks records one at a time. Its worst case grows with the input size: O(n).</li>
+<li>Build a dict once with a loop. That costs O(n), one time. Each dictionary lookup after that is O(1) on average.</li>
+<li>Square brackets raise a <code>KeyError</code> for a missing key. <code>.get()</code> returns <code>None</code>, so your code can handle it.</li>
+</ul>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> the help line adds a feature. When a call comes in, the screen should say "Called before today" if this number already called today. The program keeps every number that called today, and that collection grows all day. Which design keeps the check fast?</p>
+<button type="button" class="mlrk-choice" data-a="set">Keep today's numbers as dict keys (or in a set), so each check stays about one step.</button>
+<button type="button" class="mlrk-choice" data-a="list">Keep today's numbers in a list, so they stay in the order they called.</button>
+<button type="button" class="mlrk-choice" data-a="same">Any container works, because they all check for a value at the same speed.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">In interviews, "Why did you use a dict here instead of a list?" is a common question. A good answer names both costs: the one-time O(n) build and the O(1) lookups after it.</p>
+<p>The same question, "how does the cost grow?", helps you compare any two working solutions, such as two ways to remove repeated rows from a dataset.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>12. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>"Why did you use a dict here instead of a list?" is a common question in interviews and code reviews when a search runs inside a loop. Interviewers want the reason: a linear search is O(n), a dictionary lookup is O(1) on average, and the gap grows with the data.</p>
-<p>For data roles, the question often comes up as deduplication: "How would you check whether you have already seen this ID in a dataset that keeps growing?" Name a dict or set, and say why.</p>
-<p>For software roles, expect a follow-up: "When would you keep the linear search?" A strong answer names both sides. A linear search needs nothing extra to build, but every search slows as the list grows. A dict costs one pass to build, and then each lookup is fast.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> why did switching from <code>find_flag_linear</code> to <code>flags_by_account.get()</code> fix the fraud check's slowdown? Pick the strongest answer.</p>
-<button type="button" class="mlrk-choice" data-a="cost">The linear search checks up to every flagged account, so it is O(n). The dictionary lookup jumps to the key, so it is O(1) on average. The fix removed a cost that grew with the list.</button>
-<button type="button" class="mlrk-choice" data-a="syntax"><code>.get()</code> uses faster syntax than a <code>for</code> loop.</button>
-<button type="button" class="mlrk-choice" data-a="memory">A dict uses less memory than a list.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>13. Choosing a search + reflection</h2>
-<div class="mlrk-card" id="card-debug"><p><strong>A script runs once a night. It checks one account against a list of 12 test accounts. A teammate wants to build a dict first. What is the strongest response?</strong></p>
-<button type="button" class="mlrk-choice" data-a="convert">Either is fine here. With 12 accounts and one search, building the dict costs about as much as the search it replaces. A dict pays off when you search many times or the list grows.</button>
-<button type="button" class="mlrk-choice" data-a="rename">Always build the dict, because a dictionary lookup is faster at every size.</button>
-<button type="button" class="mlrk-choice" data-a="print">Never build a dict for fewer than 1,000 items.</button>
-<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>Your decision rule:</strong> in 1-2 sentences, say when you would keep a linear search and when you would build a dict.</label>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: I would keep a linear search when..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<h2>7. Reflection</h2>
+<ol class="mlrk-steplist">
+  <li>Finish the sentence "I would keep a linear search when…". Say how big the list is or how often you search it.</li>
+  <li>Add a second sentence: "I would build a dict when…".</li>
+</ol>
+<p>Why: choosing between the two is the decision teammates and interviewers ask you to explain.</p>
+<label for="strategy"><strong>Your decision rule:</strong></label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="I would keep a linear search when..."></textarea>
+<p>Stuck? <button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed prompt (optional)</button></p>
 <div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
 </section>
 
 <section class="mlrk-section">
-<h2>14. Summary &amp; critical thinking</h2>
-<p>A linear search checks items one at a time, so its worst case grows with input size: O(n). A dictionary lookup jumps to a key, so its cost stays about flat: O(1) average-case. Both return the same answers. The difference shows up at scale, which is why you ask how a search grows before you trust it on real data.</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> an online store checks whether a coupon code was already used. The check runs thousands of times a day, and the list of used codes keeps growing. Which design keeps the check fast?</p>
-<button type="button" class="mlrk-choice" data-a="set">Store the used codes as dict keys (or in a set), so each check stays about one step.</button>
-<button type="button" class="mlrk-choice" data-a="list">Store the used codes in a list, so they stay in the order they were used.</button>
-<button type="button" class="mlrk-choice" data-a="same">Any container works, because they all check membership at the same speed.</button>
-<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> how can two searches return the same answer but scale differently?</label>
-<textarea id="clue" class="mlrk-response" data-save></textarea>
+<h2>8. Key terms review</h2>
+<p>Flip each card to check that you can explain the term in your own words.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Linear Search</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Linear search</strong><br>Checking items one at a time, in order, until one matches or none are left. <code>find_caller</code> is a linear search.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Dictionary Lookup</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Dictionary lookup</strong><br>Finding a value straight from its key, as in <code>callers_by_phone.get("555-0113")</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Input Size</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Input size (n)</strong><br>How many items the code has to work through. For the help line, n is the number of saved callers.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Worst Case</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Worst case</strong><br>The input that makes code do the most work. For a linear search, the item is last or not there at all, so every item gets checked.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>O(n)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>O(n)</strong><br>The work grows in step with input size. Double n and the worst case doubles. A linear search is O(n).</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>O(1) Average-Case</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>O(1) average-case</strong><br>A typical lookup takes about one step, no matter how large n gets. A rare one can take a little longer. A dictionary lookup is O(1) on average.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Scale</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Scale</strong><br>How a cost changes as the data grows. Two searches can tie on 10 items and be far apart on 10 million.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Complexity</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Complexity</strong><br>How much work code does as its input grows, written in Big-O, such as O(n) or O(1). It describes growth, not seconds on a clock.</span></button>
+</div>
 </section>
 
 <section class="mlrk-section">
-<h2>15. Thinking ahead</h2>
-<p>The question "how does this cost grow?" applies to more than searches. Any time you compare two working solutions, such as two ways to remove duplicates or to match records from two tables, complexity tells you which one will hold up as the data grows.</p>
+<h2>Go further (optional): list search vs. dictionary lookup</h2>
+<p>This video is optional and is not counted in the time estimate. As you watch, notice how the gap between the list and the dict changes as the collection grows. The video times its code with a clock. Your own times would differ, but the growth pattern would be the same.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/hwtre8WkLm4" title="Python dictionary vs. list speed comparison (optional video)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=hwtre8WkLm4" target="_blank" rel="noopener">Watch on YouTube</a>
 </section>
 
 <section class="mlrk-section">
-<h2>16. Your score &amp; keep a copy of your work</h2>
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://docs.python.org/3/reference/expressions.html#membership-test-operations" target="_blank" rel="noopener">Python docs: Membership test operations</a>: the official reference for how <code>in</code> and <code>not in</code> work.</li>
+<li><a href="https://docs.python.org/3/tutorial/datastructures.html#dictionaries" target="_blank" rel="noopener">Python tutorial: Dictionaries</a>: building a dict, looking up keys, and looping over keys and values.</li>
+<li><a href="https://wiki.python.org/moin/TimeComplexity" target="_blank" rel="noopener">Python Wiki: Time Complexity</a>: the cost of common list and dict operations, including the average and worst cases.</li>
+<li><a href="https://www.pythonmorsels.com/time-complexities/" target="_blank" rel="noopener">Python Morsels: Time complexities of Python's data structures</a>: a readable walkthrough of more operations than search.</li>
+</ul>
+</section>
+
+
+<section class="mlrk-section">
+<h2>Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -442,17 +365,6 @@ git push</pre></li>
 </div>
 </section>
 
-<section class="mlrk-section">
-<h2>Additional resources</h2>
-<p class="mlrk-small">Not counted in the time estimate above.</p>
-<ul>
-<li><a href="https://docs.python.org/3/reference/expressions.html#membership-test-operations" target="_blank" rel="noopener">Python docs: Membership test operations</a>: the official reference for how <code>in</code> and <code>not in</code> work.</li>
-<li><a href="https://docs.python.org/3/tutorial/datastructures.html#dictionaries" target="_blank" rel="noopener">Python tutorial: Dictionaries</a>: building a dict, looking up keys, and looping over keys and values.</li>
-<li><a href="https://wiki.python.org/moin/TimeComplexity" target="_blank" rel="noopener">Python Wiki: Time Complexity</a>: the cost of common list and dict operations, including the average and worst cases.</li>
-<li><a href="https://www.pythonmorsels.com/time-complexities/" target="_blank" rel="noopener">Python Morsels: Time complexities of Python's data structures</a>: a readable walkthrough of more operations than search.</li>
-</ul>
-</section>
-
 </div></main>
 
 <footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
@@ -470,136 +382,88 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-recall-returns", buttonSelector:"#card-recall-returns .mlrk-choice", feedbackSelector:"#recallreturnsfb", correct:"true",
-    feedback:{"true":"Right. \"H-204\" is in the list, so the file prints True.",
-              "false":"\"H-204\" is the second item in the list, so the answer is not False.",
-              index:"in returns True or False, not a position. The .index() method returns a position."}});
-
-  K.quiz({id:"q-recall-trace", buttonSelector:"#card-recall-trace .mlrk-choice", feedbackSelector:"#recalltracefb", correct:"true",
-    feedback:{"true":"Right. When the loop reaches \"B\", found becomes True and stays True.",
-              "false":"found starts as False, but the loop sets it to True when it reaches \"B\".",
-              b:"The code prints found, which holds True or False, not the matching entry."}});
-
-  K.quiz({id:"q-recall-scan", buttonSelector:"#card-recall-scan .mlrk-choice", feedbackSelector:"#recallscanfb", correct:"same",
-    feedback:{same:"Right. in on a list already compares one entry at a time. The loop just writes that work out.",
-              less:"The loop makes the same comparisons in the same order, so it skips nothing.",
-              more:"The loop stops at the first match, just like in does, so it does no extra work."}});
-
   K.quiz({id:"q-recall-worst", buttonSelector:"#card-recall-worst .mlrk-choice", feedbackSelector:"#recallworstfb", correct:"12000",
-    feedback:{"12000":"Right. No entry matches, so nothing stops the search early. All 12,000 get compared.",
-              "0":"A missing value still has to be ruled out, one entry at a time.",
-              half:"Half is about what a search for a value that is in the list costs on average. A missing value has to be compared to every entry."}});
+    feedback:{"12000":"Right. No number matches, so nothing stops the search early. All 12,000 get compared.",
+              "0":"A missing number still has to be ruled out, one entry at a time.",
+              half:"A missing number can't be ruled out until every entry has been compared, so in checks all 12,000."}});
 
-  K.flipCards("#vocab", "act-flip-vocab");
+  K.quiz({id:"q-recall-dictkey", buttonSelector:"#card-recall-dictkey .mlrk-choice", feedbackSelector:"#recalldictkeyfb", correct:"sam",
+    feedback:{sam:"Right. Square brackets with a key give back the value stored under that key.",
+              key:"555-0178 is the key you asked for. names[key] gives back the value stored under it.",
+              ana:"Ana Ruiz is stored under 555-0142. The code asks for the value under 555-0178."}});
 
-  K.quiz({id:"q-slowdown", buttonSelector:"#card-slowdown .mlrk-choice", feedbackSelector:"#slowdownfb", correct:"container",
-    feedback:{container:"Right. in on a list is a linear search. The list grew from 20 to 400,000, so each check grew with it.",
-              operator:"in does not slow down over time. The work it does depends on the container and its size.",
-              servers:"Weaker servers would not explain a slowdown that grew with the list. The list itself is the cause."}});
+  K.quiz({id:"q-linear", buttonSelector:"#card-linear .mlrk-choice", feedbackSelector:"#linearfb", correct:"none",
+    feedback:{none:"Right. 555-0113 matches the last record, so the function returns Kim Park. 555-0199 matches nothing, so the loop ends and the function returns None.",
+              error:"A missing number doesn't crash find_caller. The loop finishes, and the line after it, return None, runs.",
+              both:"555-0113 is in the list. It is the third record, so the first call returns Kim Park."}});
 
-  const BLOCKLIST_PCT = {10:8, 1000:22, 100000:55, 5000000:100};
-  const triedSizes = new Set();
-  const markGrowth = K.activity("act-lookup-growth", () => triedSizes.size >= 3);
-  function updateBlocklist(){
-    const n = +$("#blocklist-size").value;
-    $("#listCount").textContent = n.toLocaleString();
-    $("#listBar").style.width = BLOCKLIST_PCT[n] + "%";
-    triedSizes.add(n);
-    markGrowth();
-  }
-  $("#blocklist-size").addEventListener("change", updateBlocklist);
-  updateBlocklist();
+  K.quiz({id:"q-build", buttonSelector:"#card-build .mlrk-choice", feedbackSelector:"#buildfb", correct:"name",
+    feedback:{name:"Right. The loop stored each name under its phone number, so the key 555-0113 gives back Kim Park.",
+              key:"555-0113 is the key. Square brackets give back the value stored under it.",
+              record:"The loop stored record[\"name\"], only the name, under each phone number. The whole record was not stored."}});
 
-  K.quiz({id:"q-double", buttonSelector:"#card-double .mlrk-choice", feedbackSelector:"#doublefb", correct:"double",
-    feedback:{double:"Right. A linear search is O(n): double the input size and the worst case doubles.",
-              same:"The worst case checks every account, and there are now twice as many to check.",
-              square:"That would be n times n. A linear search grows in step with n, so doubling n doubles the work."}});
+  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"either",
+    feedback:{either:"Right. With 12 callers and one search, the choice barely matters. Many searches, or a list that keeps growing, are what make the dict worth building.",
+              always:"Building the dict is itself one pass over all 12 callers. For one search, that costs about the same as the search.",
+              never:"There is no fixed cutoff. The choice depends on how often you search and how large the list gets."}});
 
-  K.dragDrop("#dragarea", "act-drag-fastslow");
-  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneFast", label:".get() on a dict", expectedLabel:"O(1) average-case"},
-    chip2:{expectedId:"zoneSlow", label:"find_flag_linear on a list", expectedLabel:"O(n)"},
-    chip3:{expectedId:"zoneSlow", label:"in on a tuple", expectedLabel:"O(n)"},
-    chip4:{expectedId:"zoneFast", label:"in on a dict's keys", expectedLabel:"O(1) average-case"}
-  }});
-
-  K.quiz({id:"q-dictvalues", buttonSelector:"#card-dictvalues .mlrk-choice", feedbackSelector:"#dictvaluesfb", correct:"scan",
-    feedback:{scan:"Right. Only keys get the fast lookup. Searching .values() compares each value in turn, so it is O(n).",
-              same:"The fast lookup works on keys. Names are the values here, so Python has to check them one by one.",
-              faster:".values() is not sorted. Python checks each value in turn, which is a linear search."}});
-
-  K.traceStepper("#tracestep", {steps:[
-    {cell:"record 1", line:'"9004" == "1058"? No match.'},
-    {cell:"record 2", line:'"9004" == "2203"? No match.'},
-    {cell:"record 3", line:'"9004" == "4471"? No match.'},
-    {cell:"record 4", line:'"9004" == "6614"? No match.'},
-    {cell:"record 5", line:'"9004" == "7732"? No match.'},
-    {cell:"record 6", line:'"9004" == "8890"? No match. No records left: return None.'}
-  ]});
-
-  K.quiz({id:"q-worstcase-tf", buttonSelector:"#card-worstcase-tf .mlrk-choice", feedbackSelector:"#worstcasetffb", correct:"true", maxAttempts:1,
-    feedback:{"true":"True. The trace compared all 6 records before it could return None.",
-              "false":"The trace compared all 6 records before it could return None, so this is true."}});
-
-  K.orderSteps("#ordersteps", {id:"act-order-in", correctOrder:["start","compare","match","advance","exhausted"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.quiz({id:"q-brackets", buttonSelector:"#card-brackets .mlrk-choice", feedbackSelector:"#bracketsfb", correct:"keyerror",
+    feedback:{keyerror:"Right. 555-0142 is a key, so the first line prints Ana Ruiz. 555-0199 is not a key, so square brackets raise a KeyError and the program stops.",
+              none:"Square brackets don't give back None for a missing key. They raise a KeyError.",
+              blank:"A missing key doesn't print an empty line. Square brackets raise a KeyError."}});
 
   K.Scoring.register("q-blank",1,"quiz");
   let blankAttempts=0, blankDone=false;
   $("#blankcheck").addEventListener("click",()=>{
     if(blankDone) return;
+    const raw=$("#blankinput").value.trim();
+    if(!raw) return;
     blankAttempts++;
-    const val = $("#blankinput").value.trim().toLowerCase().replace(/^\./,"").replace(/\(\)$/,"");
+    const val = raw.toLowerCase().replace(/^\./,"").replace(/\(\s*(phone)?\s*\)$/,"");
     const ok = val==="get";
     const fb=$("#blankfb");
     if(ok){
       K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> <code>.get()</code> jumps to the key and returns <code>None</code> for an account that is not flagged. Square brackets would raise a <code>KeyError</code> instead.";
+      fb.innerHTML="<strong>Correct.</strong> <code>.get()</code> returns <code>None</code> for 555-0199, so the program prints \"New caller\" instead of crashing. Press Run to see the output.";
       blankDone=true;
     } else if(blankAttempts>=2){
       K.Scoring.award("q-blank",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing method is <code>get</code>, as in <code>flags_by_account.get(account_number)</code>.";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The blank is <code>get</code>, as in <code>callers_by_phone.get(phone)</code>.";
       blankDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> Look back at Way 2 in section 1. Which method looked up <code>\"9004\"</code> and printed <code>None</code>?";
+      fb.innerHTML="<strong>Not quite.</strong> The blank needs a dict method that returns <code>None</code> for a missing key. Reread the sentence just before this file. <div class=\"mlrk-attempt-note\">One more try before the answer is revealed.</div>";
     }
+    if(blankDone) K.markDone("q-blank");
     fb.setAttribute("tabindex","-1");fb.focus();
   });
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"The same in syntax works on a list, tuple, dict, and set, but the work underneath can be very different.", correct:true,
-      hint:"Look at your drag-and-drop in section 6. Did every in check land in the same zone?",
-      explain:"The syntax is the same everywhere. Section 6 sorted the in checks into O(1) and O(n) zones."},
-    {value:"b", label:"Checking whether a value is in a tuple is O(1) on average, like a dict key.", correct:false,
-      hint:"Look at section 6 again. Which zone did the tuple land in?",
-      explain:"A tuple is checked one item at a time, like a list, so it is O(n)."},
-    {value:"c", label:"Building flags_by_account loops over every record once, which is O(n). Each lookup after that is O(1) on average.", correct:true,
-      hint:"Reread the paragraph after Way 2 in section 1. What does building the dict cost, and how often?",
+    {value:"c", label:"Building callers_by_phone visits every record once, which is O(n). Each lookup after that is O(1) on average.", correct:true,
+      hint:"Reread the paragraph after build_caller_dict.py. What does building the dict cost, and how often?",
       explain:"The build is one O(n) pass, paid once. Every lookup after it takes about one step."},
+    {value:"b", label:"callers_by_phone[\"555-0199\"] gives None when that number is not a key.", correct:false,
+      hint:"Look at what lookup_brackets.py printed for 555-0199.",
+      explain:"Square brackets raise a KeyError for a missing key. .get() is the one that returns None."},
+    {value:"a", label:"A linear search over 400,000 saved callers can make 400,000 checks for one call.", correct:true,
+      hint:"Think about the worst case for find_caller: a number that is last or not saved.",
+      explain:"In the worst case a linear search checks every record, so 400,000 records can mean 400,000 checks."},
     {value:"d", label:"After a linear search finds a match, it keeps checking the rest of the list to be sure.", correct:false,
-      hint:"Look at the steps you ordered in section 8. What happens on a match?",
-      explain:"A match returns the record right away. Only a missing value forces every item to be checked."}
+      hint:"Look at find_caller. What does return do as soon as a record matches?",
+      explain:"return record[\"name\"] ends the function at the first match. Only a missing number forces every record to be checked."}
   ]});
 
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"hwtre8WkLm4"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"cost",
-    feedback:{cost:"Right. This answer names both complexities and ties the fix to how the cost grows with the list.",
-              syntax:"Syntax does not make code fast. The difference is how many records each search has to check.",
-              memory:"Memory is not what changed the speed. The dict cut the number of checks per lookup from up to n to about one."}});
-
-  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"convert",
-    feedback:{convert:"Right. At 12 items and one search, the choice barely matters. Scale and repeated lookups are what make the dict worth building.",
-              rename:"On 12 items you may not measure any difference, and building the dict is itself one pass over all 12.",
-              print:"There is no fixed cutoff. The choice depends on how often you search and how large the list gets."}});
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"set",
+    feedback:{set:"Right. Checking a dict key or a set is O(1) on average, so it stays fast as today's numbers pile up.",
+              list:"Order doesn't help here. Checking a growing list is a linear search, so it gets slower all day.",
+              same:"Containers don't all check at the same cost. A list is O(n). A dict key or a set is O(1) on average."}});
 
   K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
 
   const AI_PROMPTS = [
-    "Think about finding a name in a paper sign-in sheet by reading every line, versus a phone's contacts app that jumps to a name as you type. Where else have you seen that difference?",
+    "Think about finding a name on a paper sign-in sheet by reading every line, compared with a phone's contacts app that jumps to a name as you type. Where else have you seen that difference?",
     "Explain \"the same question can be fast or slow depending on how the answer is stored\" to a friend, using an example from your own life.",
     "Think of an app search that felt instant at first and got slower as more data piled up. How might the data be stored behind it?"
   ];
@@ -609,12 +473,8 @@ git push</pre></li>
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"set",
-    feedback:{set:"Right. A dict key or set check is O(1) on average, so it stays fast as the used codes pile up.",
-              list:"Order does not help here. Checking a growing list is a linear search, so it slows down as codes pile up.",
-              same:"Containers do not all check membership at the same cost. A list is O(n). A dict key or set is O(1) on average."}});
+  K.flipCards("#vocab", "act-flip-vocab");
 
-  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
   $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));

@@ -17,10 +17,11 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Make It Survive</h1>
-<p class="mlrk-lead">A school's rooftop weather station measures rain and wind every hour. A short Python script keeps each hour's numbers in a dictionary. The script works all day. Then the laptop restarts overnight, and in the morning every reading is gone. The sensor measured the rain, but the numbers only lived inside the running script. To keep data after a program closes, the program has to write that data to a file, in a format it can read back later.</p>
+<p class="mlrk-lead">A school has a weather station on its roof. A Python program keeps each hour's rain in a dictionary. One night the laptop restarts. In the morning, every number is gone, because the numbers only lived inside the running program. To keep data after a program stops, the program must save it to a file.</p>
+<p class="mlrk-lead"><strong>Your goal:</strong> save Python data to a file, load it back, and check what changed on the way. A value can come back looking the same with a different type, and then the program gives wrong answers without any error.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~42–46 minutes</span>
-  <span class="mlrk-pill">Includes a 6-minute video</span>
+  <span class="mlrk-pill">~21–24 minutes</span>
+  <span class="mlrk-pill">Optional 6-minute video at the end</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -51,123 +52,50 @@
   </div>
 </section>
 
-<section class="mlrk-section">
-<h2>1. Concept overview</h2>
-<p>While the weather script runs, the hourly numbers sit in a dictionary in memory: <code>rain = {6: (0.4, 12), 7: (1.2, 18)}</code>. Each key is an hour of the day. Each value is a tuple: millimeters of rain, then wind speed in km/h. The dictionary is real and usable while the script runs. When the script stops, on purpose or because the laptop shuts down, every variable it was holding disappears.</p>
-<p>To survive, the dictionary has to be written to a file as text, and rebuilt from that text later. Turning a Python value into text you can save is <strong>serialization</strong>. Its everyday name is saving. Rebuilding a Python value from that saved text is <strong>deserialization</strong>, or loading. The rules for how the text is laid out in the file are its <strong>format</strong>. This reading uses three formats: <strong>JSON</strong>, <strong>CSV</strong>, and <strong>TXT</strong>.</p>
-<p>The file never holds the dictionary itself. It holds a text version of the data, and loading builds a brand-new dictionary from that text. The diagram follows <code>rain</code> through one save and one load in JSON. Two things come back different.</p>
-
-<svg class="mlrk-illustration" viewBox="0 0 760 290" role="img" aria-labelledby="survivalTitle survivalDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="survivalTitle">A Python dictionary saved to a JSON file and loaded back, with two values changing type</title>
-  <desc id="survivalDesc">Panel one shows the rain dictionary while the script runs, with integer keys 6 and 7 and tuple values. An arrow labeled json.dump() leads to panel two, the same data in rain.json on disk, where the keys are quoted strings and the tuples are bracketed arrays. An arrow labeled json.load() leads to panel three, the dictionary rebuilt later, where the keys are still strings and the values are lists. Captions under the panels spell out both changes.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="250" y="30" text-anchor="middle" font-family="Consolas, Monaco, monospace" font-size="16" font-weight="700" fill="#264326">json.dump()</text>
-    <text x="510" y="30" text-anchor="middle" font-family="Consolas, Monaco, monospace" font-size="16" font-weight="700" fill="#2274B5">json.load()</text>
-
-    <rect x="10" y="44" width="220" height="170" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="120" y="72" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">In Python (running)</text>
-    <g font-family="Consolas, Monaco, monospace" font-size="16" fill="#261F1D">
-      <text x="22" y="108">rain = {</text>
-      <text x="42" y="134">6: (0.4, 12),</text>
-      <text x="42" y="160">7: (1.2, 18)</text>
-      <text x="22" y="186">}</text>
-    </g>
-    <polygon points="234,120 252,120 252,113 266,127 252,141 252,134 234,134" fill="#264326"/>
-
-    <rect x="270" y="44" width="220" height="170" rx="16" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
-    <text x="380" y="72" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">rain.json (on disk)</text>
-    <g font-family="Consolas, Monaco, monospace" font-size="16" fill="#261F1D">
-      <text x="282" y="108">{</text>
-      <text x="302" y="134"><tspan fill="#C92929" font-weight="700">"6"</tspan>: <tspan fill="#C92929" font-weight="700">[0.4, 12]</tspan>,</text>
-      <text x="302" y="160"><tspan fill="#C92929" font-weight="700">"7"</tspan>: <tspan fill="#C92929" font-weight="700">[1.2, 18]</tspan></text>
-      <text x="282" y="186">}</text>
-    </g>
-    <polygon points="494,120 512,120 512,113 526,127 512,141 512,134 494,134" fill="#2274B5"/>
-
-    <rect x="530" y="44" width="220" height="170" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="640" y="72" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Back in Python (later)</text>
-    <g font-family="Consolas, Monaco, monospace" font-size="16" fill="#261F1D">
-      <text x="542" y="108">rain = {</text>
-      <text x="562" y="134"><tspan fill="#C92929" font-weight="700">"6"</tspan>: <tspan fill="#C92929" font-weight="700">[0.4, 12]</tspan>,</text>
-      <text x="562" y="160"><tspan fill="#C92929" font-weight="700">"7"</tspan>: <tspan fill="#C92929" font-weight="700">[1.2, 18]</tspan></text>
-      <text x="542" y="186">}</text>
-    </g>
-
-    <text x="380" y="248" text-anchor="middle" font-size="16" font-weight="700" fill="#C92929">Key change: the integer 6 came back as the string "6".</text>
-    <text x="380" y="274" text-anchor="middle" font-size="16" font-weight="700" fill="#C92929">Value change: the tuple (0.4, 12) came back as the list [0.4, 12].</text>
-  </g>
-</svg>
-
-<p>JSON keys are always strings, so every integer key comes back as a string. JSON has no tuple type, so every tuple comes back as a list.</p>
-
-<div class="mlrk-card" id="card-memory"><p><strong>The script builds <code>rain</code>, but the laptop restarts before anything is written to a file. What does the script have the next morning?</strong></p>
-<button type="button" class="mlrk-choice" data-a="gone">Nothing. The dictionary only existed in memory, and memory was cleared.</button>
-<button type="button" class="mlrk-choice" data-a="auto">The same dictionary. Python reloads the last values on its own.</button>
-<button type="button" class="mlrk-choice" data-a="hidden">A JSON file that Python wrote on its own before the restart.</button>
-<div id="memfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> a value that comes back with a different type does not crash anything. A script that looks up hour <code>7</code> as an integer finds nothing once every key has become a string. The script gives wrong answers, and no error warns anyone. Catching that means checking what a loaded value really is, not what it looks like.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to build dicts, lists, and tuples while a program runs. This reading covers what happens when that data leaves memory and comes back. The same question, "what type does this loaded value have?", comes up whenever a program reads data that another program saved, and whenever a program checks each line of a file before using it.</p>
-</div>
-</section>
 
 <section class="mlrk-section">
-<h2>2. Prerequisite recall</h2>
-<p>Dictionaries and tuples are prerequisite skills for this reading. Answer all three questions before moving on.</p>
+<h2>1. Recall before continuing</h2>
+<p>Dictionaries and tuples are prerequisite skills for this reading. Answer both questions before moving on.</p>
 <div class="mlrk-card" id="card-recall"><p><strong>What does a Python dict store?</strong></p>
 <button type="button" class="mlrk-choice" data-a="pairs">Key-value pairs, where each key looks up its own value</button>
 <button type="button" class="mlrk-choice" data-a="sequence">An ordered sequence of values with no labels</button>
 <button type="button" class="mlrk-choice" data-a="fixed">A single value that can never change</button>
 <div id="recallfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-tuple" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>wind = (1.2, 18)</code>. What is <code>wind[1]</code>?</p>
-<button type="button" class="mlrk-choice" data-a="b">18</button>
+<div class="mlrk-card" id="card-tuple" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>reading = (1.2, 55)</code>. What is <code>reading[1]</code>?</p>
+<button type="button" class="mlrk-choice" data-a="b">55</button>
 <button type="button" class="mlrk-choice" data-a="three">1.2</button>
 <button type="button" class="mlrk-choice" data-a="error">A TypeError, because tuples can't be indexed</button>
 <div id="tuplefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-record" style="margin-top:.8rem"><p><strong>Scenario check:</strong> one hour's record needs a rain amount, a wind speed, and a list of alerts. Which structure keeps those pieces labeled and together?</p>
-<button type="button" class="mlrk-choice" data-a="dict">A dictionary, so each piece has its own key</button>
-<button type="button" class="mlrk-choice" data-a="tuple">A tuple, since tuples can hold more than one type</button>
-<button type="button" class="mlrk-choice" data-a="string">One string with everything joined together</button>
-<div id="recordfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Technical vocabulary</h2>
-<p>Flip all six cards before the practice in section 4.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>serialization</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Serialization</strong><br>Turning a Python value into text that can be saved to a file. Its everyday name is saving.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>deserialization</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Deserialization</strong><br>Rebuilding a Python value from saved text. Its everyday name is loading.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>format</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Format</strong><br>The rules for how data is laid out as text in a file. The format decides how the data reads back.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>JSON</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>JSON</strong><br>A text format for nested, structured data. A JSON object looks like a Python dict, and a JSON array looks like a Python list.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>CSV</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>CSV</strong><br>A text format for flat rows and columns: column names once in a header row, then one row per line, with values separated by commas.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>TXT</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>TXT</strong><br>Plain text with no built-in structure. The layout is whatever you or your program decides.</span></button>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>4. Three shapes, three formats</h2>
-<p>All three formats store plain text. They differ in the shape of data each one fits. Here is one hour's reading saved as three files:</p>
+<h2>2. Saving means writing text</h2>
+<p>While the weather program runs, each hour's numbers sit in a dictionary: <code>rain = {6: (0.4, 58), 7: (1.2, 55)}</code>. Each key is an hour of the day. Each value is a tuple: the rain in millimeters (mm), then the temperature in degrees Fahrenheit. One millimeter is about as thick as a dime. When the program stops, every variable it was holding is gone.</p>
+<p>A file can only hold text. So to keep the dictionary, the program turns it into text and writes that text to a file. Later, a program reads the text and builds a new dictionary from it.</p>
+<ul>
+<li><strong>Serialization</strong> is turning a Python value into text that can be saved to a file. Its everyday name is saving.</li>
+<li><strong>Deserialization</strong> is building a Python value again from saved text. Its everyday name is loading.</li>
+<li>A <strong>format</strong> is the set of rules for how the text is laid out in the file.</li>
+</ul>
+<p>This reading uses three formats. Here is one hour's reading saved in each of them:</p>
 <div class="mlrk-grid">
 <div class="mlrk-code" data-file="hour7.json"><div class="mlrk-screen">{"hour": 7, "rain_mm": 1.2}</div></div>
 <div class="mlrk-code" data-file="hour7.csv"><div class="mlrk-screen">hour,rain_mm
 7,1.2</div></div>
 <div class="mlrk-code" data-file="hour7.txt"><div class="mlrk-screen">7:00 rain 1.2 mm</div></div>
 </div>
-<p>JSON labels every value. CSV writes the labels once, in the header row. TXT uses whatever layout you choose.</p>
 <div class="mlrk-grid">
-<div class="mlrk-card mlrk-format-card"><h3>JSON</h3><p><strong>Shape:</strong> nested keys, values, and arrays.</p><p><strong>Fits:</strong> one record with structure inside it, like a sensor with a list of today's alerts.</p></div>
-<div class="mlrk-card mlrk-format-card mlrk-format-csv"><h3>CSV</h3><p><strong>Shape:</strong> flat rows and columns, every row the same.</p><p><strong>Fits:</strong> a table someone will open in a spreadsheet.</p></div>
-<div class="mlrk-card mlrk-format-card mlrk-format-txt"><h3>TXT</h3><p><strong>Shape:</strong> any line-by-line layout you choose.</p><p><strong>Fits:</strong> a simple log that only your own script writes and reads.</p></div>
+<div class="mlrk-card mlrk-format-card"><h3>JSON</h3><p><strong>JSON</strong> is a text format for data with structure inside it. A JSON object looks like a Python dict, and a JSON array looks like a Python list.</p><p><strong>Use it for:</strong> one record that holds a list or another record inside it.</p></div>
+<div class="mlrk-card mlrk-format-card mlrk-format-csv"><h3>CSV</h3><p><strong>CSV</strong> is a text format for a table. The column names come once, in a header row. Then each line is one row, with commas between the values.</p><p><strong>Use it for:</strong> a table someone will open in a spreadsheet.</p></div>
+<div class="mlrk-card mlrk-format-card mlrk-format-txt"><h3>TXT</h3><p><strong>TXT</strong> is plain text with no built-in structure. Your program decides the layout.</p><p><strong>Use it for:</strong> a simple log that only your own program writes and reads.</p></div>
 </div>
-<p style="margin-top:1rem">Match each situation to the format it fits best. Drag each chip into a zone, then press the self-check button.</p>
+<p style="margin-top:1rem">Match each new situation to the format it fits best. Drag each chip into a zone (on a phone, tap a chip and then tap a zone). Then press the self-check button.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">a sensor record with a nested list of today's alerts</span>
-  <span id="chip2" class="mlrk-draggable">every row has the same three columns, and someone will open it in a spreadsheet</span>
-  <span id="chip3" class="mlrk-draggable">a one-line-per-hour log that only your own script reads</span>
+  <span id="chip1" class="mlrk-draggable">the station's settings: its name, its place on the roof, and a list of alerts it can send</span>
+  <span id="chip2" class="mlrk-draggable">a table of every hour's rain that the science class will open in a spreadsheet</span>
+  <span id="chip3" class="mlrk-draggable">a note the program adds one line to each hour, like "9:00 rain 0.2 mm"</span>
 </div>
 <div class="mlrk-grid">
   <div><p class="mlrk-small"><strong>JSON</strong></p><div class="mlrk-dropzone" id="zoneJSON"></div></div>
@@ -180,14 +108,46 @@
 </section>
 
 <section class="mlrk-section">
-<h2>5. Writing a file: the mode matters</h2>
-<p><code>open()</code> takes a mode that says what you plan to do with the file:</p>
+<h2>3. Open a file, write to it, read it back</h2>
+<p>This file writes two lines to <code>rain_note.txt</code>, then reads the file back and prints it. Each Run button on this page shows what a file prints when Python runs every line, top to bottom. On your own laptop, you would type <code>python3 write_note.py</code> in the terminal.</p>
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>New in this file: how <code>with open(...) as f:</code> works</strong></p>
+<ol class="mlrk-steplist">
+<li><code>open("rain_note.txt", "w")</code> finds the file, or makes it if it doesn't exist yet. <code>"w"</code> means you plan to write.</li>
+<li><code>as f</code> gives the open file a short name, <code>f</code>, to use in the lines below.</li>
+<li>The indented lines run while the file is open. <code>f.write(text)</code> adds that text to the file.</li>
+<li><code>"\n"</code> inside a string means "start a new line here." Without it, the next write lands on the same line.</li>
+<li>When the indented lines end, Python closes the file for you. That is why files are opened with <code>with</code>.</li>
+<li><code>f.read()</code> gives back everything in the file as one string.</li>
+</ol>
+</div>
+<p><strong>Predict:</strong> what does <code>write_note.py</code> print?</p>
+<div class="mlrk-code" data-file="write_note.py"><div class="mlrk-screen">with open("rain_note.txt", "w") as f:
+    f.write("6:00 rain 0.4 mm\n")
+    f.write("7:00 rain 1.2 mm\n")
+
+with open("rain_note.txt") as f:
+    text = f.read()
+
+print(text)</div></div>
+<button type="button" class="mlrk-btn" data-run="write_note.py" data-after="q-anatomy"></button>
+<div class="mlrk-run" data-file="write_note.py" hidden><pre>6:00 rain 0.4 mm
+7:00 rain 1.2 mm</pre></div>
+<div class="mlrk-card" id="card-anatomy" style="margin-top:1rem">
+<button type="button" class="mlrk-choice" data-a="two">Two lines: <code>6:00 rain 0.4 mm</code>, then <code>7:00 rain 1.2 mm</code> under it</button>
+<button type="button" class="mlrk-choice" data-a="one">One line: <code>6:00 rain 0.4 mm7:00 rain 1.2 mm</code></button>
+<button type="button" class="mlrk-choice" data-a="none">Nothing, because the file was already closed</button>
+<div id="anatomyfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1.2rem">The second <code>open()</code> has no mode, so it opens the file for reading. The mode is the second thing you give <code>open()</code>, and it says what you plan to do:</p>
 <ul>
-<li><code>"w"</code> (write) empties the file first, then writes. If the file doesn't exist, Python creates it.</li>
-<li><code>"a"</code> (append) keeps what is already there and adds to the end.</li>
-<li>With no mode, <code>open()</code> reads the file (<code>"r"</code>).</li>
+<li><code>"w"</code> (write) empties the file first, then writes. If the file doesn't exist, Python makes it.</li>
+<li><code>"a"</code> (append) keeps what is already in the file and adds to the end.</li>
+<li>No mode, or <code>"r"</code>, reads the file.</li>
 </ul>
-<p>The weather script should add one line to <code>rain_log.txt</code> every hour. Here is the first version someone wrote. The real script runs once an hour. In this file, each pass of the loop stands in for one of those hourly runs, and the last two lines print what the file holds afterward.</p>
+<p>Every value read from a text file is a string, even text that looks like a number, such as <code>1.5</code>. Your code has to turn it into a number before doing math with it.</p>
+<p>The weather program should add one line to <code>rain_log.txt</code> every hour. The real program runs once an hour. In <code>log_rain.py</code>, each pass of the loop stands in for one of those hourly runs, and the last two lines print what the file holds at the end.</p>
+<p><strong>Predict:</strong> what does <code>log_rain.py</code> print?</p>
 <div class="mlrk-code" data-file="log_rain.py"><div class="mlrk-screen">hour_lines = ["6:00 rain 0.4 mm\n", "7:00 rain 1.2 mm\n", "8:00 rain 0.9 mm\n"]
 
 # Each pass of the loop stands in for one hourly run.
@@ -197,114 +157,77 @@ for hour_line in hour_lines:
 
 with open("rain_log.txt") as f:
     print(f.read())</div></div>
-<div class="mlrk-actions"><button type="button" id="overwrite" class="mlrk-btn">Run python3 log_rain.py</button></div>
-<div class="mlrk-run" id="overwritewrap" hidden><pre id="overwriteout"></pre></div>
-<div class="mlrk-card" id="card-write" style="margin-top:1rem"><p><strong>The file should keep every hour's line. Which change fixes the script?</strong></p>
-<button type="button" class="mlrk-choice" data-a="replaced">Open the file with <code>"a"</code> instead of <code>"w"</code>.</button>
-<button type="button" class="mlrk-choice" data-a="kept">Open the file with <code>"r"</code> instead of <code>"w"</code>.</button>
-<button type="button" class="mlrk-choice" data-a="error">Keep <code>"w"</code>, but call <code>f.write(hour_line)</code> twice.</button>
+<button type="button" class="mlrk-btn" data-run="log_rain.py" data-after="q-write"></button>
+<div class="mlrk-run" data-file="log_rain.py" hidden><pre>8:00 rain 0.9 mm</pre></div>
+<div class="mlrk-card" id="card-write" style="margin-top:1rem">
+<button type="button" class="mlrk-choice" data-a="replaced">Only <code>8:00 rain 0.9 mm</code></button>
+<button type="button" class="mlrk-choice" data-a="kept">All three lines, 6:00 through 8:00</button>
+<button type="button" class="mlrk-choice" data-a="error">Only <code>6:00 rain 0.4 mm</code></button>
 <div id="writefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1.2rem">The fix is one letter: open the log with <code>"a"</code> so each hour adds a line. <code>log_rain_fixed.py</code> writes to a new file, <code>rain_log_fixed.txt</code>, so the line left over in <code>rain_log.txt</code> doesn't get mixed in.</p>
+<div class="mlrk-code" data-file="log_rain_fixed.py"><div class="mlrk-screen">hour_lines = ["6:00 rain 0.4 mm\n", "7:00 rain 1.2 mm\n", "8:00 rain 0.9 mm\n"]
+
+# Each pass of the loop stands in for one hourly run.
+for hour_line in hour_lines:
+    with open("rain_log_fixed.txt", "a") as f:
+        f.write(hour_line)
+
+with open("rain_log_fixed.txt") as f:
+    print(f.read())</div></div>
+<button type="button" class="mlrk-btn" data-run="log_rain_fixed.py"></button>
+<div class="mlrk-run" data-file="log_rain_fixed.py" hidden><pre>6:00 rain 0.4 mm
+7:00 rain 1.2 mm
+8:00 rain 0.9 mm</pre></div>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Reading it back</h2>
-<p><code>f.read()</code> returns the whole file as one string. Every value read from a text file starts as a string, even one that looks like a number. Your code decides when that text becomes a number.</p>
-<p>This file writes <code>1.5</code> and nothing else to <code>rain_total.txt</code>, then reads it back.</p>
-<div class="mlrk-code" data-file="read_total.py"><div class="mlrk-screen">with open("rain_total.txt", "w") as f:
-    f.write("1.5")
-
-with open("rain_total.txt") as f:
-    total = f.read()
-
-print(total * 2)</div></div>
-<div class="mlrk-card" id="card-read" style="margin-top:1rem"><p><strong>What does <code>print(total * 2)</code> print?</strong></p>
-<button type="button" class="mlrk-choice" data-a="convert">3.0</button>
-<button type="button" class="mlrk-choice" data-a="retrieve">1.51.5</button>
-<button type="button" class="mlrk-choice" data-a="keepalive">A TypeError</button>
-<div id="readfb" class="mlrk-feedback" tabindex="-1"></div>
-<div class="mlrk-run" data-file="read_total.py" id="readrun" hidden><pre>1.51.5</pre></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>7. Predict, then check: will it survive the round trip?</h2>
-<p>For each of the three round-trip files in this section, predict what happens before you answer. The real output appears after you answer.</p>
-
-<div class="mlrk-card">
-<p><strong>Round 1: integer keys</strong></p>
-<div class="mlrk-code" data-file="round_trip_keys.py" data-expect="KeyError"><div id="round1Screen" class="mlrk-screen">import json
+<h2>4. Save and load a dictionary with JSON</h2>
+<p>Writing a whole dictionary line by line would take a lot of code. Python's <code>json</code> tools do it in one call each:</p>
+<ul>
+<li><code>json.dump(value, f)</code> turns <code>value</code> into JSON text and writes it into the open file <code>f</code>. This is serialization.</li>
+<li><code>json.load(f)</code> reads the JSON text in <code>f</code> and builds a new Python value from it. This is deserialization.</li>
+</ul>
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>New in this file: <code>import json</code></strong></p>
+<p><code>import json</code> loads Python's built-in JSON tools so the file can use them. It goes at the top of the file. After it, <code>json.dump</code> and <code>json.load</code> work.</p>
+</div>
+<p>Each blank in <code>save_and_load.py</code> needs the name of one <code>json</code> function.</p>
+<div class="mlrk-code" data-file="save_and_load.py"><div class="mlrk-screen">import json
 
 rain = {6: 0.4, 7: 1.2}
 
 with open("rain.json", "w") as f:
-    json.dump(rain, f)
+    json.____(rain, f)
 
 with open("rain.json") as f:
-    restored = json.load(f)
+    restored = json.____(f)
 
-print(restored[7])</div></div>
-<p style="margin-top:.8rem"><strong>What happens when <code>print(restored[7])</code> runs?</strong></p>
-<button type="button" class="mlrk-choice round1" data-a="works">It prints 1.2, the same as before.</button>
-<button type="button" class="mlrk-choice round1" data-a="keyerror">It raises a KeyError, because the key is now the string "7".</button>
-<button type="button" class="mlrk-choice round1" data-a="typeerror">It raises a TypeError, because a dict can't be loaded from JSON.</button>
-<div id="round1fb" class="mlrk-feedback" tabindex="-1"></div>
-<div class="mlrk-run" data-file="round_trip_keys.py" id="round1run" hidden><pre>Traceback (most recent call last):
-  File "round_trip_keys.py", line 11, in &lt;module&gt;
-    print(restored[7])
-          ~~~~~~~~^^^
-KeyError: 7</pre></div>
+print(restored)</div></div>
+<button type="button" class="mlrk-btn" data-run="save_and_load.py" data-after="q-fnnames" data-after-note="Fill in both blanks first. Then you can run it."></button>
+<div class="mlrk-run" data-file="save_and_load.py" hidden><pre>{'6': 0.4, '7': 1.2}</pre></div>
+<ol class="mlrk-steplist">
+<li>Look at which block each blank sits in. The first blank is inside the <code>"w"</code> block, so it saves. The second is inside the reading block, so it loads.</li>
+<li>Type only the function name: no <code>json</code>, no dot, no parentheses. For example, type <code>print</code>, not <code>print()</code>.</li>
+<li>Press <strong>Check both</strong>. The feedback says which blank to fix.</li>
+</ol>
+<div class="mlrk-fillblank">
+  <label for="blank1">First blank (writes a Python value into the open file):</label>
+  <input type="text" id="blank1" autocomplete="off">
 </div>
-
-<div class="mlrk-card" style="margin-top:1rem">
-<p><strong>Round 2: tuple values</strong></p>
-<div class="mlrk-code" data-file="round_trip_tuple.py"><div id="round2Screen" class="mlrk-screen">import json
-
-reading = {"rain_mm": 1.2, "wind": (18, "NW")}
-
-with open("reading.json", "w") as f:
-    json.dump(reading, f)
-
-with open("reading.json") as f:
-    restored = json.load(f)
-
-print(restored["wind"] == (18, "NW"))</div></div>
-<p style="margin-top:.8rem"><strong>What does the last line print?</strong></p>
-<button type="button" class="mlrk-choice round2" data-a="tuple">True</button>
-<button type="button" class="mlrk-choice round2" data-a="list">False</button>
-<button type="button" class="mlrk-choice round2" data-a="str">A TypeError</button>
-<div id="round2fb" class="mlrk-feedback" tabindex="-1"></div>
-<div class="mlrk-run" data-file="round_trip_tuple.py" id="round2run" hidden><pre>False</pre></div>
+<div class="mlrk-fillblank">
+  <label for="blank2">Second blank (builds a Python value from the open file):</label>
+  <input type="text" id="blank2" autocomplete="off">
 </div>
+<p><button type="button" id="fncheck" class="mlrk-btn">Check both</button></p>
+<div id="fnfb" class="mlrk-feedback" tabindex="-1"></div>
 
-<div class="mlrk-card" style="margin-top:1rem">
-<p><strong>Round 3: a date value</strong></p>
-<p><code>date(2026, 10, 3)</code> is Python's built-in way to store a calendar date.</p>
-<div class="mlrk-code" data-file="save_date.py" data-expect="TypeError"><div id="round3Screen" class="mlrk-screen">import json
-from datetime import date
-
-reading = {"rain_mm": 1.2, "day": date(2026, 10, 3)}
-
-with open("reading.json", "w") as f:
-    json.dump(reading, f)</div></div>
-<p style="margin-top:.8rem"><strong>What happens when this code runs?</strong></p>
-<button type="button" class="mlrk-choice round3" data-a="fine">It saves, and <code>"day"</code> loads back as a date.</button>
-<button type="button" class="mlrk-choice round3" data-a="typeerror">It raises a TypeError, because JSON has no date type.</button>
-<button type="button" class="mlrk-choice round3" data-a="empty">It saves <code>"day"</code> as an empty string.</button>
-<div id="round3fb" class="mlrk-feedback" tabindex="-1"></div>
-<div class="mlrk-run" data-file="save_date.py" id="round3run" hidden><pre>Traceback (most recent call last):
-  File "save_date.py", line 7, in &lt;module&gt;
-    json.dump(reading, f)
-    ~~~~~~~~~^^^^^^^^^^^^
-  ...
-TypeError: Object of type date is not JSON serializable</pre></div>
-<p class="mlrk-small">The real traceback also lists a few lines from inside Python's <code>json</code> module, shortened to <code>...</code> here. Read the first frame (your line) and the last line (the error).</p>
-</div>
-
-<div class="mlrk-card" style="margin-top:1rem">
+<div class="mlrk-card" style="margin-top:1.2rem">
 <p><strong>Try it: save in one run, load in the next</strong></p>
-<p>Real programs split the round trip across two runs. <code>save_rain.py</code> writes the hourly dictionary to <code>rain.json</code>. <code>load_rain.py</code> runs later and rebuilds it.</p>
+<p>Real programs split the round trip across two runs. <code>save_rain.py</code> writes the hourly dictionary to <code>rain.json</code>. <code>load_rain.py</code> runs later and builds the dictionary again.</p>
 <div class="mlrk-code" data-file="save_rain.py"><div class="mlrk-screen">import json
 
-rain = {6: (0.4, 12), 7: (1.2, 18)}
+rain = {6: (0.4, 58), 7: (1.2, 55)}
 
 with open("rain.json", "w") as f:
     json.dump(rain, f)
@@ -317,9 +240,16 @@ with open("rain.json") as f:
 
 print("Loaded:", rain)
 print("Hour 7:", rain["7"])</div></div>
-<p style="margin-top:.8rem">Type these commands in the terminal, one at a time: <code>ls</code>, <code>python3 load_rain.py</code> (no file saved yet), <code>python3 save_rain.py</code>, <code>cat rain.json</code>, then <code>python3 load_rain.py</code> again. Look at the keys and values in <code>rain.json</code>.</p>
+<p style="margin-top:.8rem"><code>len(rain)</code> counts the keys in <code>rain</code>, so it gives 2. Click in the black terminal box, then follow these steps:</p>
+<ol class="mlrk-steplist">
+<li>Type <code>ls</code> and press Enter. It lists the two files in the folder. There is no <code>rain.json</code> yet.</li>
+<li>Type <code>python3 load_rain.py</code> and press Enter. You get an error that ends in <code>FileNotFoundError</code>, because nothing has been saved yet.</li>
+<li>Type <code>python3 save_rain.py</code> and press Enter. This writes <code>rain.json</code>.</li>
+<li>Type <code>cat rain.json</code> and press Enter. <code>cat</code> shows what is inside a file. Look at the keys and the values.</li>
+<li>Type <code>python3 load_rain.py</code> and press Enter again. This time it works. Compare what it prints with the <code>rain</code> dictionary in <code>save_rain.py</code>.</li>
+</ol>
 <div class="mlrk-terminal" id="rainterminal">
-  <div class="mlrk-terminal-log" aria-live="polite">This simulated terminal starts in the weather-station folder. Nothing has been saved yet.</div>
+  <div class="mlrk-terminal-log" aria-live="polite">This practice terminal starts in the weather-station folder. Nothing has been saved yet.</div>
   <div class="mlrk-terminal-row">
     <span class="mlrk-terminal-prompt" aria-hidden="true">$</span>
     <input type="text" class="mlrk-terminal-input" aria-label="Terminal command input" autocomplete="off" spellcheck="false">
@@ -329,125 +259,196 @@ print("Hour 7:", rain["7"])</div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>8. Typed practice: name the two functions</h2>
-<p>Each blank in this file needs the name of a <code>json</code> function.</p>
-<div class="mlrk-code" data-file="save_and_load.py"><div class="mlrk-screen">import json
+<h2>5. What comes back different</h2>
+<p>The file never holds the dictionary itself. It holds a text version, and loading builds a brand-new dictionary from that text. Two things change on the way, as the diagram shows:</p>
+<ul>
+<li>JSON keys are always strings, so the integer key <code>6</code> comes back as the string <code>"6"</code>.</li>
+<li>JSON has no tuple type, so the tuple <code>(0.4, 58)</code> comes back as the list <code>[0.4, 58]</code>.</li>
+</ul>
+<svg class="mlrk-illustration" viewBox="0 0 760 290" role="img" aria-labelledby="survivalTitle survivalDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="survivalTitle">A Python dictionary saved to a JSON file and loaded back, with two values changing type</title>
+  <desc id="survivalDesc">Panel one shows the rain dictionary while the script runs, with integer keys 6 and 7 and tuple values. An arrow labeled json.dump() leads to panel two, the same data in rain.json on disk, where the keys are quoted strings and the tuples are bracketed arrays. An arrow labeled json.load() leads to panel three, the dictionary rebuilt later, where the keys are still strings and the values are lists. Captions under the panels spell out both changes.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="250" y="30" text-anchor="middle" font-family="Consolas, Monaco, monospace" font-size="16" font-weight="700" fill="#264326">json.dump()</text>
+    <text x="510" y="30" text-anchor="middle" font-family="Consolas, Monaco, monospace" font-size="16" font-weight="700" fill="#2274B5">json.load()</text>
+
+    <rect x="10" y="44" width="220" height="170" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="120" y="72" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">In Python (running)</text>
+    <g font-family="Consolas, Monaco, monospace" font-size="16" fill="#261F1D">
+      <text x="22" y="108">rain = {</text>
+      <text x="42" y="134">6: (0.4, 58),</text>
+      <text x="42" y="160">7: (1.2, 55)</text>
+      <text x="22" y="186">}</text>
+    </g>
+    <polygon points="234,120 252,120 252,113 266,127 252,141 252,134 234,134" fill="#264326"/>
+
+    <rect x="270" y="44" width="220" height="170" rx="16" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="380" y="72" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">rain.json (on disk)</text>
+    <g font-family="Consolas, Monaco, monospace" font-size="16" fill="#261F1D">
+      <text x="282" y="108">{</text>
+      <text x="302" y="134"><tspan fill="#C92929" font-weight="700">"6"</tspan>: <tspan fill="#C92929" font-weight="700">[0.4, 58]</tspan>,</text>
+      <text x="302" y="160"><tspan fill="#C92929" font-weight="700">"7"</tspan>: <tspan fill="#C92929" font-weight="700">[1.2, 55]</tspan></text>
+      <text x="282" y="186">}</text>
+    </g>
+    <polygon points="494,120 512,120 512,113 526,127 512,141 512,134 494,134" fill="#2274B5"/>
+
+    <rect x="530" y="44" width="220" height="170" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="640" y="72" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Back in Python (later)</text>
+    <g font-family="Consolas, Monaco, monospace" font-size="16" fill="#261F1D">
+      <text x="542" y="108">rain = {</text>
+      <text x="562" y="134"><tspan fill="#C92929" font-weight="700">"6"</tspan>: <tspan fill="#C92929" font-weight="700">[0.4, 58]</tspan>,</text>
+      <text x="562" y="160"><tspan fill="#C92929" font-weight="700">"7"</tspan>: <tspan fill="#C92929" font-weight="700">[1.2, 55]</tspan></text>
+      <text x="542" y="186">}</text>
+    </g>
+
+    <text x="380" y="248" text-anchor="middle" font-size="16" font-weight="700" fill="#C92929">Key change: the integer 6 came back as the string "6".</text>
+    <text x="380" y="274" text-anchor="middle" font-size="16" font-weight="700" fill="#C92929">Value change: the tuple (0.4, 58) came back as the list [0.4, 58].</text>
+  </g>
+</svg>
+<p>Nothing crashes when a type changes. The program just gives wrong answers later, so check what type a loaded value really has. For each of the three round-trip files in this section, predict first. The output appears under the file after you answer.</p>
+
+<div class="mlrk-card">
+<p><strong>Round 1: integer keys.</strong> What happens when the last line of <code>round_trip_keys.py</code> runs?</p>
+<div class="mlrk-code" data-file="round_trip_keys.py" data-expect="KeyError"><div class="mlrk-screen">import json
 
 rain = {6: 0.4, 7: 1.2}
 
 with open("rain.json", "w") as f:
-    json.____(rain, f)
+    json.dump(rain, f)
 
 with open("rain.json") as f:
-    restored = json.____(f)
+    restored = json.load(f)
 
-print(restored)</div></div>
-<div class="mlrk-fillblank">
-  <label for="blank1">First blank (writes a Python value into the open file):</label>
-  <input type="text" id="blank1" autocomplete="off">
+print(restored[7])</div></div>
+<button type="button" class="mlrk-btn" data-run="round_trip_keys.py" data-after="q-round1"></button>
+<div class="mlrk-run" data-file="round_trip_keys.py" hidden><pre>Traceback (most recent call last):
+  File "round_trip_keys.py", line 11, in &lt;module&gt;
+    print(restored[7])
+          ~~~~~~~~^^^
+KeyError: 7</pre></div>
+<button type="button" class="mlrk-choice round1" data-a="works">It prints 1.2, the same as before.</button>
+<button type="button" class="mlrk-choice round1" data-a="keyerror">It raises a KeyError, because the key is now the string "7".</button>
+<button type="button" class="mlrk-choice round1" data-a="typeerror">It raises a TypeError, because a dict can't be loaded from JSON.</button>
+<div id="round1fb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
-<div class="mlrk-fillblank">
-  <label for="blank2">Second blank (rebuilds a Python value from the open file):</label>
-  <input type="text" id="blank2" autocomplete="off">
+
+<div class="mlrk-card" style="margin-top:1rem">
+<p><strong>Round 2: tuple values.</strong> What does the last line of <code>round_trip_tuple.py</code> print?</p>
+<div class="mlrk-code" data-file="round_trip_tuple.py"><div class="mlrk-screen">import json
+
+hour7 = {"hour": 7, "reading": (1.2, 55)}
+
+with open("hour7.json", "w") as f:
+    json.dump(hour7, f)
+
+with open("hour7.json") as f:
+    restored = json.load(f)
+
+print(restored["reading"])
+print(restored["reading"] == (1.2, 55))</div></div>
+<button type="button" class="mlrk-btn" data-run="round_trip_tuple.py" data-after="q-round2"></button>
+<div class="mlrk-run" data-file="round_trip_tuple.py" hidden><pre>[1.2, 55]
+False</pre></div>
+<button type="button" class="mlrk-choice round2" data-a="tuple">True</button>
+<button type="button" class="mlrk-choice round2" data-a="list">False</button>
+<button type="button" class="mlrk-choice round2" data-a="str">A TypeError</button>
+<div id="round2fb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
-<p><button type="button" id="fncheck" class="mlrk-btn">Check both</button></p>
-<div id="fnfb" class="mlrk-feedback" tabindex="-1"></div>
+
+<div class="mlrk-card" style="margin-top:1rem">
+<p><strong>Round 3: a date.</strong> What happens when <code>save_date.py</code> runs?</p>
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>New in this file:</strong> <code>from datetime import date</code> loads Python's tool for calendar dates. <code>date(2026, 10, 3)</code> stores October 3, 2026.</p>
+</div>
+<div class="mlrk-code" data-file="save_date.py" data-expect="TypeError"><div class="mlrk-screen">import json
+from datetime import date
+
+day_record = {"rain_mm": 1.6, "day": date(2026, 10, 3)}
+
+with open("day.json", "w") as f:
+    json.dump(day_record, f)</div></div>
+<button type="button" class="mlrk-btn" data-run="save_date.py" data-after="q-round3"></button>
+<div class="mlrk-run" data-file="save_date.py" hidden><pre>Traceback (most recent call last):
+  File "save_date.py", line 7, in &lt;module&gt;
+    json.dump(day_record, f)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^
+  ...
+TypeError: Object of type date is not JSON serializable</pre></div>
+<button type="button" class="mlrk-choice round3" data-a="fine">It saves, and <code>"day"</code> loads back as a date.</button>
+<button type="button" class="mlrk-choice round3" data-a="typeerror">It raises a TypeError, because JSON has no date type.</button>
+<button type="button" class="mlrk-choice round3" data-a="empty">It saves <code>"day"</code> as an empty string.</button>
+<div id="round3fb" class="mlrk-feedback" tabindex="-1"></div>
+<p class="mlrk-small">The real error also lists a few lines from inside Python's <code>json</code> tools, shortened to <code>...</code> here. Read your own line (line 7) and the last line, which names the error.</p>
+</div>
+
+<p style="margin-top:1.2rem">JSON also has three text rules that Python dicts don't follow. They matter when you write or check a JSON file by hand, for example one an AI assistant wrote for you:</p>
+<ol class="mlrk-steplist">
+<li>Strings and keys use double quotes: <code>"roof"</code>, never <code>'roof'</code>.</li>
+<li><code>true</code>, <code>false</code> and <code>null</code> are lowercase. Python's <code>True</code>, <code>False</code> and <code>None</code> are not valid JSON.</li>
+<li>No comma after the last item in an object or array.</li>
+</ol>
 </section>
 
 <section class="mlrk-section">
-<h2>9. Order the steps: save now, load later</h2>
-<p>Put these steps in the order a program follows to save data and load it in a later run. Click the steps in order. Click a step again to remove it, then press "Check my order." This is a self-check, not graded.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="dump"><span class="mlrk-order-num"></span> Call <code>json.dump()</code> with the Python value and the open file.</li>
-  <li class="mlrk-orderitem" data-step="openr"><span class="mlrk-order-num"></span> In a later run, open the same file for reading.</li>
-  <li class="mlrk-orderitem" data-step="openw"><span class="mlrk-order-num"></span> Open the file in write mode (<code>"w"</code>).</li>
-  <li class="mlrk-orderitem" data-step="load"><span class="mlrk-order-num"></span> Call <code>json.load()</code> to rebuild a Python value from it.</li>
-  <li class="mlrk-orderitem" data-step="close"><span class="mlrk-order-num"></span> The <code>with</code> block ends, and the file closes.</li>
-</ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>10. Select all that apply</h2>
+<h2>6. Mixed check</h2>
 <div class="mlrk-card"><p><strong>Select every statement that is TRUE.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> After a JSON round trip, every dict key is a string, even if it started as an integer.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> <code>json.load()</code> rebuilds the exact Python types that were saved, including tuples.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A number read from a TXT or CSV file arrives as a string until your code converts it.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Loading a JSON file gives you a new Python object built from the text, not the original object.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> After a JSON round trip, a dict key that started as the integer <code>7</code> comes back as the string <code>"7"</code>.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> <code>json.load()</code> gives back a tuple when a tuple was saved.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> <code>f.read()</code> gives back a string, even when the file holds only a number.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Opening a file with <code>"w"</code> keeps the lines already in it.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> In a JSON file, Python's <code>True</code> has to be written as <code>true</code>.</label>
+<div class="mlrk-actions"><button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button></div>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>11. Decision practice</h2>
-<p>Use the prompt generator if you want help deciding what to weigh.</p>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
-<label for="decision"><strong>Your reasoning:</strong> a pottery studio wants to save each glaze recipe: its name, the artist who made it, and a list of ingredients with their amounts. Which format would you start with, and why?</label>
-<textarea id="decision" class="mlrk-response" data-save placeholder="I would choose... because the data is..."></textarea>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Watch: JSON in Python</h2>
-<p>As you watch, notice when the video uses <code>dump</code> and <code>load</code> (which work with files) and when it uses <code>dumps</code> and <code>loads</code> (which work with strings). The extra <code>s</code> stands for string.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=-51jxlQaxyA" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: name one thing the video showed about reading or writing JSON that this reading did not cover.</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>13. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>Take-home projects often ask you to read a file and save your results. Reviewers check whether your data came back the way you expected, not only whether the code ran once.</p>
-<p>Most data services and many AI tools send and receive JSON. Once you say you have "worked with JSON," expect a follow-up: what does a value look like after <code>json.load()</code> rebuilds it, and what might have changed?</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>An interviewer asks: "What's the difference between <code>json.dump()</code> and <code>json.dumps()</code>?" Which answer is correct?</strong></p>
-<button type="button" class="mlrk-choice" data-a="concat"><code>json.dump()</code> writes JSON into an open file. <code>json.dumps()</code> returns the JSON as a string.</button>
-<button type="button" class="mlrk-choice" data-a="import">They are the same function with two spellings.</button>
-<button type="button" class="mlrk-choice" data-a="auto"><code>json.dumps()</code> saves several values into several files at once.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>14. Debugging habit + reflection</h2>
-<div class="mlrk-card" id="card-debug"><p><strong>An AI assistant suggests this text for a JSON file you will save by hand:</strong></p>
-<div class="mlrk-code" data-file="station.json"><div class="mlrk-screen">{
-    'sensor': 'roof',
-    'online': True,
-}</div></div>
-<p><strong>Before you trust it, what should you check first?</strong></p>
-<button type="button" class="mlrk-choice" data-a="syntax">Whether it is valid JSON: double quotes only, no trailing comma, and lowercase <code>true</code>/<code>false</code>.</button>
-<button type="button" class="mlrk-choice" data-a="filename">Whether the file name ends in .json.</button>
-<button type="button" class="mlrk-choice" data-a="trust">Nothing. JSON that an AI assistant writes is always valid.</button>
-<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy" style="margin-top:1rem;display:block"><strong>Your checking strategy:</strong> in 1-2 sentences, how would you check that saved data will come back the way you expect, before a larger program relies on it?</label>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I'd check..."></textarea>
-</section>
-
-<section class="mlrk-section">
-<h2>15. Summary &amp; critical thinking</h2>
-<p>Two habits carry this whole reading. First, a file holds a text version of your data, never the live object. Second, check what type each loaded value has instead of assuming it matches what you saved.</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a podcast team saves each episode with a title, a download count, and a list of guest names. Someone suggests a CSV file with one row per episode.</p>
-<p><strong>What problem will they run into?</strong></p>
-<button type="button" class="mlrk-choice" data-a="list">The list of guests doesn't fit in one flat cell. JSON can nest the list inside each episode.</button>
-<button type="button" class="mlrk-choice" data-a="tuple">CSV can't store numbers, so the download counts will be lost.</button>
-<button type="button" class="mlrk-choice" data-a="fails">No problem. CSV stores nested lists the same way JSON does.</button>
+<h2>7. Wrap-up</h2>
+<ul>
+<li>A file holds a text version of your data, never the live Python value. <code>json.dump</code> saves it and <code>json.load</code> builds a new value from it.</li>
+<li>Open a file with <code>"w"</code> to start it fresh, <code>"a"</code> to add to the end, and no mode to read it.</li>
+<li>Check the type of each loaded value. JSON turns integer keys into strings and tuples into lists, and text files give back strings.</li>
+</ul>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> the weather club wants to save each day's record: the date, the day's total rain, and a list of alerts, like <code>"wind"</code> and <code>"storm"</code>. Someone suggests a CSV file with one row per day. What problem will they run into?</p>
+<button type="button" class="mlrk-choice" data-a="list">The list of alerts doesn't fit in one flat cell. JSON can keep the list inside each day's record.</button>
+<button type="button" class="mlrk-choice" data-a="tuple">CSV can't store numbers, so the rain totals will be lost.</button>
+<button type="button" class="mlrk-choice" data-a="fails">No problem. CSV stores lists inside a row the same way JSON does.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="ownwords" style="margin-top:1rem;display:block"><strong>In your own words:</strong> what's the difference between data that looks unchanged after a round trip and data that is unchanged, type and all?</label>
-<textarea id="ownwords" class="mlrk-response" data-save></textarea>
+<p style="margin-top:1rem"><strong>In interviews:</strong> if you say you have worked with JSON, expect the follow-up "what can change about a value after <code>json.load()</code> builds it again?"</p>
+<p><strong>Where this goes next:</strong> data that comes from a file often has to be checked line by line before a program uses it, and that check is its own function.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>16. Thinking ahead</h2>
-<p>Any time data passes through a file, it comes back as text first, and your code rebuilds it. That holds for a database row, a response from a website, and a file another team's script wrote. The question is always the same: what type does this value have right now? Answering it line by line, before the data gets used, is the job of a validation function.</p>
+<h2>8. Reflection</h2>
+<label for="ownwords"><strong>In 1–2 sentences:</strong> how would you check that saved data comes back the way you expect, before a bigger program uses it?</label>
+<textarea id="ownwords" class="mlrk-response" data-save placeholder="First I would load the file and..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
 </section>
 
 <section class="mlrk-section">
-<h2>17. Your score &amp; keep a copy of your work</h2>
+<h2>9. Key terms review</h2>
+<p>Flip all six cards to review the terms from this reading.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>serialization</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Serialization</strong><br>Turning a Python value into text that can be saved to a file. Its everyday name is saving.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>deserialization</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Deserialization</strong><br>Building a Python value again from saved text. Its everyday name is loading.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>format</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Format</strong><br>The rules for how data is laid out as text in a file. The format decides how the data reads back.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>JSON</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>JSON</strong><br>A text format for data with structure inside it. A JSON object looks like a Python dict, and a JSON array looks like a Python list.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>CSV</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>CSV</strong><br>A text format for a table: column names once in a header row, then one row per line, with commas between the values.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>TXT</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>TXT</strong><br>Plain text with no built-in structure. Your program decides the layout.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Go further (optional): JSON in Python</h2>
+<p class="mlrk-small">Optional. This 6-minute video is not counted in the time estimate above.</p>
+<p>As you watch, notice when the video uses <code>dump</code> and <code>load</code> (which work with files) and when it uses <code>dumps</code> and <code>loads</code> (which work with strings). The extra <code>s</code> stands for string.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/-51jxlQaxyA" title="How To Use JSON In Python (YouTube video)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=-51jxlQaxyA" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -531,7 +532,6 @@ git push</pre></li>
 
 <footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
 
-
 <script src="../../../assets/reading-kit.js"></script>
 <script>
 (function(){
@@ -545,148 +545,114 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-memory", buttonSelector:"#card-memory .mlrk-choice", feedbackSelector:"#memfb", correct:"gone",
-    feedback:{gone:"Right. Variables live in memory only while the script runs. Nothing survives unless the script writes it to a file.",
-              auto:"Python does not save or restore variables between runs. Each run starts with empty memory.",
-              hidden:"A dictionary never turns itself into a file. The script has to save it on purpose."}});
-
   K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recallfb", correct:"pairs",
     feedback:{pairs:"Right. Each key in a dict looks up its own value.",
               sequence:"That describes a list. A dict attaches a label, the key, to each value.",
               fixed:"Dicts can change. You can add, remove, and update key-value pairs after you create one."}});
 
   K.quiz({id:"q-tuple", buttonSelector:"#card-tuple .mlrk-choice", feedbackSelector:"#tuplefb", correct:"b",
-    feedback:{b:"Right. Indexing starts at 0, so wind[1] is the second item, 18.",
-              three:"1.2 is wind[0], the first item. Indexing starts at 0.",
+    feedback:{b:"Right. Counting starts at 0, so reading[1] is the second item, 55.",
+              three:"1.2 is reading[0], the first item. Counting starts at 0.",
               error:"Tuples can be indexed the same way lists can. There's no error here."}});
-
-  K.quiz({id:"q-record", buttonSelector:"#card-record .mlrk-choice", feedbackSelector:"#recordfb", correct:"dict",
-    feedback:{dict:"Right. A dict gives each piece its own key, like \"rain_mm\", \"wind\", and \"alerts\".",
-              tuple:"A tuple can hold all three values, but nothing labels which value is which.",
-              string:"One joined string loses the structure you need to pull each piece back out."}});
 
   K.dragDrop("#dragarea", "act-drag-formats");
   K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneJSON", label:"a sensor record with a nested list of alerts", expectedLabel:"JSON"},
-    chip2:{expectedId:"zoneCSV", label:"same three columns in every row, opened in a spreadsheet", expectedLabel:"CSV"},
-    chip3:{expectedId:"zoneTXT", label:"a one-line-per-hour log only your script reads", expectedLabel:"TXT"}
+    chip1:{expectedId:"zoneJSON", label:"station settings with a list of alerts inside (JSON keeps a list inside a record)", expectedLabel:"JSON"},
+    chip2:{expectedId:"zoneCSV", label:"a table of hourly rain for a spreadsheet (CSV is rows and columns)", expectedLabel:"CSV"},
+    chip3:{expectedId:"zoneTXT", label:"a one-line-per-hour note only the program reads (TXT has no fixed layout)", expectedLabel:"TXT"}
   }});
 
+  K.quiz({id:"q-anatomy", buttonSelector:"#card-anatomy .mlrk-choice", feedbackSelector:"#anatomyfb", correct:"two",
+    feedback:{two:"Right. Each \"\\n\" starts a new line, so the file holds two lines, and f.read() gives both back as one string.",
+              one:"Each string ends in \"\\n\", which starts a new line. Without the \\n, the two lines would run together like this.",
+              none:"The first with block closes the file after writing. The second with block opens it again to read, so the text is there."}});
+
   K.quiz({id:"q-write", buttonSelector:"#card-write .mlrk-choice", feedbackSelector:"#writefb", correct:"replaced",
-    feedback:{replaced:"Right. \"a\" keeps the lines already in the file and adds each new line to the end.",
-              kept:"\"r\" opens the file for reading only, so f.write() would fail.",
-              error:"\"w\" still empties the file on every run, so each hour you'd get the same line twice and lose the earlier hours."},
-    onDone(){revealWrite()}});
-
-  K.quiz({id:"q-read", buttonSelector:"#card-read .mlrk-choice", feedbackSelector:"#readfb", correct:"retrieve",
-    feedback:{retrieve:"Right. total holds the string \"1.5\", and multiplying a string by 2 repeats it. float(total) * 2 would give 3.0.",
-              convert:"That would need a number. f.read() returns the string \"1.5\", and the code never converts it.",
-              keepalive:"A string times a whole number is allowed in Python. It repeats the string instead of raising an error."},
-    onDone(){$("#readrun").hidden=false}});
-
-  K.quiz({id:"q-round1", buttonSelector:".round1", feedbackSelector:"#round1fb", correct:"keyerror",
-    feedback:{works:"JSON keys are always strings, so the key 7 was saved as \"7\". restored[7] finds no match.",
-              keyerror:"Right. The round trip turned 7 into \"7\", so looking up the integer 7 fails.",
-              typeerror:"The dict loads fine. The problem is the type of one key, not the whole load."},
-    onDone(){revealRound1()}});
-
-  K.quiz({id:"q-round2", buttonSelector:".round2", feedbackSelector:"#round2fb", correct:"list",
-    feedback:{tuple:"The tuple came back as the list [18, 'NW']. A list never equals a tuple, even with the same items.",
-              list:"Right. restored[\"wind\"] is now a list, and a list never equals a tuple. tuple(restored[\"wind\"]) would match.",
-              str:"Comparing a list with a tuple is allowed. It just gives False."},
-    onDone(){revealRound2()}});
-
-  K.quiz({id:"q-round3", buttonSelector:".round3", feedbackSelector:"#round3fb", correct:"typeerror",
-    feedback:{fine:"JSON has no date type, so json.dump() can't write a date object at all.",
-              typeerror:"Right. json.dump() only handles types JSON has. Saving the date as text, like \"2026-10-03\", would work.",
-              empty:"There's no silent fallback. json.dump() stops with a TypeError."},
-    onDone(){revealRound3()}});
+    feedback:{replaced:"Right. \"w\" empties the file every time it opens, so each pass wipes out the line before it. Only the last hour is left.",
+              kept:"That's what the log should do. But \"w\" empties the file each time it opens, so each pass erases the earlier line.",
+              error:"The 6:00 line is written first, then erased when the next pass opens the file with \"w\" again. The last line written is the one left."}});
 
   K.Scoring.register("q-fnnames",1,"quiz");
   let fnAttempts=0, fnDone=false;
+  // Accept the obvious variants: dump, .dump, dump(), json.dump, json.dump()
+  const fnName = v => v.trim().toLowerCase().replace(/\s+/g,"").replace(/^json/,"").replace(/^\./,"").replace(/\(.*\)$/,"");
   $("#fncheck").addEventListener("click",()=>{
     if(fnDone) return;
     fnAttempts++;
-    const b1=$("#blank1").value.trim().toLowerCase(), b2=$("#blank2").value.trim().toLowerCase();
+    const b1=fnName($("#blank1").value), b2=fnName($("#blank2").value);
     const ok1 = b1==="dump", ok2 = b2==="load";
     const fb=$("#fnfb");
     if(ok1 && ok2){
       K.Scoring.award("q-fnnames", fnAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct"+(fnAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> json.dump() writes, json.load() reads.";
-      fnDone=true;
+      fb.innerHTML="<strong>Correct"+(fnAttempts>1?" (2nd try, 0.5 pt)":" (1st try, 1 pt)")+".</strong> json.dump() saves, json.load() loads. The output is under the file now. Notice the keys: 6 and 7 came back as the strings '6' and '7'.";
+      fnDone=true; K.markDone("q-fnnames");
     } else if(fnAttempts>=2){
       K.Scoring.award("q-fnnames",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> First blank: <code>dump</code>. Second blank: <code>load</code>.";
-      fnDone=true;
+      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> First blank: <code>dump</code>. Second blank: <code>load</code>. The output is under the file now.";
+      fnDone=true; K.markDone("q-fnnames");
     } else {
       const notes=[];
-      if(!ok1) notes.push(b1==="dumps" ? "First blank: dumps returns a string. This call writes into the file f." : "First blank: not yet. It's the function that saves a value into f.");
-      if(!ok2) notes.push(b2==="loads" ? "Second blank: loads reads from a string. This call reads from the file f." : "Second blank: not yet. It's the function that rebuilds a value from f.");
+      if(!ok1) notes.push(b1==="dumps" ? "First blank: dumps gives back a string. This call writes into the file f." : "First blank: not yet. It's the function that saves a value into f.");
+      if(!ok2) notes.push(b2==="loads" ? "Second blank: loads reads from a string. This call reads from the file f." : "Second blank: not yet. It's the function that builds a value from f.");
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
       fb.innerHTML="<strong>Not quite yet.</strong> "+notes.join(" ")+" One more try before the answer is shown.";
     }
     fb.setAttribute("tabindex","-1");fb.focus();
   });
 
-  K.orderSteps("#ordersteps", {id:"act-order-save", correctOrder:["openw","dump","close","openr","load"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
-  K.flipCards("#vocab", "act-flip-vocab");
+  K.quiz({id:"q-round1", buttonSelector:".round1", feedbackSelector:"#round1fb", correct:"keyerror",
+    feedback:{works:"JSON keys are always strings, so the key 7 was saved as \"7\". restored[7] finds no match.",
+              keyerror:"Right. The round trip turned 7 into \"7\", so looking up the integer 7 fails. restored[\"7\"] would work.",
+              typeerror:"The dict loads fine. The problem is the type of one key, not the whole load."}});
+
+  K.quiz({id:"q-round2", buttonSelector:".round2", feedbackSelector:"#round2fb", correct:"list",
+    feedback:{tuple:"The tuple came back as the list [1.2, 55]. A list never equals a tuple, even with the same items.",
+              list:"Right. restored[\"reading\"] is now a list, and a list never equals a tuple, even with the same items.",
+              str:"Comparing a list with a tuple is allowed. It just gives False."}});
+
+  K.quiz({id:"q-round3", buttonSelector:".round3", feedbackSelector:"#round3fb", correct:"typeerror",
+    feedback:{fine:"JSON has no date type, so json.dump() can't write a date at all.",
+              typeerror:"Right. json.dump() only handles types JSON has. Saving the date as text, like \"2026-10-03\", would work.",
+              empty:"There's no quiet fallback. json.dump() stops with a TypeError."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"After a JSON round trip, every dict key is a string, even if it started as an integer.", correct:true,
-      hint:"Look again at Round 1 in section 7. What type was the key 7 after loading?",
+    {value:"a", label:"After a JSON round trip, a dict key that started as the integer 7 comes back as the string \"7\".", correct:true,
+      hint:"Look again at Round 1 in section 5. What type was the key 7 after loading?",
       explain:"JSON keys are always strings, so an integer key comes back as a string."},
-    {value:"b", label:"json.load() rebuilds the exact Python types that were saved, including tuples.", correct:false,
-      hint:"Look again at Round 2 in section 7. What came back in place of the tuple?",
+    {value:"b", label:"json.load() gives back a tuple when a tuple was saved.", correct:false,
+      hint:"Look again at Round 2 in section 5. What printed in place of the tuple?",
       explain:"JSON has no tuple type. A tuple comes back as a list."},
-    {value:"c", label:"A number read from a TXT or CSV file arrives as a string until your code converts it.", correct:true,
-      hint:"Look again at section 6. What did f.read() put in total?",
-      explain:"Text files hold text. \"1.5\" stays a string until float() or int() converts it."},
-    {value:"d", label:"Loading a JSON file gives you a new Python object built from the text, not the original object.", correct:true,
-      hint:"Look again at the paragraph just before the diagram in section 1. What does the file hold?",
-      explain:"The file holds only text. Every load builds a fresh object from that text."}
+    {value:"c", label:"f.read() gives back a string, even when the file holds only a number.", correct:true,
+      hint:"Look again at the paragraph about modes in section 3. What type is every value read from a text file?",
+      explain:"Text files hold text. \"1.5\" stays a string until your code turns it into a number."},
+    {value:"d", label:"Opening a file with \"w\" keeps the lines already in it.", correct:false,
+      hint:"Look again at what log_rain.py printed in section 3.",
+      explain:"\"w\" empties the file first. \"a\" is the mode that keeps what is there."},
+    {value:"e", label:"In a JSON file, Python's True has to be written as true.", correct:true,
+      hint:"Look again at the three JSON text rules at the end of section 5.",
+      explain:"JSON writes true, false and null in lowercase."}
   ]});
 
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"list",
+    feedback:{list:"Right. CSV fits flat rows. A list of alerts inside each day is a list inside a record, which JSON handles.",
+              tuple:"CSV stores numbers as text, and your code turns them back into numbers. The real problem is the list of alerts.",
+              fails:"CSV has no way to put a list inside a row. Each cell holds one flat value."}});
+
   const AI_PROMPTS = [
-    "Who opens this file next: a person in a spreadsheet, or a Python program that expects nested structure?",
-    "If one recipe gets a new ingredient later and the others don't, does a strict grid of columns handle that well?",
-    "Does this data have one flat table shape, or does each recipe hold a list inside it?"
+    "After loading, which values would you print to see their type, and what type do you expect each one to be?",
+    "Which of your saved values are tuples or have integer keys, and how will they look after a JSON round trip?",
+    "If you save and then load a tiny test dictionary first, what would you compare it with?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.style.display="block";
+    box.hidden=false;
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"-51jxlQaxyA"});
-  K.freeResponse({id:"resp-decision", selector:"#decision", minWords:10});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
-  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
-  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:6});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"concat",
-    feedback:{concat:"Right. The s in dumps stands for string. json.load() and json.loads() split the same way.",
-              import:"They are two different functions. One writes into a file, and the other returns a string.",
-              auto:"json.dumps() writes no files at all. It returns the JSON as a string."}});
-
-  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"syntax",
-    feedback:{syntax:"Right. This text has three problems: single quotes, a capital True, and a trailing comma. Real JSON allows none of them.",
-              filename:"A file name is only a label. It doesn't make the text inside valid JSON.",
-              trust:"AI-written JSON still needs checking. This text has three errors."}});
-
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"list",
-    feedback:{list:"Right. CSV fits flat rows. A list of guests inside each episode is nested data, which JSON handles.",
-              tuple:"CSV stores numbers as text, and your code converts them back. The real problem is the nested list.",
-              fails:"CSV has no way to nest a list inside a row. Each cell holds one flat value."}});
-
-  K.runFile({button:"#overwrite", target:"#overwriteout", file:"log_rain.py", output:"8:00 rain 0.9 mm", onRun(){
-    $("#overwritewrap").hidden=false;
-  }});
-  function revealWrite(){$("#overwrite").click()}
-  function revealRound1(){$("#round1run").hidden=false}
-  function revealRound2(){$("#round2run").hidden=false}
-  function revealRound3(){$("#round3run").hidden=false}
+  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:10});
+  K.flipCards("#vocab", "act-flip-vocab");
 
   const SAVE_RAIN = $("[data-file='save_rain.py'] .mlrk-screen").textContent;
   const LOAD_RAIN = $("[data-file='load_rain.py'] .mlrk-screen").textContent;
@@ -698,7 +664,7 @@ git push</pre></li>
     [DIR]:{type:"dir",children:["load_rain.py","save_rain.py"]},
     [DIR+"/save_rain.py"]:{type:"file",contents:SAVE_RAIN,run(){
       if(!fs[DIR+"/rain.json"]){
-        fs[DIR+"/rain.json"]={type:"file",contents:'{"6": [0.4, 12], "7": [1.2, 18]}'};
+        fs[DIR+"/rain.json"]={type:"file",contents:'{"6": [0.4, 58], "7": [1.2, 55]}'};
         fs[DIR].children.push("rain.json"); fs[DIR].children.sort();
       }
       return "Saved 2 hours to rain.json";
@@ -710,7 +676,7 @@ git push</pre></li>
         '    with open("rain.json") as f:',
         "         ~~~~^^^^^^^^^^^^^",
         "FileNotFoundError: [Errno 2] No such file or directory: 'rain.json'"].join("\n");
-      return "Loaded: {'6': [0.4, 12], '7': [1.2, 18]}\nHour 7: [1.2, 18]";
+      return "Loaded: {'6': [0.4, 58], '7': [1.2, 55]}\nHour 7: [1.2, 55]";
     }}
   };
   K.terminal("#rainterminal", {id:"act-terminal-roundtrip", minCommands:4, startPath:DIR, filesystem:fs});

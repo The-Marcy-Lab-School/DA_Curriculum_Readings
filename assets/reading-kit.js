@@ -207,7 +207,7 @@
         const why=(opts.feedback[opts.correct]||"").replace(/^\s*(Right|Correct|Yes|Exactly|Yep)[.!,]\s*/i,"");
         if(correctBtn) correctBtn.dataset.picked="correct";
         fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The correct choice was: "+
-          '<span class="mlrk-answer">'+label+"</span>. "+why;
+          '<span class="mlrk-answer">'+label+"</span>"+(/[.!?]$/.test(label.replace(/<[^>]+>/g,"").trim())?" ":". ")+why;
         done=true;
         buttons.forEach(b=>b.disabled=true);
       } else {
@@ -412,7 +412,13 @@
     el.append(grid,controls,log);
     let idx=-1;
     function render(){
-      [...grid.children].forEach((c,i)=>c.classList.toggle("mlrk-trace-current",i===idx));
+      // a box shows its label only once the learner reaches it, so the
+      // grid can't give away the answer before the first click
+      [...grid.children].forEach((c,i)=>{
+        c.classList.toggle("mlrk-trace-current",i===idx);
+        c.textContent=i<=idx?opts.steps[i].cell:String(i+1);
+        c.classList.toggle("mlrk-trace-hidden",i>idx);
+      });
       log.textContent=opts.steps.slice(0,idx+1).map(s=>s.line).join("\n")||"(nothing shown yet)";
       nextBtn.disabled=idx>=opts.steps.length-1;
     }
@@ -623,6 +629,7 @@
       readingId,title,timestamp:new Date().toISOString(),
       persona:Persona.get(),
       responses,
+      done:[...doneIds],
       score:Scoring.total(),
       scoreDetail:Scoring.items
     };
@@ -651,6 +658,8 @@
     if(!data||!data.responses) return;
     // restore the score first: the input events below can trigger a save
     if(data.scoreDetail) Object.assign(Scoring.items,data.scoreDetail);
+    // questions answered before a reload keep their Run buttons unlocked
+    (data.done||[]).forEach(markDone);
     for(const [k,v] of Object.entries(data.responses)){
       const el=document.getElementById(k);
       if(el){el.value=v;el.dispatchEvent(new Event("input"));}
@@ -763,6 +772,34 @@
       el.insertBefore(cmd,el.firstChild);
     });
   }
+  /* Standard run button: <button class="mlrk-btn" data-run="name.py"
+     data-after="q-id"></button> placed right under the code, followed by a
+     hidden <div class="mlrk-run" data-file="name.py" hidden>. Clicking shows
+     that output directly under the code. With data-after, the button stays
+     locked until the question is answered, then runs by itself, so the
+     learner predicts first and still sees the output beside the code. The
+     output is static HTML, so qa/reading_qa.py checks it against a real run. */
+  function wireRunButtons(root){
+    $$("button[data-run]",root).forEach(btn=>{
+      if(btn.dataset.runWired) return;
+      btn.dataset.runWired="1";
+      if(!btn.textContent.trim()) btn.textContent="Run python3 "+btn.dataset.run;
+      let out=btn.nextElementSibling;
+      while(out&&!(out.classList.contains("mlrk-run")&&out.dataset.file===btn.dataset.run)){
+        if(out.tagName==="BUTTON"||out.classList.contains("mlrk-lock-note")){out=out.nextElementSibling;continue}
+        out=null;
+      }
+      if(!out) return;
+      const show=()=>{
+        out.hidden=false;
+        const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+        out.scrollIntoView({block:"nearest",behavior:reduce?"auto":"smooth"});
+      };
+      btn.addEventListener("click",show);
+      if(btn.dataset.after) document.addEventListener("mlrk:done",e=>{if(e.detail.id===btn.dataset.after) show()});
+    });
+  }
+
   // Show a file's output on demand (a "Run python3 x.py" button).
   // opts:{button, target, file, output (string or ()=>string), onRun,
   //       after (activity id: keep the button locked until it's answered)}
@@ -783,6 +820,7 @@
     currentReadingId=opts.readingId;currentTitle=opts.title;
     fileTabs(document);
     wireGates(document);
+    wireRunButtons(document);
     const saved=Storage.load(opts.readingId);
     if(saved){
       restore(saved);
@@ -801,7 +839,7 @@
 
   global.ReadingKit={
     init, quiz, selectAll, flipCards, orderSteps, dragDrop, video, freeResponse,
-    activity, terminal, runFile, fileTabs, markDone, wireGates, shuffleSlots,
+    activity, terminal, runFile, fileTabs, markDone, wireGates, wireRunButtons, shuffleSlots,
     selfCheck, traceStepper, Scoring, Persona, Storage,
     snapshot, toMarkdown, toText, download, restore, wireImport, submitForCredit, buildSubmitURL
   };

@@ -22,9 +22,9 @@ of work, not a rigid script.
 
 1. **No module numbers, no "before lecture" language, anywhere in the reading's own text.** Folder paths can stay module-numbered for now (that's just current repo organization, checked by `qa/reading_qa.py`), but the page content must read as fully standalone — a reading may get moved between modules later.
 2. **Never reuse an example a Fellow will meet elsewhere in the module.** That means the LiveLab deck's analogies (including its backups), code examples, scenario and datasets; the code-along notebook's examples; every Data Challenge's scenario and dataset; and the graded project's stakeholders, scenarios and data files. The full list of where to look, and in what order of authority, is "Source of truth" below. Write the avoid-list into the content brief before choosing anything, then rotate real-world scenarios across finance / healthcare / public sector / nonprofit & social impact / business ops / professional services (see `pedagogy/pedagogy/PEDAGOGY_SUMMARY.md` §5).
-3. **Required sections**: **Introduction** (see its own bullet below — this is not optional and not the same thing as "Concept Overview," though the two can flow directly into each other), Concept Overview (scenario-based — open inside a concrete situation, never "a loop is X, a conditional is Y" style dry definitions), Technical Vocabulary, Interactive Practice, "How This Shows Up in Interviews" (data-focused; +SWE angle for Python/OOP/SQL), Overall Summary/Critical Thinking Questions, Additional Resources. Optional but encouraged when genuinely relevant: a prereq-recall section (1-4 questions, mixing types — recall, coding-based/trace, scenario-based, critical-thinking — covering the *actual* prerequisite skills the reading leans on later, not just the one most obvious one; e.g. a nested-loops reading that later unpacks tuples needs a tuple-unpacking prereq question too, not just `range()`), and a "thinking ahead" section on where the concept resurfaces later.
+3. **Required sections** — *superseded on 2026-10-23 by the template in "Readings a beginner can follow"; follow that template. The text below is kept for history.* **Introduction** (see its own bullet below — this is not optional and not the same thing as "Concept Overview," though the two can flow directly into each other), Concept Overview (scenario-based — open inside a concrete situation, never "a loop is X, a conditional is Y" style dry definitions), Technical Vocabulary, Interactive Practice, "How This Shows Up in Interviews" (data-focused; +SWE angle for Python/OOP/SQL), Overall Summary/Critical Thinking Questions, Additional Resources. Optional but encouraged when genuinely relevant: a prereq-recall section (1-4 questions, mixing types — recall, coding-based/trace, scenario-based, critical-thinking — covering the *actual* prerequisite skills the reading leans on later, not just the one most obvious one; e.g. a nested-loops reading that later unpacks tuples needs a tuple-unpacking prereq question too, not just `range()`), and a "thinking ahead" section on where the concept resurfaces later.
 
-3a. **The Introduction must do four things, explicitly** — not just imply them:
+3a. *(Folded into the template's hook on 2026-10-23: one scenario, one sentence each of why it matters and what the reader already knows, and a visual.)* **The Introduction must do four things, explicitly** — not just imply them:
    - A concrete scenario (this can be the same scenario the Concept Overview then develops further — they don't need to be two unrelated hooks).
    - **Why the reader should care** — a real stake: how this shows up in a job, a project, an interview, or a decision someone actually has to make. Not "this is an important skill you'll use throughout your career" — say something *specific* to this concept.
    - **A connection to what the reader already knows** *and* **where this is headed** — e.g. "you already know how to write a single loop; this is about combining two of them" plus a forward gesture in terms of *concepts*, never reading/lecture sequence (no "the next reading," no "in the upcoming lecture" — readings are standalone; point forward at an idea, not at another artifact).
@@ -84,11 +84,11 @@ teach them.
   `supplementary: true` in the manifest.
 
 ### Videos
-About **10-12 minutes** is the guide here, not the SWE repo's 5-minute cap, since
-DA readings run 25-50 minutes. But every pick must be verified: real duration,
-English **audio** (the default caption track's `languageCode` — an English
-title proves nothing), and embeddable. Over 12 warns, over 20 fails, and the
-verified duration goes into the displayed time estimate.
+A video is **optional**: it sits in a "Go further" spot near the end, is
+labeled optional, and stays **out of the displayed time estimate** (Angelica,
+2026-10-23). Up to about 12 minutes is fine. Every pick must still be verified:
+real duration, English **audio** (the default caption track's `languageCode` —
+an English title proves nothing), and embeddable. Over 12 warns, over 20 fails.
 
 ## Python examples are .py files (added 2026-10-18)
 
@@ -137,6 +137,102 @@ every block.
 - **Inline `<code>` in prose and in quiz answer choices can stay a single
   expression** (`range(3)`, `total += 1`). Any snippet longer than one line is a
   file.
+
+## Readings a beginner can follow (added 2026-10-23)
+
+Fellows told Angelica the Mod 1 readings were hard to follow. A beginner
+walkthrough of all 14 found four causes, none of them sentence length: code
+used Python no reading had taught, two quests ran in the wrong order, readings
+were twice as long as their skills needed (16–22 sections, ~44 minutes), and
+activities gave answers away. This section **supersedes** the required-sections
+list in hard constraint 3/3a and the ~45-minute ceiling below wherever they
+conflict.
+
+### The template (target 20–25 minutes, about 1,100–1,300 words of content)
+1. **Hook + goal**: one familiar scenario, 60 words or fewer. One sentence of
+   why it matters and one of what the reader already knows fold in here.
+2. **Recall**: 2 questions, only on things an earlier reading actually taught
+   (check the syntax ledger). A module's first reading teaches a short primer
+   instead.
+3. **Three idea blocks** (four for a big topic): plain explanation with
+   Vocabulary Mission terms bolded and defined at first use → the `.py` file →
+   a predict question → Run → output under the code.
+4. **One mixed check**: a select-all or a drag sort.
+5. **Wrap-up**: 3 bullets, one "new situation" question in the same scenario,
+   one sentence on interviews, one sentence on where the idea goes next.
+6. **One reflection box** with a sentence starter; the AI prompt is optional
+   inside it.
+7. **Key-term review cards** at the end, for the quest's Mission terms (plus at
+   most 2 others). Cards review terms; they are not the first time a reader
+   meets a word.
+8. Optional "Go further" video (not timed), Additional resources, then the
+   score / download / submit block.
+
+Do not add: a separate interviews section, "Thinking ahead", separate "Why
+this matters" / "Where you're coming from" paragraphs, more than one
+order-the-steps list, an "after watching" prompt, or the same code block shown
+more than twice. About 10–14 graded items in all.
+
+### Output rule
+Prompt above the code, then the file, then the locked Run button, then the
+output slot, then the answer choices:
+```html
+<p><strong>Predict:</strong> what does <code>name.py</code> print?</p>
+<pre class="mlrk-code" data-file="name.py">...</pre>
+<button class="mlrk-btn" data-run="name.py" data-after="q-id"></button>
+<div class="mlrk-run" data-file="name.py" hidden><pre>real output</pre></div>
+<div class="mlrk-card"> ...choices for quiz q-id... </div>
+```
+The kit (`wireRunButtons`, `wireGates`) labels the button, keeps it locked
+until `q-id` is answered, then shows the output directly under the code. A
+fill-in handler calls `ReadingKit.markDone("<id>")` when solved. Every file
+shows its real output at some point, and a fixed bug is shown as a file with
+output rather than described.
+
+### Step-by-step rule
+Every place the learner types gets a numbered `mlrk-steplist` directly above
+it: what to type, its exact format ("only the name, no dot, no parentheses"),
+and one line of why. Checkers accept the obvious variants (`get`/`.get`/
+`get()`, with or without `self.`) and name which blank is wrong. A terminal
+task gets one step per command. A module's first reading says once what
+running a file means.
+
+### Scenario rule
+One familiar scenario per reading, reused in its "new situation" question, at
+a 6th-grade level outside technical terms: short sentences, no idioms, no job
+jargon (take-home, technical screen, codebase, production, rubric). Explain any
+domain word once. Domains that tested hard: electric co-ops and kWh, payment
+fraud and chargebacks, airline manifests, hotel room codes. A variable name
+must not double as an everyday word (`fine` read as "OK").
+
+### Syntax ledger (Mod 1)
+A reading uses only Python taught by an earlier reading in quest order, or
+teaches it at first use in a 2–3 line "New in this file" note.
+- **1.1 first**: primer (`=`, `print(a, b)`, comparisons including `==` and
+  `!=`, lists, `#`, `:` + indentation, running a file), if/elif/else, `for`
+  (the loop variable holds the current item), `range(n)`, `while`,
+  `x = x - 10`.
+- **1.1 second**: nested loops and conditionals. No tuples, no f-strings.
+- **1.2 functions**: `def`, parameters, `return`, `None`, `+=`, string `+`,
+  `str()`, f-strings.
+- **1.2 scope**: local/global, reading a traceback, `min()`.
+- **1.3**: `in` on a list, `len()`, indexing from 0. No dict syntax.
+- **1.4**: `.append`, tuples and unpacking, dict `d[k]` and `d[k] = v`, sets,
+  `set()`, `.add`, `type()`. No hashing internals.
+- **1.5**: `import json`, `with open(...) as f:`, `f.write`, `f.read()`,
+  `"\n"`, `json.dump`/`json.load`, file modes.
+- **1.6 validation (first)**: `.split()`, `.isdigit()`, `int()`, `not`,
+  `and`/`or`, `enumerate(..., start=1)`.
+- **1.6 try/except (second)**: exceptions, `try`/`except ValueError`, bare
+  `except:` and why to avoid it, IndexError/KeyError.
+- **1.7**: accumulators.
+- **1.8 classes (first)**: `class`, `__init__`, `self`, attributes, methods.
+- **1.8 magic methods (second)**: `__str__`, `__repr__`, `repr()`.
+- **1.9**: a dict built with a plain loop, `.get`, `is None`.
+- **1.10**: `range(start, stop)`, looping over indexes.
+Big-O (1.3) teaches growth only; Lookups (1.9) teaches building and using a
+dict. One name per idea across both: **linear search** ("also called a linear
+scan" once), **dictionary lookup**, worst case = the item is last or missing.
 
 ## Source of truth: the decks, the labs repo, the projects repo (added 2026-10-15)
 
@@ -267,11 +363,11 @@ Angelica's calibration: students are encountering this material for the first ti
 - ~50 seconds per quiz/question-style item (read the prompt, look at any code, think, click, read the feedback).
 - ~2 minutes per hands-on activity (flip-card set, drag-drop, order-the-steps, trace-stepper, container-matcher, code simulator run) — each counted once regardless of how many sub-items it has.
 - ~2 minutes per free-response box.
-- The video's actual verified duration (see above), plus a little for the reflection question after it.
+- Not the video: it is optional and excluded from the estimate.
 - Plus roughly 5-8 minutes of baseline for reading the prose/scenario/code snippets themselves, more if the reading has a lot of setup text or an SVG diagram to read.
 Add it up, round to a comfortable range (e.g. "~33-36 minutes"). This will usually land noticeably higher than a quick mental estimate — that's the point.
 
-**Ceiling (confirmed 2026-09-01, supersedes the earlier 25-minute figure): a non-complex-topic reading with videos and activities can run up to ~45 minutes and that's completely fine.** Complex topics (the list in "Inputs to gather" above — data structures, OOP, functions, recursion, stats/distributions, linear algebra, ACID, design patterns, gradient descent) can run longer than 45 minutes when the content genuinely calls for it. Either way: never under-report the time to make a reading look shorter than it actually is — if the honest count lands at 44 minutes, say 44 minutes. If a non-complex reading's honest count comes out well past 45, that's a real signal to trim activities or split the reading, not to shrink the displayed number.
+**Target (2026-10-23, supersedes the 2026-09-01 ~45-minute ceiling): 20–25 minutes per reading, video excluded** (see "Readings a beginner can follow"). The old ceiling read: a non-complex-topic reading with videos and activities could run up to ~45 minutes. Complex topics (the list in "Inputs to gather" above — data structures, OOP, functions, recursion, stats/distributions, linear algebra, ACID, design patterns, gradient descent) can run longer than 45 minutes when the content genuinely calls for it. Either way: never under-report the time to make a reading look shorter than it actually is — if the honest count lands at 44 minutes, say 44 minutes. If a non-complex reading's honest count comes out well past 45, that's a real signal to trim activities or split the reading, not to shrink the displayed number.
 
 ## Submission / grading
 

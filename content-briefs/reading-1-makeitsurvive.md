@@ -4,7 +4,7 @@
 - **Skill tags (from taxonomy.json):** data-serialization
 - **Audience:** data + software engineering
 - **Complexity flag:** standard
-- **Estimated time:** 40–44 minutes (unchanged; activity count unchanged)
+- **Estimated time:** 21–24 minutes (content pass 2026-10-23; optional video excluded)
 
 ## Sources (see SKILL.md, "Source of truth")
 - **Drive decks read (2026-10-16):** Data Serialization — Why JSON, CSV, and TXT Exist (slides + notes); Recall & Practice: Functions, Validation, try/except, Serialization (serialization recall only)
@@ -25,15 +25,18 @@
 
 ## Prepare
 - **Data Challenge move:** serialize, hit an unserializable type, read the error, reload and check types → Round 3 (a date value) and Rounds 1–2 (types after reload), on weather data.
-- **Project roadblock defused:** code that runs without error but is wrong → KeyError after reload, string repetition from an unconverted file value.
+- **Project roadblock defused:** code that runs without error but is wrong → KeyError after reload, tuple-vs-list comparison; text files give back strings (stated, no string × int question).
 - **Confirmed:** works no Data Challenge step; never builds a results export.
 
 ## Real-world scenario
-- **Domain:** public sector / education — a school's rooftop weather station logging hourly rain and wind.
+- **Domain:** public sector / education — a school's rooftop weather station logging hourly rain and temperature (°F; wind dropped 2026-10-23 to cut domain words).
 - **Why it fits:** a running script losing its data overnight is concrete, and hour keys and (rain, wind) tuples are natural ints and tuples.
 
 ## Video pick
-- **How To Use JSON In Python — Tech With Tim, 6:11** (verified 371 s, English captions default, embeddable). Unchanged.
+- **How To Use JSON In Python — Tech With Tim, 6:11** (verified 371 s, English captions default, embeddable). Now an optional "Go further" plain iframe at the end: no points, not in the time estimate.
 
 ## Summary scenario
-- Podcast episodes with a nested guest list: why CSV is the wrong format.
+- Same scenario: a weather-club day record with a list of alerts, and why CSV is the wrong format.
+
+## Structure (content pass 2026-10-23)
+Hook + goal → recall (2) → saving means writing text (formats, drag sort) → open/write/read (`with open` anatomy box, `\n`, modes, log bug + fixed file) → save and load with JSON (`import json` note, fill-in, numbered terminal steps) → what comes back different (3 predict rounds, JSON text rules) → select-all → wrap-up → one reflection → key-term flip cards → optional video. 14 graded items.

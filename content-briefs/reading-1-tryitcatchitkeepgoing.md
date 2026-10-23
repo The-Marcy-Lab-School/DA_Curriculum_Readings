@@ -4,7 +4,8 @@
 - **Skill tags (from taxonomy.json):** debugging-testing
 - **Audience:** data + software engineering
 - **Complexity flag:** standard
-- **Estimated time:** 43 minutes (pill ~42–45; includes the 10:34 video)
+- **Estimated time:** 20 minutes (pill ~19–22; the 10:34 video is optional and excluded)
+- **Quest order:** second reading of Quest 1.6; assumes `.split()`, `.isdigit()`, `int()` from the validation reading (never named on the page).
 
 ## Sources (see SKILL.md, "Source of truth")
 - **Drive decks read:** both decks above, slides and speaker notes, via the Drive/Slides connectors on 2026-10-16.
@@ -25,42 +26,41 @@
 - **Quest Vocabulary Mission terms this reading defines:** Exception, Error Handling, `try`, `except`. (The validation reading defines Validation, Valid/Invalid/Malformed Input.)
 
 ## Prepare
-- **Data Challenge move:** count how many records ran before a crash → section 8 quiz on a hotel batch.
-- **Data Challenge move:** sort a bad value into validation (`if`) or error handling (`except`) → section 14 quiz (a number that converts but breaks a rule vs. text that won't convert).
-- **Data Challenge move:** named `except`, never bare → sections 4 and 18.
-- **Project roadblock defused:** one malformed line crashing the whole script → sections 1 and 8.
+- **Data Challenge move:** count how many records ran before a crash → section 2 quiz on a hotel batch.
+- **Data Challenge move:** sort a bad value into validation (`if`) or error handling (`except`) → section 6 new-situation quiz (a number that converts but breaks a rule).
+- **Data Challenge move:** named `except`, never bare → section 4.
+- **Project roadblock defused:** one malformed line crashing the whole script → sections 2 and 3.
 - **Confirmed:** the reading works no Data Challenge step and solves no part of the project.
 
 ## Real-world scenario for this reading
 - **Domain:** business ops (hotel booking requests).
-- **Scenario:** a small hotel's script books each night's online requests (`guest|nights|room_code`); one request has "4 nights" in the nights field.
+- **Scenario:** a small hotel's program books online room requests (`guest|nights|room_type`, room types `single`/`double`); one request has "4 nights" in the nights field.
 - **Why it fits:** everyone has booked or filled in a reservation form, and stray text in a number field is easy to picture.
 
+## Structure (content pass 2026-10-23)
+1 Recall (2: split, isdigit) · 2 Exception + crash cost (book_requests.py, traceback) · 3 Error handling, `try`, `except` + 3-step flow (read_nights.py, book_requests_safe.py) · 4 Two excepts, one error map of 4, bare `except:`, typed error name (room_total.py, room_types.py) · 5 Select-all · 6 Wrap-up + new situation · 7 Reflection · 8 Key terms review · optional video. Every file: predict → gated Run → output under the code.
+
 ## Vocabulary list
-- exception, error handling, traceback, try, except, ValueError, TypeError, NameError, IndexError, KeyError
+- Key terms review cards: exception, error handling, try, except, traceback, bare except.
+- Error map (once, in section 4): ValueError, KeyError, IndexError, NameError.
 
 ## Activity rotation
-- [x] flip cards
+- [x] flip cards (end-of-page review)
 - [x] quiz (radio) with feedback on every choice
 - [x] select-all-that-apply
-- [x] drag-and-drop matching
-- [x] fill-in-the-blank (type the exception name)
-- [x] code simulator (`process_request`)
-- [x] video reflection prompt
+- [x] typed answer (error name; accepts case and a stray colon)
+- [x] reflection with numbered steps and a sentence starter
 
 ## Video pick
 - **Title/channel/length:** Python Tutorial: Using Try/Except Blocks for Error Handling — Corey Schafer, 10:34 (verified 2026-10-16, English captions, embeddable)
 - **Link:** https://www.youtube.com/watch?v=NIWwJbo-9_8
-- **Why this one:** reputable channel; names specific exceptions rather than bare except.
+- **Placement:** optional "Go further" section; not in the time estimate or score.
 
 ## Interview relevance
-- "What happens if this value isn't a number?" and "why `except ValueError` instead of bare `except`?"
+- One sentence in the wrap-up; the bare-except quiz in section 4.
 
 ## AI integration
-- AI-brainstormed sentence starters for the control-flow explanation (section 16).
+- Optional AI-brainstormed sentence starter inside the reflection box.
 
 ## Critical thinking / summary questions
-- New scenario: a school enrollment script's dictionary lookup on a course that may be missing (KeyError plan).
-
-## Thinking ahead
-- Choosing, for a whole function, which failures to catch and which to let surface.
+- Same scenario: a 45-night request that converts fine but breaks the 1–30 rule (validation, not except).

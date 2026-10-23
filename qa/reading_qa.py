@@ -442,11 +442,19 @@ def _urlopen_relaxed(req):
         raise
 
 
+def _video_ids(html):
+    """YouTube ids from kit video() calls and from plain embeds (optional
+    "Go further" videos are plain iframes, 2026-10-23, and still get checked)."""
+    ids = re.findall(r'videoId\s*:\s*"([A-Za-z0-9_-]{6,})"', html)
+    ids += re.findall(r'youtube(?:-nocookie)?\.com/embed/([A-Za-z0-9_-]{6,})', html)
+    return list(dict.fromkeys(ids))
+
+
 def check_video_language(html, skip_network=False):
     # A video's title/channel name being in English is not proof its spoken
     # audio is — a real bug shipped this way (English title, Hindi audio).
     # The reliable signal is the watch page's default (first) caption track.
-    ids = re.findall(r'videoId\s*:\s*"([A-Za-z0-9_-]{6,})"', html)
+    ids = _video_ids(html)
     if not ids:
         return []
     if skip_network:
@@ -627,7 +635,7 @@ def check_py_files(path, html):
 
 
 def check_video_embeddable(html, skip_network=False):
-    ids = re.findall(r'videoId\s*:\s*"([A-Za-z0-9_-]{6,})"', html)
+    ids = _video_ids(html)
     if not ids or skip_network:
         return []
     findings = []
@@ -647,7 +655,7 @@ def check_video_embeddable(html, skip_network=False):
 
 
 def check_video_duration(html, skip_network=False):
-    ids = re.findall(r'videoId\s*:\s*"([A-Za-z0-9_-]{6,})"', html)
+    ids = _video_ids(html)
     if not ids or skip_network:
         return []
     findings = []

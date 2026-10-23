@@ -8,6 +8,7 @@
 .cf-flow{display:flex;flex-direction:column;gap:.5rem;margin:1rem 0}
 .cf-flow-step{border:2px solid var(--mlrk-callout-blue-border);background:var(--mlrk-callout-blue-fill);border-radius:12px;padding:.7rem 1rem;font-weight:700}
 .cf-flow-note{font-size:.92rem;font-weight:600;color:var(--mlrk-text-on-light-muted);padding-left:.3rem}
+.cf-primer li{margin:.45rem 0}
 @media(max-width:650px){.cf-flow{gap:.4rem}}
 </style>
 </head><body>
@@ -15,10 +16,9 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Choose, Repeat, Trace</h1>
-<p class="mlrk-lead">A movie theater's scheduling script reads tonight's movies one at a time. For each movie it asks one question: is this movie longer than 150 minutes? If yes, the script books a long time slot. If no, it books a standard slot. Then it asks the same question about the next movie, until the list runs out. <strong>Picking the slot is a conditional. Asking again for every movie is a loop.</strong></p>
+<p class="mlrk-lead">A movie theater has a list of tonight's movies. A small Python program, called a script, looks at each movie, one at a time. Is the movie longer than 150 minutes? Then it gets a long time slot. If not, it gets a regular slot. <strong>Choosing the slot is a conditional. Doing it again for every movie is a loop.</strong></p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~42–45 minutes</span>
-  <span class="mlrk-pill">Includes a 10-minute video</span>
+  <span class="mlrk-pill">~20–23 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -50,12 +50,10 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Concept overview</h2>
-<p>Start with one movie that runs 98 minutes. The script asks: is 98 more than 150? No, so it books a standard slot and skips the long-slot path. Code shaped like this is a <strong>conditional</strong>: it checks a condition and picks which branch runs.</p>
-
+<h2>1. The big idea</h2>
 <svg class="mlrk-illustration" viewBox="0 0 640 200" role="img" aria-labelledby="cfFlowTitle cfFlowDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="cfFlowTitle">Three movies flowing one at a time into a single decision</title>
-  <desc id="cfFlowDesc">Three movie cards, 98 minutes, 165 minutes, and 122 minutes, each feed one at a time into a diamond asking "over 150 minutes?" A yes answer leads to a "long slot" box; a no answer leads to a "standard slot" box.</desc>
+  <desc id="cfFlowDesc">Three movie cards, 98 minutes, 165 minutes, and 122 minutes, each feed one at a time into a diamond asking "over 150 minutes?" A yes answer leads to a "long slot" box; a no answer leads to a "regular slot" box.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
     <g fill="#FFFCF7" stroke="#264326" stroke-width="2.5">
       <rect x="20" y="20" width="100" height="46" rx="10"/>
@@ -77,65 +75,62 @@
     <rect x="408" y="30" width="170" height="50" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
     <text x="493" y="61" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">Long slot</text>
     <rect x="408" y="125" width="170" height="50" rx="10" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="493" y="156" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">Standard slot</text>
+    <text x="493" y="156" text-anchor="middle" font-size="16" font-weight="700" fill="#261F1D">Regular slot</text>
   </g>
 </svg>
-
-<p>One movie is never the whole schedule. The script asks the same question about every movie on the list, in order, until none are left. That repeating is a <strong>loop</strong>. One pass through it, one movie and one answer, is an <strong>iteration</strong>. The code that runs on each pass is the <strong>loop body</strong>. Here, the loop body checks the runtime and books a slot.</p>
-<div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> a loop that visits every item, plus a conditional that decides what to do with each item, is the shape behind most code that handles a list. Filtering records, flagging bad rows, and pulling out the rows someone needs to see all use it. Interviewers often open with six lines of it and ask what it prints.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to compare two values and how to store a list of them. This reading adds two controls: what happens to each item, and how many times code repeats. After that comes putting one loop inside another, and then wrapping the whole pattern in a reusable piece of code you can point at any list.</p>
-</div>
-<p>Python runs the same steps in the same order every time. So if you read the code carefully, you can say exactly what it prints before you run it. That is the skill this reading builds.</p>
+<p>Going through a list and deciding what to do with each item is one of the most common jobs in code. Data work uses it to pick out the rows you need and mark the bad ones. Later, you will put one loop inside another and wrap the whole pattern into code you can reuse.</p>
+<p>Python runs the same steps in the same order every time. So if you read code carefully, you can say what it prints before you run it. That skill is called <strong>tracing</strong>, and this reading practices it.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall before choosing</h2>
-<p>This reading builds on three prerequisite skills: data types, comparisons, and lists. Answer these four questions before moving on.</p>
-<div class="mlrk-card" id="card-recall"><p><strong>Which of these three values is a string?</strong></p>
-<button type="button" class="mlrk-choice" data-a="b">150</button>
-<button type="button" class="mlrk-choice" data-a="c">150.0</button>
-<button type="button" class="mlrk-choice" data-a="a">"150"</button>
+<h2>2. Reading Python</h2>
+<p>This is your first look at Python code. Here are the pieces every file in this reading uses.</p>
+<ul class="cf-primer">
+  <li><code>runtime = 98</code> stores the value 98 under the name <code>runtime</code>. A name that holds a value is a <strong>variable</strong>. Here <code>=</code> means "store," not "is equal to."</li>
+  <li><code>print(runtime)</code> shows the value on the screen. <code>print("Runtime:", runtime)</code> shows both values, with a space between them.</li>
+  <li><code>98</code> is a number. <code>"98"</code>, in quotes, is a string: text. You met these data types before.</li>
+  <li><code>&gt;</code> <code>&gt;=</code> <code>&lt;</code> <code>&lt;=</code> <code>==</code> <code>!=</code> compare two values. Each comparison gives back <code>True</code> or <code>False</code>. Two equals signs, <code>==</code>, ask "are these equal?" and <code>!=</code> asks "are these different?"</li>
+  <li><code>[98, 165, 122]</code> is a <strong>list</strong>: several values kept in order, inside square brackets.</li>
+  <li>A line that starts with <code>#</code> is a note for people. Python skips it.</li>
+  <li>A line that ends with a colon <code>:</code> owns the lines under it that are pushed in by 4 spaces. That pushed-in group is called a block. You will see this with <code>if</code>, <code>for</code>, and <code>while</code>.</li>
+</ul>
+<p><strong>Running a file</strong> means Python does every line, top to bottom. The Run button shows what it prints. On your own laptop you'd type <code>python3 theater_notes.py</code> in the terminal.</p>
+<pre class="mlrk-code" data-file="theater_notes.py"># Lines that start with # are notes for people. Python skips them.
+movie = "Moonlight Run"
+runtime = 98
+
+print(movie)
+print("Runtime:", runtime)
+print(runtime > 150)
+print(runtime == 98)
+
+runtimes = [98, 165, 122]
+print(runtimes)</pre>
+<button type="button" class="mlrk-btn" data-run="theater_notes.py"></button>
+<div class="mlrk-run" data-file="theater_notes.py" hidden><pre>Moonlight Run
+Runtime: 98
+False
+True
+[98, 165, 122]</pre></div>
+
+<div class="mlrk-card" id="card-recall" style="margin-top:1rem"><p><strong>Which of these three values is a string?</strong></p>
+<button type="button" class="mlrk-choice" data-a="b"><code>150</code></button>
+<button type="button" class="mlrk-choice" data-a="c"><code>150.0</code></button>
+<button type="button" class="mlrk-choice" data-a="a"><code>"150"</code></button>
 <div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-compare" style="margin-top:.8rem"><p><strong>Coding check:</strong> <code>runtime = 98</code>. Does <code>runtime &gt; 150</code> evaluate to <code>True</code>?</p>
-<button type="button" class="mlrk-choice" data-a="no">No</button>
-<button type="button" class="mlrk-choice" data-a="yes">Yes</button>
+<div class="mlrk-card" id="card-compare" style="margin-top:.8rem"><p><strong>A file sets <code>runtime = 98</code> and then runs <code>print(runtime &gt; 150)</code>. What shows on the screen?</strong></p>
+<button type="button" class="mlrk-choice" data-a="no"><code>False</code></button>
+<button type="button" class="mlrk-choice" data-a="yes"><code>True</code></button>
 <div id="comparefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-list" style="margin-top:.8rem"><p><strong>Scenario check:</strong> the script stores tonight's runtimes as <code>runtimes = [98, 165, 122]</code>. What is true about this list?</p>
-<button type="button" class="mlrk-choice" data-a="three">It holds three separate values, and each one can be checked with a comparison on its own.</button>
-<button type="button" class="mlrk-choice" data-a="one">It is a single value that cannot be broken into individual parts.</button>
-<button type="button" class="mlrk-choice" data-a="string">It must be converted to a string before Python can read it.</button>
-<div id="listfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-why" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> why does a conditional need a comparison like <code>runtime &gt; 150</code> instead of just the plain number <code>150</code>?</p>
-<button type="button" class="mlrk-choice" data-a="bool">A comparison produces <code>True</code> or <code>False</code>, and a conditional needs exactly that kind of answer to pick a branch.</button>
-<button type="button" class="mlrk-choice" data-a="cantread">Python cannot read a plain number inside an <code>if</code> statement at all.</button>
-<button type="button" class="mlrk-choice" data-a="speed">Comparisons only exist to make the code run faster.</button>
-<div id="whyfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue"><p>Comparisons, data types, and lists work the same way inside a loop or an <code>if</code> as they do on their own. A loop changes how many times a comparison runs, not what the comparison means.</p></div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Technical vocabulary</h2>
-<p>Flip all seven cards, then start tracing code.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>conditional</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Conditional</strong><br>Code that checks a condition, True or False, and picks which branch runs. In an <code>if</code>/<code>elif</code>/<code>else</code> chain, exactly one branch runs.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>branch</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Branch</strong><br>One possible path in a conditional: the code under an <code>if</code>, an <code>elif</code>, or an <code>else</code>.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>loop</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Loop</strong><br>A structure that repeats a block of code, once per item or for as long as a condition holds.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>iteration</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Iteration</strong><br>One single pass through a loop's body.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>loop body</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Loop body</strong><br>The indented code inside a loop. It runs once per iteration.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>range()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>range()</strong><br>A built-in function that makes numbers to loop over. <code>range(n)</code> starts at 0 and stops before <code>n</code>, so it gives <code>n</code> numbers.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>off-by-one error</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Off-by-one error</strong><br>A loop that runs one time too many or one time too few, because a start or stop value is one step off. Python raises no error. The result is just wrong by one.</span></button>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>4. <code>if</code> / <code>elif</code> / <code>else</code>: exactly one path runs</h2>
-<p>Python reads an <code>if</code>/<code>elif</code>/<code>else</code> chain from top to bottom and stops at the first branch whose condition is True. An <code>elif</code> is checked only when every earlier branch in the chain was False. An <code>else</code> runs only when no earlier branch was True. So exactly one branch runs, and tracing the chain means finding that branch. A chain with no <code>else</code> can run no branch at all, when every condition is False.</p>
-<p>The theater's lobby screen tells moviegoers how soon their show starts. In <code>lobby_screen.py</code>, the show starts in 25 minutes. Predict what prints before you run it.</p>
+<h2>3. <code>if</code> / <code>elif</code> / <code>else</code>: exactly one path runs</h2>
+<p>A <strong>conditional</strong> is code that checks a condition, <code>True</code> or <code>False</code>, and picks which code runs next. Each possible path is a <strong>branch</strong>: the block under an <code>if</code>, an <code>elif</code> (short for "else if"), or an <code>else</code>.</p>
+<p>Python reads the chain from top to bottom. It stops at the first branch whose condition is <code>True</code> and runs only that block. An <code>else</code> runs only when every condition before it was <code>False</code>. So exactly one branch runs.</p>
+<p>The theater's lobby screen tells people how soon their movie starts. In <code>lobby_screen.py</code>, the movie starts in 25 minutes.</p>
+<p><strong>Predict:</strong> what does <code>lobby_screen.py</code> print?</p>
 <pre class="mlrk-code" data-file="lobby_screen.py">minutes_left = 25
 
 if minutes_left >= 60:
@@ -144,9 +139,9 @@ elif minutes_left >= 15:
     print("head over soon")
 else:
     print("starting now")</pre>
-<div class="mlrk-actions"><button type="button" id="predictrun" class="mlrk-btn">Run python3 lobby_screen.py</button></div>
-<div class="mlrk-run" id="predictoutwrap" hidden><pre id="predictout" aria-live="polite"></pre></div>
-<div class="mlrk-card" id="card-predict" style="margin-top:1rem"><p><strong>Before running: what prints?</strong></p>
+<button type="button" class="mlrk-btn" data-run="lobby_screen.py" data-after="q-predict"></button>
+<div class="mlrk-run" data-file="lobby_screen.py" hidden><pre>head over soon</pre></div>
+<div class="mlrk-card" id="card-predict" style="margin-top:1rem"><p><strong>What prints?</strong></p>
 <button type="button" class="mlrk-choice" data-a="halfway">head over soon</button>
 <button type="button" class="mlrk-choice" data-a="goal">plenty of time</button>
 <button type="button" class="mlrk-choice" data-a="starting">starting now</button>
@@ -154,103 +149,95 @@ else:
 </section>
 
 <section class="mlrk-section">
-<h2>5. A <code>for</code> loop repeats once per item</h2>
-<p>A <code>for</code> loop runs its body once for each item in a list. So the number of items tells you the number of iterations, without running anything.</p>
+<h2>4. <code>for</code> loops and <code>range()</code></h2>
+<p>A <strong>loop</strong> repeats a block of code. A <code>for</code> loop repeats it once for each item in a list. One pass through the loop is an <strong>iteration</strong>. The pushed-in code that runs on every pass is the <strong>loop body</strong>.</p>
+<p>In <code>showtimes.py</code>, the name <code>show</code> holds the current item. On the first pass, <code>show</code> is <code>"4:15"</code>. On the next pass, it is <code>"7:00"</code>.</p>
+<p><strong>Predict:</strong> how many lines does <code>showtimes.py</code> print?</p>
 <pre class="mlrk-code" data-file="showtimes.py">showtimes = ["4:15", "7:00", "9:45"]
 
 for show in showtimes:
-    print(show)</pre>
-<div class="mlrk-card" id="card-foriter" style="margin-top:1rem"><p><strong>How many iterations happen?</strong></p>
+    print("Showing at", show)</pre>
+<button type="button" class="mlrk-btn" data-run="showtimes.py" data-after="q-foriter"></button>
+<div class="mlrk-run" data-file="showtimes.py" hidden><pre>Showing at 4:15
+Showing at 7:00
+Showing at 9:45</pre></div>
+<div class="mlrk-card" id="card-foriter" style="margin-top:1rem"><p><strong>How many lines print?</strong></p>
 <button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
+<button type="button" class="mlrk-choice" data-a="1">1</button>
 <button type="button" class="mlrk-choice" data-a="4">4</button>
 <div id="foriterfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
 
-<section class="mlrk-section">
-<h2>6. <code>range()</code>: watch the stopping boundary</h2>
-<p><code>range(n)</code> gives exactly <code>n</code> numbers. It starts at 0 and stops one step <strong>before</strong> <code>n</code>, so <code>range(3)</code> gives 0, 1, and 2. The stop value is never included.</p>
-<div class="mlrk-card" id="card-rangebound"><p><strong>What does <code>range(4)</code> produce?</strong></p>
+<p style="margin-top:1.2rem">Sometimes you want to repeat a set number of times instead of going through a list. <code>range(n)</code> makes <code>n</code> numbers to loop over. It starts at 0 and stops one step <strong>before</strong> <code>n</code>. So <code>range(3)</code> gives 0, 1, and 2. The stop number itself is never included.</p>
+<div class="mlrk-card" id="card-rangebound"><p><strong>What numbers does <code>range(4)</code> give?</strong></p>
 <button type="button" class="mlrk-choice" data-a="0123">0, 1, 2, 3</button>
 <button type="button" class="mlrk-choice" data-a="1234">1, 2, 3, 4</button>
 <button type="button" class="mlrk-choice" data-a="01234">0, 1, 2, 3, 4</button>
 <div id="rangeboundfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<pre class="mlrk-code" data-file="screen_numbers.py" style="margin-top:1rem">for screen in ____(7):
-    print(screen)</pre>
-<div class="mlrk-fillblank">
-  <label for="blankinput">Type the missing function name:</label>
-  <input type="text" id="blankinput" autocomplete="off">
-  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
-</div>
-<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
 </section>
 
 <section class="mlrk-section">
-<h2>7. Off-by-one errors: wrong by exactly one</h2>
-<p>The theater has seven screens. Before the doors open, <code>screen_check.py</code> should print one line for each screen:</p>
+<h2>5. Off-by-one errors: wrong by exactly one</h2>
+<p>The theater has seven screens. Before the doors open, <code>screen_check.py</code> should print one line for each screen. It prints six.</p>
 <pre class="mlrk-code" data-file="screen_check.py">for screen in range(6):
     print("checking screen", screen + 1)</pre>
-<p>Running <code>python3 screen_check.py</code> prints this:</p>
 <div class="mlrk-run" data-file="screen_check.py"><pre>checking screen 1
 checking screen 2
 checking screen 3
 checking screen 4
 checking screen 5
 checking screen 6</pre></div>
-<p>Six lines, not seven. <code>range(6)</code> gives 0 through 5, so <code>screen + 1</code> stops at 6. Screen 7 never gets checked. This is an <strong>off-by-one error</strong>: a loop that runs one time too many or one time too few, because its start or stop value is one step off.</p>
-<p>Python raises no error here. <code>screen_check.py</code> runs and finishes normally, so nothing on screen says anything is wrong. Two habits catch it:</p>
+<p><code>range(6)</code> gives 0 through 5. The file prints <code>screen + 1</code>, so the last line says 6. Screen 7 never gets checked. This is an <strong>off-by-one error</strong>: a loop that runs one time too many or one time too few, because a start or stop number is one step off.</p>
+<p>Python shows no error here. The file runs and finishes, so nothing on the screen says anything is wrong. Two habits catch it:</p>
 <ol class="mlrk-steplist">
-  <li>Trace the <strong>first</strong> and <strong>last</strong> iterations by hand, and compare them with what you meant. The first should be screen 1, and the last should be screen 7.</li>
-  <li>Count the lines that print, and compare that count with the number you expected. Six is not seven.</li>
+  <li>Trace the <strong>first</strong> and <strong>last</strong> passes by hand. The first should say screen 1, and the last should say screen 7.</li>
+  <li>Count the lines that print. Six is not seven.</li>
 </ol>
-<pre class="mlrk-code" data-file="screen_check.py" style="margin-top:1rem">for screen in range(____):
+<p>Now fix it. This is the same file with the stop number blank.</p>
+<pre class="mlrk-code" data-file="screen_check.py" id="obocode">for screen in range(<span id="oboblank">____</span>):
     print("checking screen", screen + 1)</pre>
+<button type="button" class="mlrk-btn" data-run="screen_check.py" data-after="q-obo" data-after-note="Solve the blank first. Then you can run the fixed file."></button>
+<div class="mlrk-run" data-file="screen_check.py" hidden><pre>checking screen 1
+checking screen 2
+checking screen 3
+checking screen 4
+checking screen 5
+checking screen 6
+checking screen 7</pre></div>
+<ol class="mlrk-steplist" style="margin-top:1rem">
+  <li>Look at the last line you want: <code>checking screen 7</code>.</li>
+  <li>The file prints <code>screen + 1</code>, so <code>screen</code> must reach 6 on the last pass.</li>
+  <li><code>range()</code> stops one before its number. Type the number that makes it stop right after 6. Type only the number.</li>
+</ol>
 <div class="mlrk-fillblank">
-  <label for="oboinput">Type the stop value that makes <code>screen_check.py</code> check all seven screens:</label>
+  <label for="oboinput">Stop number for <code>range()</code>:</label>
   <input type="text" id="oboinput" autocomplete="off">
   <button type="button" id="obocheck" class="mlrk-btn">Check</button>
 </div>
 <div id="obofb" class="mlrk-feedback" tabindex="-1"></div>
-<details class="mlrk-hint"><summary>Need a hint?</summary>
-  <p>Count the lines you need, not the numbers <code>range()</code> gives. The last line should read <code>checking screen 7</code>. Since <code>screen + 1</code> is what prints, work backward to the last value <code>screen</code> has to hold.</p>
-</details>
 </section>
 
 <section class="mlrk-section">
-<h2>8. Sort by trigger: fixed count vs. a condition</h2>
-<p>Drag each description onto the loop type it matches. Then press "Check my matches."</p>
-<div id="dragarea">
-<div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">Repeat a fixed number of times, once per item in a known list</span>
-  <span id="chip2" class="mlrk-draggable">Repeat for as long as a condition stays True, until something changes it</span>
-</div>
-<div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>for loop</strong></p><div class="mlrk-dropzone" id="zoneFor"></div></div>
-  <div><p class="mlrk-small"><strong>while loop</strong></p><div class="mlrk-dropzone" id="zoneWhile"></div></div>
-</div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
-<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>9. <code>while</code>: the condition is checked before every pass</h2>
+<h2>6. <code>while</code> loops: check, run, check again</h2>
+<p>A <code>while</code> loop repeats for as long as its condition stays <code>True</code>. Python checks the condition before every pass:</p>
 <div class="cf-flow">
   <div class="cf-flow-step">Check the condition</div>
   <div class="cf-flow-note">the body runs only when the check is True</div>
   <div class="cf-flow-step">Run the loop body</div>
-  <div class="cf-flow-note">the body usually changes a value the condition uses</div>
+  <div class="cf-flow-note">the body changes a value the condition uses</div>
   <div class="cf-flow-step">Check the condition again, with the new value</div>
 </div>
-<p>If the condition is False the very first time, the body never runs. Before the doors open, a lobby sign counts down 10 minutes at a time. This is the <code>countdown</code> loop, saved as <code>countdown.py</code>:</p>
+<p>Before the doors open, a lobby sign counts down 10 minutes at a time. The last line of <code>countdown.py</code> is <code>minutes = minutes - 10</code>. Python works out the right side first: the current <code>minutes</code> minus 10. Then it stores that result back under the name <code>minutes</code>. So 30 becomes 20.</p>
+<p><strong>Predict:</strong> what does <code>countdown.py</code> print?</p>
 <pre class="mlrk-code" data-file="countdown.py">minutes = 30
 
 while minutes > 0:
     print(minutes)
     minutes = minutes - 10</pre>
-<div class="mlrk-actions"><button type="button" id="whilerun" class="mlrk-btn">Run python3 countdown.py</button></div>
-<div class="mlrk-run" id="whileoutwrap" hidden><pre id="whileout" aria-live="polite"></pre></div>
-<div class="mlrk-card" id="card-whiletrace" style="margin-top:1rem"><p><strong>Before running: what prints?</strong></p>
+<button type="button" class="mlrk-btn" data-run="countdown.py" data-after="q-whiletrace"></button>
+<div class="mlrk-run" data-file="countdown.py" hidden><pre>30
+20
+10</pre></div>
+<div class="mlrk-card" id="card-whiletrace" style="margin-top:1rem"><p><strong>What prints, one number per line?</strong></p>
 <button type="button" class="mlrk-choice" data-a="200300400">30, 20, 10</button>
 <button type="button" class="mlrk-choice" data-a="200300400500">30, 20, 10, 0</button>
 <button type="button" class="mlrk-choice" data-a="300400500">20, 10, 0</button>
@@ -258,48 +245,21 @@ while minutes > 0:
 </section>
 
 <section class="mlrk-section">
-<h2>10. Order the trace steps</h2>
-<p>The <code>countdown</code> loop has printed 30 and 20, and <code>minutes</code> is now 10. Put the next four events in the order they happen.</p>
-<ol class="mlrk-steplist">
-  <li>Click the events in order.</li>
-  <li>Click an event again to remove it if you change your mind.</li>
-  <li>Press "Check my order." This is a self-check, not graded.</li>
-</ol>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="run-body"><span class="mlrk-order-num"></span> <code>print(minutes)</code> shows 10.</li>
-  <li class="mlrk-orderitem" data-step="check-again"><span class="mlrk-order-num"></span> Python checks <code>minutes &gt; 0</code> with <code>minutes</code> at 0. It is False, so the loop ends and 0 never prints.</li>
-  <li class="mlrk-orderitem" data-step="check-first"><span class="mlrk-order-num"></span> Python checks <code>minutes &gt; 0</code> with <code>minutes</code> at 10. It is True.</li>
-  <li class="mlrk-orderitem" data-step="update-state"><span class="mlrk-order-num"></span> <code>minutes = minutes - 10</code> sets <code>minutes</code> to 0.</li>
-</ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>11. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement that is TRUE about conditionals and loops.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> An <code>elif</code> is checked only when the <code>if</code> that opens its chain was False.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A <code>while</code> loop's condition is checked once, before the very first pass, and never checked again after that.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> <code>range(6)</code> produces seven values: 0 through 6.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Once one branch in an <code>if</code>/<code>elif</code>/<code>else</code> chain runs, Python skips every remaining branch in that chain.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
-<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Two ideas, one move: loop + conditional together</h2>
-<p>A loop visits every item. A conditional inside the loop body decides what happens to the current item, and Python checks that condition again on every iteration. This is the <code>runtimes</code> loop from the theater's scheduling script, <code>runtimes.py</code>:</p>
+<h2>7. Loop + conditional together</h2>
+<p>Now put the two ideas together, like the theater script from the start. The loop visits every movie. The <code>if</code> inside the loop body decides the slot for the current movie. Python checks that condition again on every pass.</p>
+<p><strong>Predict:</strong> how many movies does <code>runtimes.py</code> put in a long slot?</p>
 <pre class="mlrk-code" data-file="runtimes.py">runtimes = [98, 165, 150]
 
 for runtime in runtimes:
     if runtime > 150:
         print(runtime, "long slot")
     else:
-        print(runtime, "standard slot")</pre>
-<div class="mlrk-actions"><button type="button" id="comborun" class="mlrk-btn">Run python3 runtimes.py</button></div>
-<div class="mlrk-run" id="combooutwrap" hidden><pre id="comboout" aria-live="polite"></pre></div>
-<div class="mlrk-card" id="card-combo" style="margin-top:1rem"><p><strong>How many movies does the <code>runtimes</code> loop book into a long slot?</strong></p>
+        print(runtime, "regular slot")</pre>
+<button type="button" class="mlrk-btn" data-run="runtimes.py" data-after="q-combo"></button>
+<div class="mlrk-run" data-file="runtimes.py" hidden><pre>98 regular slot
+165 long slot
+150 regular slot</pre></div>
+<div class="mlrk-card" id="card-combo" style="margin-top:1rem"><p><strong>How many long slots?</strong></p>
 <button type="button" class="mlrk-choice" data-a="1">1</button>
 <button type="button" class="mlrk-choice" data-a="2">2</button>
 <button type="button" class="mlrk-choice" data-a="3">3</button>
@@ -307,67 +267,80 @@ for runtime in runtimes:
 </section>
 
 <section class="mlrk-section">
-<h2>13. Debug by tracing</h2>
-<div class="mlrk-card" id="card-debug"><p><strong>Your prediction came out one line short of what a snippet really printed, and Python raised no error. What is the best next move?</strong></p>
-<button type="button" class="mlrk-choice" data-a="trace">Trace the first iteration and the last iteration by hand, and check each boundary on its own.</button>
-<button type="button" class="mlrk-choice" data-a="random">Assume Python randomly skipped an iteration.</button>
-<button type="button" class="mlrk-choice" data-a="rewrite">Rewrite the whole snippet before checking the trace.</button>
-<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>Your tracing rule:</strong> in your own words, write one habit that will help you predict output accurately.</label>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: Before I run code, I will..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
+<h2>8. Check yourself</h2>
+<div class="mlrk-card"><p><strong>Select every statement that is true.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> An <code>elif</code> is checked only when every condition before it in the chain was <code>False</code>.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A <code>while</code> loop checks its condition once, before the first pass, and never again.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> <code>range(6)</code> gives seven numbers: 0 through 6.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Once one branch of an <code>if</code>/<code>elif</code>/<code>else</code> chain runs, Python skips the rest of that chain.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Wrap-up</h2>
+<ul>
+  <li>Read an <code>if</code>/<code>elif</code>/<code>else</code> chain top to bottom, and name the one branch that runs.</li>
+  <li>Count a loop's passes one at a time instead of guessing the total.</li>
+  <li>Check the first and last pass against what you meant. That is where an off-by-one error shows up.</li>
+</ul>
+<div class="mlrk-card" id="card-bridge"><p><strong>New situation:</strong> the theater wants a script that goes through every showing tonight. If a showing has 200 or more tickets sold, the script prints "sold out." Other showings print nothing. What does this script need?</p>
+<button type="button" class="mlrk-choice" data-a="both">A loop to visit every showing, and a conditional to decide about each one</button>
+<button type="button" class="mlrk-choice" data-a="if">Only a conditional, since Python repeats it by itself</button>
+<button type="button" class="mlrk-choice" data-a="loop">Only a loop, since every showing prints the same thing</button>
+<div id="bridgefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>In job interviews, "Trace this code and tell me what it prints" is a very common first question, and the interviewer wants to hear your steps out loud. Next, these ideas grow: one loop inside another, and then a pattern you can reuse on any list.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Your tracing habit</h2>
+<ol class="mlrk-steplist">
+  <li>Think about how you worked out <code>countdown.py</code> or <code>screen_check.py</code>.</li>
+  <li>Write one habit you will use to predict what code prints, in 1–2 sentences.</li>
+  <li>Start with the words in the box, or write your own.</li>
+</ol>
+<label for="strategy"><strong>Your tracing habit:</strong></label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Before I run code, I will..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Optional: show me a different question to think about</button></p>
 <div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
 </section>
 
 <section class="mlrk-section">
-<h2>14. Watch: for and while loops, live</h2>
-<p class="mlrk-small">About 10 minutes.</p>
-<p>As you watch, notice when the video's <code>while</code> loop updates its variable, and when it checks the condition again right after. It is the same check, run, update cycle as the <code>countdown</code> loop in section 9.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<h2>11. Key terms review</h2>
+<p>Click each card to check your memory.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Conditional</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Conditional</strong><br>Code that checks a condition, True or False, and picks which branch runs. In an <code>if</code>/<code>elif</code>/<code>else</code> chain, exactly one branch runs.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Branch</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Branch</strong><br>One possible path in a conditional: the block under an <code>if</code>, an <code>elif</code>, or an <code>else</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Loop</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Loop</strong><br>Code that repeats a block: once per item (<code>for</code>) or for as long as a condition stays True (<code>while</code>).</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Iteration</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Iteration</strong><br>One single pass through a loop's body.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Loop body</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Loop body</strong><br>The pushed-in code inside a loop. It runs once per iteration.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>range()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>range()</strong><br>Makes numbers to loop over. <code>range(n)</code> starts at 0 and stops before <code>n</code>, so it gives <code>n</code> numbers.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Off-by-one error</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Off-by-one error</strong><br>A loop that runs one time too many or one time too few, because a start or stop number is one step off. Python shows no error. The result is just wrong by one.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Go further (optional): for and while loops on video</h2>
+<p class="mlrk-small">Optional. About 10 minutes. Not counted in the time estimate.</p>
+<p>As you watch, notice when the video's <code>while</code> loop changes its variable, and when it checks the condition again right after. It is the same check, run, check-again cycle as <code>countdown.py</code>.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/6iF8Xb7Z3wQ" title="For and while loops in Python (Corey Schafer)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=6iF8Xb7Z3wQ" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one moment where the video's explanation matched, or didn't match, how you were already picturing a loop repeating?</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
 </section>
 
 <section class="mlrk-section">
-<h2>15. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>"Trace this code and tell me what prints" is one of the most common opening questions in data and software engineering interviews. Interviewers listen to how you reason: reading top to bottom, naming the branch that runs, and saying what each iteration does. The reasoning counts as much as the final answer.</p>
-<p>An off-by-one error is a common follow-up. You get a loop that runs one time too few or too many, and you say out loud which boundary is wrong, without running it.</p>
-<p>For data roles, a loop that visits every row, with a conditional deciding what to do with each row, is the idea behind most "clean this column" or "filter these records" questions. You use it before you ever use a library built for that work.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style: a loop iterates over 6 items. Inside, a conditional only prints when an item is over 50. Exactly 2 of the 6 items are over 50. How many lines print in total?</strong></p>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<button type="button" class="mlrk-choice" data-a="6">6</button>
-<button type="button" class="mlrk-choice" data-a="0">0</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a>: step through your own if/elif/else and loop code, one line at a time.</li>
+<li><a href="https://www.w3schools.com/python/python_conditions.asp" target="_blank" rel="noopener">W3Schools: Python If...Else</a>: more worked conditional examples.</li>
+<li><a href="https://www.w3schools.com/python/python_for_loops.asp" target="_blank" rel="noopener">W3Schools: Python For Loops</a>: the for-loop side, with more examples.</li>
+<li><a href="https://www.w3schools.com/python/python_while_loops.asp" target="_blank" rel="noopener">W3Schools: Python While Loops</a>: the while-loop side, with more examples.</li>
+</ul>
 </section>
 
 <section class="mlrk-section">
-<h2>16. Summary &amp; critical thinking</h2>
-<p>Three habits from this reading:</p>
-<ol class="mlrk-steplist">
-  <li>Read an <code>if</code>/<code>elif</code>/<code>else</code> chain top to bottom and name the one branch that runs.</li>
-  <li>Count a loop's iterations one pass at a time, rather than guessing the total.</li>
-  <li>Check the first and the last iteration against what you meant, which is where an off-by-one error shows itself.</li>
-</ol>
-<div class="mlrk-card" id="card-bridge"><p><strong>New situation:</strong> a system reviews every login attempt in a list. For each attempt, it checks whether it happened after business hours. If so, it flags the login for review; otherwise, it logs it normally. Which combination of tools does this job need?</p>
-<button type="button" class="mlrk-choice" data-a="both">A loop to visit every attempt + a conditional to decide what happens to that attempt</button>
-<button type="button" class="mlrk-choice" data-a="if">Only a conditional, because repetition happens automatically</button>
-<button type="button" class="mlrk-choice" data-a="loop">Only a loop, because every attempt gets treated the same way</button>
-<div id="bridgefb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> what tells you, just by reading the code, whether a line belongs to a loop's body or not?</label>
-<textarea id="clue" class="mlrk-response" data-save></textarea>
-</section>
-
-<section class="mlrk-section">
-<h2>17. Thinking ahead</h2>
-<p>A loop with a conditional inside it comes back right away in bigger forms. Put one loop inside another, and every pass of the outer loop starts a full run of the inner one. Counting iterations and checking boundaries matter even more there. After that, you can package the whole pattern into one reusable piece of code you can point at any list.</p>
-</section>
-
-<section class="mlrk-section">
-<h2>18. Your score &amp; keep a copy of your work</h2>
+<h2>Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -436,17 +409,6 @@ git push</pre></li>
 </div>
 </section>
 
-<section class="mlrk-section">
-<h2>Additional resources</h2>
-<p class="mlrk-small">Not counted in the time estimate above.</p>
-<ul>
-<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — step through your own if/elif/else and loop code, one line at a time.</li>
-<li><a href="https://www.w3schools.com/python/python_conditions.asp" target="_blank" rel="noopener">W3Schools: Python If...Else</a> — more worked conditional examples.</li>
-<li><a href="https://www.w3schools.com/python/python_for_loops.asp" target="_blank" rel="noopener">W3Schools: Python For Loops</a> — the for-loop side, with more examples.</li>
-<li><a href="https://www.w3schools.com/python/python_while_loops.asp" target="_blank" rel="noopener">W3Schools: Python While Loops</a> — the while-loop side, with more examples.</li>
-</ul>
-</section>
-
 </div></main>
 
 <footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
@@ -465,151 +427,101 @@ git push</pre></li>
   K.Scoring.renderChip("#scorechip");
 
   K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"a",
-    feedback:{b:"150 is an integer: a whole number with no quotes.",
-              c:"150.0 is a float because it has a decimal point.",
-              a:"Quotes make \"150\" text, so it is a string."}});
+    feedback:{b:"150 has no quotes, so it is a number: an integer, a whole number.",
+              c:"150.0 has no quotes, so it is a number: a float, because of the decimal point.",
+              a:"The quotes make \"150\" text, so it is a string."}});
 
   K.quiz({id:"q-compare", buttonSelector:"#card-compare .mlrk-choice", feedbackSelector:"#comparefb", correct:"no", maxAttempts:1,
-    feedback:{no:"98 is not greater than 150, so the comparison is False.",
-              yes:"98 is less than 150, so the comparison is False, not True."}});
-
-  K.quiz({id:"q-list", buttonSelector:"#card-list .mlrk-choice", feedbackSelector:"#listfb", correct:"three",
-    feedback:{three:"A list holds each value separately, so 98, 165, and 122 can each be compared on their own.",
-              one:"A list is a collection of individual values, not a single unbreakable value.",
-              string:"Python reads a list of numbers directly. No conversion to a string is needed."}});
-
-  K.quiz({id:"q-why", buttonSelector:"#card-why .mlrk-choice", feedbackSelector:"#whyfb", correct:"bool",
-    feedback:{bool:"A conditional needs a True/False answer to know which branch to run, and a comparison is exactly what produces one.",
-              cantread:"Python can read a plain number just fine. The issue is that a number alone isn't True or False.",
-              speed:"Comparisons exist to produce a True/False answer, not to make code run faster."}});
-
-  // Each button simulates `python3 <file>.py`; the output is from a real run.
-  [["#predictrun","#predictout","lobby_screen.py","head over soon"],
-   ["#whilerun","#whileout","countdown.py","30\n20\n10"],
-   ["#comborun","#comboout","runtimes.py","98 standard slot\n165 long slot\n150 standard slot"]
-  ].forEach(([button,target,file,output])=>K.runFile({button,target,file,output,
-    onRun:()=>{$(target+"wrap").hidden=false}}));
+    feedback:{no:"98 is not greater than 150, so the comparison gives False, and print shows False.",
+              yes:"98 is less than 150, so runtime > 150 gives False, not True."}});
 
   K.quiz({id:"q-predict", buttonSelector:"#card-predict .mlrk-choice", feedbackSelector:"#predictfb", correct:"halfway",
-    feedback:{halfway:"25 is not 60 or more, but it is 15 or more, so the elif branch prints head over soon.",
-              goal:"minutes_left >= 60 is False, because 25 is less than 60.",
-              starting:"Python already found a True branch, minutes_left >= 15, so it never reaches else."},
-    onDone(){$("#predictrun").click()}});
+    feedback:{halfway:"25 >= 60 is False, so Python moves to the elif. 25 >= 15 is True, so it prints head over soon and skips the else.",
+              goal:"minutes_left >= 60 is False, because 25 is less than 60, so that branch is skipped.",
+              starting:"Python already found a True branch, minutes_left >= 15, so it never reaches the else."}});
 
   K.quiz({id:"q-foriter", buttonSelector:"#card-foriter .mlrk-choice", feedbackSelector:"#foriterfb", correct:"3",
-    feedback:{3:"The list holds three showtimes, so the loop body runs three times.",
-              2:"Count the showtimes again: 4:15, 7:00, and 9:45 make three.",
-              4:"A for loop runs once per item, and the list holds three showtimes, not four."}});
+    feedback:{3:"The list holds three showtimes, so the loop body runs three times and prints three lines.",
+              1:"The print is inside the loop body, so it runs once per showtime, not once in total.",
+              4:"Count the showtimes again: 4:15, 7:00, and 9:45 make three, so three passes."}});
 
   K.quiz({id:"q-rangebound", buttonSelector:"#card-rangebound .mlrk-choice", feedbackSelector:"#rangeboundfb", correct:"0123",
     feedback:{"0123":"range(4) starts at 0 and stops before 4: 0, 1, 2, 3.",
               "1234":"range(4) starts at 0, not 1, and never reaches 4.",
-              "01234":"The stop value 4 is excluded, so only four values are produced, not five."}});
+              "01234":"The stop number 4 is left out, so range(4) gives four numbers, not five."}});
 
   K.quiz({id:"q-whiletrace", buttonSelector:"#card-whiletrace .mlrk-choice", feedbackSelector:"#whiletracefb", correct:"200300400",
     feedback:{"200300400":"The loop prints 30, 20, and 10. When minutes becomes 0, minutes > 0 is False, so the loop stops before printing 0.",
               "200300400500":"0 never prints. Python checks minutes > 0 before that pass, and 0 > 0 is False.",
-              "300400500":"minutes starts at 30, and print runs before the first subtraction, so 30 prints first."},
-    onDone(){$("#whilerun").click()}});
+              "300400500":"minutes starts at 30, and print runs before the first subtraction, so 30 prints first."}});
 
   K.quiz({id:"q-combo", buttonSelector:"#card-combo .mlrk-choice", feedbackSelector:"#combofb", correct:"1",
-    feedback:{1:"Only 165 is greater than 150. For the last movie, 150 > 150 is False, so it gets a standard slot.",
+    feedback:{1:"Only 165 is greater than 150. For the last movie, 150 > 150 is False, so it gets a regular slot.",
               2:"That counts 150 as long. 150 > 150 is False, because a number is not greater than itself.",
-              3:"98 is well under 150, so the condition is False on the first iteration."},
-    onDone(){$("#comborun").click()}});
-
-  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"trace",
-    feedback:{trace:"Checking the first and last iterations against what you meant is how you find an off-by-one error. Python reports nothing on its own.",
-              random:"Python never skips an iteration at random. A missing line always has a cause you can find in the code.",
-              rewrite:"A rewrite can keep the same boundary mistake, and you still won't know where the missing line went. Trace it first."}});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"2",
-    feedback:{2:"The loop visits all 6 items, but the print only happens inside the True branch, which fires for the 2 items over 50.",
-              6:"That would be true only if the conditional printed for every item regardless of the condition. It doesn't.",
-              0:"The loop does reach the conditional for every item. It's just that only 2 of those checks come out True."}});
+              3:"98 is under 150, so the condition is False on the first pass."}});
 
   K.quiz({id:"q-bridge", buttonSelector:"#card-bridge .mlrk-choice", feedbackSelector:"#bridgefb", correct:"both",
-    feedback:{both:"Exactly: the loop visits every login attempt, and the conditional decides whether that specific attempt gets flagged.",
-              if:"A conditional chooses a path, but it doesn't automatically visit every attempt in the list on its own.",
-              loop:"A loop repeats work, but a conditional is still needed since not every attempt gets the same outcome."}});
+    feedback:{both:"The loop visits every showing, and the conditional decides whether that showing prints sold out.",
+              if:"A conditional makes one choice. Python only repeats it for every showing when a loop wraps it.",
+              loop:"Only some showings print sold out, so each one needs a check. That check is a conditional."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"An elif is checked only when the if that opens its chain was False.", correct:true,
-      hint:"Think back to lobby_screen.py in section 4. Does Python check every elif in a chain, or only some of them?",
-      explain:"Python reads the chain top to bottom, so it reaches an elif only after every earlier branch was False."},
-    {value:"b", label:"A while loop's condition is checked once, before the very first pass, and never checked again after that.", correct:false,
-      hint:"Look again at the countdown loop in section 9. How many times does Python check minutes > 0?",
-      explain:"A while loop checks its condition before every pass, not just the first one."},
-    {value:"c", label:"range(6) produces seven values: 0 through 6.", correct:false,
-      hint:"Revisit the stopping rule in section 6. Does range() ever produce its stop value?",
-      explain:"range(6) stops one step before 6, so it gives six values: 0 through 5."},
-    {value:"d", label:"Once one branch in an if/elif/else chain runs, Python skips every remaining branch in that chain.", correct:true,
-      hint:"Think about lobby_screen.py in section 4. After head over soon prints, does Python check the else?",
+    {value:"a", label:"An elif is checked only when every condition before it in the chain was False.", correct:true,
+      hint:"Think back to lobby_screen.py. Did Python check the elif before or after the if came out False?",
+      explain:"Python reads the chain top to bottom, so it reaches an elif only after every earlier condition was False."},
+    {value:"b", label:"A while loop checks its condition once, before the first pass, and never again.", correct:false,
+      hint:"Look again at countdown.py. How did the loop know to stop after printing 10?",
+      explain:"A while loop checks its condition before every pass, which is how countdown.py stops at 0."},
+    {value:"c", label:"range(6) gives seven numbers: 0 through 6.", correct:false,
+      hint:"Think about screen_check.py. Does range() ever give its own stop number?",
+      explain:"range(6) stops one step before 6, so it gives six numbers: 0 through 5."},
+    {value:"d", label:"Once one branch of an if/elif/else chain runs, Python skips the rest of that chain.", correct:true,
+      hint:"Think about lobby_screen.py. After head over soon prints, does Python look at the else?",
       explain:"Python stops at the first True branch, which is why lobby_screen.py never reaches its else."}
   ]});
 
-  K.dragDrop("#dragarea", "act-drag-triggers");
-  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneFor", label:"Repeat a fixed number of times, once per item in a known list", expectedLabel:"for loop"},
-    chip2:{expectedId:"zoneWhile", label:"Repeat for as long as a condition stays True, until something changes it", expectedLabel:"while loop"}
-  }});
-  K.orderSteps("#ordersteps", {id:"act-order-while", correctOrder:["check-first","run-body","update-state","check-again"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
-  // The HTML lists these four events shuffled on purpose; correctOrder above is the real sequence.
   K.flipCards("#vocab", "act-flip-vocab");
-
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"6iF8Xb7Z3wQ"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
   K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
-  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
 
-
-  function typedAnswer(opts){
-    K.Scoring.register(opts.id,1,"quiz");
-    let attempts=0, done=false;
-    $(opts.button).addEventListener("click",()=>{
-      if(done) return;
-      attempts++;
-      const typed = $(opts.input).value.trim().toLowerCase();
-      const fb=$(opts.feedback);
-      if(opts.accept.includes(typed)){
-        K.Scoring.award(opts.id, attempts===1?1:0.5);
-        fb.className="mlrk-feedback mlrk-show mlrk-good";
-        fb.innerHTML="<strong>Correct.</strong> "+opts.correctNote;
-        done=true;
-      } else if(attempts>=2){
-        K.Scoring.award(opts.id,0);
-        fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-        fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> "+opts.reveal;
-        done=true;
-      } else {
-        fb.className="mlrk-feedback mlrk-show mlrk-bad";
-        fb.innerHTML="<strong>That isn't it yet.</strong> "+opts.retryNote;
-      }
-      fb.setAttribute("tabindex","-1");fb.focus();
-    });
+  // Fill-in: the fixed screen_check.py. Solving (or the reveal) unlocks its Run button.
+  K.Scoring.register("q-obo",1,"quiz");
+  let oboAttempts=0, oboDone=false;
+  function finishObo(){
+    oboDone=true;
+    $("#oboblank").textContent="7";
+    K.markDone("q-obo");
   }
-
-  typedAnswer({id:"q-blank", input:"#blankinput", button:"#blankcheck", feedback:"#blankfb",
-    accept:["range","range()"],
-    correctNote:"range(7) gives the numbers this loop counts through: 0 up to, but not including, 7.",
-    retryNote:"The missing name is the built-in that turns one stop value into a run of numbers to loop over. This section opens with it.",
-    reveal:"The missing function is <code>range</code>, so the loop header reads <code>for screen in range(7):</code>."});
-
-  typedAnswer({id:"q-obo", input:"#oboinput", button:"#obocheck", feedback:"#obofb",
-    accept:["7","range(7)","7)"],
-    correctNote:"range(7) gives 0 through 6, so screen + 1 prints 1 through 7 and all seven screens get checked.",
-    retryNote:"Check the last line your value would print. range() stops one step before its stop value, and the line shows screen + 1.",
-    reveal:"The stop value is <code>7</code>. range(7) gives 0 through 6, and screen + 1 turns those into screen 1 through screen 7."});
+  $("#obocheck").addEventListener("click",()=>{
+    if(oboDone) return;
+    oboAttempts++;
+    const typed=$("#oboinput").value.trim().toLowerCase().replace(/\s+/g,"");
+    const fb=$("#obofb");
+    if(["7","range(7)","(7)","7)"].includes(typed)){
+      K.Scoring.award("q-obo", oboAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct.</strong> range(7) gives 0 through 6, so screen + 1 prints 1 through 7 and all seven screens get checked.";
+      finishObo();
+    } else if(oboAttempts>=2){
+      K.Scoring.award("q-obo",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The stop number is <code>7</code>. range(7) gives 0 through 6, and screen + 1 turns those into screen 1 through screen 7.";
+      finishObo();
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>That isn't it yet.</strong> Work out the last line your number would print. range() stops one before its number, and each line shows screen + 1. One more try.";
+    }
+    fb.setAttribute("tabindex","-1");fb.focus();
+  });
 
   const AI_PROMPTS = [
     "Think about a daily routine that only makes sense in a certain order, like checking for your keys before you lock the door. Where's the conditional in that routine?",
-    "If you had to explain \"the loop checks every item, but the conditional decides what happens to each one\" to a friend using something from your own daily life, what would you compare it to?",
-    "Where have you seen a repeated check with a changing answer in real life, like scanning a stack of mail and sorting each piece differently?"
+    "How would you explain \"the loop visits every item, and the conditional decides what happens to each one\" to a friend, using something from your own day?",
+    "Where have you seen a repeated check with a changing answer in real life, like sorting a stack of mail one piece at a time?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
     box.style.display="block";
-    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+    box.innerHTML="<strong>AI-brainstormed question:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";

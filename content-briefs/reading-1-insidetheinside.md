@@ -4,7 +4,7 @@
 - **Skill tags (from taxonomy.json):** python-fundamentals
 - **Audience:** data + software engineering
 - **Complexity flag:** standard
-- **Estimated time:** 40 minutes (unchanged by the 2026-10-16 revision; activity count is the same)
+- **Estimated time:** 21 minutes (2026-10-23 content pass: was 40; video now optional and excluded)
 
 ## Sources (see SKILL.md, "Source of truth")
 - **Drive decks read:** Nested Loops & Conditionals (slides + speaker notes), read 2026-10-16 after that day's edits. Control Flow & Conditionals read too, for the quest-wide avoid-list.
@@ -23,51 +23,53 @@
 - **Quest Vocabulary Mission terms this reading owes:** Nested Loop, Loop Body, Iteration (Conditional, Loop and Off-by-One Error are carried by the Part 1 reading).
 
 ## Prepare (what this reading rehearses, on its own examples)
-- **Data Challenge move:** state a nested count as a multiplication before running → playlist report count question, trace stepper, interview question.
-- **Data Challenge move:** a print in the wrong loop body → tournament-script indentation question.
+- **Data Challenge move:** state a nested count as a multiplication before running → `checkpoints.py` count question.
+- **Data Challenge move:** a print in the wrong loop body → `practice_mode.py` typed total-lines prediction.
 - **Data Challenge move:** separate records from combinations → the 3 + 4 = 7 distractor and its feedback.
-- **Project roadblock / common mistake defused:** an inner check that never fires → gate diagram, `roster_status` trace, outside-in debug order.
+- **Project roadblock / common mistake defused:** an inner check that never fires → red-door gate diagram and the `door_check.py` trace.
 - **Confirmed:** the reading works no Data Challenge step and solves no part of the project.
 
 ## Real-world scenario for this reading
-- **Domain:** video game worlds/checkpoints (hook), music streaming (playlist report), sports league stats (playoff eligibility, tournament script)
-- **Scenario:** a game's worlds and checkpoints introduce both rules; a youth basketball league's roster-then-games check replaced the earlier public-health-clinic example (healthcare overlaps the project).
-- **Why it fits:** familiar and low-jargon, and outside the deck, Data Challenge and project.
+- **Domain:** video game (one scenario throughout)
+- **Scenario:** 3 worlds x 4 checkpoints (`checkpoints.py`), practice mode (`practice_mode.py`), red doors that check for a key and its color (`door_check.py`); the new-situation question is a coin shop in the same game. Music app, basketball league, tournament, notification service and support tickets removed.
+- **Why it fits:** familiar, 6th-grade words, outside the deck, Data Challenge and project.
 
 ## Prereq recall
-- range(), comparisons, single if/elif/else, tuple unpacking → all four reappear in the traces (the `alerts` loop unpacks tuples).
+- range() count and one comparison (2 questions). Tuple unpacking dropped: no tuples or f-strings anywhere (comma prints instead).
 
 ## Vocabulary list
-- nested loop, nested conditional, loop body, outer loop, inner loop, iteration, branch
+- Bolded at first use: nested loop, loop body, outer loop, inner loop, iteration, nested conditional
+- Key-terms review flip cards at the end: Nested loop, Outer loop and inner loop, Nested conditional, Loop body, Iteration
 
 ## Activity rotation
-- [x] flip cards
-- [x] quiz (radio) with feedback on every choice
-- [x] select-all-that-apply
-- [x] drag-and-drop matching
-- [x] order-the-steps
-- [x] fill-in-the-blank code
-- [x] trace stepper
+- [x] flip cards (key-terms review, at the end)
+- [x] quiz (radio) with feedback on every choice, predict-then-run on every file
+- [x] select-all-that-apply (mixed check)
+- [ ] drag-and-drop matching (cut 2026-10-23)
+- [ ] order-the-steps (cut 2026-10-23)
+- [x] typed prediction (`practice_mode.py` total lines, numbered steps above the box)
+- [ ] trace stepper (cut; the run output shows the order)
 - [ ] pseudocode-from-a-scenario
-- [x] video reflection prompt
+- [ ] video reflection prompt (cut; video is optional "Go further")
+- Graded items: 12 (the optional video is a plain embed, unscored)
 
 ## Video pick
 - **Title/channel/length:** Python nested loops — Bro Code, 4:47 (verified 2026-10-16)
 - **Link:** https://www.youtube.com/watch?v=qwvswinpu2s
-- **Why this one:** short, reputable, shows the inner loop finishing before the outer advances.
+- **Placement:** optional "Go further" section at the end; not in the time estimate.
 
 ## Interview relevance
-- Nested-loop "how many lines print?" traces; spot-the-bug for an inner check that never fires; how work grows when input doubles.
+- One sentence in the wrap-up: "how many lines does this nested loop print?" as a common warm-up.
 
 ## AI integration
-- AI-brainstormed reflection prompt beside the tracing-strategy free response.
+- Optional AI-brainstormed question button inside the reflection box.
 
 ## Additional resources (not counted in the time estimate)
 - Python Tutor; W3Schools nested loops and nested if; Data with Baraa nested loops; Python docs control flow
 
 ## Critical thinking / summary questions
-- Support tickets: trace the URGENT outer branch first.
-- What visual clue shows which structure a statement belongs to?
+- New situation (same game): coin shop; with no coins, only the outer question is checked.
+- One reflection: your tracing strategy (sentence starter given).
 
 ## Thinking ahead
-- Grids, multi-field record checks, grouping then summarizing.
+- One sentence in the wrap-up: grids cell by cell, several checks per row.

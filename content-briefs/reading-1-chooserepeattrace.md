@@ -4,7 +4,7 @@
 - **Skill tags (from taxonomy.json):** python-fundamentals
 - **Audience:** data + software engineering
 - **Complexity flag:** standard
-- **Estimated time:** 44 minutes (unchanged by the 2026-10-16 revision; activity count is the same)
+- **Estimated time:** 22 minutes (2026-10-23 content pass: was 44; video now optional and excluded)
 
 ## Sources (see SKILL.md, "Source of truth")
 - **Drive decks read:** Control Flow & Conditionals (slides + speaker notes), read 2026-10-16 after that day's edits. Nested Loops & Conditionals read too, for the quest-wide avoid-list.
@@ -23,51 +23,53 @@
 - **Quest Vocabulary Mission terms this reading owes:** Conditional, Iteration, Loop, Loop Body, Off-by-One Error (Nested Loop is carried by the Part 2 reading).
 
 ## Prepare (what this reading rehearses, on its own examples)
-- **Data Challenge move:** predict a count where one value sits exactly on the threshold → the `runtimes` loop question includes 150 against `> 150`.
+- **Data Challenge move:** predict a count where one value sits exactly on the threshold → the `runtimes.py` question includes 150 against `> 150`.
 - **Data Challenge move:** catch a silent off-by-one → `screen_check` section: trace first/last iteration, and compare the printed count with the expected count.
-- **Data Challenge move:** follow one variable through every pass → `countdown` while trace plus an order-the-events activity on its final passes.
+- **Data Challenge move:** follow one variable through every pass → `countdown.py` while trace, with `minutes = minutes - 10` explained.
 - **Project roadblock / common mistake defused:** "code that runs without an error must be correct" → off-by-one section and the debug-by-tracing question.
 - **Confirmed:** the reading works no Data Challenge step and solves no part of the project.
 
 ## Real-world scenario for this reading
 - **Domain:** business ops (movie theater showtimes)
-- **Scenario:** a theater's scheduling script books each movie into a long or standard slot by runtime; side examples are a lobby countdown, a show-starts-soon message, and a seven-screen check.
-- **Why it fits:** everyday, low-jargon, and nowhere in the deck, Data Challenge or project.
+- **Scenario:** one theater throughout: the slot script (`runtimes.py`), lobby screen, showtimes, seven-screen check, lobby countdown; the new-situation question is a sold-out check in the same theater.
+- **Why it fits:** everyday, 6th-grade words, nowhere in the deck, Data Challenge or project.
 
 ## Prereq recall
-- Data types, comparisons, lists → every trace in the reading uses all three.
+- Replaced by a "Reading Python" primer (first Python a Fellow reads): `name = value`, `print(x)` / `print(a, b)`, numbers vs strings, comparison operators give True/False, lists, `#` comments, `:` + indentation owns a block, what running a file means. One file (`theater_notes.py`) and two questions (string vs number; `print(runtime > 150)`).
 
 ## Vocabulary list
-- conditional, branch, loop, iteration, loop body, range(), off-by-one error
+- Bolded at first use in the text: variable, list, tracing, conditional, branch, loop, iteration, loop body, off-by-one error
+- Key-terms review flip cards at the end: Conditional, Branch, Loop, Iteration, Loop body, range(), Off-by-one error
 
 ## Activity rotation
-- [x] flip cards
-- [x] quiz (radio) with feedback on every choice
-- [x] select-all-that-apply
-- [x] drag-and-drop matching
-- [x] order-the-steps
-- [x] fill-in-the-blank code (two typed answers)
+- [x] flip cards (key-terms review, at the end)
+- [x] quiz (radio) with feedback on every choice, predict-then-run on every file
+- [x] select-all-that-apply (mixed check)
+- [ ] drag-and-drop matching (cut 2026-10-23)
+- [ ] order-the-steps (cut 2026-10-23)
+- [x] fill-in-the-blank code (one typed answer: the `screen_check.py` stop number, numbered steps above the box)
 - [ ] code/terminal simulator
 - [ ] pseudocode-from-a-scenario
-- [x] video reflection prompt
+- [ ] video reflection prompt (cut; video is optional "Go further")
+- Graded items: 12 (the optional video is a plain embed, unscored)
 
 ## Video pick
 - **Title/channel/length:** Python Tutorial for Beginners 7: Loops and Iterations - For/While Loops — Corey Schafer, 10:14 (verified 2026-10-16)
 - **Link:** https://www.youtube.com/watch?v=6iF8Xb7Z3wQ
-- **Why this one:** reputable channel, covers for and while with a variable updated each pass.
+- **Placement:** optional "Go further" section at the end; not in the time estimate.
 
 ## Interview relevance
-- "What does this print?" traces and off-by-one follow-ups, for data and SWE roles.
+- One sentence in the wrap-up: "trace this and say what prints" as a common first question.
 
 ## AI integration
-- AI-brainstormed reflection prompt beside the tracing-rule free response.
+- Optional AI-brainstormed question button inside the reflection box.
 
 ## Additional resources (not counted in the time estimate)
 - Python Tutor; W3Schools If...Else, For Loops, While Loops
 
 ## Critical thinking / summary questions
-- Login-attempt review: which tools does the job need (loop + conditional)?
-- What tells you a line belongs to a loop body?
+- New situation (same theater): a sold-out check over every showing needs a loop + a conditional.
+- One reflection: your tracing habit (sentence starter given).
 
 ## Thinking ahead
-- Nested loops, then wrapping the pattern in reusable code.
+- One sentence in the wrap-up: nested loops, then a reusable pattern.
