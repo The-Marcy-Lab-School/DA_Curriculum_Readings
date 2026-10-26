@@ -4,7 +4,7 @@
 - **Skill tags (from taxonomy.json):** oop-design
 - **Audience:** data + software engineering
 - **Complexity flag:** complex (OOP)
-- **Estimated time:** 22 minutes (pill ~21–24), excluding the optional 13:50 video. Cut from 48 in the 2026-10-23 content pass (learner audit). Read SECOND in Quest 1.8, after Meet the Objects.
+- **Estimated time:** 22 minutes (pill ~21–24), excluding the optional 3:28 video. Cut from 48 in the 2026-10-23 content pass (learner audit). Read SECOND in Quest 1.8, after Meet the Objects.
 
 ## Sources (see SKILL.md, "Source of truth")
 - **Drive decks read:** "Magic Methods — What __init__/__str__/__repr__ Actually Mean" (slides + speaker notes), read 2026-10-16.
@@ -53,10 +53,9 @@
 - magic method (dunder), `__str__`, `__repr__`, default representation (bolded at first use; flip cards at the end for review).
 
 ## Video pick
-- **Title/channel/length:** Python OOP Tutorial 5: Special (Magic/Dunder) Methods — Corey Schafer, 13:50 (verified; English; embeddable)
-- **Link:** https://www.youtube.com/watch?v=3ohzBxoFHAY
-- **Why this one:** reputable, directly on topic. Over the 12-minute guide (QA warns); kept as a deliberate pick.
-- **Placement:** optional \"Go further\" section at the end; not scored, not in the time estimate. Open question: still 13:50, over the ~12-minute guide.
+- **Title/channel/length:** Python's __repr__ and __str__ — Python Morsels (Trey Hunner), 3:28 (verified 2026-10-26: length, English captions as default, embeddable)
+- **Link:** https://www.youtube.com/watch?v=c9uDwq5ji9o
+- **Why this one:** short and exactly on topic (how a class describes itself to people vs. programmers, and the __repr__ fallback). Replaced Corey Schafer's 13:50 OOP magic-methods video, which ran past the ~12-minute guide.
 
 ## Interview relevance
 - One sentence in the wrap-up: who reads each method, the fallback rule, and "write `__repr__` if only one".
