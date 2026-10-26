@@ -7,7 +7,6 @@
 .mlrk-illustration{width:100%;max-width:900px;height:auto;margin:1.1rem 0;display:block}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:9rem}
-.cf-blank-row{margin:.5rem 0}
 @media(max-width:650px){.mlrk-illustration{max-width:100%}}
 </style>
 </head><body>
@@ -15,9 +14,9 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Write It Once</h1>
-<p class="mlrk-lead">Terra Bean Coffee Roasters gets a shipment log emailed in from five different green-coffee suppliers every month. Every log has a supplier_name column, and every log spells the same five names a different way: extra spaces, ALL CAPS, a stray period, sometimes nothing typed at all. Fixing that by hand in a notebook cell works fine the first time. The second time, someone tweaks the fix slightly. The third time, someone forgets a step entirely, and now July's numbers are quietly wrong. Whether you already know how to drop, fill, or flag a single gap and how to write a function with a parameter and a return, the real skill here is combining both into one thing you write once, trust, and call again on every column and every new file that shows up with the same mess.</p>
+<p class="mlrk-lead">Terra Bean is a small coffee shop. Every month it gets a list of bean deliveries from its suppliers, the farms that sell it beans. Each list spells the same farm names differently: extra spaces, ALL CAPS, or nothing typed at all. Fixing the names by hand every month is slow, and each retyped fix comes out a little different.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~46–49 minutes</span>
+  <span class="mlrk-pill">~21–24 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -49,12 +48,8 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Concept overview</h2>
-<p>Picture the May shipment log open in a notebook. The supplier_name column has values like <code>"  BLUE MOUNTAIN COFFEE CO.  "</code>, <code>"blue mountain coffee co."</code>, and <code>"Blue Mountain Coffee Co."</code>, all meant to be the same supplier. A quick fix in one cell handles it:</p>
-<div class="mlrk-code"><div class="mlrk-screen">df["supplier_name"] = df["supplier_name"].str.strip().str.title()</div></div>
-<p>June's log arrives a few weeks later. Same mess, so the fix gets copied down and re-run, except this time a few rows came back completely blank, and nobody remembers to handle that, so <code>fillna</code> never gets added. July's log arrives, the fix gets copied a third time, and this time <code>.str.title()</code> gets swapped for <code>.str.upper()</code> by accident while someone's mid-scroll. Three notebook cells later, the same "clean this column" idea has three slightly different, undocumented implementations, and a report that groups shipments by supplier now shows fourteen suppliers instead of five.</p>
-<p>None of that is a knowledge problem. Whoever wrote each fix already knew the right pandas methods. It's a <strong>repetition</strong> problem: the same logic, retyped by hand, drifts a little more every time it's retyped. The fix is the same one you already reach for anywhere else in Python when logic needs to run more than once: wrap it in a function, with a real parameter and a real return value, and call that function every time instead of retyping its body.</p>
-
+<h2>1. The same fix, typed three times</h2>
+<p>In May, someone fixes the farm names by hand. In June, they copy the fix but forget to handle the empty cells. In July, they copy it again and change one method by mistake. Now there are three slightly different fixes for one job, and a report that groups deliveries by farm shows more farms than really exist.</p>
 <svg class="mlrk-illustration" viewBox="0 0 900 460" role="img" aria-labelledby="wioTitle wioDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="wioTitle">Fixing a column by hand three times, versus writing one function and calling it three times</title>
   <desc id="wioDesc">Left side: three separate rows, each showing a raw column going through its own hand-typed, independently-editable fix into a cleaned column. Right side: three raw columns all flow into a single function box, which produces three cleaned columns, showing the same logic reused instead of retyped.</desc>
@@ -152,248 +147,244 @@
     <text x="670" y="410" text-anchor="middle" font-size="12" fill="#261F1D">One logic, one place. Fix a bug once and every call gets the fix.</text>
   </g>
 </svg>
-
+<p>You already know how to decide whether to drop, fill, or flag a gap, and how to write a function with <code>def</code>, parameters, and <code>return</code>. This reading puts the two together: one function that takes a messy column in and hands a clean column back.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> a take-home data project that fixes a column inline three separate times instead of writing one function is one of the fastest tells a reviewer or interviewer has that cleaning was done ad hoc, not deliberately. It's also a real, recurring cost: a monthly shipment log means this exact mess shows up again next month, and again the month after.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to decide whether a specific missing value should be dropped, filled, or flagged, and you already know how to write a function with a <code>def</code>, a parameter, and a <code>return</code>. Neither of those is new here. What's new is combining them: writing one function whose job is "take a raw column in, hand a clean column back," with the missing-value decision built into that same function instead of re-decided by hand every time.</p>
+<p><strong>How the examples work:</strong> each example is a <code>.py</code> file. Most of them read <code>deliveries.csv</code>. The Run button shows what the file prints. On your own laptop, you'd save the files in one folder and type <code>python3 name.py</code> in the terminal.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall before writing a cleaning function</h2>
-<p class="mlrk-small">A few earlier skills get combined below: what a function actually returns, basic string cleanup methods, and the drop/fill/flag judgment call. Test each one before moving on.</p>
+<h2>2. Recall</h2>
+<p>Two earlier skills come back in this reading. Check each one.</p>
 
-<div class="mlrk-card" id="card-recall-return"><p><strong>Coding check:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">def shout(word):
-    print(word.upper() + "!")
+<div class="mlrk-card" id="card-recall-return"><p><strong>Predict:</strong> <code>bag_label.py</code> prints two lines. What is the second line?</p>
+<div class="mlrk-code" data-file="bag_label.py"><div class="mlrk-screen">def bag_label(count):
+    print(str(count) + " bags")
 
-result = shout("hi")</div></div>
-<p><strong>What does result hold after this runs?</strong></p>
-<button type="button" class="mlrk-choice" data-a="none">None, because shout prints a value instead of returning one</button>
-<button type="button" class="mlrk-choice" data-a="hi">"HI!", the value that got printed</button>
-<button type="button" class="mlrk-choice" data-a="orig">"hi", unchanged</button>
+
+result = bag_label(12)
+print(result)</div></div>
+<button type="button" class="mlrk-btn" data-run="bag_label.py" data-after="q-recall-return"></button>
+<div class="mlrk-run" data-file="bag_label.py" hidden><pre>12 bags
+None</pre></div>
+<button type="button" class="mlrk-choice" data-a="none"><code>None</code></button>
+<button type="button" class="mlrk-choice" data-a="bags"><code>12 bags</code></button>
+<button type="button" class="mlrk-choice" data-a="twelve"><code>12</code></button>
 <div id="recallreturnfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-recall-strip" style="margin-top:.8rem"><p><strong>Coding check:</strong> what does <code>"  blue mountain coffee co.  ".strip().title()</code> evaluate to?</p>
-<button type="button" class="mlrk-choice" data-a="clean">"Blue Mountain Coffee Co."</button>
-<button type="button" class="mlrk-choice" data-a="lower">"blue mountain coffee co."</button>
-<button type="button" class="mlrk-choice" data-a="spaces">"  Blue Mountain Coffee Co.  ", spaces still there</button>
-<div id="recallstripfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-recall-dff" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a shipment-weight column is missing for 3 of 400 rows because a warehouse scale malfunctioned for one afternoon. The rest of each of those 3 rows is real and usable. What fits best?</p>
-<button type="button" class="mlrk-choice" data-a="fill">Fill the 3 gaps with the column's median weight, a small, low-stakes gap in an otherwise real row</button>
-<button type="button" class="mlrk-choice" data-a="drop">Drop all 3 rows, since the scale malfunctioned</button>
-<button type="button" class="mlrk-choice" data-a="flag">Flag the rows and leave weight blank in every report from now on</button>
+<div class="mlrk-card" id="card-recall-dff" style="margin-top:.8rem"><p><strong>A bag-weight column is empty in 3 of 400 rows because the shop's scale broke for one afternoon. The rest of each of those rows is real. What fits best?</strong></p>
+<button type="button" class="mlrk-choice" data-a="fill">Fill the 3 gaps with the column's median weight.</button>
+<button type="button" class="mlrk-choice" data-a="drop">Drop the 3 rows, since their weight is unknown.</button>
+<button type="button" class="mlrk-choice" data-a="flag">Leave the 3 cells empty in every report from now on.</button>
 <div id="recalldfffb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-recall-hardcode" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> a function is written as below, with the DataFrame name and column name typed directly into its body.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def clean_may_supplier_column():
-    df["supplier_name"] = df["supplier_name"].str.strip().str.title()</div></div>
-<p><strong>June's log arrives with the exact same kind of mess. What happens?</strong></p>
-<button type="button" class="mlrk-choice" data-a="cant">It can't be reused as-is. The DataFrame and column name are hardcoded, not passed in, so it would need to be copied and edited again</button>
-<button type="button" class="mlrk-choice" data-a="auto">It automatically works on June's data too, since Python functions apply to every DataFrame in memory</button>
-<button type="button" class="mlrk-choice" data-a="error">It throws an error every time it's called, no matter what</button>
-<div id="recallhardcodefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">Nothing about wrapping logic in a function changes what strip, title, or a drop/fill/flag decision actually do. This reading is about where that logic lives and how it takes its input, not about the individual methods themselves.</div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Technical vocabulary</h2>
-<p>Flip each card before the practice below.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>function contract</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Function contract</strong><br>The agreement a function makes with whoever calls it: exactly what it takes in as parameters, and exactly what it hands back as a return value, independent of any one specific column name or file.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>idempotent</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Idempotent</strong><br>Running the same function again on already-cleaned data doesn't change it any further. Calling a cleaning function twice on the same value should be as safe as calling it once.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>in-place vs. returning a copy</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>In-place vs. returning a copy</strong><br>"In-place" changes an existing object directly. "Returning a copy" leaves the original untouched and hands back a new value, which is what pandas' .str methods and .fillna() do by default.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>docstring</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Docstring</strong><br>A short triple-quoted string as the first line inside a function, documenting its contract for future you and for anyone else who calls it.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>side effect</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Side effect</strong><br>Anything a function does besides returning a value, like printing, changing a variable outside itself, or writing a file. A reusable cleaning function should avoid unexpected ones.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>hardcoded</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Hardcoded</strong><br>A value, like a column name or file path, baked directly into a function's body instead of passed in as a parameter. Exactly what keeps a function from being reused anywhere else.</span></button>
-</div>
-</section>
+<h2>3. What makes a function reusable</h2>
+<p>A value typed straight into a function's body, like one file name or one column name, is <strong>hardcoded</strong>. A function with a hardcoded column name only works on that one column, so next month someone copies it and edits it, and the drift starts again.</p>
+<p>A reusable function has a clear <strong>function contract</strong>: what it takes in as parameters, and what it hands back with <code>return</code>. It should also avoid surprise <strong>side effects</strong>. A side effect is anything a function does besides returning a value, such as printing, changing a variable outside the function, or saving a file.</p>
 
-<section class="mlrk-section">
-<h2>4. Design check: which contract is actually reusable?</h2>
-<p>Terra Bean's analyst is deciding how to write the cleaning function before typing a single line.</p>
-<div class="mlrk-card" id="card-contract"><p><strong>Which version has the strongest contract for something meant to be reused?</strong></p>
-<button type="button" class="mlrk-choice" data-a="hardcoded">def clean_it(): reads shipments_may.csv from a hardcoded file path, cleans supplier_name in place, and prints the result. No parameters, no return value.</button>
-<button type="button" class="mlrk-choice" data-a="generic">def clean_text_column(raw_series, missing_label="Unknown"): takes any raw column in as a parameter, returns a new cleaned column, and never mentions a file path or a specific column name.</button>
-<button type="button" class="mlrk-choice" data-a="renamed">def clean_supplier_name(df): expects a DataFrame that already has a column literally named supplier_name, changes it in place, and returns nothing.</button>
+<div class="mlrk-card" id="card-contract"><p><strong>Terra Bean needs a function to clean name columns. Which design has the strongest contract for reuse?</strong></p>
+<button type="button" class="mlrk-choice" data-a="generic"><code>clean_text_column(raw_column, missing_label)</code>: takes any text column in, returns a new cleaned column, and never names a file or a column.</button>
+<button type="button" class="mlrk-choice" data-a="hardcoded"><code>clean_it()</code>: opens <code>may_deliveries.csv</code>, cleans <code>supplier_name</code>, and prints the result. No parameters, no <code>return</code>.</button>
+<button type="button" class="mlrk-choice" data-a="renamed"><code>clean_supplier(df)</code>: only works if the table has a column named exactly <code>supplier_name</code>, changes it, and returns nothing.</button>
 <div id="contractfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Trace a value through the function</h2>
-<p>Here's the function this reading builds toward, working on a whole column at once:</p>
-<div class="mlrk-code"><div class="mlrk-screen">def clean_text_column(raw_series, missing_label="Unknown"):
-    cleaned = raw_series.str.strip()
-    cleaned = cleaned.str.title()
-    cleaned = cleaned.fillna(missing_label)
-    return cleaned</div></div>
-<p>Two rows are traced below: Row A, a real but messy value, and Row B, a completely blank cell. Click through one line at a time.</p>
-<div id="tracestep"></div>
-</section>
+<h2>4. Write the function</h2>
+<p>Here is a small delivery list. The same farm is typed three different ways, and one name is empty.</p>
+<div class="mlrk-code" data-file="deliveries.csv"><div class="mlrk-screen">supplier_name,country,bags
+  HILLTOP FARM  ,colombia,12
+hilltop farm,COLOMBIA ,8
+Hilltop Farm,Colombia,10
+ sunrise beans,  kenya,6
+,peru,4</div></div>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong></p>
+<ul>
+<li><code>.str.strip()</code> removes spaces from the start and end of every value in a text column. <code>.str.title()</code> capitalizes the first letter of each word, so <code>"hilltop farm"</code> becomes <code>"Hilltop Farm"</code>.</li>
+<li><code>missing_label="Unknown"</code> gives the parameter a <em>default value</em>. If a call leaves that argument out, Python uses <code>"Unknown"</code>.</li>
+<li>The text in triple quotes, right under the <code>def</code> line, is a <strong>docstring</strong>: a short note that explains the function's contract to anyone who uses it.</li>
+</ul></div>
 
-<section class="mlrk-section">
-<h2>6. Write it: a real cleaning function with a real contract</h2>
-<p>Fill in the three missing method names to complete the function traced above. All three are plain pandas/string methods you've already used on their own.</p>
-<div class="mlrk-code"><div class="mlrk-screen">def clean_text_column(raw_series, missing_label="Unknown"):
-    """
-    ...
-    """
-    cleaned = raw_series.str.____()      # remove leading/trailing whitespace
-    cleaned = cleaned.str.____()         # standardize capitalization
-    cleaned = cleaned.____(missing_label)  # fill any still-missing entries
-    return cleaned</div></div>
-<div class="cf-blank-row"><div class="mlrk-fillblank">
-  <label for="blank1">Blank 1 (whitespace):</label>
-  <input type="text" id="blank1" autocomplete="off">
-</div>
-<div class="mlrk-fillblank">
-  <label for="blank2">Blank 2 (capitalization):</label>
-  <input type="text" id="blank2" autocomplete="off">
-</div>
-<div class="mlrk-fillblank">
-  <label for="blank3">Blank 3 (still-missing entries):</label>
-  <input type="text" id="blank3" autocomplete="off">
-</div>
-<div class="mlrk-actions" style="margin-top:.6rem"><button type="button" id="blankcheck" class="mlrk-btn">Check my three answers</button></div></div>
+<h3>Fill in the blanks</h3>
+<div class="mlrk-code" data-file="clean_suppliers.py"><div class="mlrk-screen">import pandas as pd
+
+
+def clean_text_column(raw_column, missing_label="Unknown"):
+    """Take a column of text. Return a new column with extra spaces
+    removed, each word capitalized, and empty cells set to missing_label."""
+    cleaned = raw_column.str.____()       # box (1)
+    cleaned = cleaned.str.____()          # box (2)
+    cleaned = cleaned.____(missing_label)  # box (3)
+    return cleaned
+
+
+deliveries = pd.read_csv("deliveries.csv")
+deliveries["supplier_name"] = clean_text_column(deliveries["supplier_name"])
+print(deliveries)</div></div>
+<button type="button" class="mlrk-btn" data-run="clean_suppliers.py" data-after="q-fillcode" data-after-note="Solve all three blanks first. Then you can run it."></button>
+<div class="mlrk-run" data-file="clean_suppliers.py" hidden><pre>   supplier_name    country  bags
+0   Hilltop Farm   colombia    12
+1   Hilltop Farm  COLOMBIA      8
+2   Hilltop Farm   Colombia    10
+3  Sunrise Beans      kenya     6
+4        Unknown       peru     4</pre></div>
+<ol class="mlrk-steplist">
+  <li>In box (1), type the method that removes spaces from the start and end of each value.</li>
+  <li>In box (2), type the method that capitalizes the first letter of each word.</li>
+  <li>In box (3), type the pandas method that puts a value into every empty cell.</li>
+  <li>Type only each method's name: no dot, no parentheses. Then press <strong>Check my answers</strong>. The page tells you which box, if any, needs another look.</li>
+</ol>
+<div class="mlrk-fillblank"><label for="blank1">Box (1):</label><input type="text" id="blank1" autocomplete="off"></div>
+<div class="mlrk-fillblank"><label for="blank2">Box (2):</label><input type="text" id="blank2" autocomplete="off"></div>
+<div class="mlrk-fillblank"><label for="blank3">Box (3):</label><input type="text" id="blank3" autocomplete="off"></div>
+<p><button type="button" id="blankcheck" class="mlrk-btn">Check my answers</button></p>
 <div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
 
-<label for="docstring" style="display:block;margin-top:1.2rem"><strong>Now write the docstring:</strong> in one or two sentences, describe this function's contract, exactly what it takes in and exactly what it hands back, the way you'd want it documented for a teammate who's never seen it.</label>
-<textarea id="docstring" class="mlrk-response" data-save placeholder="Try starting with: Takes a raw column of..."></textarea>
-</section>
+<p>All three spellings of Hilltop Farm now match, so a report that groups by <code>supplier_name</code> will count one farm, not three. The <code>country</code> column is still messy. The next file, <code>clean_two_columns.py</code>, fixes it with the same function.</p>
 
-<section class="mlrk-section">
-<h2>7. See it called on two different columns</h2>
-<p>Terra Bean's origin_country column has the exact same kind of mess as supplier_name: inconsistent spacing and case, from the same five suppliers typing it five different ways. Nothing about clean_text_column needs to change to handle it.</p>
-<div class="mlrk-code"><div id="reuseScreen" class="mlrk-screen">df["supplier_name"] = clean_text_column(df["supplier_name"], missing_label="Unknown Supplier")
-df["origin_country"] = clean_text_column(df["origin_country"], missing_label="Unknown Origin")</div>
-<div class="mlrk-actions"><button type="button" id="reuserun" class="mlrk-btn">Reveal simulated output</button></div></div>
-<p id="reusefb" class="mlrk-small" aria-live="polite"></p>
-</section>
-
-<section class="mlrk-section">
-<h2>8. The missing-value decision, made once, inside the function</h2>
-<div class="mlrk-card" id="card-missing"><p><strong>Six rows in June's log have a totally blank supplier_name cell, a real gap from a new intern skipping the field, not a formatting typo to fix.</strong> Inside clean_text_column, once strip() and title() have run, what should <code>fillna(missing_label)</code> do with those six rows?</p>
-<button type="button" class="mlrk-choice" data-a="label">Replace them with missing_label ("Unknown Supplier"), keeping all six shipments in the data with an honest placeholder instead of a guess</button>
-<button type="button" class="mlrk-choice" data-a="mode">Replace them with whichever supplier name appears most often in the rest of the column, since a guess is better than a blank</button>
-<button type="button" class="mlrk-choice" data-a="drop">Drop those six rows before returning, since a missing name means the row can't be trusted at all</button>
+<div class="mlrk-card" id="card-missing"><p><strong>The last row's farm name was empty because nobody typed it. Why does the function fill it with a label like <code>"Unknown"</code> instead of guessing a name or dropping the row?</strong></p>
+<button type="button" class="mlrk-choice" data-a="label">The delivery really happened, so the row stays, and the label says honestly that the name wasn't recorded.</button>
+<button type="button" class="mlrk-choice" data-a="mode">Guessing the most common farm, Hilltop Farm, would be more accurate than a label.</button>
+<button type="button" class="mlrk-choice" data-a="drop">The row should really be dropped, since a delivery with no farm name can't be trusted.</button>
 <div id="missingfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<label for="justify" style="display:block;margin-top:1rem"><strong>Document your reasoning:</strong> write the one-sentence code comment you'd put directly above <code>cleaned = cleaned.fillna(missing_label)</code>, explaining why a placeholder beats a guess or a dropped row here.</label>
-<textarea id="justify" class="mlrk-response" data-save placeholder="Try starting with: A blank name here means..."></textarea>
 </section>
 
 <section class="mlrk-section">
-<h2>9. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about writing a real, reusable cleaning function.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A reusable cleaning function should take the column to clean in as a parameter, not assume a specific column name already exists.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Once a function is written, calling it three times is exactly as much "new code" as writing three separate inline fixes.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Because pandas' .str methods and .fillna() return new Series by default, the function needs to return its result explicitly, or the caller never sees the cleaned version.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A function that only works because a column named supplier_name happens to already exist in the notebook is genuinely reusable.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
-<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
+<h2>5. Call it again, and again</h2>
+<p>The pandas methods inside the function never change a column <strong>in place</strong>, which would mean editing the original. Each one is <strong>returning a copy</strong>: it leaves the original alone and hands back a new column. That's why <code>clean_text_column</code> needs its <code>return</code> line, and why the original column survives until you replace it.</p>
+
+<div class="mlrk-card" id="card-copy"><p><strong>Predict:</strong> <code>clean_two_columns.py</code> saves the raw <code>country</code> column as <code>before</code>, then cleans both columns. What does the last line, <code>print(before[1])</code>, show?</p>
+<div class="mlrk-code" data-file="clean_two_columns.py"><div class="mlrk-screen">import pandas as pd
+
+
+def clean_text_column(raw_column, missing_label="Unknown"):
+    """Take a column of text. Return a new column with extra spaces
+    removed, each word capitalized, and empty cells set to missing_label."""
+    cleaned = raw_column.str.strip()
+    cleaned = cleaned.str.title()
+    cleaned = cleaned.fillna(missing_label)
+    return cleaned
+
+
+deliveries = pd.read_csv("deliveries.csv")
+before = deliveries["country"]
+deliveries["supplier_name"] = clean_text_column(deliveries["supplier_name"], "Unknown Supplier")
+deliveries["country"] = clean_text_column(deliveries["country"], "Unknown Country")
+print(deliveries)
+print(before[1])</div></div>
+<button type="button" class="mlrk-btn" data-run="clean_two_columns.py" data-after="q-copy"></button>
+<div class="mlrk-run" data-file="clean_two_columns.py" hidden><pre>      supplier_name   country  bags
+0      Hilltop Farm  Colombia    12
+1      Hilltop Farm  Colombia     8
+2      Hilltop Farm  Colombia    10
+3     Sunrise Beans     Kenya     6
+4  Unknown Supplier      Peru     4
+COLOMBIA </pre></div>
+<button type="button" class="mlrk-choice" data-a="raw">The raw value, <code>COLOMBIA</code> in capital letters</button>
+<button type="button" class="mlrk-choice" data-a="clean">The cleaned value, <code>Colombia</code></button>
+<button type="button" class="mlrk-choice" data-a="error">An error, because that column was replaced</button>
+<div id="copyfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>Notice the two calls: the same function cleaned two columns, and each call passed its own label. Nothing inside the function changed.</p>
+
+<div class="mlrk-card" id="card-twice" style="margin-top:.8rem"><p><strong>Predict:</strong> next month, someone runs the function on names that are already clean. <code>clean_twice.py</code> cleans the column once, then cleans the result again. What do its two lines show?</p>
+<div class="mlrk-code" data-file="clean_twice.py"><div class="mlrk-screen">import pandas as pd
+
+
+def clean_text_column(raw_column, missing_label="Unknown"):
+    """Take a column of text. Return a new column with extra spaces
+    removed, each word capitalized, and empty cells set to missing_label."""
+    cleaned = raw_column.str.strip()
+    cleaned = cleaned.str.title()
+    cleaned = cleaned.fillna(missing_label)
+    return cleaned
+
+
+deliveries = pd.read_csv("deliveries.csv")
+once = clean_text_column(deliveries["supplier_name"])
+twice = clean_text_column(once)
+print(once[0])
+print(twice[0])</div></div>
+<button type="button" class="mlrk-btn" data-run="clean_twice.py" data-after="q-twice"></button>
+<div class="mlrk-run" data-file="clean_twice.py" hidden><pre>Hilltop Farm
+Hilltop Farm</pre></div>
+<button type="button" class="mlrk-choice" data-a="same">The same name twice: <code>Hilltop Farm</code></button>
+<button type="button" class="mlrk-choice" data-a="change"><code>Hilltop Farm</code>, then <code>Hilltop farm</code></button>
+<button type="button" class="mlrk-choice" data-a="error">An error, because the names are already clean</button>
+<div id="twicefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>A function that changes nothing when you run it a second time is <strong>idempotent</strong>. That makes a cleaning function safe: running it on an already-clean file does no harm.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>10. Sort into buckets: ad hoc fix, or reusable function</h2>
-<p>Drag each description into the bucket it belongs in, then use the self-check button to confirm your matches.</p>
+<h2>6. Mixed check</h2>
+<p>Sort each description into the right box.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">Copy-pasted into three different notebook cells, each with a small edit drifting in</span>
-  <span id="chip2" class="mlrk-draggable">Takes a raw column in as its only required parameter</span>
-  <span id="chip3" class="mlrk-draggable">Only works because a column named supplier_name happens to exist in the notebook's global scope</span>
-  <span id="chip4" class="mlrk-draggable">Returns a new, cleaned column and lets the caller decide what to do with it</span>
+  <span id="chip1" class="mlrk-draggable">Copied into three places, with a small change in each copy</span>
+  <span id="chip2" class="mlrk-draggable">Takes the column to clean as a parameter</span>
+  <span id="chip3" class="mlrk-draggable">Only works on a column named exactly <code>supplier_name</code></span>
+  <span id="chip4" class="mlrk-draggable">Returns a new cleaned column and lets the caller decide where it goes</span>
 </div>
 <div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>Ad hoc, one-off fix</strong></p><div class="mlrk-dropzone" id="zoneAdhoc"></div></div>
-  <div><p class="mlrk-small"><strong>Genuinely reusable function</strong></p><div class="mlrk-dropzone" id="zoneReuse"></div></div>
+  <div><p><strong>One-off fix</strong></p><div class="mlrk-dropzone" id="zoneAdhoc"></div></div>
+  <div><p><strong>Reusable function</strong></p><div class="mlrk-dropzone" id="zoneReuse"></div></div>
 </div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches</button></div>
 <div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>11. Order the steps</h2>
-<p>Click steps, in order, to build the sequence for turning a one-off fix into a real cleaning function. Click a step again to remove it if you change your mind, then press "Check my order." This is a self-check, not graded on correctness.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="inspect"><span class="mlrk-order-num"></span> Look at several real raw values in the messy column, not just one.</li>
-  <li class="mlrk-orderitem" data-step="decide"><span class="mlrk-order-num"></span> Decide the exact transformation steps needed, and how a still-missing value should be handled.</li>
-  <li class="mlrk-orderitem" data-step="write"><span class="mlrk-order-num"></span> Write the function with a clear parameter in and a return out, not a hardcoded column name.</li>
-  <li class="mlrk-orderitem" data-step="test"><span class="mlrk-order-num"></span> Test it on a small sample, including a value that's already clean and one that's missing.</li>
-  <li class="mlrk-orderitem" data-step="reuse"><span class="mlrk-order-num"></span> Call it on every column with the same kind of mess, instead of copying its body.</li>
+<h2>7. Wrap-up</h2>
+<ul>
+<li>A reusable cleaning function takes the column in as a parameter and hands a new column back with <code>return</code>.</li>
+<li>The missing-value choice, like filling with <code>"Unknown"</code>, lives inside the function, so it's made the same way every time.</li>
+<li>A good cleaning function is idempotent: running it twice gives the same result as running it once.</li>
 </ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Watch: why repeated logic becomes a function</h2>
-<p>As you watch, notice how the video frames the cost of the same logic living in more than one place, and hold that up against the three drifting notebook-cell fixes from Section 1.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=IGH4-ZhfVDk" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching:</strong> where else in your own code (not necessarily a cleaning function) have you retyped the same few lines more than once? What would wrapping that in a function with a real parameter and return look like?</p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>13. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>A take-home data project that hardcodes the same cleaning logic inline two or three times, instead of writing one function and calling it, is one of the fastest, most common red flags a reviewer looks for. It signals the cleaning decisions weren't actually deliberate, they were retyped by feel each time, and it's exactly the kind of thing that shows up as drift the moment a new file arrives.</p>
-<p>Interviewers will sometimes hand you a notebook with three near-identical cleaning cells and ask "how would you refactor this?" The strong answer names the actual contract: what should the function take in, what should it hand back, and does the missing-value handling belong inside that function or outside it, not just "put it in a function."</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> you're reviewing a candidate's take-home project and see the exact same three-line cleaning snippet pasted into four different cells, each fixing a different column. What's the strongest note to leave?</p>
-<button type="button" class="mlrk-choice" data-a="extract">Extract the shared logic into one function that takes a column as a parameter and returns the cleaned version, then call it four times.</button>
-<button type="button" class="mlrk-choice" data-a="fine">This is fine, since each cell only runs once and the code still works.</button>
-<button type="button" class="mlrk-choice" data-a="delete">Delete three of the four cells, since repeating a fix four times is unnecessary and one is enough.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>14. Debugging habit + reflection</h2>
-<div class="mlrk-card" id="card-debug"><p><strong>You write:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">def clean_text_column(raw_series, missing_label="Unknown"):
-    raw_series = raw_series.str.strip()
-    raw_series = raw_series.str.title()
-    raw_series = raw_series.fillna(missing_label)
-    return raw_series
-
-original = df["supplier_name"]
-df["supplier_name"] = clean_text_column(df["supplier_name"])
-print(original.iloc[0])</div></div>
-<p><strong>What does original.iloc[0] print?</strong></p>
-<button type="button" class="mlrk-choice" data-a="untouched">The original, unmodified raw value. .str.strip(), .str.title(), and .fillna() each return a new Series rather than changing one in place, so reassigning the parameter name inside the function never touches what "original" still points to.</button>
-<button type="button" class="mlrk-choice" data-a="cleaned">The cleaned value, since assigning inside the function updates the caller's variable too.</button>
-<button type="button" class="mlrk-choice" data-a="error">An error, since raw_series can't be reassigned inside a function.</button>
-<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy" style="display:block;margin-top:1rem"><strong>Your habit:</strong> in 1-2 sentences, describe how you'd check whether a function you wrote mutates its input in place, versus safely returning a copy, before relying on it elsewhere.</label>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: I'd test it by..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>15. Summary &amp; critical thinking</h2>
-<p>One idea carried this whole reading: the same judgment you already use to clean one column by hand belongs inside a function with a real contract, a raw column in, a clean column out, so it gets written once and trusted every time after, instead of retyped and drifting.</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a small logistics company receives a driver_name column from three different partner apps, each formatted differently, in a file that arrives daily. What's the strongest first move?</p>
-<button type="button" class="mlrk-choice" data-a="function">Write one function that takes a raw driver_name column in and returns a cleaned one, then call it on each day's file as it arrives.</button>
-<button type="button" class="mlrk-choice" data-a="manual">Manually retype the cleaning fix each morning when the new file lands, since each day's mess might look slightly different.</button>
-<button type="button" class="mlrk-choice" data-a="ignore">Leave driver_name as-is, since it's just a display field and doesn't affect anything downstream.</button>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> Terra Bean's new list has a <code>farm_region</code> column with the same messy spacing and capitals. Empty cells there should say <code>"No Region Listed"</code>. What's the best move?</p>
+<button type="button" class="mlrk-choice" data-a="arg">Call <code>clean_text_column(deliveries["farm_region"], "No Region Listed")</code>.</button>
+<button type="button" class="mlrk-choice" data-a="copy">Copy the whole function, name it <code>clean_region</code>, and type <code>"No Region Listed"</code> inside it.</button>
+<button type="button" class="mlrk-choice" data-a="default">Change the default in the <code>def</code> line to <code>"No Region Listed"</code>.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue" style="display:block;margin-top:1rem"><strong>In your own words:</strong> what's the difference between a function that happens to work once and a function with a genuinely reusable contract?</label>
-<textarea id="clue" class="mlrk-response" data-save></textarea>
+<p><strong>In interviews:</strong> you may be shown the same few cleaning lines pasted in several places and asked how you'd improve them. Name the contract: what the function takes in, and what it returns.</p>
+<p><strong>Where this goes next:</strong> with clean columns you can trust, you can start digging into the data to find patterns worth reporting.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>16. Thinking ahead</h2>
-<p>Once one column has a real cleaning function, the same shape keeps paying off: a second messy column in the same file often needs the exact same steps, and a file that arrives again next month can be cleaned by calling the function again, not by remembering what was typed by hand last time. The judgment stays the same. Only the reach of the code that carries it out gets bigger.</p>
+<h2>8. Reflection</h2>
+<label for="strategy"><strong>Your checking habit:</strong> how would you check whether a function changes its input in place or returns a new copy, before you rely on it?</label>
+<ol class="mlrk-steplist">
+  <li>Write 1 or 2 sentences, at least 8 words. The counter under the box tells you when it counts.</li>
+  <li>Try starting with: "I'd save the original column in a variable, then..."</li>
+</ol>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="I'd save the original column in a variable, then..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
 </section>
 
 <section class="mlrk-section">
-<h2>17. Your score &amp; keep a copy of your work</h2>
+<h2>9. Key terms review</h2>
+<p>Flip each card to check that you can explain the term.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Function contract</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Function contract</strong><br>What a function takes in as parameters and what it hands back as a return value, without depending on one column name or file.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Hardcoded</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Hardcoded</strong><br>A value, like a column name or file name, typed straight into a function's body instead of passed in as a parameter.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Side effect</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Side effect</strong><br>Anything a function does besides returning a value, like printing, changing an outside variable, or saving a file.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Docstring</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Docstring</strong><br>A note in triple quotes right under the <code>def</code> line that explains the function's contract.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>In-place vs. returning a copy</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>In-place vs. returning a copy</strong><br>In-place edits the original. Returning a copy leaves the original alone and hands back a new value, which is what <code>.str</code> methods and <code>.fillna()</code> do.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Idempotent</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Idempotent</strong><br>Running it a second time changes nothing more. Cleaning clean data gives the same clean data.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Go further (optional)</h2>
+<p>This video is optional and isn't part of the time estimate or your score. As you watch, notice how the video explains the cost of keeping the same logic in more than one place.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/IGH4-ZhfVDk" title="Why repeated code becomes a function, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=IGH4-ZhfVDk" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -428,9 +419,9 @@ print(original.iloc[0])</div></div>
       <li>Move into your repo folder:
         <pre class="mlrk-code">cd YOUR-REPO</pre></li>
       <li>Move the file you just downloaded out of <code>Downloads</code> and into that folder:
-        <pre class="mlrk-code">mv ~/Downloads/cleaning-function-reading1.json .</pre></li>
+        <pre class="mlrk-code">mv ~/Downloads/cleaning-function-reading1-writeitonce.json .</pre></li>
       <li>Save it to git and push it up to GitHub:
-        <pre class="mlrk-code">git add cleaning-function-reading1.json
+        <pre class="mlrk-code">git add cleaning-function-reading1-writeitonce.json
 git commit -m "Complete write it once reading"
 git push</pre></li>
     </ol>
@@ -491,144 +482,85 @@ git push</pre></li>
   K.Scoring.renderChip("#scorechip");
 
   K.quiz({id:"q-recall-return", buttonSelector:"#card-recall-return .mlrk-choice", feedbackSelector:"#recallreturnfb", correct:"none",
-    feedback:{none:"print() displays a value but hands nothing back to the caller. With no return statement, shout(\"hi\") evaluates to None, so result holds None.",
-              hi:"That's what got printed to the screen, but printing and returning are different things. Without a return, the caller never receives that value.",
-              orig:"The function's body never runs the original word back out unchanged. It uppercases and prints it, then returns nothing at all."}});
-
-  K.quiz({id:"q-recall-strip", buttonSelector:"#card-recall-strip .mlrk-choice", feedbackSelector:"#recallstripfb", correct:"clean",
-    feedback:{clean:".strip() removes the leading and trailing spaces first, then .title() capitalizes the first letter of each remaining word.",
-              lower:".title() runs after .strip(), so the result is capitalized, not left lowercase.",
-              spaces:".strip() specifically removes leading and trailing whitespace, so the surrounding spaces don't survive."}});
+    feedback:{none:"Right. bag_label prints \"12 bags\" but has no return line, so the call hands back None and result holds None.",
+              bags:"\"12 bags\" is the first line, printed inside the function. The function never returns it, so result holds None.",
+              twelve:"12 is the argument passed in. The function has no return line, so result holds None."}});
 
   K.quiz({id:"q-recall-dff", buttonSelector:"#card-recall-dff .mlrk-choice", feedbackSelector:"#recalldfffb", correct:"fill",
-    feedback:{fill:"The rest of each row is still real, and a small, likely-random gap like a temporary scale malfunction is exactly what a typical value is a fair stand-in for.",
-              drop:"That throws away 3 rows of otherwise-real shipment data over one missing measurement, more loss than this small gap justifies.",
-              flag:"Flagging matters more when the absence itself might mean something. A scale malfunction is closer to random noise than a meaningful pattern."}});
-
-  K.quiz({id:"q-recall-hardcode", buttonSelector:"#card-recall-hardcode .mlrk-choice", feedbackSelector:"#recallhardcodefb", correct:"cant",
-    feedback:{cant:"df and \"supplier_name\" are both typed directly into the function's body. Nothing about calling this function again points it at June's data instead.",
-              auto:"Python functions don't automatically retarget themselves at a different DataFrame. Whatever name is hardcoded inside is what actually runs, every time.",
-              error:"This function runs without raising anything, it just always operates on the one hardcoded df and column, whether or not that's what's currently needed."}});
+    feedback:{fill:"Right. The gap is small, the rest of each row is real, and a broken scale doesn't follow a pattern, so the median is a fair stand-in.",
+              drop:"Dropping throws away 3 real deliveries just because one cell is empty. A small, random gap can be filled.",
+              flag:"Leaving the cells empty forever means every weight total is off. A small, random gap can be filled with a typical value."}});
 
   K.quiz({id:"q-contract", buttonSelector:"#card-contract .mlrk-choice", feedbackSelector:"#contractfb", correct:"generic",
-    feedback:{generic:"A parameter in, a return out, and no mention of a specific file or column name is exactly what lets this function run unchanged on supplier_name, origin_country, or any future column with the same mess.",
-              hardcoded:"No parameter, no return value, and a hardcoded file path all tie this function to one specific file. Nothing about it can be pointed at a different column or DataFrame.",
-              renamed:"This one takes a DataFrame in, but only works if that DataFrame already has a column with this exact hardcoded name, and it changes things in place instead of handing back something the caller can use elsewhere."},
-    maxAttempts:2});
+    feedback:{generic:"Right. It takes the column in, returns a new one, and names no file or column, so it works on any messy text column.",
+              hardcoded:"The file name and column are hardcoded, and it prints instead of returning. It can't be used on next month's file without editing.",
+              renamed:"It only works on one column name and returns nothing, so the caller can't use the result anywhere else."}});
 
   K.quiz({id:"q-missing", buttonSelector:"#card-missing .mlrk-choice", feedbackSelector:"#missingfb", correct:"label",
-    feedback:{label:"Every real shipment stays in the data, and the placeholder is honest about what's actually known: the supplier for these six shipments wasn't recorded.",
-              mode:"Guessing the most common supplier would quietly attribute six real shipments to whichever supplier already ships the most, which may not be true for any of them.",
-              drop:"Unlike a row with nothing usable left in it, these six rows still have real weight, origin, and date data. Dropping them throws that away over one missing field."}});
+    feedback:{label:"Right. The 4 bags from Peru were really delivered. A clear label keeps the row and doesn't pretend to know the farm.",
+              mode:"A guess could give Hilltop Farm credit for a delivery from a different farm. A label is honest about the gap.",
+              drop:"Dropping would lose 4 real bags from the totals. Only the name is missing; the rest of the row is real."}});
 
-  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"A reusable cleaning function should take the column to clean in as a parameter, not assume a specific column name already exists.", correct:true,
-      hint:"Revisit Section 4's design check. Which version worked on any column, and which only worked on one specific name?",
-      explain:"Taking the column in as a parameter is exactly what let clean_text_column run unchanged on both supplier_name and origin_country in Section 7."},
-    {value:"b", label:"Once a function is written, calling it three times is exactly as much \"new code\" as writing three separate inline fixes.", correct:false,
-      hint:"Think about what happens when a bug is found. With three inline fixes, how many places does the fix need to be made?",
-      explain:"Calling a function three times reuses one implementation. Three inline fixes are three separate implementations that each have to be edited on their own."},
-    {value:"c", label:"Because pandas' .str methods and .fillna() return new Series by default, the function needs to return its result explicitly, or the caller never sees the cleaned version.", correct:true,
-      hint:"Look back at the debugging scenario in Section 14. What went wrong when the function's result wasn't captured and returned properly?",
-      explain:"None of strip(), title(), or fillna() modify the original Series in place. Without an explicit return, the cleaned result would only exist inside the function and then disappear."},
-    {value:"d", label:"A function that only works because a column named supplier_name happens to already exist in the notebook is genuinely reusable.", correct:false,
-      hint:"This is the same hardcoded-column problem from the recall question and Section 4's design check. Does relying on a specific existing name count as reusable?",
-      explain:"That's the hardcoded-column pattern from Section 4, the opposite of reusable. It only works in the one notebook where that exact column already exists."}
-  ]});
+  K.quiz({id:"q-copy", buttonSelector:"#card-copy .mlrk-choice", feedbackSelector:"#copyfb", correct:"raw",
+    feedback:{raw:"Right. The function returned a new column and the table's country column was replaced with it. before still holds the old, raw column.",
+              clean:"The function never edits its input. It returns a new column, so before still points to the raw one.",
+              error:"No error. Replacing a column in the table doesn't delete the old column that before still holds."}});
+
+  K.quiz({id:"q-twice", buttonSelector:"#card-twice .mlrk-choice", feedbackSelector:"#twicefb", correct:"same",
+    feedback:{same:"Right. Stripping clean text removes nothing, and title-casing \"Hilltop Farm\" gives \"Hilltop Farm\" again.",
+              change:".str.title() capitalizes every word, so \"Hilltop Farm\" stays \"Hilltop Farm.\"",
+              error:"Clean text is still text, so every method works and simply changes nothing."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"arg",
+    feedback:{arg:"Right. Passing the label as an argument changes the label for this one call, and the function stays the same.",
+              copy:"A copy is the drift problem from the start of this reading: two fixes that can grow apart.",
+              default:"Changing the default would change the label for every other call that relies on \"Unknown.\" Pass the label as an argument instead."}});
 
   K.dragDrop("#dragarea", "act-drag-buckets");
   K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneAdhoc", label:"Copy-pasted into three different notebook cells, each with a small edit drifting in", expectedLabel:"Ad hoc, one-off fix"},
-    chip2:{expectedId:"zoneReuse", label:"Takes a raw column in as its only required parameter", expectedLabel:"Genuinely reusable function"},
-    chip3:{expectedId:"zoneAdhoc", label:"Only works because a column named supplier_name happens to exist in the notebook's global scope", expectedLabel:"Ad hoc, one-off fix"},
-    chip4:{expectedId:"zoneReuse", label:"Returns a new, cleaned column and lets the caller decide what to do with it", expectedLabel:"Genuinely reusable function"}
+    chip1:{expectedId:"zoneAdhoc", label:"Copied into three places, with a small change in each copy", expectedLabel:"One-off fix"},
+    chip2:{expectedId:"zoneReuse", label:"Takes the column to clean as a parameter", expectedLabel:"Reusable function"},
+    chip3:{expectedId:"zoneAdhoc", label:"Only works on a column named exactly supplier_name", expectedLabel:"One-off fix"},
+    chip4:{expectedId:"zoneReuse", label:"Returns a new cleaned column and lets the caller decide where it goes", expectedLabel:"Reusable function"}
   }});
-  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["inspect","decide","write","test","reuse"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
   K.flipCards("#vocab", "act-flip-vocab");
-  K.traceStepper("#tracestep", {steps:[
-    {cell:"Row A raw", line:'Row A raw: "  BLUE MOUNTAIN COFFEE CO.  "'},
-    {cell:"Row A: strip", line:'After .str.strip(): "BLUE MOUNTAIN COFFEE CO."'},
-    {cell:"Row A: title", line:'After .str.title(): "Blue Mountain Coffee Co."'},
-    {cell:"Row A: fillna", line:'After .fillna("Unknown"): "Blue Mountain Coffee Co." (unchanged, it was never missing)'},
-    {cell:"Row B raw", line:"Row B raw: NaN (a blank cell in the spreadsheet)"},
-    {cell:"Row B: strip", line:"After .str.strip(): still NaN, there's nothing to trim on a missing value"},
-    {cell:"Row B: title", line:"After .str.title(): still NaN, there's nothing to capitalize on a missing value"},
-    {cell:"Row B: fillna", line:'After .fillna("Unknown"): "Unknown" replaces the gap'}
-  ]});
-
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"IGH4-ZhfVDk"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
-  K.freeResponse({id:"resp-docstring", selector:"#docstring", minWords:10});
-  K.freeResponse({id:"resp-justify", selector:"#justify", minWords:10});
   K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
-  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:8});
 
-  function revealReuse(){
-    $("#reuseScreen").textContent = `df["supplier_name"] = clean_text_column(df["supplier_name"], missing_label="Unknown Supplier")
-df["origin_country"] = clean_text_column(df["origin_country"], missing_label="Unknown Origin")
-
-[Output]
-df["supplier_name"].nunique()
-# before: 14   (one real supplier, several spellings each)
-# after:   5   (the five real suppliers)
-
-df["origin_country"].nunique()
-# before: 9    (one real origin, several spellings each)
-# after:  4    (the four real origin countries)`;
-    $("#reusefb").textContent = "Same function, zero new code, two different columns, each cleaned with the sentinel label that fits it.";
-  }
-  $("#reuserun").addEventListener("click", revealReuse);
-
-  K.Scoring.register("q-blank",1,"quiz");
-  let blankAttempts=0, blankDone=false;
+  K.Scoring.register("q-fillcode",1,"quiz");
+  let fillAttempts=0, fillDone=false;
   $("#blankcheck").addEventListener("click",()=>{
-    if(blankDone) return;
-    blankAttempts++;
-    const a1 = $("#blank1").value.trim().toLowerCase();
-    const a2 = $("#blank2").value.trim().toLowerCase();
-    const a3 = $("#blank3").value.trim().toLowerCase();
-    const ok = a1==="strip" && a2==="title" && a3==="fillna";
+    if(fillDone) return;
+    fillAttempts++;
+    const clean = v => v.trim().toLowerCase().replace(/[`'"\s]/g,"").replace(/^\.?(str\.)?/,"").replace(/\(.*\)$/,"");
+    const ok = [clean($("#blank1").value)==="strip", clean($("#blank2").value)==="title", clean($("#blank3").value)==="fillna"];
     const fb=$("#blankfb");
-    if(ok){
-      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+    if(ok.every(Boolean)){
+      K.Scoring.award("q-fillcode", fillAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> strip() removes the surrounding whitespace, title() standardizes capitalization, and fillna() handles anything still missing after both of those run.";
-      blankDone=true;
-    } else if(blankAttempts>=2){
-      K.Scoring.award("q-blank",0);
+      fb.innerHTML="<strong>Correct"+(fillAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> strip removes the extra spaces, title fixes the capitals, and fillna puts missing_label into the empty cell. Run the file to see the result.";
+      fillDone=true;
+    } else if(fillAttempts>=2){
+      K.Scoring.award("q-fillcode",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> Blank 1: <code>strip</code>. Blank 2: <code>title</code>. Blank 3: <code>fillna</code>.";
-      blankDone=true;
+      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> Box (1) is <code>strip</code>, box (2) is <code>title</code>, and box (3) is <code>fillna</code>.";
+      fillDone=true;
     } else {
+      const wrong = ok.map((v,i)=>v?null:"("+(i+1)+")").filter(Boolean);
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> One more try on all three before the answer is shown.";
+      fb.innerHTML="<strong>Not quite yet.</strong> Box "+wrong.join(" and box ")+(wrong.length>1?" need":" needs")+" another look. The \"New in this file\" note names the two text methods. Box (3) is the pandas method that puts a value into empty cells.";
     }
-    fb.setAttribute("tabindex","-1");fb.focus();
+    fb.setAttribute("tabindex","-1"); fb.focus();
+    if(fillDone) K.markDone("q-fillcode");
   });
 
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"extract",
-    feedback:{extract:"Naming the actual fix, a real function with a column-in, column-out contract, is what separates useful feedback from just flagging that something looks repetitive.",
-              fine:"It runs, but four near-identical cells mean a bug found in one of them has to be hunted down and fixed in the other three separately.",
-              delete:"Each of those four cells is cleaning a different column. Deleting three would just remove the cleaning for those columns, not the duplication problem."}});
-
-  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"untouched",
-    feedback:{untouched:"Reassigning the local name raw_series inside the function never reaches back out to whatever variable the caller used. Combined with methods that return new Series instead of mutating, \"original\" is left exactly as it was.",
-              cleaned:"Assigning to a function's parameter name only changes what that name points to inside the function. It doesn't reach back out to the caller's own variable.",
-              error:"Reassigning a parameter name inside a function body is completely normal Python. Nothing here raises an error."}});
-
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"function",
-    feedback:{function:"A daily-arriving file with a recurring mess is exactly the situation a reusable function pays off in: write the contract once, call it on every day's file after.",
-              manual:"A file arriving daily means this exact fix would need retyping daily, which is the same drift risk this whole reading has been arguing against.",
-              ignore:"Even a display-only field is worth cleaning once it's clearly reused logic across three formats. A messy field left as-is can still mislead whoever reads the report."}});
-
   const AI_PROMPTS = [
-    "Think about a chore you do the same way every time, like packing a lunch. If you wrote step-by-step instructions once instead of re-deciding each morning, what would the \"parameters\" be, the parts that change each time?",
-    "If you had to explain a function's \"contract\" to a friend using a real-world agreement, like a food delivery order, what would you compare the parameters and the return value to?",
-    "Where have you seen the same fix applied inconsistently across a few different places, in code or otherwise, because it was redone by hand each time instead of done once?"
+    "Think about a chore you do the same way every time, like packing a lunch. If you wrote the steps down once, which parts would change each time, the way arguments change between calls?",
+    "How would you explain a function's contract to a friend, using a food order: what you hand over, and what you get back?",
+    "Where have you seen the same fix done slightly differently in a few places, because someone redid it by hand each time?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.style.display="block";
+    box.hidden=false;
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 

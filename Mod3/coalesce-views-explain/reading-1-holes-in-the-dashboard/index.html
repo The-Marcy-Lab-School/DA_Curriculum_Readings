@@ -4,25 +4,20 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:860px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;margin-left:auto;margin-right:auto;display:block}
+.mlrk-illustration{width:100%;max-width:820px;height:auto;margin:1.1rem 0;display:block}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:12rem}
-.mlrk-fillblank input.mlrk-wide{width:26rem}
-.mlrk-matchrow{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,1fr);gap:.8rem;align-items:center;margin-top:.7rem}
-.mlrk-matchlabel{font-family:var(--mlrk-font-code);font-weight:700}
-.mlrk-screen.mlrk-plan{white-space:pre}
-@media(max-width:650px){.mlrk-illustration{max-width:100%}.mlrk-matchrow{grid-template-columns:1fr}}
 </style>
 </head><body>
 
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Holes in the Dashboard</h1>
-<p class="mlrk-lead">Renata is the operations analyst at Brightline Studio, a sixty-person architecture firm that designs schools, libraries, and apartment buildings. Her job this week is a billable-hours dashboard: one page that tells each project lead how many paid hours the team has logged against their building. Two things are going wrong. Some people have not turned in a timesheet yet, so the numbers come back with blanks in them. And rebuilding the totals from three tables every time somebody opens the page is slow enough that leads have started complaining. This reading is about fixing both honestly, and then actually measuring whether the fix worked.</p>
+<p class="mlrk-lead">A school runs a walking challenge. Each day, students log their steps, and a dashboard (a web page that shows numbers at a glance) shows each class team's totals. Two things go wrong. Some students have not logged yet, so blanks appear. And adding up every log each time someone opens the page is slow.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~43-47 minutes</span>
+  <span class="mlrk-pill">~22–25 minutes</span>
   <span class="mlrk-pill">Interactive</span>
-  <span class="mlrk-pill">No local Postgres install needed</span>
+  <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
 </div>
 </div></header>
@@ -53,436 +48,312 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. The dashboard with holes in it</h2>
-<p>At Brightline Studio, a <strong>billable hour</strong> is an hour of work a staff member logs against a client's building project, so the firm can invoice the client for it. Every Friday, staff type their week into a <strong>timesheet</strong>. Renata's dashboard adds those hours up per project and shows each project lead the total.</p>
-
-<p>On Monday morning she opened her own first draft and found this. Amara, Luis, Priya, and June all show hours. Tomas shows nothing at all, because he had not filed his timesheet yet when the page loaded.</p>
+<h2>1. The dashboard with a hole in it</h2>
+<p>The database has three tables. <code>teams</code> has one row per class team. <code>students</code> has one row per student, with a <code>team_id</code>. <code>step_logs</code> has one row each time a student logs a day's steps. Here is the first draft of the Room 12 dashboard:</p>
 
 <svg class="mlrk-illustration" viewBox="0 0 860 352" role="img" aria-labelledby="dashTitle dashDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="dashTitle">A billable-hours dashboard with one row missing its values</title>
-  <desc id="dashDesc">A table titled Weekly billable hours for Studio B. It has three columns: Name, Project, and Hours. Amara Diallo shows Eastside Library and 22.50 hours. Luis Ferrara shows Eastside Library and 18.00 hours. Priya Raman shows Harbor View Apartments and 30.00 hours. Tomas Vega's row is shaded and both his Project and Hours cells are completely empty. June Okada shows Cedar Grove School and 12.00 hours. A note underneath says Tomas Vega has not submitted a timesheet yet, so both cells come back empty, and that empty here means unknown rather than zero hours.</desc>
+  <title id="dashTitle">A step-count dashboard with one row missing its value</title>
+  <desc id="dashDesc">A table titled Today's steps for Room 12. It has two columns: Name and Steps. Ava shows 8200 steps. June shows 6100. Luis shows 9400. Priya shows 7300. Tomas's row is shaded and the Steps cell is empty. A note underneath says Tomas has not logged steps yet, so the cell comes back empty, and that empty here means unknown, not zero steps.</desc>
   <g font-family="Helvetica, Arial, sans-serif" fill="#261F1D">
-    <text x="430" y="26" text-anchor="middle" font-size="19" font-weight="700" fill="#264326">Weekly billable hours: Studio B</text>
-
+    <text x="430" y="26" text-anchor="middle" font-size="19" font-weight="700" fill="#264326">Today's steps: Room 12</text>
     <rect x="24" y="44" width="812" height="204" rx="2" fill="#FFFFFF" stroke="#B3BBB0" stroke-width="1.5"/>
     <rect x="25" y="45" width="810" height="33" fill="#E9EFEB"/>
-    <rect x="25" y="180" width="810" height="34" fill="#FFF6E4"/>
-
+    <rect x="25" y="214" width="810" height="33" fill="#FFF6E4"/>
     <line x1="24" y1="78" x2="836" y2="78" stroke="#B3BBB0" stroke-width="1.5"/>
     <line x1="24" y1="112" x2="836" y2="112" stroke="#E1E3E0" stroke-width="1"/>
     <line x1="24" y1="146" x2="836" y2="146" stroke="#E1E3E0" stroke-width="1"/>
     <line x1="24" y1="180" x2="836" y2="180" stroke="#E1E3E0" stroke-width="1"/>
     <line x1="24" y1="214" x2="836" y2="214" stroke="#E1E3E0" stroke-width="1"/>
-    <line x1="316" y1="44" x2="316" y2="248" stroke="#E1E3E0" stroke-width="1"/>
-    <line x1="700" y1="44" x2="700" y2="248" stroke="#E1E3E0" stroke-width="1"/>
-
+    <line x1="560" y1="44" x2="560" y2="248" stroke="#E1E3E0" stroke-width="1"/>
     <text x="40" y="68" font-size="17" font-weight="700">Name</text>
-    <text x="332" y="68" font-size="17" font-weight="700">Project</text>
-    <text x="820" y="68" font-size="17" font-weight="700" text-anchor="end">Hours</text>
-
-    <text x="40" y="101" font-size="17">Amara Diallo</text>
-    <text x="332" y="101" font-size="17">Eastside Library</text>
-    <text x="820" y="101" font-size="17" text-anchor="end">22.50</text>
-
-    <text x="40" y="135" font-size="17">Luis Ferrara</text>
-    <text x="332" y="135" font-size="17">Eastside Library</text>
-    <text x="820" y="135" font-size="17" text-anchor="end">18.00</text>
-
-    <text x="40" y="169" font-size="17">Priya Raman</text>
-    <text x="332" y="169" font-size="17">Harbor View Apartments</text>
-    <text x="820" y="169" font-size="17" text-anchor="end">30.00</text>
-
-    <text x="40" y="203" font-size="17" font-weight="700">Tomas Vega</text>
-
-    <text x="40" y="237" font-size="17">June Okada</text>
-    <text x="332" y="237" font-size="17">Cedar Grove School</text>
-    <text x="820" y="237" font-size="17" text-anchor="end">12.00</text>
-
+    <text x="820" y="68" font-size="17" font-weight="700" text-anchor="end">Steps</text>
+    <text x="40" y="101" font-size="17">Ava</text><text x="820" y="101" font-size="17" text-anchor="end">8200</text>
+    <text x="40" y="135" font-size="17">June</text><text x="820" y="135" font-size="17" text-anchor="end">6100</text>
+    <text x="40" y="169" font-size="17">Luis</text><text x="820" y="169" font-size="17" text-anchor="end">9400</text>
+    <text x="40" y="203" font-size="17">Priya</text><text x="820" y="203" font-size="17" text-anchor="end">7300</text>
+    <text x="40" y="237" font-size="17" font-weight="700">Tomas</text>
     <rect x="24" y="268" width="812" height="66" rx="10" fill="#DEEAF4" stroke="#2F5A8B" stroke-width="1.5"/>
-    <text x="44" y="295" font-size="17">Tomas Vega has not submitted a timesheet yet, so both of his cells come back empty.</text>
-    <text x="44" y="320" font-size="17">Empty here means unknown. It does not mean he billed zero hours.</text>
+    <text x="44" y="295" font-size="17">Tomas has not logged steps yet, so the Steps cell comes back empty.</text>
+    <text x="44" y="320" font-size="17">Empty here means unknown. It does not mean Tomas walked zero steps.</text>
   </g>
 </svg>
 
+<p>A teacher who reads that blank as zero might think Tomas skipped the challenge. You already know <code>LEFT JOIN</code> and <code>GROUP BY</code>. This reading covers what that blank is, how to fill it on purpose, how to save an expensive answer, and how to measure what a query costs.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> a project lead looking at that screen will read the blank as a zero, decide Tomas had a light week, and maybe move work onto him. That is a real staffing decision made from a hole in the data. Dashboards get trusted, and a number nobody questioned is exactly how a wrong number spreads. In a data-role interview this shows up as a direct question: "how do you handle missing values in SQL?" and, right behind it, "how would you investigate a query that suddenly got slow?" Both are questions you can answer concretely by the end of this page.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to join tables and add numbers up with GROUP BY, and you already know a join can leave you holding rows that have no match on the other side. This reading picks up exactly at that blank cell: what it actually is, how to fill it on purpose, how to save an expensive answer so nobody pays for it twice, and how to ask the database itself what your query cost. Later on, the same habit of measuring first is what lets you decide whether an index or a rewrite is worth it, instead of guessing.</p>
+<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what <code>psql</code> prints when it runs that file. On your own laptop you'd type <code>psql -d step_challenge -f name.sql</code>. The <code>-f</code> tells <code>psql</code> to run every statement in the file, top to bottom.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Concept overview: three problems, one dashboard</h2>
-<p>Brightline's database has three tables that matter here. <code>staff</code> holds one row per employee. <code>projects</code> holds one row per building. <code>timesheets</code> holds one row per person, per week, per project, with the hours they logged. Renata's dashboard has to pull from all three.</p>
-
-<p>Her first query lists everyone in Studio B next to the hours they logged. She uses a <strong>LEFT JOIN</strong>, which keeps every row from the first table even when the second table has no matching row. That is on purpose: she wants all five people listed, including anyone who has not filed yet.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">SELECT s.full_name, t.billable_hours
-FROM staff s
-LEFT JOIN timesheets t ON t.staff_id = s.staff_id
-ORDER BY s.full_name;
-
-   full_name   | billable_hours
----------------+----------------
- Amara Diallo  |          22.50
- June Okada    |          12.00
- Luis Ferrara  |          18.00
- Priya Raman   |          30.00
- Tomas Vega    |
-(5 rows)</div></div>
-
-<p>Tomas's cell is not an empty piece of text and it is not a zero. It is <strong>NULL</strong>, which is PostgreSQL's way of saying "there is no value here and I do not know what it should be." That distinction drives everything else in this reading.</p>
-
-<p>Renata's first instinct was to hunt for the missing rows with <code>WHERE t.billable_hours = NULL</code>. It ran without an error and returned nothing at all. Here is why. NULL means unknown, so asking whether an unknown thing equals something is itself unknown. Picture two sealed envelopes with no idea what is inside either one. Are their contents equal? You cannot say yes, and you cannot say no. A <code>WHERE</code> clause only keeps rows it can prove are true, so a row whose answer is "unknown" never survives. The keyword that actually tests for absence is <strong><code>IS NULL</code></strong>.</p>
-
-<p>Once she could find the blanks, she had to decide what to show in them. <strong><code>COALESCE</code></strong> takes a list of values and hands back the first one that is not NULL, reading left to right. <code>COALESCE(t.billable_hours, 0)</code> shows the real hours when they exist and <code>0</code> when they do not. <code>COALESCE(p.project_name, 'No timesheet yet')</code> does the same thing with a piece of text. Both are one function. The difference between them is a judgment call about what the blank means, and that judgment belongs to Renata, not to SQL.</p>
-
-<p>The second problem is cost. Brightline has four years of timesheets, which is about 180,000 rows. The totals query reads all of them, joins three tables, and groups the result every single time the page loads. A <strong>view</strong> would not help much: a view stores only the query's text and re-runs it on every read. A <strong>materialized view</strong> stores the actual answer rows on disk, so reading it is just reading rows.</p>
-
-<p>Think of the printed room schedule taped to a conference-room door. Reading it takes a second, because somebody already did the work of looking everything up and printing it. It is also only true as of the moment it was printed. If a meeting moves, the sheet on the door says nothing about it until a person prints a fresh one. A materialized view works the same way, and printing a fresh one is a real command: <strong><code>REFRESH MATERIALIZED VIEW</code></strong>. Until somebody runs it, the stored rows are <strong>stale</strong>, meaning they were correct once and are not correct now.</p>
-
-<p>The third problem is that Renata had assumed the totals query was expensive without ever measuring it. <strong><code>EXPLAIN</code></strong> asks PostgreSQL to describe the <strong>query plan</strong> it intends to use, step by step, with estimated costs, without running anything. Adding <strong><code>ANALYZE</code></strong> actually runs the query and prints the measured times and true row counts next to those estimates.</p>
-
-<p>An architecture firm is a good place for this comparison. When Brightline hires a contractor, the bid is an estimate of what each stage will take. The invoice at the end is the itemized list of what each stage really took. <code>EXPLAIN</code> is the bid. <code>EXPLAIN ANALYZE</code> is the invoice, with the real hours filled in next to the guesses.</p>
-
-<div class="mlrk-callout mlrk-callout-gold">
-<p><strong>One safety note, worth knowing before you ever type it:</strong> because <code>ANALYZE</code> genuinely runs the statement, running it on an <code>INSERT</code>, <code>UPDATE</code>, or <code>DELETE</code> really does change your data. On a <code>SELECT</code> it is completely safe, and every example in this reading is a <code>SELECT</code>.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>3. Recall before you start</h2>
-<p>Three skills are prerequisites for the rest of this page: knowing what a LEFT JOIN does to unmatched rows, reading the output of a GROUP BY with a SUM in it, and recognizing a table alias. Check each one below.</p>
-
-<div class="mlrk-card" id="card-recall-join"><p><strong>Scenario:</strong> a <code>projects</code> table has three projects. Only two of them have any rows in <code>timesheets</code>. <strong>What does <code>projects LEFT JOIN timesheets</code> return for the third project?</strong></p>
-<button type="button" class="mlrk-choice" data-a="keeps">The project still appears, with empty values in the timesheet columns.</button>
-<button type="button" class="mlrk-choice" data-a="drops">The project is dropped from the result entirely.</button>
+<h2>2. Recall</h2>
+<p>Every query here joins and adds up rows. Check both skills.</p>
+<div class="mlrk-card" id="card-recall-left"><p><strong>Room 15 has no rows in <code>step_logs</code> yet. A query starts <code>FROM teams</code> and uses <code>LEFT JOIN</code> to reach the logs. What happens to Room 15?</strong></p>
+<button type="button" class="mlrk-choice" data-a="kept">Room 15 still appears, with empty values in the log columns.</button>
+<button type="button" class="mlrk-choice" data-a="dropped">Room 15 is left out of the result.</button>
 <button type="button" class="mlrk-choice" data-a="error">The query fails with an error about a missing match.</button>
-<div id="recallfb1" class="mlrk-feedback" tabindex="-1"></div></div>
+<div id="leftfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-recall-group" style="margin-top:.8rem"><p><strong>Read this result:</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT project_name, SUM(billable_hours) AS total_hours
-FROM project_log
-GROUP BY project_name;
-
-    project_name     | total_hours
----------------------+-------------
- Eastside Library    |       40.50
- Cedar Grove School  |       12.00</div></div>
-<p><strong>What does the 40.50 actually represent?</strong></p>
-<button type="button" class="mlrk-choice" data-a="sum">The hours from every Eastside Library row, added together into one number.</button>
-<button type="button" class="mlrk-choice" data-a="one">The hours from the single largest Eastside Library row.</button>
-<button type="button" class="mlrk-choice" data-a="count">The number of Eastside Library rows in the table.</button>
-<div id="recallfb2" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-recall-alias" style="margin-top:.8rem"><p><strong>In the query <code>FROM staff s LEFT JOIN timesheets t ON t.staff_id = s.staff_id</code>, what are <code>s</code> and <code>t</code> doing?</strong></p>
-<button type="button" class="mlrk-choice" data-a="alias">They are short nicknames for the two tables, so each column can say which table it came from.</button>
-<button type="button" class="mlrk-choice" data-a="column">They are column names being selected from each table.</button>
-<button type="button" class="mlrk-choice" data-a="type">They are data types PostgreSQL applies to the joined columns.</button>
-<div id="recallfb3" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-card" id="card-recall-sum" style="margin-top:.8rem"><p><strong>A query with <code>GROUP BY team_name</code> and <code>SUM(steps) AS total_steps</code> shows Room 14 with 11500. What is 11500?</strong></p>
+<button type="button" class="mlrk-choice" data-a="sum">The steps from every Room 14 log, added together.</button>
+<button type="button" class="mlrk-choice" data-a="max">The steps in Room 14's single biggest log.</button>
+<button type="button" class="mlrk-choice" data-a="count">The number of Room 14 logs.</button>
+<div id="sumfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Technical vocabulary</h2>
-<p>Flip each card before the practice below.</p>
+<h2>3. NULL means unknown</h2>
+<p>Here is the query behind the dashboard. The <code>LEFT JOIN</code> keeps every student, even one with no log.</p>
+<div class="mlrk-code" data-file="room12.sql"><div class="mlrk-screen">SELECT s.name, l.steps
+FROM students s
+LEFT JOIN step_logs l ON l.student_id = s.student_id
+WHERE s.team_id = 1
+ORDER BY s.name;</div></div>
+<div class="mlrk-run" data-file="room12.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f room12.sql</div><pre> name  | steps
+-------+-------
+ Ava   |  8200
+ June  |  6100
+ Luis  |  9400
+ Priya |  7300
+ Tomas |
+(5 rows)</pre></div>
+<p>Tomas's cell is <strong>NULL</strong>: the absence of a value. NULL means unknown. It is not zero, and it is not empty text. To find students with no log, the obvious try is <code>= NULL</code>.</p>
+
+<div class="mlrk-card" id="card-eq"><p><strong>Predict:</strong> how many rows does <code>missing_try.sql</code> return?</p>
+<div class="mlrk-code" data-file="missing_try.sql"><div class="mlrk-screen">SELECT s.name
+FROM students s
+LEFT JOIN step_logs l ON l.student_id = s.student_id
+WHERE s.team_id = 1 AND l.steps = NULL;</div></div>
+<button type="button" class="mlrk-btn" data-run="missing_try.sql" data-after="q-eq">Run missing_try.sql</button>
+<div class="mlrk-run" data-file="missing_try.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f missing_try.sql</div><pre> name
+------
+(0 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="zero">0 rows, with no error</button>
+<button type="button" class="mlrk-choice" data-a="one">1 row: Tomas</button>
+<button type="button" class="mlrk-choice" data-a="five">All 5 students</button>
+<div id="eqfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p>Asking whether an unknown value equals something gives another unknown, and <code>WHERE</code> only keeps rows it knows are true. So <code>= NULL</code> never matches anything, not even another NULL. <strong>IS NULL</strong> is the keyword that tests whether a value is absent.</p>
+
+<h3>Fill in the blank: find the missing log</h3>
+<div class="mlrk-code" data-file="missing.sql"><div class="mlrk-screen">SELECT s.name
+FROM students s
+LEFT JOIN step_logs l ON l.student_id = s.student_id
+WHERE s.team_id = 1 AND l.steps ____;</div></div>
+<button type="button" class="mlrk-btn" data-run="missing.sql" data-after="q-isnull" data-after-note="Solve the blank first. Then you can run it.">Run missing.sql</button>
+<div class="mlrk-run" data-file="missing.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f missing.sql</div><pre> name
+-------
+ Tomas
+(1 row)</pre></div>
+<ol class="mlrk-steplist">
+  <li>Type the two words that test whether <code>l.steps</code> has no value. Leave out <code>l.steps</code> itself.</li>
+  <li>Put one space between the words. Capital letters or lowercase both work.</li>
+  <li>Press <strong>Check</strong>. Then the Run button unlocks.</li>
+</ol>
+<div class="mlrk-fillblank">
+  <label for="isInput">Missing words:</label>
+  <input type="text" id="isInput" autocomplete="off">
+  <button type="button" id="isCheck" class="mlrk-btn">Check</button>
+</div>
+<div id="isfb" class="mlrk-feedback" tabindex="-1"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>4. COALESCE fills the gap, and you choose what it claims</h2>
+<p><strong>COALESCE</strong> is a function that returns the first value in its list that is not NULL, checking left to right. <code>COALESCE(l.steps, 0)</code> shows the real steps when they exist and 0 when they don't. The 0 is a <strong>fallback</strong>: the stand-in value you choose to show in place of a NULL. Choosing one is a claim about what the missing value means. COALESCE changes only this query's output; the NULL is still stored in the table.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>ROUND(x)</code> rounds a number to the nearest whole number, so <code>ROUND(7750.4)</code> gives <code>7750</code>. <code>AVG</code> skips NULLs, the same way <code>COUNT(column)</code> does.</p></div>
+
+<div class="mlrk-card" id="card-avg"><p><strong>Predict:</strong> the four logged students average 7750 steps. What does <code>avg_with_zero</code> show once Tomas counts as 0?</p>
+<div class="mlrk-code" data-file="room12_average.sql"><div class="mlrk-screen">SELECT ROUND(AVG(l.steps)) AS avg_logged,
+       ROUND(AVG(COALESCE(l.steps, 0))) AS avg_with_zero
+FROM students s
+LEFT JOIN step_logs l ON l.student_id = s.student_id
+WHERE s.team_id = 1;</div></div>
+<button type="button" class="mlrk-btn" data-run="room12_average.sql" data-after="q-avg">Run room12_average.sql</button>
+<div class="mlrk-run" data-file="room12_average.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f room12_average.sql</div><pre> avg_logged | avg_with_zero
+------------+---------------
+       7750 |          6200
+(1 row)</pre></div>
+<button type="button" class="mlrk-choice" data-a="lower">6200, because the same total is now split across 5 students</button>
+<button type="button" class="mlrk-choice" data-a="same">7750, because COALESCE does not change averages</button>
+<button type="button" class="mlrk-choice" data-a="higher">9400, because 0 is ignored</button>
+<div id="avgfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>That 0 claims Tomas walked zero steps, which nobody measured, and it pulls Room 12's average down by 1550. A zero is honest only when it means "none," such as a column labeled "steps logged so far." Same function, two different claims. The judgment belongs to you, not to SQL.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Store the answer instead of redoing it</h2>
+<p>The team totals join three tables and add up every log. Run that on every page load, all day, and it gets slow. A <strong>view</strong> is a query saved under a name. It stores only the query text, so it re-runs every time you read from it. A <strong>materialized view</strong> is a saved query whose result rows are stored on disk, so reading it does not redo the work:</p>
+<div class="mlrk-code" data-file="create_team_steps.sql"><div class="mlrk-screen">CREATE MATERIALIZED VIEW team_steps AS
+SELECT t.team_name,
+       COUNT(l.log_id) AS logs,
+       COALESCE(SUM(l.steps), 0) AS total_steps
+FROM teams t
+LEFT JOIN students s ON s.team_id = t.team_id
+LEFT JOIN step_logs l ON l.student_id = s.student_id
+GROUP BY t.team_name;
+
+SELECT * FROM team_steps ORDER BY team_name;</div></div>
+<div class="mlrk-run" data-file="create_team_steps.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f create_team_steps.sql</div><pre>SELECT 3
+ team_name | logs | total_steps
+-----------+------+-------------
+ Room 12   |    4 |       31000
+ Room 14   |    2 |       11500
+ Room 15   |    0 |           0
+(3 rows)</pre></div>
+<p>The <code>SELECT 3</code> line is <code>psql</code> saying it stored 3 rows. You read a materialized view the same way you read a table. Now Tomas logs 7000 steps.</p>
+
+<div class="mlrk-card" id="card-stale"><p><strong>Predict:</strong> in <code>late_log.sql</code>, what does the first <code>SELECT</code> show for Room 12's <code>total_steps</code>?</p>
+<div class="mlrk-code" data-file="late_log.sql"><div class="mlrk-screen">INSERT INTO step_logs (log_id, student_id, log_date, steps)
+VALUES (7, 5, '2026-10-05', 7000);
+
+SELECT * FROM team_steps ORDER BY team_name;
+
+REFRESH MATERIALIZED VIEW team_steps;
+
+SELECT * FROM team_steps ORDER BY team_name;</div></div>
+<button type="button" class="mlrk-btn" data-run="late_log.sql" data-after="q-stale">Run late_log.sql</button>
+<div class="mlrk-run" data-file="late_log.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f late_log.sql</div><pre>INSERT 0 1
+ team_name | logs | total_steps
+-----------+------+-------------
+ Room 12   |    4 |       31000
+ Room 14   |    2 |       11500
+ Room 15   |    0 |           0
+(3 rows)
+
+REFRESH MATERIALIZED VIEW
+ team_name | logs | total_steps
+-----------+------+-------------
+ Room 12   |    5 |       38000
+ Room 14   |    2 |       11500
+ Room 15   |    0 |           0
+(3 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="old">31000, the stored number from before the new log</button>
+<button type="button" class="mlrk-choice" data-a="new">38000, because the view updates itself</button>
+<button type="button" class="mlrk-choice" data-a="error">An error, because the view is out of date</button>
+<div id="stalefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>Between the <code>INSERT</code> and the refresh, the stored rows were <strong>stale</strong>: correct at their last refresh, but no longer matching the live tables. <strong>REFRESH MATERIALIZED VIEW</strong> re-runs the stored query and replaces every stored row. PostgreSQL never does this on its own. The rule: if the numbers must be right to the second, use a plain view. If the query is slow and the numbers can be a little behind, use a materialized view and say how fresh it is.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Measure the cost with EXPLAIN ANALYZE</h2>
+<p>A <strong>query plan</strong> is the step-by-step method PostgreSQL picks for running your query, printed one line per step. <code>EXPLAIN</code> shows the plan without running the query. <strong>EXPLAIN ANALYZE</strong> runs the query and prints the plan with real times and real row counts next to the planner's guesses. Because it really runs the statement, only use it on a <code>SELECT</code> while you practice: on an <code>INSERT</code> it would really add the row.</p>
+<p>The whole school district runs this challenge: 12 teams, 250 students, and about 180,000 step logs. Here is the team totals query on that data, before the materialized view existed. The block scrolls sideways; each step that sits further right runs first.</p>
+<div class="mlrk-code" data-file="explain_totals.sql"><div class="mlrk-screen">EXPLAIN ANALYZE
+SELECT t.team_name,
+       COUNT(l.log_id) AS logs,
+       COALESCE(SUM(l.steps), 0) AS total_steps
+FROM teams t
+LEFT JOIN students s ON s.team_id = t.team_id
+LEFT JOIN step_logs l ON l.student_id = s.student_id
+GROUP BY t.team_name;</div></div>
+<div class="mlrk-run" data-file="explain_totals.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d district_steps -f explain_totals.sql</div><pre>                                                            QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=6911.52..6911.64 rows=12 width=48) (actual time=97.402..97.410 rows=12 loops=1)
+   Group Key: t.team_name
+   -&gt;  Hash Right Join  (cost=11.78..5561.40 rows=180016 width=44) (actual time=0.231..62.118 rows=180020 loops=1)
+         Hash Cond: (l.student_id = s.student_id)
+         -&gt;  Seq Scan on step_logs l  (cost=0.00..3105.16 rows=180016 width=12) (actual time=0.010..15.204 rows=180016 loops=1)
+         -&gt;  Hash  (cost=8.66..8.66 rows=250 width=36) (actual time=0.205..0.207 rows=250 loops=1)
+               -&gt;  Hash Right Join  (cost=1.27..8.66 rows=250 width=36) (actual time=0.031..0.152 rows=250 loops=1)
+                     Hash Cond: (s.team_id = t.team_id)
+                     -&gt;  Seq Scan on students s  (cost=0.00..5.50 rows=250 width=8) (actual time=0.005..0.041 rows=250 loops=1)
+                     -&gt;  Hash  (cost=1.12..1.12 rows=12 width=36) (actual time=0.014..0.015 rows=12 loops=1)
+                           -&gt;  Seq Scan on teams t  (cost=0.00..1.12 rows=12 width=36) (actual time=0.006..0.009 rows=12 loops=1)
+ Planning Time: 0.412 ms
+ Execution Time: 97.871 ms
+(13 rows)</pre></div>
+<p>You don't have to read every line. Look for three things:</p>
+<ol>
+<li><strong>Seq Scan</strong> lines: a step that reads every row of a table in order. That is fine on a small table and worth a look on a huge one. Here <code>step_logs</code> got a Seq Scan over 180,016 rows.</li>
+<li>Guess versus real: each line has a guessed <code>rows=</code> in the first parentheses and the real <code>rows=</code> in the <code>actual</code> parentheses. Here they are close, which is a good sign.</li>
+<li><strong>Execution Time</strong>, the last line: how many milliseconds the run really took. The <code>cost=</code> numbers are not times. They are units the planner uses to compare its own options.</li>
+</ol>
+
+<div class="mlrk-card" id="card-plan"><p><strong>Which part of the plan tells you how long the query really took?</strong></p>
+<button type="button" class="mlrk-choice" data-a="exec"><code>Execution Time: 97.871 ms</code></button>
+<button type="button" class="mlrk-choice" data-a="cost"><code>cost=0.00..3105.16</code> on the <code>step_logs</code> line</button>
+<button type="button" class="mlrk-choice" data-a="rows"><code>rows=180016</code> on the <code>step_logs</code> line</button>
+<div id="planfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p>Now the same question, asked of a materialized view built on the district data:</p>
+<div class="mlrk-code" data-file="explain_view.sql"><div class="mlrk-screen">EXPLAIN ANALYZE SELECT * FROM team_steps;</div></div>
+<div class="mlrk-run" data-file="explain_view.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d district_steps -f explain_view.sql</div><pre>                                               QUERY PLAN
+-------------------------------------------------------------------------------------------------------
+ Seq Scan on team_steps  (cost=0.00..1.12 rows=12 width=48) (actual time=0.008..0.010 rows=12 loops=1)
+ Planning Time: 0.051 ms
+ Execution Time: 0.024 ms
+(3 rows)</pre></div>
+<p>One line of plan instead of eleven, and no joins, because the joins already ran once when the view was stored. Times move a little from run to run, so compare the shape of the plan, not one run's milliseconds.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Mixed check</h2>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A materialized view stores its result rows, so reading it does not redo the joins.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A plain view stores only the query text, so it re-runs every time you read from it.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A materialized view updates itself whenever the tables under it change.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> <code>WHERE steps = NULL</code> finds the rows where <code>steps</code> is missing.</label>
+<p><button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button></p>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>8. Wrap-up</h2>
+<ul>
+<li>NULL means unknown, so <code>= NULL</code> matches nothing and <code>IS NULL</code> is the test. COALESCE fills a gap with whatever fallback you choose, so choose one that tells the truth.</li>
+<li>A materialized view trades freshness for speed. Someone has to run <code>REFRESH MATERIALIZED VIEW</code>.</li>
+<li><code>EXPLAIN ANALYZE</code> measures what a query costs, so you check instead of guess.</li>
+</ul>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> the school hallway screen shows which students have logged steps today, and students check it all day. The query reads one small table. Which fits?</p>
+<button type="button" class="mlrk-choice" data-a="view">A plain view, because the screen must be up to date and the query is cheap to re-run.</button>
+<button type="button" class="mlrk-choice" data-a="nightly">A materialized view refreshed each night, so the screen loads fast in the morning.</button>
+<button type="button" class="mlrk-choice" data-a="hourly">A materialized view refreshed every hour, as a middle choice.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p><strong>In interviews:</strong> for "How do you handle missing values in SQL?", a strong answer names what the missing value means and what your fallback claims, not only "I use COALESCE."</p>
+<p><strong>Where this goes next:</strong> once a plan shows a step reading far more rows than it needs, you can change that step, for example with an index that lets PostgreSQL jump straight to matching rows.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Reflection</h2>
+<label for="strategy"><strong>Your answer:</strong> a teacher asks you to show every blank as 0 so the dashboard "looks finished." What would you say back, and what would you offer instead?</label>
+<ol class="mlrk-steplist">
+  <li>Write 1 or 2 sentences, at least 8 words. The counter under the box tells you when it counts.</li>
+  <li>Try starting with: "I'd explain that a 0 would..."</li>
+</ol>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="I'd explain that a 0 would..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Key terms review</h2>
+<p>Flip each card to check that you can explain the term.</p>
 <div class="mlrk-grid" id="vocab">
 <button type="button" class="mlrk-term"><span class="mlrk-front"><strong>NULL</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>NULL</strong><br>The absence of a value: unknown, not zero and not empty text.</span></button>
 <button type="button" class="mlrk-term"><span class="mlrk-front"><strong>IS NULL</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>IS NULL</strong><br>The keyword that tests whether a value is absent. <code>= NULL</code> never matches anything, not even another NULL.</span></button>
 <button type="button" class="mlrk-term"><span class="mlrk-front"><strong>COALESCE</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>COALESCE</strong><br>A function that returns the first value in its list that is not NULL, checking left to right.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>fallback</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Fallback</strong><br>The stand-in value you choose to show in place of a NULL. Choosing one is a claim about what the missing value means.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>view</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>View</strong><br>A query saved under a name. It stores only the query text, so it re-runs every time you read from it.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>materialized view</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Materialized view</strong><br>A saved query whose result rows are genuinely stored on disk, so reading it does not redo the work.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Fallback</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Fallback</strong><br>The stand-in value you choose to show in place of a NULL. Choosing one is a claim about what the missing value means.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>View</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>View</strong><br>A query saved under a name. It stores only the query text, so it re-runs every time you read from it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Materialized view</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Materialized view</strong><br>A saved query whose result rows are stored on disk, so reading it does not redo the work.</span></button>
 <button type="button" class="mlrk-term"><span class="mlrk-front"><strong>REFRESH MATERIALIZED VIEW</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>REFRESH MATERIALIZED VIEW</strong><br>The command that re-runs the stored query and replaces every stored row. PostgreSQL never does this on its own.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>stale</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Stale</strong><br>Describes stored rows that were correct at their last refresh and no longer match the live tables.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>query plan</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Query plan</strong><br>The step-by-step method PostgreSQL chose for running your query, printed as one line per step.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>EXPLAIN ANALYZE</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>EXPLAIN ANALYZE</strong><br>Runs the query and prints the plan with measured times and true row counts beside the planner's estimates.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Seq Scan</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Seq Scan</strong><br>A plan step that reads every row of a table in order. Perfectly fine on a small table, worth a look on a huge one.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Execution Time</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Execution Time</strong><br>The last line of an <code>EXPLAIN ANALYZE</code> plan: how many milliseconds the run actually took.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Stale</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Stale</strong><br>Describes stored rows that were correct at their last refresh and no longer match the live tables.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Query plan</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Query plan</strong><br>The step-by-step method PostgreSQL chose for running your query, printed as one line per step.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>EXPLAIN ANALYZE</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>EXPLAIN ANALYZE</strong><br>Runs the query and prints the plan with measured times and real row counts beside the planner's guesses.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Seq Scan</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Seq Scan</strong><br>A plan step that reads every row of a table in order. Fine on a small table, worth a look on a huge one.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Execution Time</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Execution Time</strong><br>The last line of an <code>EXPLAIN ANALYZE</code> plan: how many milliseconds the run really took.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Why <code>= NULL</code> never matches</h2>
-<p>Renata wanted a list of everyone who still owed her a timesheet. Here is the query she tried first.</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT s.full_name
-FROM staff s
-LEFT JOIN timesheets t ON t.staff_id = s.staff_id
-WHERE t.billable_hours = NULL;</div></div>
-
-<div class="mlrk-card" id="card-eqnull"><p><strong>Tomas is the one person with no timesheet row. How many rows does this query return?</strong></p>
-<button type="button" class="mlrk-choice" data-a="zero">Zero rows, with no error message.</button>
-<button type="button" class="mlrk-choice" data-a="one">One row, listing Tomas Vega.</button>
-<button type="button" class="mlrk-choice" data-a="all">All five rows, because every comparison to NULL passes.</button>
-<div id="eqnullfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<p style="margin-top:1rem">This is the most common silent bug in SQL. There is no error, no warning, and no red text. The query simply answers a different question than the one you meant to ask, and hands back an empty result that looks like a real finding. Fix it by naming absence directly.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">SELECT s.full_name
-FROM staff s
-LEFT JOIN timesheets t ON t.staff_id = s.staff_id
-WHERE t.billable_hours __BLANK__;</div></div>
-<div class="mlrk-fillblank">
-  <label for="isnullinput">Type the two words that belong in the blank:</label>
-  <input type="text" id="isnullinput" autocomplete="off" placeholder="two words">
-  <button type="button" id="isnullcheck" class="mlrk-btn">Check my answer</button>
-</div>
-<div id="isnullfb" class="mlrk-feedback" tabindex="-1"></div>
-<details class="mlrk-hint" style="margin-top:.6rem"><summary>Need a hint?</summary>
-<p>You are not comparing the column to a value. You are asking whether the column has a value at all, so the keyword reads like plain English about the row's state.</p>
-</details>
-
-<div class="mlrk-callout mlrk-callout-gold" style="margin-top:1rem">
-<p>PostgreSQL treats <code>!=</code> the same way. <code>WHERE t.billable_hours != NULL</code> also returns nothing, which catches people out even more often than the first version does. The opposite of <code>IS NULL</code> is <code>IS NOT NULL</code>.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>6. COALESCE, and what a fallback claims</h2>
-<p>Now Renata fills the gaps on purpose. She writes two fallbacks into one query: a number for the hours column, and a piece of text for the project column.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">SELECT s.full_name,
-       COALESCE(p.project_name, 'No timesheet yet') AS project,
-       COALESCE(t.billable_hours, 0) AS hours
-FROM staff s
-LEFT JOIN timesheets t ON t.staff_id = s.staff_id
-LEFT JOIN projects p ON p.project_id = t.project_id
-ORDER BY s.full_name;
-
-   full_name   |      project       | hours
----------------+--------------------+-------
- Amara Diallo  | Eastside Library   | 22.50
- June Okada    | Cedar Grove School | 12.00
- Luis Ferrara  | Eastside Library   | 18.00
- Priya Raman   | Harbor View Apart. | 30.00
- Tomas Vega    | No timesheet yet   |  0.00</div></div>
-
-<p>Two things are worth noticing. First, <code>COALESCE</code> changed nothing in the table. The NULL is still sitting in the database afterward; only this one query's output looks different. Second, the two fallbacks on Tomas's row disagree with each other. <code>'No timesheet yet'</code> tells the truth. <code>0.00</code> quietly states that he billed nothing.</p>
-
-<p>Now try writing one yourself. The query below should show each person's hours, with any missing value displayed as <code>0</code> and the column renamed to <code>hours</code>.</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT s.full_name,
-       __BLANK__ AS hours
-FROM staff s
-LEFT JOIN timesheets t ON t.staff_id = s.staff_id;</div></div>
-<div class="mlrk-fillblank">
-  <label for="coalinput">Type the whole expression that belongs in the blank:</label>
-  <input type="text" id="coalinput" class="mlrk-wide" autocomplete="off" placeholder="function name, then the column and the fallback">
-  <button type="button" id="coalcheck" class="mlrk-btn">Check my answer</button>
-</div>
-<div id="coalfb" class="mlrk-feedback" tabindex="-1"></div>
-<details class="mlrk-hint" style="margin-top:.6rem"><summary>Need a hint?</summary>
-<p>The function takes two things inside its parentheses, separated by a comma: the column you are reading, then the value to fall back on. The column lives on the timesheets table, so it is written <code>t.billable_hours</code>.</p>
-</details>
-
-<h3 style="margin-top:1.6rem">The part SQL will not decide for you</h3>
-<p>The four submitted timesheets are 22.50, 18.00, 30.00, and 12.00 hours. Their average is 20.63 hours per person. Wrap the column in <code>COALESCE(t.billable_hours, 0)</code> and the average is computed over five people instead of four, which drops it to 16.50.</p>
-
-<div class="mlrk-card" id="card-judgment"><p><strong>Which statement describes what that <code>0</code> is claiming?</strong></p>
-<button type="button" class="mlrk-choice" data-a="claims">It claims Tomas worked zero billable hours that week, which is a measurement nobody has actually taken.</button>
-<button type="button" class="mlrk-choice" data-a="neutral">It leaves the value unknown, since 0 and NULL mean the same thing to a numeric column.</button>
-<button type="button" class="mlrk-choice" data-a="safe">It is always the safe choice, because a dashboard should never display an empty cell.</button>
-<div id="judgmentfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem">
-<p><strong>Where a zero fallback genuinely is the right answer:</strong> Renata's project totals use <code>COALESCE(SUM(t.billable_hours), 0)</code> so that a brand-new project with no timesheet rows at all shows <code>0.00</code> instead of a blank. That zero is honest, because the rows genuinely do not exist: nobody has logged any time against that building yet. A person who simply has not filed yet is a different situation, and deserves a different fallback. Same function, two different claims.</p>
-</div>
-
-<label for="fallbackthink" style="display:block;margin-top:1.2rem"><strong>In your own words:</strong> a project lead asks Renata to show every blank as 0.00 so the dashboard "looks finished." In 2-3 sentences, what would you say back, and what would you offer instead?</label>
-<textarea id="fallbackthink" class="mlrk-response" data-save placeholder="Try starting with: showing 0.00 would tell the reader that..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>7. Storing the answer instead of recomputing it</h2>
-<p>Renata's totals query joins all three tables and groups the result. Running it once is fine. Running it on every page load, for every lead, all day, is the part that hurts. Both kinds of saved query look identical to read from, which is exactly why the difference catches people out.</p>
-
-<div class="mlrk-card">
-<p><strong>Select every statement below that is TRUE about views and materialized views.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A materialized view stores the actual result rows, so reading it does not re-run the joins.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A plain view stores only the query text, so it re-runs every time you select from it.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A materialized view updates itself automatically whenever the underlying tables change.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Querying a materialized view needs different syntax from querying a table.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
-<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-
-<p style="margin-top:1.4rem">Referring to the trade-off above, put the life of Renata's materialized view in the order it actually happens. Click a step to add it to your sequence; click it again to remove it.</p>
-<div id="ordersteps">
-  <div class="mlrk-orderitem" data-step="write"><span class="mlrk-order-num"></span> Write the totals SELECT on its own and confirm it returns the numbers you expect.</div>
-  <div class="mlrk-orderitem" data-step="create"><span class="mlrk-order-num"></span> Wrap that SELECT in <code>CREATE MATERIALIZED VIEW</code>, which stores its result rows on disk.</div>
-  <div class="mlrk-orderitem" data-step="read"><span class="mlrk-order-num"></span> Point the dashboard at the stored view and read it the same way you would read a table.</div>
-  <div class="mlrk-orderitem" data-step="newdata"><span class="mlrk-order-num"></span> A late timesheet lands in the <code>timesheets</code> table.</div>
-  <div class="mlrk-orderitem" data-step="stale"><span class="mlrk-order-num"></span> The dashboard keeps showing its stored numbers, which no longer match the live tables.</div>
-  <div class="mlrk-orderitem" data-step="refresh"><span class="mlrk-order-num"></span> Someone runs <code>REFRESH MATERIALIZED VIEW</code> and the stored rows are rebuilt.</div>
-</div>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order (2 tries before the answer shows)</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-<details class="mlrk-hint" style="margin-top:.6rem"><summary>Need a hint?</summary>
-<p>Nothing can go stale before it has been stored, and nothing gets refreshed before anything has changed. Start from the plain query and follow the timeline forward.</p>
-</details>
-
-<div class="mlrk-callout mlrk-callout-gold" style="margin-top:1.2rem">
-<p><strong>The honest decision rule:</strong> if the answer has to be correct to the second, a plain view is right. If the query is expensive and you control how fresh the numbers need to be, a materialized view is right. Most dashboards are the second case. Whoever builds one owes the people reading it a plain statement of how fresh the numbers are, which is why so many real dashboards carry a small "last updated at" line in the corner.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>8. Practice in a simulated psql session</h2>
-<p>This is a simulated database standing in for Renata's terminal, not a real one. It holds a small practice copy of Brightline's data: five people in Studio B, three projects, and four submitted timesheets. It recognizes the exact commands below and will explain itself if you try something else. Type each line, in order, and press Enter after each one.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">1.  pwd
-2.  psql billing
-3.  SELECT s.full_name, t.billable_hours FROM staff s LEFT JOIN timesheets t ON t.staff_id = s.staff_id ORDER BY s.full_name;
-4.  SELECT s.full_name FROM staff s LEFT JOIN timesheets t ON t.staff_id = s.staff_id WHERE t.billable_hours = NULL;
-5.  SELECT s.full_name FROM staff s LEFT JOIN timesheets t ON t.staff_id = s.staff_id WHERE t.billable_hours IS NULL;
-6.  SELECT s.full_name, COALESCE(t.billable_hours, 0) AS hours FROM staff s LEFT JOIN timesheets t ON t.staff_id = s.staff_id ORDER BY s.full_name;
-7.  CREATE MATERIALIZED VIEW project_hours AS SELECT p.project_name, COUNT(s.staff_id) AS people, COALESCE(SUM(t.billable_hours), 0) AS total_hours FROM projects p LEFT JOIN timesheets t ON t.project_id = p.project_id LEFT JOIN staff s ON s.staff_id = t.staff_id GROUP BY p.project_name;
-8.  SELECT * FROM project_hours ORDER BY total_hours DESC;
-9.  INSERT INTO timesheets (entry_id, staff_id, project_id, week_ending, billable_hours) VALUES (5, 4, 103, '2026-03-13', 16.00);
-10. SELECT * FROM project_hours ORDER BY total_hours DESC;
-11. REFRESH MATERIALIZED VIEW project_hours;
-12. SELECT * FROM project_hours ORDER BY total_hours DESC;
-13. EXPLAIN ANALYZE SELECT * FROM project_hours;</div></div>
-
-<p>Lines 8, 10, and 12 are the same query typed three times on purpose. Watch what Cedar Grove School's total does across those three runs, and when it finally moves.</p>
-
-<div class="mlrk-terminal" id="psqlterminal">
-  <div class="mlrk-terminal-log" aria-live="polite">Welcome, Renata. This simulated terminal starts in your dashboard project folder.
-Try pwd to get your bearings, then work through the numbered lines above, one at a time.</div>
-  <div class="mlrk-terminal-row">
-    <span class="mlrk-terminal-prompt" aria-hidden="true">$</span>
-    <input type="text" class="mlrk-terminal-input" id="psqlinput" aria-label="Terminal command input" autocomplete="off" spellcheck="false">
-  </div>
-</div>
-<details class="mlrk-hint" style="margin-top:.8rem"><summary>Need a nudge?</summary>
-<p>Copy each line exactly, including the semicolon at the end, and press Enter after each one. If line 8 says the relation does not exist, line 7 has not run successfully yet. Line 9 adds Tomas's late timesheet to the base table; line 10 shows you what the stored view says about it, which is the whole point of that pair.</p>
-</details>
-</section>
-
-<section class="mlrk-section">
-<h2>9. Reading what the plan tells you</h2>
-<p>On five practice rows everything is fast, so the timings above mean very little on their own. Renata ran the same two shapes against the firm's real database, where <code>timesheets</code> holds about 180,000 rows. Here is the totals query, before the materialized view existed.</p>
-
-<p class="mlrk-small">The plan below keeps its real indentation, so the block scrolls sideways on a narrow screen instead of wrapping. The indentation is part of the meaning: a step sitting further right runs before the step above it.</p>
-<div class="mlrk-code"><div class="mlrk-screen mlrk-plan">EXPLAIN ANALYZE
-SELECT p.project_name, COUNT(s.staff_id) AS people,
-       COALESCE(SUM(t.billable_hours), 0) AS total_hours
-FROM projects p
-LEFT JOIN timesheets t ON t.project_id = p.project_id
-LEFT JOIN staff s ON s.staff_id = t.staff_id
-GROUP BY p.project_name;
-
- HashAggregate  (cost=9184.22..9184.25 rows=3 width=48) (actual time=408.91..408.94 rows=3 loops=1)
-   Group Key: p.project_name
-   ->  Hash Left Join  (cost=41.60..7834.10 rows=180016 width=44) (actual time=1.02..286.74 rows=180016 loops=1)
-         Hash Cond: (t.staff_id = s.staff_id)
-         ->  Hash Left Join  (cost=1.07..5309.44 rows=180016 width=40) (actual time=0.06..118.60 rows=180016 loops=1)
-               Hash Cond: (t.project_id = p.project_id)
-               ->  Seq Scan on timesheets t  (cost=0.00..3105.16 rows=180016 width=18) (actual time=0.01..27.44 rows=180016 loops=1)
-               ->  Seq Scan on projects p  (cost=0.00..1.03 rows=3 width=26) (actual time=0.01..0.02 rows=3 loops=1)
-         ->  Seq Scan on staff s  (cost=0.00..1.60 rows=60 width=4) (actual time=0.01..0.03 rows=60 loops=1)
- Planning Time: 0.38 ms
- Execution Time: 412.65 ms</div></div>
-
-<p>That looks like a wall of text the first time. You do not have to read all of it. Three things carry almost all of the meaning.</p>
-<ol class="mlrk-steplist">
-  <li><strong>What kind of scan each table got.</strong> Three <code>Seq Scan</code> lines here, one per table. A sequential scan reads every row in order, because no <strong>index</strong> was used. An index is a separate lookup structure a table can have that lets PostgreSQL jump straight to matching rows instead of reading all of them.</li>
-  <li><strong>How close the guess was to reality.</strong> Each line carries a guessed <code>rows=</code> from the planner and an actual <code>rows=</code> from the run. Here they match exactly, which is a healthy sign. A wide gap between them on a large table is the first thing a performance engineer looks at.</li>
-  <li><strong>The last line.</strong> <code>Execution Time</code> is real milliseconds. The <code>cost=</code> numbers are not: they are made-up units the planner uses only to compare its own options against each other, so never read a cost as a time.</li>
-</ol>
-
-<p>Here is that second point up close. This is the <code>timesheets</code> line from the plan above, split across three lines here so the whole thing fits on screen.</p>
-<div class="mlrk-code"><div class="mlrk-screen mlrk-plan">Seq Scan on timesheets t
-  (cost=0.00..3105.16 rows=180016 width=18)
-  (actual time=0.01..27.44 rows=180016 loops=1)</div></div>
-<p>The first <code>rows=180016</code> sits in the estimate parentheses: that is the planner's guess before it ran anything. The second sits in the <code>actual</code> parentheses: that is what really came back. Matching numbers mean the planner understood this table well. A guess of 200 next to an actual of 180,016 would mean it did not, and that gap is often the real reason a query got slow.</p>
-
-<p>Now the same question, asked of the materialized view instead.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen mlrk-plan">EXPLAIN ANALYZE SELECT * FROM project_hours;
-
- Seq Scan on project_hours  (cost=0.00..1.03 rows=3 width=48) (actual time=0.01..0.02 rows=3 loops=1)
- Planning Time: 0.06 ms
- Execution Time: 0.09 ms</div></div>
-
-<p>One line instead of nine. No joins anywhere, because the joins already happened once, at creation time, and reading the stored rows never redoes them. That is the whole point of the previous section, made visible and measured rather than assumed.</p>
-
-<p>One honest caution: run the same query twice and the execution time will move, because caching and whatever else the machine is doing both affect it. Compare shapes and row counts, not one run's milliseconds.</p>
-
-<h3 style="margin-top:1.6rem">Match each plan line to what it is telling you</h3>
-<p>Referring to the two plans above, drag each plain-language meaning into the plan line it belongs with. You get two tries before the answers show.</p>
-<div id="planmatch">
-  <div class="mlrk-drag-source">
-    <span class="mlrk-draggable" id="chip-scan">Read every row of that table, with no index used</span>
-    <span class="mlrk-draggable" id="chip-group">Collapse many rows into one row per project</span>
-    <span class="mlrk-draggable" id="chip-exec">How many milliseconds the run actually took</span>
-    <span class="mlrk-draggable" id="chip-plan">Time spent choosing a plan, before running anything</span>
-  </div>
-  <div class="mlrk-matchrow">
-    <span class="mlrk-matchlabel">Seq Scan on timesheets t</span>
-    <div class="mlrk-dropzone" id="zone-scan" aria-label="Drop zone for Seq Scan on timesheets"></div>
-  </div>
-  <div class="mlrk-matchrow">
-    <span class="mlrk-matchlabel">Group Key: p.project_name</span>
-    <div class="mlrk-dropzone" id="zone-group" aria-label="Drop zone for Group Key"></div>
-  </div>
-  <div class="mlrk-matchrow">
-    <span class="mlrk-matchlabel">Execution Time: 412.65 ms</span>
-    <div class="mlrk-dropzone" id="zone-exec" aria-label="Drop zone for Execution Time"></div>
-  </div>
-  <div class="mlrk-matchrow">
-    <span class="mlrk-matchlabel">Planning Time: 0.38 ms</span>
-    <div class="mlrk-dropzone" id="zone-plan" aria-label="Drop zone for Planning Time"></div>
-  </div>
-</div>
-<div class="mlrk-actions"><button type="button" id="matchcheck" class="mlrk-btn">Check my matches</button></div>
-<div id="matchfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>10. Watch: the two words, side by side</h2>
-<p>As you watch, listen for one specific distinction: <code>EXPLAIN</code> on its own describes the plan without running the query, while adding <code>ANALYZE</code> runs it and reports what really happened. Notice where the estimated row counts sit next to the actual ones, since that pairing is the single most useful thing in the output.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
+<h2>11. Go further (optional)</h2>
+<p>This video is optional and isn't part of the time estimate or your score. As you watch, listen for the difference between <code>EXPLAIN</code>, which only describes the plan, and <code>EXPLAIN ANALYZE</code>, which runs the query and reports what really happened.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/GmX8tjT7UcQ" title="EXPLAIN and EXPLAIN ANALYZE in PostgreSQL, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=GmX8tjT7UcQ" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what is one thing in a query plan you now feel confident pointing at and explaining out loud?</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
 </section>
 
 <section class="mlrk-section">
-<h2>11. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>"How do you handle missing values in SQL?" is a standard screening question for data roles, and the weak answer is "I use COALESCE." The strong answer names the judgment: what the missing value means, what the fallback would be claiming, and why you picked the one you picked. Renata's dashboard is a ready-made example of that, with two different fallbacks on the same row for two genuinely different reasons.</p>
-<p>"What is the difference between a view and a materialized view?" leans toward analytics-engineering and data-engineering roles more than pure analyst roles, but it is worth knowing cold. Answer in one sentence, ground it in something you actually built, then close with the decision rule rather than a summary.</p>
-<p>"A dashboard query that used to take two seconds now takes forty. How would you investigate?" is a mid-level question, and interviewers are listening for a process rather than a fix. A strong shape: confirm the slowdown is real and repeatable, ask what changed and when, name several possible causes out loud before picking one, then run <code>EXPLAIN ANALYZE</code> and compare the plan and row counts against what the query used to do. That evidence step is the part most candidates hand-wave, and it is the part you can now actually demonstrate.</p>
-</div>
-<div class="mlrk-card" id="card-interview" style="margin-top:1rem"><p><strong>Interview-style question:</strong> a candidate says a materialized view is "just a faster view." <strong>What is the most accurate correction?</strong></p>
-<button type="button" class="mlrk-choice" data-a="tradeoff">It is not faster at the same job. It trades freshness for speed, and somebody has to decide that trade is acceptable.</button>
-<button type="button" class="mlrk-choice" data-a="index">It is faster because PostgreSQL automatically adds an index to every materialized view.</button>
-<button type="button" class="mlrk-choice" data-a="same">There is no real difference; the two names describe the same feature.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Summary &amp; critical thinking</h2>
-<p>Three ideas carried this whole reading. NULL means unknown, which is why <code>= NULL</code> matches nothing and <code>IS NULL</code> exists. <code>COALESCE</code> will put any fallback you name into a gap without any opinion about whether that fallback is honest, so the judgment is always yours. And a materialized view buys speed by storing an answer, which means someone has to decide how stale is too stale and run <code>REFRESH MATERIALIZED VIEW</code> on a schedule that matches that decision. <code>EXPLAIN ANALYZE</code> is how you check any of this instead of assuming it.</p>
-
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a dental clinic's front-desk screen shows how many patients are currently checked in and waiting. Staff need that count correct to the minute, and the query behind it reads one small table. <strong>Which choice fits?</strong></p>
-<button type="button" class="mlrk-choice" data-a="view">A plain view, since the answer has to be current and the query is cheap to re-run.</button>
-<button type="button" class="mlrk-choice" data-a="matnight">A materialized view refreshed nightly, so the screen loads instantly in the morning.</button>
-<button type="button" class="mlrk-choice" data-a="mathourly">A materialized view refreshed every hour, as a compromise between the two.</button>
-<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<label for="ownwords" style="display:block;margin-top:1.2rem"><strong>In your own words:</strong> the same clinic also wants a monthly report of total appointments per dentist, pulled from three years of visit records, shown to managers once a week. Which kind of saved query fits that one, and what would you tell the managers about how fresh the numbers are?</label>
-<textarea id="ownwords" class="mlrk-response" data-save></textarea>
-</section>
-
-<section class="mlrk-section">
-<h2>13. Thinking ahead</h2>
-<p>Every plan in this reading answered the same question: what did this query cost? The natural next step is the question right behind it. Once a plan shows one step reading far more rows than the answer actually needs, the work becomes changing that step, by adding an index so PostgreSQL can jump to matching rows instead of reading all of them, or by rewriting the query so fewer rows ever reach the expensive part. Measuring first is what makes that next step a decision rather than a guess.</p>
-</section>
-
-<section class="mlrk-section">
-<h2>14. Your score &amp; keep a copy of your work</h2>
+<h2>12. Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -549,6 +420,7 @@ git push</pre></li>
     <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
   </div>
 </div>
+
 </section>
 
 <section class="mlrk-section">
@@ -556,10 +428,10 @@ git push</pre></li>
 <p class="mlrk-small">Not counted in the time estimate above.</p>
 <ul>
 <li><a href="https://www.postgresql.org/docs/current/functions-conditional.html" target="_blank" rel="noopener">PostgreSQL docs: Conditional Expressions</a> — the official reference for <code>COALESCE</code> and its relatives.</li>
-<li><a href="https://www.postgresql.org/docs/current/sql-creatematerializedview.html" target="_blank" rel="noopener">PostgreSQL docs: CREATE MATERIALIZED VIEW</a> — every option on the command, including what happens at creation time.</li>
+<li><a href="https://www.postgresql.org/docs/current/sql-creatematerializedview.html" target="_blank" rel="noopener">PostgreSQL docs: CREATE MATERIALIZED VIEW</a> — every option on the command.</li>
 <li><a href="https://www.postgresql.org/docs/current/using-explain.html" target="_blank" rel="noopener">PostgreSQL docs: Using EXPLAIN</a> — worked examples behind every plan line you read here.</li>
-<li><a href="https://pgexercises.com/" target="_blank" rel="noopener">PostgreSQL Exercises</a> — a free, hands-on practice site that runs your SQL in the browser against a real sample database, with a whole section of aggregation questions.</li>
-<li><a href="https://explain.depesz.com/" target="_blank" rel="noopener">explain.depesz.com</a> — paste a plan and it colors in which step cost the most, which makes a long plan far easier to read. Use it for practice data only, never for a plan from an employer's database, since anything you paste is stored on their server.</li>
+<li><a href="https://pgexercises.com/" target="_blank" rel="noopener">PostgreSQL Exercises</a> — a free practice site that runs your SQL in the browser against a real sample database.</li>
+<li><a href="https://explain.depesz.com/" target="_blank" rel="noopener">explain.depesz.com</a> — paste a plan and it colors in which step cost the most. Use it for practice data only, since anything you paste is stored on their server.</li>
 </ul>
 </section>
 
@@ -580,268 +452,97 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  /* ---------- section 3: prereq recall ---------- */
-  K.quiz({id:"q-recall-join", buttonSelector:"#card-recall-join .mlrk-choice", feedbackSelector:"#recallfb1", correct:"keeps",
-    feedback:{keeps:"A LEFT JOIN keeps every row from the first table, so the unmatched project stays and its timesheet columns come back empty.",
-              drops:"Dropping unmatched rows is what an INNER JOIN does. A LEFT JOIN keeps them on purpose.",
-              error:"A missing match is a normal result, not an error. PostgreSQL fills the missing columns instead of failing."}});
+  K.quiz({id:"q-left", buttonSelector:"#card-recall-left .mlrk-choice", feedbackSelector:"#leftfb", correct:"kept",
+    feedback:{kept:"Right. A LEFT JOIN keeps every row from the first table, and fills the other table's columns with empty values when nothing matches.",
+              dropped:"That is what an INNER JOIN does. A LEFT JOIN keeps every row from the first table.",
+              error:"A missing match is not an error. The LEFT JOIN keeps the row and leaves those columns empty."}});
 
-  K.quiz({id:"q-recall-group", buttonSelector:"#card-recall-group .mlrk-choice", feedbackSelector:"#recallfb2", correct:"sum",
-    feedback:{sum:"GROUP BY collects all the Eastside Library rows into one group, and SUM adds their hours into a single total.",
-              one:"SUM adds every value in the group together. A single largest value would need MAX instead.",
-              count:"A row count would come from COUNT. SUM reports the total of the values themselves."}});
+  K.quiz({id:"q-sum", buttonSelector:"#card-recall-sum .mlrk-choice", feedbackSelector:"#sumfb", correct:"sum",
+    feedback:{sum:"Right. SUM adds the steps column across every row in the Room 14 group.",
+              max:"The biggest single value would be MAX. SUM adds them all.",
+              count:"Counting rows would be COUNT. SUM adds the values inside them."}});
 
-  K.quiz({id:"q-recall-alias", buttonSelector:"#card-recall-alias .mlrk-choice", feedbackSelector:"#recallfb3", correct:"alias",
-    feedback:{alias:"They are table aliases, which is why a column can be written t.staff_id and be unambiguous about where it came from.",
-              column:"Column names appear after SELECT or on either side of the ON condition. These sit right after each table name.",
-              type:"Data types are set once when a table is created. Nothing in a FROM clause assigns one."}});
+  K.quiz({id:"q-eq", buttonSelector:"#card-eq .mlrk-choice", feedbackSelector:"#eqfb", correct:"zero",
+    feedback:{zero:"Right. Comparing anything to NULL with = gives unknown, and WHERE drops every row that is not known to be true. No error warns you.",
+              one:"That is what you meant to ask, but = NULL never comes out true, even for Tomas. Run it and see.",
+              five:"Comparing to NULL never comes out true, so WHERE keeps no rows at all."}});
 
-  K.flipCards("#vocab", "act-flip-vocab");
-
-  /* ---------- section 5: = NULL ---------- */
-  K.quiz({id:"q-eqnull", buttonSelector:"#card-eqnull .mlrk-choice", feedbackSelector:"#eqnullfb", correct:"zero",
-    feedback:{zero:"Comparing anything to NULL produces unknown, and a WHERE clause keeps only rows it can prove are true. Nothing survives, and nothing warns you.",
-              one:"That is the answer you wanted, but not the one you asked for. Finding Tomas takes IS NULL, not an equals sign.",
-              all:"A comparison to NULL never passes. It does not fail loudly either; it just quietly evaluates to unknown."}});
-
-  K.Scoring.register("q-isnull", 1, "quiz");
-  let isnullAttempts = 0, isnullDone = false;
-  function normWords(s){ return (s||"").trim().toUpperCase().replace(/\s+/g," ").replace(/;$/,""); }
-  $("#isnullcheck").addEventListener("click", () => {
-    if(isnullDone) return;
-    isnullAttempts++;
-    const ok = normWords($("#isnullinput").value) === "IS NULL";
-    const fb = $("#isnullfb");
+  K.Scoring.register("q-isnull",1,"quiz");
+  let isAttempts=0, isDone=false;
+  $("#isCheck").addEventListener("click",()=>{
+    if(isDone) return;
+    isAttempts++;
+    const v=$("#isInput").value.trim().toUpperCase().replace(/[`'";]/g,"").replace(/\s+/g," ").replace(/^L\.STEPS /,"");
+    const ok = v==="IS NULL";
+    const fb=$("#isfb");
     if(ok){
-      K.Scoring.award("q-isnull", isnullAttempts===1?1:0.5);
-      fb.className = "mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML = "<strong>Correct.</strong> IS NULL tests whether the value is absent, instead of comparing it to something. That query returns Tomas Vega.";
-      isnullDone = true;
-    } else if(isnullAttempts >= 2){
-      K.Scoring.award("q-isnull", 0);
-      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML = "<strong>Here's the answer. You'll get it next time.</strong> The two words are IS NULL.";
-      isnullDone = true;
+      K.Scoring.award("q-isnull", isAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct"+(isAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> IS NULL asks whether the value is absent, so Tomas's row matches.";
+      isDone=true;
+    } else if(isAttempts>=2){
+      K.Scoring.award("q-isnull",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The blank is <code>IS NULL</code>.";
+      isDone=true;
     } else {
-      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML = "<strong>Not quite yet.</strong> No equals sign belongs here. Read the line out loud as a plain-English question about whether the value exists. One more try.";
+      const hint = v.indexOf("=")>=0 ? "An = sign is what failed in missing_try.sql. Use the keyword instead." : (v==="IS NOT NULL" ? "That finds students who did log. You want the ones with no value." : "It is two words. The second word is NULL.");
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite yet.</strong> "+hint;
     }
     fb.setAttribute("tabindex","-1"); fb.focus();
+    if(isDone) K.markDone("q-isnull");
   });
 
-  /* ---------- section 6: COALESCE ---------- */
-  K.Scoring.register("q-coalesce", 1, "quiz");
-  let coalAttempts = 0, coalDone = false;
-  function normExpr(s){ return (s||"").trim().toUpperCase().replace(/\s+/g,"").replace(/;$/,""); }
-  const COAL_TARGETS = ["COALESCE(T.BILLABLE_HOURS,0)","COALESCE(BILLABLE_HOURS,0)","COALESCE(T.BILLABLE_HOURS,0.00)","COALESCE(BILLABLE_HOURS,0.00)"];
-  $("#coalcheck").addEventListener("click", () => {
-    if(coalDone) return;
-    coalAttempts++;
-    const ok = COAL_TARGETS.includes(normExpr($("#coalinput").value));
-    const fb = $("#coalfb");
-    if(ok){
-      K.Scoring.award("q-coalesce", coalAttempts===1?1:0.5);
-      fb.className = "mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML = "<strong>Correct.</strong> COALESCE(t.billable_hours, 0) hands back the real hours when they exist, and 0 when the value is missing.";
-      coalDone = true;
-    } else if(coalAttempts >= 2){
-      K.Scoring.award("q-coalesce", 0);
-      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML = "<strong>Here's the answer. You'll get it next time.</strong> The expression is COALESCE(t.billable_hours, 0).";
-      coalDone = true;
-    } else {
-      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML = "<strong>Not quite.</strong> Check three things: the function name, the column inside the parentheses, and the fallback value after the comma. One more try.";
-    }
-    fb.setAttribute("tabindex","-1"); fb.focus();
-  });
+  K.quiz({id:"q-avg", buttonSelector:"#card-avg .mlrk-choice", feedbackSelector:"#avgfb", correct:"lower",
+    feedback:{lower:"Right. The four logs add up to 31000. AVG skipped Tomas's NULL and divided by 4. With 0 filled in, it divides by 5: 31000 / 5 = 6200.",
+              same:"AVG skips NULLs but counts zeros. Filling in 0 adds a fifth student to the average.",
+              higher:"9400 is Luis's steps, the biggest log. A 0 is a real number to AVG, so it pulls the average down."}});
 
-  K.quiz({id:"q-judgment", buttonSelector:"#card-judgment .mlrk-choice", feedbackSelector:"#judgmentfb", correct:"claims",
-    feedback:{claims:"Exactly. A zero is a measurement, and nobody measured Tomas's week. That is why the per-person average moved from 20.63 to 16.50.",
-              neutral:"They are genuinely different to a numeric column. Zero is a known value that gets added and averaged; NULL is skipped by those functions entirely.",
-              safe:"A tidy screen and an accurate screen are not the same goal here. A blank that means unknown can be labeled honestly instead of filled in."}});
+  K.quiz({id:"q-stale", buttonSelector:"#card-stale .mlrk-choice", feedbackSelector:"#stalefb", correct:"old",
+    feedback:{old:"Right. The view still holds the rows it stored. Only REFRESH MATERIALIZED VIEW brings in Tomas's log, which is why the second SELECT shows 38000.",
+              new:"A materialized view never updates itself. It keeps its stored rows until someone refreshes it.",
+              error:"An out-of-date view still reads fine. It just shows old numbers, with no warning."}});
 
-  K.freeResponse({id:"resp-fallback", selector:"#fallbackthink", minWords:12});
+  K.quiz({id:"q-plan", buttonSelector:"#card-plan .mlrk-choice", feedbackSelector:"#planfb", correct:"exec",
+    feedback:{exec:"Right. Execution Time is real milliseconds for this run.",
+              cost:"cost= numbers are planner units for comparing options. They are not times.",
+              rows:"rows= is a count of rows, not a time. The time is on the last line."}});
 
-  /* ---------- section 7: views ---------- */
-  K.selectAll({id:"q-views", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"A materialized view stores the actual result rows, so reading it does not re-run the joins.", correct:true,
-      hint:"Revisit the flip card for materialized view. What does it say is stored on disk?",
-      explain:"That stored-rows behavior is exactly why reading one is fast, and exactly why it can drift out of date."},
-    {value:"b", label:"A plain view stores only the query text, so it re-runs every time you select from it.", correct:true,
-      hint:"Look back at the flip card for view. What does a plain view keep, the text or the rows?",
-      explain:"A plain view is a saved query, not a saved answer, so it always reports current data and always pays for it."},
-    {value:"c", label:"A materialized view updates itself automatically whenever the underlying tables change.", correct:false,
-      hint:"Think about why REFRESH MATERIALIZED VIEW exists as a command you type yourself.",
-      explain:"Core PostgreSQL has no automatic refresh. Teams schedule one from outside, which is why the command exists at all."},
-    {value:"d", label:"Querying a materialized view needs different syntax from querying a table.", correct:false,
-      hint:"Compare line 8 in the practice session to any ordinary SELECT you have written.",
-      explain:"SELECT, WHERE, ORDER BY and GROUP BY all work on it exactly as they would on a table."}
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"A materialized view stores its result rows, so reading it does not redo the joins.", correct:true,
+      hint:"Compare the two plans in section 6. How many join steps did explain_view.sql show?",
+      explain:"explain_view.sql showed one Seq Scan and no joins."},
+    {value:"b", label:"A plain view stores only the query text, so it re-runs every time you read from it.", correct:true,
+      hint:"Think about how section 5 defined a view.",
+      explain:"A view saves the query, not the rows, so each read runs it again."},
+    {value:"c", label:"A materialized view updates itself whenever the tables under it change.", correct:false,
+      hint:"Think about the first SELECT in late_log.sql.",
+      explain:"It showed 31000 until REFRESH MATERIALIZED VIEW ran."},
+    {value:"d", label:"WHERE steps = NULL finds the rows where steps is missing.", correct:false,
+      hint:"Think about missing_try.sql.",
+      explain:"= NULL never matches. missing_try.sql returned 0 rows."}
   ]});
 
-  K.orderSteps("#ordersteps", {id:"act-order-mv", correctOrder:["write","create","read","newdata","stale","refresh"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
-
-  /* ---------- section 8: simulated psql session ---------- */
-  function pad(str, width){ str = String(str); return str.length >= width ? str : str + " ".repeat(width - str.length); }
-  function padLeft(str, width){ str = String(str); return str.length >= width ? str : " ".repeat(width - str.length) + str; }
-  function renderTable(cols, rows){
-    let out = " " + cols.map(c => pad(c.name, c.w)).join("| ") + "\n";
-    out += cols.map(c => "-".repeat(c.w + 1)).join("+") + "\n";
-    rows.forEach(r => {
-      out += " " + cols.map((c, i) => c.right ? padLeft(r[i], c.w - 1) + " " : pad(r[i], c.w)).join("| ") + "\n";
-    });
-    out += "(" + rows.length + (rows.length === 1 ? " row)" : " rows)");
-    return out;
-  }
-  const PEOPLE = [
-    {name:"Amara Diallo", hours:"22.50"},
-    {name:"June Okada", hours:"12.00"},
-    {name:"Luis Ferrara", hours:"18.00"},
-    {name:"Priya Raman", hours:"30.00"},
-    {name:"Tomas Vega", hours:null}
-  ];
-  function totalsNow(state){
-    const late = !!state.lateEntry;
-    return [
-      ["Eastside Library", "2", "40.50"],
-      ["Harbor View Apartments", "1", "30.00"],
-      ["Cedar Grove School", late ? "2" : "1", late ? "28.00" : "12.00"]
-    ];
-  }
-  const BASE_PLAN =
-" HashAggregate  (cost=9184.22..9184.25 rows=3 width=48) (actual time=0.09..0.10 rows=3 loops=1)\n" +
-"   Group Key: p.project_name\n" +
-"   ->  Hash Left Join  (cost=41.60..7834.10 rows=4 width=44) (actual time=0.04..0.06 rows=4 loops=1)\n" +
-"         Hash Cond: (t.staff_id = s.staff_id)\n" +
-"         ->  Seq Scan on timesheets t  (cost=0.00..1.04 rows=4 width=18) (actual time=0.01..0.02 rows=4 loops=1)\n" +
-"         ->  Seq Scan on staff s  (cost=0.00..1.05 rows=5 width=4) (actual time=0.01..0.01 rows=5 loops=1)\n" +
-" Planning Time: 0.21 ms\n" +
-" Execution Time: 0.14 ms\n" +
-"(on five practice rows every number here is tiny. Section 9 shows the same two shapes on the firm's real table.)";
-  const MV_PLAN =
-" Seq Scan on project_hours  (cost=0.00..1.03 rows=3 width=48) (actual time=0.01..0.02 rows=3 loops=1)\n" +
-" Planning Time: 0.06 ms\n" +
-" Execution Time: 0.09 ms";
-
-  function selectHandler(args, state){
-    const rest = args.join(" ").toLowerCase();
-    if(rest.includes("from project_hours")){
-      if(!state.mvCreated) return 'ERROR:  relation "project_hours" does not exist';
-      const rows = state.mvRows.slice().sort((a,b) => parseFloat(b[2]) - parseFloat(a[2]));
-      return renderTable([{name:"project_name",w:23},{name:"people",w:8,right:true},{name:"total_hours",w:12,right:true}], rows);
-    }
-    if(!state.connected) return 'ERROR:  you are not connected to a database yet. Run psql billing first.';
-    if(rest.includes("coalesce")){
-      const rows = PEOPLE.map(p => [p.name, p.hours === null ? "0.00" : p.hours]);
-      return renderTable([{name:"full_name",w:14},{name:"hours",w:7,right:true}], rows);
-    }
-    if(rest.includes("is null")){
-      return renderTable([{name:"full_name",w:14}], PEOPLE.filter(p => p.hours === null).map(p => [p.name]));
-    }
-    if(rest.includes("= null") || rest.includes("=null")){
-      return "(0 rows)\n(no error, and no rows. That is the whole trap.)";
-    }
-    if(rest.includes("from staff")){
-      const rows = PEOPLE.map(p => [p.name, p.hours === null ? "" : p.hours]);
-      return renderTable([{name:"full_name",w:14},{name:"billable_hours",w:15,right:true}], rows);
-    }
-    return "ERROR:  this simulator recognizes the SELECT statements listed above section 8. Check your spelling against one of them.";
-  }
-  function createHandler(args, state){
-    const rest = args.join(" ").toLowerCase();
-    if(!state.connected) return 'ERROR:  you are not connected to a database yet. Run psql billing first.';
-    if(!rest.startsWith("materialized view")) return 'ERROR:  this simulator only creates the project_hours materialized view here.';
-    if(!rest.includes("project_hours")) return 'ERROR:  this simulator only creates the project_hours materialized view here.';
-    if(state.mvCreated) return 'ERROR:  relation "project_hours" already exists';
-    state.mvCreated = true;
-    state.mvRows = totalsNow(state);
-    return "SELECT 3";
-  }
-  function insertHandler(args, state){
-    const rest = args.join(" ").toLowerCase();
-    if(!state.connected) return 'ERROR:  you are not connected to a database yet. Run psql billing first.';
-    if(!rest.startsWith("into timesheets")) return 'ERROR:  this simulator only inserts into the timesheets table here.';
-    state.lateEntry = true;
-    return "INSERT 0 1";
-  }
-  function refreshHandler(args, state){
-    const rest = args.join(" ").toLowerCase();
-    if(!rest.startsWith("materialized view")) return 'ERROR:  syntax error at or near "' + (args[0] || "") + '"';
-    if(!state.mvCreated) return 'ERROR:  relation "project_hours" does not exist';
-    state.mvRows = totalsNow(state);
-    return "REFRESH MATERIALIZED VIEW";
-  }
-  function explainHandler(args, state){
-    const rest = args.join(" ").toLowerCase();
-    if(!rest.startsWith("analyze")) return "ERROR:  this simulator expects EXPLAIN ANALYZE followed by a SELECT statement.";
-    if(rest.includes("project_hours")){
-      if(!state.mvCreated) return 'ERROR:  relation "project_hours" does not exist';
-      return MV_PLAN;
-    }
-    if(rest.includes("from projects") || rest.includes("from staff")) return BASE_PLAN;
-    return "ERROR:  try EXPLAIN ANALYZE SELECT * FROM project_hours;";
-  }
-
-  K.terminal("#psqlterminal", {
-    id: "act-psql-terminal",
-    minCommands: 8,
-    startPath: "/home/renata/billing-dashboard",
-    filesystem: {
-      "/home/renata/billing-dashboard": {type:"dir", children:["notes.md"]},
-      "/home/renata/billing-dashboard/notes.md": {type:"file", contents:"Leads want the hours page to load instantly. Also: stop showing blanks as zeros."}
-    },
-    commands: {
-      psql(args, state){
-        state.connected = true;
-        const dbname = args[0] || "billing";
-        return 'psql (16.4)\nType "help" for help.\n\n' + dbname + "=#";
-      },
-      SELECT: selectHandler, select: selectHandler,
-      CREATE: createHandler, create: createHandler,
-      INSERT: insertHandler, insert: insertHandler,
-      REFRESH: refreshHandler, refresh: refreshHandler,
-      EXPLAIN: explainHandler, explain: explainHandler
-    }
-  });
-
-  /* ---------- section 9: plan-line matcher ---------- */
-  K.dragDrop("#planmatch", "act-plan-match");
-  K.selfCheck({buttonSelector:"#matchcheck", feedbackSelector:"#matchfb", mapping:{
-    "chip-scan":{expectedId:"zone-scan", label:"Read every row of that table, with no index used", expectedLabel:"Seq Scan on timesheets t"},
-    "chip-group":{expectedId:"zone-group", label:"Collapse many rows into one row per project", expectedLabel:"Group Key: p.project_name"},
-    "chip-exec":{expectedId:"zone-exec", label:"How many milliseconds the run actually took", expectedLabel:"Execution Time: 412.65 ms"},
-    "chip-plan":{expectedId:"zone-plan", label:"Time spent choosing a plan, before running anything", expectedLabel:"Planning Time: 0.38 ms"}
-  }});
-
-  /* ---------- section 10: video ---------- */
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"GmX8tjT7UcQ"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:8});
-
-  /* ---------- sections 11-12 ---------- */
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"tradeoff",
-    feedback:{tradeoff:"That is the answer an interviewer is listening for. It names the trade rather than treating one option as strictly better.",
-              index:"PostgreSQL does not add an index on its own. The speed comes from the rows already being stored, not from an index.",
-              same:"They behave very differently. One re-runs the query on every read; the other reads rows it stored earlier."}});
-
   K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"view",
-    feedback:{view:"Correct to the minute rules out stored rows, and a cheap query over one small table has nothing to gain from storing them anyway.",
-              matnight:"Nightly rows would tell the front desk who was waiting last night, which is the one thing that screen cannot be wrong about.",
-              mathourly:"An hour old is still wrong for a waiting-room count, and the query is cheap enough that there is no speed to buy here."}});
+    feedback:{view:"Right. The answer has to be current, and re-running a cheap query costs little.",
+              nightly:"By lunch, a nightly copy would be stale, and students would not see their own logs.",
+              hourly:"There is no slow query to save time on here, so any stale minutes are a cost with no benefit."}});
 
-  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:12});
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
 
   const AI_PROMPTS = [
-    "Think of a form or app you use that shows a blank where it does not know something, instead of guessing a value. What does that blank tell you that a filled-in number would not?",
-    "Describe a time you saw a number presented confidently that turned out to be built on incomplete data. What would have made the gap visible to you sooner?",
-    "If you had to explain to a project lead, in one sentence with no SQL in it, why a zero and a blank are different facts, what would you say?"
+    "If your phone showed 0 steps on a day you forgot to wear it, would that be true? What would be a more honest label?",
+    "Think of a printed class schedule taped to a door. When is it right, and when does it go stale?",
+    "Why might a teacher trust a dashboard more if it says when its numbers were last updated?"
   ];
-  $("#aiprompt").addEventListener("click", () => {
-    const box = $("#aipromptbox");
-    box.style.display = "block";
-    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  $("#aiprompt").addEventListener("click",()=>{
+    const box=$("#aipromptbox");
+    box.hidden=false;
+    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 
-  /* ---------- export / submit ---------- */
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
   $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
   $("#ghrepo").value = localStorage.getItem("mlrk:ghrepo") || "";
@@ -864,10 +565,10 @@ git push</pre></li>
 
   $("#submitcredit").addEventListener("click", () => {
     if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
-    const fb = $("#submitfb");
+    const fb=$("#submitfb");
     K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["sql-relational"],
       skills:["sql","database-administration"], onDone(status,message){
-      fb.textContent = message;
+      fb.textContent=message;
     }});
   });
 

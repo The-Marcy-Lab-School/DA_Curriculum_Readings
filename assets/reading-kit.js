@@ -756,6 +756,14 @@
      shows the name as a tab. A `.mlrk-run[data-file]` block holds what
      running that file prints; the kit adds the "$ python3 name.py" line, so
      every example reads as a file a Fellow could save and run. */
+  // The command a run block shows: data-cmd wins; otherwise by file type
+  // (.sql files are PostgreSQL in Mod 3, everything else is python3).
+  function runCommand(el){
+    if(el.dataset.cmd) return el.dataset.cmd;
+    const f=el.dataset.file||el.dataset.run||"";
+    if(/\.sql$/i.test(f)) return "psql -f "+f;
+    return "python3 "+f;
+  }
   function fileTabs(root){
     $$(".mlrk-code[data-file]",root).forEach(el=>{
       if($(".mlrk-filename",el)) return;
@@ -768,7 +776,7 @@
       if($(".mlrk-run-cmd",el)) return;
       const cmd=document.createElement("div");
       cmd.className="mlrk-run-cmd";
-      cmd.innerHTML='<span class="mlrk-terminal-prompt">$</span> python3 '+el.dataset.file.replace(/</g,"&lt;");
+      cmd.innerHTML='<span class="mlrk-terminal-prompt">$</span> '+runCommand(el).replace(/</g,"&lt;");
       el.insertBefore(cmd,el.firstChild);
     });
   }
@@ -783,7 +791,7 @@
     $$("button[data-run]",root).forEach(btn=>{
       if(btn.dataset.runWired) return;
       btn.dataset.runWired="1";
-      if(!btn.textContent.trim()) btn.textContent="Run python3 "+btn.dataset.run;
+      if(!btn.textContent.trim()) btn.textContent="Run "+runCommand(btn);
       let out=btn.nextElementSibling;
       while(out&&!(out.classList.contains("mlrk-run")&&out.dataset.file===btn.dataset.run)){
         if(out.tagName==="BUTTON"||out.classList.contains("mlrk-lock-note")){out=out.nextElementSibling;continue}

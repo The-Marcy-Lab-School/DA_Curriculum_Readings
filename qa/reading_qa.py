@@ -147,6 +147,12 @@ def _http_error_finding(code, url):
         # submission repo is deliberately private, so this fires constantly
         # and correctly for real links. WARN, not a hard failure.
         return ("WARN", f"github.com repo link returned 404 — likely just private (unauthenticated check can't tell), not necessarily broken: {url}")
+    if code in (403, 429):
+        # 403/429 mean the server refused this automated request, not that the
+        # page is gone: marcylabschool.org (every footer) and hapgood.us started
+        # answering 403 to the checker in 2026-10 while loading fine in a
+        # browser. A dead page is a 404/410. WARN so it gets a manual look.
+        return ("WARN", f"link returned {code} (server refused the automated check; open it in a browser to confirm): {url}")
     if code >= 400 and code != 405:  # some sites reject HEAD; 405 isn't a dead link
         return ("ERROR", f"link returned {code}: {url}")
     return None

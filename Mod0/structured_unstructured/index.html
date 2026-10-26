@@ -5,7 +5,9 @@
 <link rel="stylesheet" href="../../assets/reading-kit.css">
 <style>
 .mlrk-illustration{width:100%;max-width:670px;height:auto;margin:1.1rem 0;display:block}
-.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:12rem}
+.mlrk-code .mlrk-screen.cmd{min-height:0}
 @media(max-width:650px){.mlrk-illustration{max-width:100%}}
 </style>
 </head><body>
@@ -13,9 +15,9 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>What Shape Is This Data?</h1>
-<p class="mlrk-lead">You're the new data analyst for a city's public works department. Every morning, the same three kinds of files land in your inbox describing yesterday's resident service requests: a spreadsheet, a folder of typed-up field notes, and a JSON export from the city's reporting app. None of them look the same, and none of them can be opened with the same approach. Before you touch any of them, you have to answer one question first: what shape is this data actually in?</p>
+<p class="mlrk-lead">A public library runs a summer reading program for kids. At the end of summer, three files sit on the library's laptop: a sign-up sheet, the librarian's typed notes, and a file from the library's app. Each one is shaped differently, and the shape decides which tools work on it. So before you use a file, you check its shape.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~33–37 minutes</span>
+  <span class="mlrk-pill">~19–22 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">Browser-based terminal included</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -47,14 +49,11 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Concept overview</h2>
-<p>Picture the three files from the intro. The first, <code>requests.csv</code>, lists one row per service request with the exact same five columns every time: <code>request_id</code>, <code>category</code>, <code>ward</code>, <code>days_open</code>, <code>status</code>. That consistency is what makes something <strong>structured data</strong>: a fixed set of fields, repeated exactly the same way, record after record.</p>
-<p>The second file, <code>field_notes.txt</code>, is nothing like that. It's just paragraphs a repair crew typed up after each visit, in whatever length and order they wrote them. There's no <code>request_id</code> column to sort by and no fixed number of sentences per entry. That's <strong>unstructured data</strong>: real information, but with no predefined fields to slot it into automatically.</p>
-<p>The third file, <code>app_reports.json</code>, sits in between. Every entry has an <code>id</code> and a <code>category</code>, like a structured record would. But the extra details vary: one report includes a <code>tags</code> list and a <code>photo_count</code>, another has neither. There's real organization here, keys and nested details, just not the same rigid columns for every row. That in-between shape is <strong>semi-structured data</strong>.</p>
-
+<h2>1. Three shapes</h2>
+<p>Data comes in three shapes. The picture shows them side by side, and each one gets its own section below.</p>
 <svg class="mlrk-illustration" viewBox="0 0 670 232" role="img" aria-labelledby="shapeTitle shapeDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="shapeTitle">Three shapes of data: structured, semi-structured, and unstructured</title>
-  <desc id="shapeDesc">A structured example shown as a small table where every row repeats the same two columns. A semi-structured example shown as three key bars, one drawn with a dashed outline to show it only appears in some records. An unstructured example shown as five ragged, uneven bars representing free-flowing paragraph text with no fields at all.</desc>
+  <desc id="shapeDesc">A structured example shown as a small table where every row repeats the same two columns. A semi-structured example shown as three labeled bars, one with a dashed outline to show it only appears in some entries. An unstructured example shown as five uneven bars standing for free-flowing sentences with no fields at all.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
     <rect x="10" y="16" width="200" height="196" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
     <text x="110" y="42" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Structured</text>
@@ -63,9 +62,8 @@
       <rect x="30" y="86" width="75" height="24"/><rect x="115" y="86" width="75" height="24"/>
       <rect x="30" y="114" width="75" height="24"/><rect x="115" y="114" width="75" height="24"/>
     </g>
-    <text x="110" y="192" text-anchor="middle" font-size="13" fill="#261F1D">same columns,</text>
-    <text x="110" y="206" text-anchor="middle" font-size="13" fill="#261F1D">every single row</text>
-
+    <text x="110" y="180" text-anchor="middle" font-size="14" fill="#261F1D">same columns,</text>
+    <text x="110" y="198" text-anchor="middle" font-size="14" fill="#261F1D">every row</text>
     <rect x="235" y="16" width="200" height="196" rx="16" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
     <text x="335" y="42" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Semi-structured</text>
     <g fill="#FFFCF7" stroke="#2274B5" stroke-width="2">
@@ -73,9 +71,8 @@
       <rect x="255" y="88" width="100" height="18" rx="4"/>
       <rect x="255" y="116" width="120" height="18" rx="4" stroke-dasharray="5 4"/>
     </g>
-    <text x="335" y="192" text-anchor="middle" font-size="13" fill="#261F1D">keys and tags,</text>
-    <text x="335" y="206" text-anchor="middle" font-size="13" fill="#261F1D">not identical rows</text>
-
+    <text x="335" y="180" text-anchor="middle" font-size="14" fill="#261F1D">labels, but entries</text>
+    <text x="335" y="198" text-anchor="middle" font-size="14" fill="#261F1D">don't all match</text>
     <rect x="460" y="16" width="200" height="196" rx="16" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
     <text x="560" y="42" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Unstructured</text>
     <g fill="#83671C">
@@ -85,228 +82,205 @@
       <rect x="480" y="112" width="90" height="10" rx="5"/>
       <rect x="484" y="130" width="125" height="10" rx="5"/>
     </g>
-    <text x="560" y="192" text-anchor="middle" font-size="13" fill="#261F1D">free-flowing text,</text>
-    <text x="560" y="206" text-anchor="middle" font-size="13" fill="#261F1D">no fixed fields</text>
+    <text x="560" y="180" text-anchor="middle" font-size="14" fill="#261F1D">free-flowing text,</text>
+    <text x="560" y="198" text-anchor="middle" font-size="14" fill="#261F1D">no fixed fields</text>
   </g>
 </svg>
-
-<div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> a file's shape is the very first decision point in almost any real data task, before you write a query, before you clean a column, before you pick a chart. A structured table calls for a spreadsheet or a SQL query. Free text calls for search or language tools. A semi-structured export usually needs something in between, like a script that expects some keys to be missing. Guess the shape wrong, and you've reached for the wrong tool before you've even started.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to run <code>pwd</code>, <code>ls</code>, and <code>cd</code> to find your way around a filesystem. This reading adds a few new commands for actually looking inside a file, plus a repeatable way to decide its shape from real evidence instead of a guess. That same habit, gathering evidence before classifying, comes back every time you clean, combine, or query a dataset you didn't build yourself.</p>
-</div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall before classifying</h2>
-<p class="mlrk-small">Terminal navigation and basic data vocabulary are prerequisite skills for this reading. Test each one below before moving on.</p>
-<div class="mlrk-card" id="card-ls"><p><strong>Which command lists what's inside your current folder?</strong></p>
-<button type="button" class="mlrk-choice" data-a="ls">ls</button>
-<button type="button" class="mlrk-choice" data-a="pwd">pwd</button>
-<button type="button" class="mlrk-choice" data-a="cd">cd</button>
-<div id="lsfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-pwd" style="margin-top:.8rem"><p><strong>Scenario check:</strong> you just opened a new terminal window and aren't sure which folder you're in. What do you run first?</p>
-<button type="button" class="mlrk-choice" data-a="pwd">pwd</button>
-<button type="button" class="mlrk-choice" data-a="ls">ls</button>
-<button type="button" class="mlrk-choice" data-a="cd">cd</button>
-<div id="pwdfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<h2>2. Recall before you start</h2>
+<p>Opening a file in the terminal and telling a data type from a data structure are prerequisite skills for this reading. Check both before moving on.</p>
+<div class="mlrk-card" id="card-cat"><p><strong>Which command prints everything inside <code>notes.txt</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="cat"><code>cat notes.txt</code></button>
+<button type="button" class="mlrk-choice" data-a="ls"><code>ls notes.txt</code></button>
+<button type="button" class="mlrk-choice" data-a="cd"><code>cd notes.txt</code></button>
+<div id="catfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-datatype" style="margin-top:.8rem"><p><strong>Which of these is a data type, not a data structure?</strong></p>
-<button type="button" class="mlrk-choice" data-a="int">A whole number, like 42</button>
-<button type="button" class="mlrk-choice" data-a="list">A list of whole numbers</button>
-<button type="button" class="mlrk-choice" data-a="table">A table of rows and columns</button>
+<button type="button" class="mlrk-choice" data-a="int">A whole number, like 12</button>
+<button type="button" class="mlrk-choice" data-a="row">One kid's row: name, age, and books read</button>
+<button type="button" class="mlrk-choice" data-a="table">A whole sign-up sheet of rows</button>
 <div id="datatypefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-extension" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> a colleague says a file must be structured because its name ends in <code>.csv</code>. What's the strongest reason to double-check that claim yourself?</p>
-<button type="button" class="mlrk-choice" data-a="check">A file extension describes intent, not guaranteed contents. Only opening the file confirms its real shape.</button>
-<button type="button" class="mlrk-choice" data-a="always-semi">Files ending in <code>.csv</code> are always semi-structured, never structured.</button>
-<button type="button" class="mlrk-choice" data-a="no-need">There's no need to double-check. <code>.csv</code> always means structured.</button>
-<div id="extensionfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">None of this changes once file-shape classification is introduced: terminal commands and basic data vocabulary work exactly the same way here as they do on their own. Get each one right in isolation first.</div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Technical vocabulary</h2>
-<p>Flip each card before moving into the classification practice below.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>structured data</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Structured data</strong><br>Organized into a fixed set of fields (like columns) that every single record repeats in exactly the same way.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>semi-structured data</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Semi-structured data</strong><br>Organized with keys, tags, or labels, but records don't all share the exact same fields. JSON and XML are common examples.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>unstructured data</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Unstructured data</strong><br>Free-form content, like paragraphs, audio, or images, with no predefined fields to parse it into automatically.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>schema</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Schema</strong><br>The predefined shape, field names and types, that every record in a structured dataset is expected to follow.</span></button>
+<h2>3. Structured: the same columns in every row</h2>
+<p>Here is the sign-up sheet, opened with <code>cat</code>:</p>
+<div class="mlrk-run"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> cat signups.csv</div><pre>name,age,books_read,finished
+Maya,9,12,True
+Leo,11,7,False
+Ava,8,15,True
+Sam,10,4,False
+Zoe,12,9,True</pre></div>
+<p>Every row has the same four fields in the same order. That makes it <strong>structured data</strong>: data organized into the same rows and columns every time, like a spreadsheet. The first line lists the column names. That fixed plan of field names, which every row follows, is the file's <strong>schema</strong>.</p>
+<p>Because every row matches, you can count rows and compare columns with no surprises. A command called <code>wc</code> counts things in a file. <code>wc -l</code> counts lines.</p>
+<p><strong>Predict:</strong> what number does <code>wc -l signups.csv</code> print?</p>
+<div class="mlrk-code" data-file="Terminal"><div class="mlrk-screen cmd">wc -l signups.csv</div></div>
+<button type="button" class="mlrk-btn" data-run="run-wc" data-after="q-wc">Run wc -l signups.csv</button>
+<div class="mlrk-run" data-file="run-wc" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> wc -l signups.csv</div><pre>       6 signups.csv</pre></div>
+<div class="mlrk-card" id="card-wc" style="margin-top:1rem"><p><strong>What number does <code>wc -l signups.csv</code> print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="6"><code>6</code></button>
+<button type="button" class="mlrk-choice" data-a="5"><code>5</code></button>
+<button type="button" class="mlrk-choice" data-a="4"><code>4</code></button>
+<div id="wcfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>The line count includes the column-name line. Five kids signed up, plus one line of column names, makes six lines.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>4. Unstructured: free-flowing text</h2>
+<p>The librarian's notes look nothing like the sign-up sheet:</p>
+<div class="mlrk-run"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> cat notes.txt</div><pre>Week 1 was busy. Maya asked for more graphic novels.
+Leo said the summer list was too long, so we made a shorter one.
+Week 3: Ava read 5 books in one week and wants a harder list.
+Maya brought a friend to story time.</pre></div>
+<p>There are no columns. Each line is as long as the librarian made it. That's <strong>unstructured data</strong>: data with no fixed columns, like free text, photos, or audio. It still holds useful facts. You just can't pull them out by column.</p>
+<p>Instead, you search the text. <code>grep</code> plus a word and a file name prints every line in that file that has the word.</p>
+<p><strong>Predict:</strong> what does <code>grep Maya notes.txt</code> print?</p>
+<div class="mlrk-code" data-file="Terminal"><div class="mlrk-screen cmd">grep Maya notes.txt</div></div>
+<button type="button" class="mlrk-btn" data-run="run-grep" data-after="q-grep">Run grep Maya notes.txt</button>
+<div class="mlrk-run" data-file="run-grep" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> grep Maya notes.txt</div><pre>Week 1 was busy. Maya asked for more graphic novels.
+Maya brought a friend to story time.</pre></div>
+<div class="mlrk-card" id="card-grep" style="margin-top:1rem"><p><strong>What does <code>grep Maya notes.txt</code> print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="two">The two lines that mention Maya</button>
+<button type="button" class="mlrk-choice" data-a="word">Just the word <code>Maya</code>, twice</button>
+<button type="button" class="mlrk-choice" data-a="count">The number <code>2</code></button>
+<div id="grepfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<h3 style="margin-top:1.4rem">Your turn: name the command</h3>
+<ol class="mlrk-steplist">
+<li>Think about which command searches a file's text for a word.</li>
+<li>Type only the command's name. No word or file name after it.</li>
+<li>Press <strong>Check</strong>. You get 2 tries.</li>
+</ol>
+<p>Why: searching is how you find facts in unstructured text.</p>
+<div class="mlrk-fillblank">
+  <label for="blankinput">The command:</label>
+  <input type="text" id="blankinput" autocomplete="off" spellcheck="false">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
 </div>
+<div id="blankresult" class="mlrk-feedback" tabindex="-1"></div>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Classify from what you see</h2>
-<p>Each scenario below describes a real file. Classify its shape based only on what's actually described, not the file's name.</p>
-<div class="mlrk-card" id="card-lab"><p><strong>A hospital's lab-results file has one row per test, with the exact same columns (<code>patient_id</code>, <code>test_type</code>, <code>result_value</code>, <code>result_date</code>) for every single row. What shape is this?</strong></p>
-<button type="button" class="mlrk-choice" data-a="s">Structured</button>
-<button type="button" class="mlrk-choice" data-a="m">Semi-structured</button>
-<button type="button" class="mlrk-choice" data-a="u">Unstructured</button>
-<div id="labfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-support" style="margin-top:.8rem"><p><strong>A customer-support platform exports a JSON file where every ticket has an <code>id</code> and a <code>message</code>, but only some tickets include an optional <code>escalation_reason</code> field. What shape is this?</strong></p>
-<button type="button" class="mlrk-choice" data-a="m">Semi-structured</button>
-<button type="button" class="mlrk-choice" data-a="s">Structured</button>
-<button type="button" class="mlrk-choice" data-a="u">Unstructured</button>
-<div id="supportfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-audio" style="margin-top:.8rem"><p><strong>A city's 311 hotline keeps recordings of resident phone calls as raw audio files, with no transcript. What shape is this?</strong></p>
-<button type="button" class="mlrk-choice" data-a="u">Unstructured</button>
-<button type="button" class="mlrk-choice" data-a="s">Structured</button>
-<button type="button" class="mlrk-choice" data-a="m">Semi-structured</button>
-<div id="audiofb" class="mlrk-feedback" tabindex="-1"></div></div>
+<h2>5. Semi-structured: labels, but not the same every time</h2>
+<p>The app saves its entries in JSON. JSON is a common file format that stores each value next to a label, inside curly braces <code>{ }</code>.</p>
+<div class="mlrk-run"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> cat app_entries.json</div><pre>[
+  {"name": "Maya", "books_read": 12, "favorite_genre": "graphic novels"},
+  {"name": "Leo", "books_read": 7},
+  {"name": "Ava", "books_read": 15, "badges": ["Speed Reader", "Week 3 Star"]}
+]</pre></div>
+<p>Every entry has a <code>name</code> and <code>books_read</code>. But Maya's also has <code>favorite_genre</code>, Ava's has a list of <code>badges</code>, and Leo's has neither. That in-between shape is <strong>semi-structured data</strong>: data with labels, where entries don't all have the same fields.</p>
+<div class="mlrk-card" id="card-json"><p><strong>A classmate says <code>app_entries.json</code> is structured because it's "neat and labeled." What's the best reply?</strong></p>
+<button type="button" class="mlrk-choice" data-a="semi">It's semi-structured, because the entries don't all have the same fields</button>
+<button type="button" class="mlrk-choice" data-a="agree">You're right. Labels make it structured.</button>
+<button type="button" class="mlrk-choice" data-a="un">It's unstructured, because it uses curly braces</button>
+<div id="jsonfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>A file's name can mislead you, too. A file ending in <code>.csv</code> might hold messy text. Open it and look before you decide.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Sort real examples by shape</h2>
-<p>Drag each example into the zone that matches its shape, then use the self-check button to confirm your matches.</p>
+<h2>6. Practice in a simulated terminal</h2>
+<p>This pretend terminal is open in the <code>reading-program</code> folder with all three files. Press Enter after each command.</p>
+<ol class="mlrk-steplist">
+<li>Type <code>ls</code>. You should see the three file names.</li>
+<li>Type <code>cat signups.csv</code>. Look for the same columns in every row.</li>
+<li>Type <code>cat notes.txt</code>. Look for the lack of columns.</li>
+<li>Type <code>grep Ava notes.txt</code>. You should see the one line about Ava.</li>
+<li>Type <code>wc -w notes.txt</code>. <code>-w</code> counts words, a better unit than rows for free text.</li>
+<li>Type <code>cat app_entries.json</code>. Look for which entries have extra labels.</li>
+</ol>
+<div class="mlrk-terminal" id="terminalBox">
+  <div class="mlrk-terminal-log" id="termlog" aria-live="polite">The reading-program folder is open. Start with step 1.</div>
+  <div class="mlrk-terminal-row">
+    <span class="mlrk-terminal-prompt"></span>
+    <input type="text" id="termcmd" class="mlrk-terminal-input" autocomplete="off" spellcheck="false" aria-label="Terminal command input">
+  </div>
+</div>
+<details class="mlrk-hint" style="margin-top:.8rem"><summary>Something didn't work?</summary>
+<p>Check the spelling of the file name with <code>ls</code>. You don't need quotes around the search word, so type <code>grep Ava notes.txt</code> just like that.</p>
+</details>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Mixed check: sort by shape</h2>
+<p>Each chip describes a different library file. Put it in the shape it has. Then press the check button.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">A payroll table where every employee has the exact same columns: id, department, hire_date, salary</span>
-  <span id="chip2" class="mlrk-draggable">A library's checkout log with one row per checkout: book_id, member_id, checkout_date, return_date</span>
-  <span id="chip3" class="mlrk-draggable">A wearable fitness tracker's JSON export, where every entry has a date and a heart_rate reading, but only some entries include an optional workout_tags list</span>
-  <span id="chip4" class="mlrk-draggable">A grant database record with an id and an applicant_name, plus an optional list of prior_awards that not every applicant has</span>
-  <span id="chip5" class="mlrk-draggable">A folder of raw voicemail transcripts from a nonprofit's donor hotline</span>
-  <span id="chip6" class="mlrk-draggable">A city council's collection of public-comment letters submitted as free-form paragraphs</span>
+  <span id="chip1" class="mlrk-draggable">A checkout list where every row has book_title, due_date, and returned</span>
+  <span id="chip2" class="mlrk-draggable">A room-booking sheet where every row has room, date, and time</span>
+  <span id="chip3" class="mlrk-draggable">An app file where every event has a name and date, but only some have an age_group label</span>
+  <span id="chip4" class="mlrk-draggable">A book list in JSON where some books have a list of awards and others don't</span>
+  <span id="chip5" class="mlrk-draggable">Photos of kids' drawings of their favorite books</span>
+  <span id="chip6" class="mlrk-draggable">Thank-you letters families wrote to the librarian</span>
 </div>
 <div class="mlrk-grid">
   <div><p class="mlrk-small"><strong>Structured</strong></p><div class="mlrk-dropzone" id="zoneStructured"></div></div>
   <div><p class="mlrk-small"><strong>Semi-structured</strong></p><div class="mlrk-dropzone" id="zoneSemi"></div></div>
   <div><p class="mlrk-small"><strong>Unstructured</strong></p><div class="mlrk-dropzone" id="zoneUnstructured"></div></div>
 </div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches</button></div>
 <div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>6. New commands for inspecting a file</h2>
-<p>You already know <code>pwd</code>, <code>ls</code>, and <code>cd</code> for finding your way around a filesystem. Classifying a file's shape takes three more commands, for actually looking inside it.</p>
-<div class="mlrk-grid">
-<div class="mlrk-card"><h3><code>cat</code></h3><p><strong>Meaning:</strong> print a file's entire contents.</p><p><strong>Why use it?</strong> Read a short file quickly, before deciding anything about its shape.</p><div class="mlrk-code"><div class="mlrk-screen">cat field_notes.txt</div></div></div>
-<div class="mlrk-card"><h3><code>grep</code></h3><p><strong>Meaning:</strong> search a file's text for lines matching a word or pattern.</p><p><strong>Why use it?</strong> Find one specific thing inside free-flowing text, without reading the whole file.</p><div class="mlrk-code"><div class="mlrk-screen">grep noise field_notes.txt</div></div></div>
-<div class="mlrk-card"><h3><code>wc</code></h3><p><strong>Meaning:</strong> count things in a file. <code>wc -l</code> counts lines; <code>wc -w</code> counts words.</p><p><strong>Why use it?</strong> A structured file's natural unit is usually rows (lines). An unstructured file's natural unit is usually words.</p><div class="mlrk-code"><div class="mlrk-screen">wc -l requests.csv</div></div></div>
-</div>
-<p style="margin-top:1rem">The simulator below still accepts <code>pwd</code>, <code>ls</code>, and <code>cd</code> too, in case you want to double-check where you are or what's in the folder.</p>
-<div class="mlrk-code"><div class="mlrk-screen">To search inside a file's text for a specific word or phrase, you'd use ____.</div></div>
-<div class="mlrk-fillblank">
-  <label for="blankinput">Type the missing command:</label>
-  <input type="text" id="blankinput" autocomplete="off">
-  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
-</div>
-<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>7. Practice terminal</h2>
-<p>This is a simulated filesystem, not your real computer. A practice folder called <code>practice</code> is already loaded with the three files from the intro: <code>requests.csv</code>, <code>field_notes.txt</code>, and <code>app_reports.json</code>. Try <code>ls</code> first, then <code>cat</code> each file, then a <code>grep</code> or <code>wc</code> command of your own.</p>
-<div class="mlrk-terminal" id="terminalBox">
-  <div class="mlrk-terminal-log" id="termlog" aria-live="polite" tabindex="-1">You are in /practice
-A practice folder is ready. Type ls to begin.</div>
-  <div class="mlrk-terminal-row">
-    <span class="mlrk-terminal-prompt"></span>
-    <label for="termcmd" class="mlrk-small" style="position:absolute;left:-9999px">Terminal command</label>
-    <input type="text" id="termcmd" class="mlrk-terminal-input" autocomplete="off" spellcheck="false" placeholder="Type a command and press Enter">
-  </div>
-</div>
-<details class="mlrk-hint"><summary>Need a hint?</summary>
-<p>Try <code>ls</code>, then <code>cat requests.csv</code>, <code>cat field_notes.txt</code>, and <code>cat app_reports.json</code>. Once you've seen all three, try <code>grep noise field_notes.txt</code> or <code>wc -l requests.csv</code>. Quotes around a search word aren't needed here, just type the single word.</p>
-</details>
-</section>
-
-<section class="mlrk-section">
-<h2>8. Put the inspection habit in order</h2>
-<p>Click steps, in order, to build the sequence you should follow before classifying any new file. Click a step again to remove it if you change your mind, then press "Check my order" when ready, this is a self-check, not graded on correctness.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="list"><span class="mlrk-order-num"></span> List what files are actually in the folder.</li>
-  <li class="mlrk-orderitem" data-step="preview"><span class="mlrk-order-num"></span> Preview or read the file's contents instead of guessing from its name.</li>
-  <li class="mlrk-orderitem" data-step="search"><span class="mlrk-order-num"></span> Search or count specific pieces of it for more evidence.</li>
-  <li class="mlrk-orderitem" data-step="classify"><span class="mlrk-order-num"></span> Only then classify its shape, based on what you actually saw.</li>
+<h2>8. Wrap-up</h2>
+<ul>
+<li>Structured data has the same columns in every row, following a schema. You can count rows and compare columns.</li>
+<li>Unstructured data, like notes, photos, or audio, has no fixed columns. You search it instead.</li>
+<li>Semi-structured data, like JSON, has labels, but entries don't all have the same fields. Open a file and look before you decide its shape.</li>
 </ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>9. Classify one file from evidence</h2>
-<p>Using what you saw with <code>cat</code> in the terminal above, classify <code>app_reports.json</code>.</p>
-<div class="mlrk-card" id="card-jsonclassify"><p><strong>How would you classify <code>app_reports.json</code>?</strong></p>
-<button type="button" class="mlrk-choice" data-a="m">Semi-structured</button>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> next summer, the library also records short audio clips of kids talking about their favorite book. What shape is that data?</p>
+<button type="button" class="mlrk-choice" data-a="un">Unstructured</button>
 <button type="button" class="mlrk-choice" data-a="s">Structured</button>
-<button type="button" class="mlrk-choice" data-a="u">Unstructured</button>
-<div id="jsonclassifyfb" class="mlrk-feedback" tabindex="-1"></div>
-<label for="evidence" style="display:block;margin-top:1rem"><strong>Explain your evidence:</strong> what did you actually see in the file that supports your classification?</label>
-<textarea id="evidence" class="mlrk-response" data-save placeholder="I'm classifying app_reports.json as ___ because I saw ..."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>10. Ask AI, then verify</h2>
-<div class="mlrk-card" id="card-aicheck"><p><strong>You paste the first few lines of <code>app_reports.json</code> into an AI assistant and ask what shape the data is. It replies: "Structured, since it's neatly formatted with keys." What should you do before accepting that answer?</strong></p>
-<button type="button" class="mlrk-choice" data-a="verify">Check whether every single record actually shares the exact same keys, not just whether it looks neatly formatted.</button>
-<button type="button" class="mlrk-choice" data-a="trust">Trust it, since the file does use keys and looks organized.</button>
-<button type="button" class="mlrk-choice" data-a="dismiss">Assume the AI is wrong, just because AI tools sometimes make mistakes with data questions.</button>
-<div id="aicheckfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed practice prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>11. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about structured, semi-structured, and unstructured data.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> Every semi-structured record in a dataset must contain the exact same set of keys.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A file's extension, like <code>.csv</code> or <code>.json</code>, is enough on its own to prove its shape without opening it.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Structured data can be reliably queried column by column, because every row shares the same fields.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Unstructured data can still contain useful information, it just isn't pre-organized into fixed fields.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
-<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Watch: the three shapes of data</h2>
-<p>As you watch, notice how briefly each shape gets defined, and check whether your own definitions from section 3 line up with what's shown.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=bcvt22A_G9Y" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which part of the explanation matched, or didn't match, how you were already picturing these three shapes?</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>13. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>Data-role interviews ask about this distinction directly, sometimes as a plain definitional question, sometimes as "here's a sample file, what would you do with it?" It's often the very first filter for which tool an interviewer expects you to reach for: a SQL query, a text-search or NLP approach, or something that expects a flexible set of keys.</p>
-<p>A common follow-up is being handed a real (but unfamiliar) file and asked to justify a classification out loud, using specific evidence from the file rather than a guess based on its name or extension. That's the exact habit practiced in sections 7 through 9.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>An interviewer hands you a sample file and asks, "Would you use a SQL query or a text-search tool on this?" before giving you any more information. What's the very first thing you should do?</strong></p>
-<button type="button" class="mlrk-choice" data-a="inspect">Open or inspect the actual file first, before assuming which tool fits.</button>
-<button type="button" class="mlrk-choice" data-a="assume">Assume it's structured unless told otherwise, since most business data lives in tables.</button>
-<button type="button" class="mlrk-choice" data-a="comfortable">Pick whichever tool you personally know best, regardless of the file.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>14. Summary &amp; critical thinking</h2>
-<p>Two habits carried this whole reading: telling structured, semi-structured, and unstructured data apart by their actual field consistency, and gathering real evidence (list, preview, search) before ever committing to a classification.</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a nonprofit exports two files: a spreadsheet with one row per volunteer, using the same <code>volunteer_id</code>, <code>hours</code>, and <code>date</code> columns for every row, and a second file containing free-form thank-you notes volunteers typed into a text box. How would you classify each one?</p>
-<button type="button" class="mlrk-choice" data-a="combo">The volunteer-hours spreadsheet is structured; the thank-you notes are unstructured.</button>
-<button type="button" class="mlrk-choice" data-a="swapped">The volunteer-hours spreadsheet is unstructured; the thank-you notes are structured.</button>
-<button type="button" class="mlrk-choice" data-a="both-structured">Both files are structured, since they came from the same nonprofit's system.</button>
+<button type="button" class="mlrk-choice" data-a="m">Semi-structured</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> what's one question you should always ask before trusting a file's shape from its name or extension alone?</label>
-<textarea id="clue" class="mlrk-response" data-save></textarea>
+<p>Data interviews often hand you a sample file and ask what shape it is, and the strongest answers point to what's in the file, not its name.</p>
+<p>Next, the same "look at the real thing" habit applies to answers from AI tools, which are free text too.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>15. Thinking ahead</h2>
-<p>This same judgment call resurfaces constantly: cleaning or combining datasets starts with knowing whether you're working with fixed columns or free text, SQL tables assume a structured schema going in, document-style databases are built specifically to hold semi-structured records, and natural-language tools exist specifically to turn unstructured text into something closer to structured signal.</p>
+<h2>9. Reflect</h2>
+<div class="mlrk-callout mlrk-callout-blue">
+<label for="evidence"><strong>In your own words:</strong> what shape is <code>app_entries.json</code>, and what did you see in the file that shows it?</label>
+<textarea id="evidence" class="mlrk-response" data-save placeholder="Start with: app_entries.json is ___ because I saw..."></textarea>
+<p>Stuck? <button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</div>
 </section>
 
 <section class="mlrk-section">
-<h2>16. Your score &amp; keep a copy of your work</h2>
+<h2>10. Key terms review</h2>
+<p>Flip each card and check that you could explain the term to a classmate.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>structured data</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Structured data</strong><br>Data organized into consistent rows and columns, like a spreadsheet.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>semi-structured data</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Semi-structured data</strong><br>Data with labels, where entries don't all share the same fields. JSON is a common example.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>unstructured data</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Unstructured data</strong><br>Data with no fixed columns: free text, images, audio.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>schema</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Schema</strong><br>The fixed plan of field names (and their types) that every row in a structured file follows.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Go further (optional video)</h2>
+<p>Optional. It isn't counted in the time above or in your points. As you watch, check whether the video's definitions match the ones on this page.</p>
+<div class="mlrk-video-wrap" id="ytplayer" data-title="The three shapes of data"></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=bcvt22A_G9Y" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://cloud.google.com/discover/unstructured-data" target="_blank" rel="noopener">Google Cloud: What Is Unstructured Data?</a> — a short official overview with more real examples.</li>
+<li><a href="https://aws.amazon.com/compare/the-difference-between-structured-data-and-unstructured-data/" target="_blank" rel="noopener">AWS: Structured Data vs. Unstructured Data</a> — another clear comparison, with examples.</li>
+<li><a href="https://www.w3schools.com/js/js_json.asp" target="_blank" rel="noopener">W3Schools: JSON Introduction</a> — more practice reading the labeled shape of semi-structured files.</li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/JSON" target="_blank" rel="noopener">MDN: Working with JSON</a> — a deeper, official reference on JSON's structure.</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>Your score and keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -375,17 +349,6 @@ git push</pre></li>
 </div>
 </section>
 
-<section class="mlrk-section">
-<h2>Additional resources</h2>
-<p class="mlrk-small">Not counted in the time estimate above.</p>
-<ul>
-<li><a href="https://cloud.google.com/discover/unstructured-data" target="_blank" rel="noopener">Google Cloud: What Is Unstructured Data?</a> — a short official overview with more real examples.</li>
-<li><a href="https://aws.amazon.com/compare/the-difference-between-structured-data-and-unstructured-data/" target="_blank" rel="noopener">AWS: Structured Data vs. Unstructured Data</a> — another vendor-neutral-enough comparison.</li>
-<li><a href="https://www.w3schools.com/js/js_json.asp" target="_blank" rel="noopener">W3Schools: JSON Introduction</a> — more practice reading the key/tag shape behind semi-structured files.</li>
-<li><a href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/JSON" target="_blank" rel="noopener">MDN: Working with JSON</a> — a deeper, official reference on JSON's structure.</li>
-</ul>
-</section>
-
 </div></main>
 
 <footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
@@ -403,175 +366,135 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-ls", buttonSelector:"#card-ls .mlrk-choice", feedbackSelector:"#lsfb", correct:"ls",
-    feedback:{ls:"ls lists what's inside your current folder, which is exactly the first move before opening anything.",
-              pwd:"pwd tells you where you are, not what's inside the current folder.",
-              cd:"cd moves you into a different folder. It doesn't list what's in the one you're already in."}});
-
-  K.quiz({id:"q-pwd", buttonSelector:"#card-pwd .mlrk-choice", feedbackSelector:"#pwdfb", correct:"pwd",
-    feedback:{pwd:"pwd (print working directory) confirms exactly where you are before you do anything else.",
-              ls:"ls is useful next, but it doesn't tell you your actual location, only what's around you.",
-              cd:"Moving somewhere before confirming where you currently are risks getting more lost, not less."}});
+  K.quiz({id:"q-cat", buttonSelector:"#card-cat .mlrk-choice", feedbackSelector:"#catfb", correct:"cat",
+    feedback:{cat:"Right. cat plus a file name prints everything in the file.",
+              ls:"ls lists names in a folder. It doesn't print what's inside a file.",
+              cd:"cd moves into folders. notes.txt is a file, so cd can't go into it."}});
 
   K.quiz({id:"q-datatype", buttonSelector:"#card-datatype .mlrk-choice", feedbackSelector:"#datatypefb", correct:"int",
-    feedback:{int:"A whole number is a single value's data type. It doesn't organize multiple values together.",
-              list:"A list of numbers is a data structure: a way of organizing multiple values, not a type of value itself.",
-              table:"A table is also a data structure, organizing many rows and columns of values together."}});
+    feedback:{int:"Right. A whole number is one value's kind, so it's a data type.",
+              row:"One row groups several values together, so it's a data structure.",
+              table:"A whole sheet of rows groups many values, so it's a data structure."}});
 
-  K.quiz({id:"q-extension", buttonSelector:"#card-extension .mlrk-choice", feedbackSelector:"#extensionfb", correct:"check",
-    feedback:{check:"An extension describes what a file is intended to hold, not a guarantee. Opening it is the only way to actually confirm its shape.",
-              "always-semi":"There's no rule that ties an extension to exactly one shape. A .csv file is usually structured, but the only way to know for sure is to look.",
-              "no-need":"Extensions can be wrong, renamed, or misleading. Treating one as proof skips the actual evidence-gathering step."}});
+  K.quiz({id:"q-wc", buttonSelector:"#card-wc .mlrk-choice", feedbackSelector:"#wcfb", correct:"6",
+    feedback:{"6":"Right. wc -l counts every line: 5 kids plus the line of column names.",
+              "5":"Five kids signed up, but wc -l counts lines, and the column-name line counts too.",
+              "4":"4 is the number of columns. wc -l counts lines, including the column-name line."}});
 
-  K.quiz({id:"q-lab", buttonSelector:"#card-lab .mlrk-choice", feedbackSelector:"#labfb", correct:"s",
-    feedback:{s:"Every row uses the same columns (patient_id, test_type, result_value, result_date), which is exactly what makes something structured.",
-              m:"Semi-structured data allows keys to vary between records. This scenario has zero variation: every row shares the same columns.",
-              u:"This is the opposite of free-flowing text: it's a fixed table with the same fields repeating."}});
+  K.quiz({id:"q-grep", buttonSelector:"#card-grep .mlrk-choice", feedbackSelector:"#grepfb", correct:"two",
+    feedback:{two:"Right. grep prints each whole line that has the word, so you see both Maya lines.",
+              word:"grep prints the whole line that matches, so you can read the word in context.",
+              count:"grep prints the matching lines themselves, not how many there are."}});
 
-  K.quiz({id:"q-support", buttonSelector:"#card-support .mlrk-choice", feedbackSelector:"#supportfb", correct:"m",
-    feedback:{m:"Every ticket has an id and a message, but escalation_reason only shows up sometimes. That mix of shared and optional keys is the signature of semi-structured data.",
-              s:"If this were structured, every ticket would need the exact same fields. escalation_reason isn't guaranteed to be there.",
-              u:"There's real organization here (id, message, an optional key), so this isn't free-flowing unstructured text."}});
+  K.quiz({id:"q-json", buttonSelector:"#card-json .mlrk-choice", feedbackSelector:"#jsonfb", correct:"semi",
+    feedback:{semi:"Right. Labels give it some organization, but Leo's entry has fewer fields than Maya's or Ava's, so it's semi-structured.",
+              agree:"Labels alone don't make data structured. Structured data has the same fields in every entry, and these entries don't.",
+              un:"Curly braces and labels give JSON real organization, so it isn't unstructured."}});
 
-  K.quiz({id:"q-audio", buttonSelector:"#card-audio .mlrk-choice", feedbackSelector:"#audiofb", correct:"u",
-    feedback:{u:"A raw audio file with no transcript has no fields at all to parse automatically. That's unstructured.",
-              s:"There's no fixed set of columns here at all, just a sound file.",
-              m:"Semi-structured data still needs some machine-readable keys or tags. A raw recording doesn't have any."}});
-
-  K.quiz({id:"q-jsonclassify", buttonSelector:"#card-jsonclassify .mlrk-choice", feedbackSelector:"#jsonclassifyfb", correct:"m",
-    feedback:{m:"Every report has an id and a category, but tags, photo_count, and location details don't show up identically across every entry. Keys, but not a rigid shared table: that's semi-structured.",
-              s:"If this were structured, every single report would need the exact same fields, but some reports include tags and photo_count and others don't.",
-              u:"There's real organization here (ids, categories, nested location details), which is more structure than free-flowing text has."}});
-
-  K.quiz({id:"q-aicheck", buttonSelector:"#card-aicheck .mlrk-choice", feedbackSelector:"#aicheckfb", correct:"verify",
-    feedback:{verify:"Checking a few more records is exactly the evidence-gathering habit practiced earlier in this reading. \"Has keys\" and \"looks neat\" aren't the same as \"every record shares identical fields.\"",
-              trust:"Looking organized isn't the same as being structured. Structured means every record shares identical fields, and this file's records don't.",
-              dismiss:"An AI answer isn't automatically wrong either. The fix isn't blind trust or blind dismissal, it's checking the actual records yourself."}});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"inspect",
-    feedback:{inspect:"Exactly the evidence-first habit from this reading: the file's real shape decides the tool, not a guess.",
-              assume:"A lot of real data isn't structured at all. Assuming structured-by-default is exactly the kind of guess that leads to reaching for the wrong tool.",
-              comfortable:"The tool has to fit the file's actual shape. Comfort with a tool doesn't change what the data actually looks like."}});
-
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"combo",
-    feedback:{combo:"Right. Fixed columns every row make the spreadsheet structured, and free-flowing paragraphs with no set fields make the notes unstructured.",
-              swapped:"This has it backwards. Fixed columns describe the spreadsheet (structured), and free-flowing text describes the notes (unstructured).",
-              "both-structured":"Coming from the same organization doesn't make two files the same shape. One has fixed columns; the other is free-flowing paragraphs."}});
-
-  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"Every semi-structured record in a dataset must contain the exact same set of keys.", correct:false,
-      hint:"Think back to the app_reports.json example: did every entry have tags and photo_count?",
-      explain:"Semi-structured records can share some keys while other keys only show up in some records, exactly what made app_reports.json semi-structured rather than structured."},
-    {value:"b", label:"A file's extension, like .csv or .json, is enough on its own to prove its shape without opening it.", correct:false,
-      hint:"Think back to the terminal practice: did you classify anything before actually running cat or grep on it?",
-      explain:"An extension is a hint, not proof. The reliable method is opening the file and checking the actual contents: list, preview, search, then classify."},
-    {value:"c", label:"Structured data can be reliably queried column by column, because every row shares the same fields.", correct:true,
-      hint:"Revisit section 1's requests.csv example. Does every row share the exact same fields?",
-      explain:"This is the core property of structured data: since every row has identical fields, you can reliably pull out just one column across every record."},
-    {value:"d", label:"Unstructured data can still contain useful information, it just isn't pre-organized into fixed fields.", correct:true,
-      hint:"Revisit the field_notes.txt example. Was there useful information in it, even without fixed columns?",
-      explain:"The field notes example still had real, useful details in it. It just required reading or searching instead of querying a column."}
-  ]});
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"un",
+    feedback:{un:"Right. Audio has no columns or labels to read by field, so it's unstructured.",
+              s:"Structured data has the same columns in every row. An audio clip has no columns at all.",
+              m:"Semi-structured data has labels for its values. A raw audio clip doesn't."}});
 
   K.dragDrop("#dragarea", "act-drag-shapes");
   K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneStructured", label:"A payroll table with the same columns for every employee", expectedLabel:"Structured"},
-    chip2:{expectedId:"zoneStructured", label:"A library's checkout log with the same columns per checkout", expectedLabel:"Structured"},
-    chip3:{expectedId:"zoneSemi", label:"A fitness tracker's JSON export with an optional workout_tags list", expectedLabel:"Semi-structured"},
-    chip4:{expectedId:"zoneSemi", label:"A grant database record with an optional prior_awards list", expectedLabel:"Semi-structured"},
-    chip5:{expectedId:"zoneUnstructured", label:"A folder of raw voicemail transcripts", expectedLabel:"Unstructured"},
-    chip6:{expectedId:"zoneUnstructured", label:"A city council's collection of public-comment letters", expectedLabel:"Unstructured"}
+    chip1:{expectedId:"zoneStructured", label:"A checkout list where every row has book_title, due_date, and returned", expectedLabel:"Structured"},
+    chip2:{expectedId:"zoneStructured", label:"A room-booking sheet where every row has room, date, and time", expectedLabel:"Structured"},
+    chip3:{expectedId:"zoneSemi", label:"An app file where every event has a name and date, but only some have an age_group label", expectedLabel:"Semi-structured"},
+    chip4:{expectedId:"zoneSemi", label:"A book list in JSON where some books have a list of awards and others don't", expectedLabel:"Semi-structured"},
+    chip5:{expectedId:"zoneUnstructured", label:"Photos of kids' drawings of their favorite books", expectedLabel:"Unstructured"},
+    chip6:{expectedId:"zoneUnstructured", label:"Thank-you letters families wrote to the librarian", expectedLabel:"Unstructured"}
   }});
-  K.orderSteps("#ordersteps", {id:"act-order-inspect", correctOrder:["list","preview","search","classify"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+
   K.flipCards("#vocab", "act-flip-vocab");
+  K.freeResponse({id:"resp-evidence", selector:"#evidence", minWords:8});
+
+  // Optional video: not scored, so it stays out of the reading's points.
+  const GO_FURTHER = {videoId:"bcvt22A_G9Y"};
+  const yt = $("#ytplayer");
+  const frame = document.createElement("iframe");
+  frame.src = "https://www.youtube.com/embed/" + GO_FURTHER.videoId;
+  frame.title = yt.dataset.title;
+  frame.loading = "lazy";
+  frame.allowFullscreen = true;
+  yt.appendChild(frame);
 
   const FILES = {
-    "/practice/requests.csv":"request_id,category,ward,days_open,status\n4471,pothole,3,2,open\n4472,streetlight,7,5,closed\n4473,noise,3,1,open",
-    "/practice/field_notes.txt":"Checked the intersection at 5th and Oak. Pothole confirmed, roughly two feet across. Recommend patching before the weekend rain.\nFollowed up on the streetlight complaint on Birch Ave. Bulb was out, already replaced by the crew.\nResident called back twice about the noise complaint near the loading dock. Says it's mostly after 10pm.",
-    "/practice/app_reports.json":"[\n  {\n    \"id\": \"R-901\",\n    \"category\": \"pothole\",\n    \"location\": {\"lat\": 40.71, \"lng\": -73.99},\n    \"tags\": [\"road\", \"urgent\"],\n    \"photo_count\": 2\n  },\n  {\n    \"id\": \"R-902\",\n    \"category\": \"noise\",\n    \"location\": {\"lat\": 40.72, \"lng\": -74.0}\n  }\n]"
+    "signups.csv": "name,age,books_read,finished\nMaya,9,12,True\nLeo,11,7,False\nAva,8,15,True\nSam,10,4,False\nZoe,12,9,True",
+    "notes.txt": "Week 1 was busy. Maya asked for more graphic novels.\nLeo said the summer list was too long, so we made a shorter one.\nWeek 3: Ava read 5 books in one week and wants a harder list.\nMaya brought a friend to story time.",
+    "app_entries.json": "[\n  {\"name\": \"Maya\", \"books_read\": 12, \"favorite_genre\": \"graphic novels\"},\n  {\"name\": \"Leo\", \"books_read\": 7},\n  {\"name\": \"Ava\", \"books_read\": 15, \"badges\": [\"Speed Reader\", \"Week 3 Star\"]}\n]"
   };
-  function resolvePath(name, state){
-    if(!name) return state.cwd;
-    if(name.startsWith("/")) return name;
-    return (state.cwd==="/"?"":state.cwd)+"/"+name;
-  }
+  const fs = {"/reading-program": {type:"dir", children:Object.keys(FILES)}};
+  Object.keys(FILES).forEach(f => fs["/reading-program/" + f] = {type:"file", contents:FILES[f]});
+  const pad = n => String(n).padStart(8, " ");
   K.terminal("#terminalBox", {
-    id:"act-terminal-inspect",
-    startPath:"/practice",
-    filesystem:{
-      "/practice":{type:"dir", children:["requests.csv","field_notes.txt","app_reports.json"]},
-      "/practice/requests.csv":{type:"file", contents:FILES["/practice/requests.csv"]},
-      "/practice/field_notes.txt":{type:"file", contents:FILES["/practice/field_notes.txt"]},
-      "/practice/app_reports.json":{type:"file", contents:FILES["/practice/app_reports.json"]}
-    },
-    commands:{
-      grep(args, state){
-        const pattern = args[0];
-        const path = resolvePath(args[1], state);
-        const node = FILES[path];
-        if(node===undefined) return path+": no such file";
-        if(!pattern) return "grep: missing search word";
-        let rx;
-        try{ rx = new RegExp(pattern, "i"); }catch(e){ return "grep: invalid search pattern"; }
-        const matches = node.split("\n").filter(line=>rx.test(line));
-        return matches.length ? matches.join("\n") : "(no matching lines)";
+    id: "act-terminal",
+    minCommands: 4,
+    startPath: "/reading-program",
+    filesystem: fs,
+    commands: {
+      grep(args){
+        if(args.length < 2) return "Type it as: grep WORD FILE, for example grep Ava notes.txt";
+        const word = args[0].replace(/^["']|["']$/g, ""), file = args[1];
+        if(!FILES[file]) return "grep: " + file + ": No such file or directory";
+        return FILES[file].split("\n").filter(l => l.includes(word)).join("\n");
       },
-      wc(args, state){
-        let flag = args[0], fileArg = args[1];
-        if(fileArg===undefined){ fileArg = flag; flag = "-l"; }
-        const path = resolvePath(fileArg, state);
-        const node = FILES[path];
-        if(node===undefined) return path+": no such file";
-        if(flag==="-w"){
-          const trimmed = node.trim();
-          const words = trimmed ? trimmed.split(/\s+/).length : 0;
-          return words+" "+fileArg;
-        }
-        return node.split("\n").length+" "+fileArg;
+      wc(args){
+        const flag = args[0], file = args[1];
+        if(!file || !FILES[file]) return (file ? "wc: " + file + ": open: No such file or directory" : "Type it as: wc -l FILE or wc -w FILE");
+        const text = FILES[file];
+        if(flag === "-l") return pad(text.split("\n").length) + " " + file;
+        if(flag === "-w") return pad(text.split(/\s+/).filter(Boolean).length) + " " + file;
+        return "This practice terminal knows wc -l and wc -w.";
       }
     }
   });
 
-  K.Scoring.register("q-blank",1,"quiz");
-  let blankAttempts=0, blankDone=false;
-  $("#blankcheck").addEventListener("click",()=>{
+  // Typed command name: grep
+  K.Scoring.register("q-blank", 1, "quiz");
+  let blankAttempts = 0, blankDone = false;
+  $("#blankcheck").addEventListener("click", () => {
     if(blankDone) return;
-    blankAttempts++;
-    const ok = $("#blankinput").value.trim().toLowerCase()==="grep";
-    const fb=$("#blankfb");
-    if(ok){
-      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> grep searches a file's text for lines matching a word or pattern.";
-      blankDone=true;
-    } else if(blankAttempts>=2){
-      K.Scoring.award("q-blank",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing command is <code>grep</code>.";
-      blankDone=true;
-    } else {
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    const val = $("#blankinput").value.trim().toLowerCase();
+    const fb = $("#blankresult");
+    if(!val){
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>The box is empty.</strong> Type one command name, then press Check.";
+      fb.focus(); return;
     }
-    fb.setAttribute("tabindex","-1");fb.focus();
+    blankAttempts++;
+    const ok = val === "grep";
+    let hint = "Look at section 4: which command printed the lines that mention Maya?";
+    if(/^grep\s/.test(val)) hint = "Type only the command's name, with nothing after it.";
+    else if(val === "cat") hint = "cat prints the whole file. You want the command that searches for a word.";
+    else if(val === "wc") hint = "wc counts lines or words. You want the command that searches for a word.";
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts === 1 ? 1 : 0.5);
+      fb.className = "mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML = "<strong>Correct" + (blankAttempts > 1 ? " (2nd try, 0.5 pt)" : "") + ".</strong> <code>grep</code> searches a file's text and prints each line that has the word.";
+      blankDone = true; K.markDone("q-blank");
+    } else if(blankAttempts >= 2){
+      K.Scoring.award("q-blank", 0);
+      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML = "<strong>Here's the answer. You'll get it next time.</strong> The command is <code>grep</code>.";
+      blankDone = true; K.markDone("q-blank");
+    } else {
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>Not quite yet.</strong> " + hint + " You have one more try.";
+    }
+    fb.setAttribute("tabindex","-1"); fb.focus();
   });
-
-  K.freeResponse({id:"resp-evidence", selector:"#evidence", minWords:10});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
-  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:8});
 
   const AI_PROMPTS = [
-    "Paste a short list of column or key names from a real file into an AI assistant and ask whether the data is structured, semi-structured, or unstructured. Then check its answer against at least two actual records yourself.",
-    "Ask an AI assistant to write three example JSON records for a made-up dataset. Do all three records actually share the exact same keys? If not, is that closer to structured or semi-structured?",
-    "Describe a file you've worked with recently (a spreadsheet, a notes app export, anything) to an AI assistant and ask it to guess the file's shape from your description alone. What would you still need to check yourself before trusting that guess?"
+    "Pick an app on your phone. Name one piece of its data that's structured, one that's semi-structured, and one that's unstructured.",
+    "Explain structured versus unstructured data to a friend using a school report card and a teacher's written comments.",
+    "Think of a file you've opened that turned out messier than its name suggested. What would you check first next time?"
   ];
-  $("#aiprompt").addEventListener("click",()=>{
-    const box=$("#aipromptbox");
-    box.style.display="block";
-    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  $("#aiprompt").addEventListener("click", () => {
+    const box = $("#aipromptbox");
+    box.style.display = "block";
+    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random() * AI_PROMPTS.length)];
   });
-
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"bcvt22A_G9Y"});
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
   $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));

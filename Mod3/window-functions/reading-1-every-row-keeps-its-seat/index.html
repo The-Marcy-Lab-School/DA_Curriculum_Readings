@@ -4,15 +4,7 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:880px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;
-  margin-left:auto;margin-right:auto;display:block}
-.wf-wrap{overflow-x:auto;margin:1rem 0}
-.wf-table{border-collapse:collapse;min-width:280px;font-family:var(--mlrk-font-code);font-size:.95rem}
-.wf-table caption{caption-side:top;text-align:left;font-family:var(--mlrk-font-body);font-weight:700;
-  margin-bottom:.4rem;color:var(--mlrk-ink-900)}
-.wf-table th,.wf-table td{border:1px solid var(--mlrk-divider-on-light);padding:.45rem .8rem;text-align:left}
-.wf-table th{background:var(--mlrk-bg-light-alt);font-weight:700}
-.wf-side-by-side{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem;margin:1rem 0}
+.mlrk-illustration{width:100%;max-width:820px;height:auto;margin:1.1rem 0;display:block}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:9rem}
 </style>
@@ -21,11 +13,11 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Every Row Keeps Its Seat</h1>
-<p class="mlrk-lead">A small bank runs the same four numbers through two different queries. One query hands back a tidy summary and quietly deletes every person behind it. The other hands back all four people, each with a placement written beside their name. Same data, same database, two very different answers.</p>
+<p class="mlrk-lead">A school sells tickets to its spring play. The teacher wants every seller listed by name, in order, with a place beside each name. Two students sold the same number, and the teacher wants them shown as tied. <code>GROUP BY</code> would fold the names away. A <strong>window function</strong> keeps every name and adds a place to each one.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~33–36 minutes</span>
+  <span class="mlrk-pill">~19–22 minutes</span>
   <span class="mlrk-pill">Interactive</span>
-  <span class="mlrk-pill">No setup needed</span>
+  <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
 </div>
 </div></header>
@@ -55,28 +47,15 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Introduction</h2>
-<p>Riverbend Community Credit Union is a small bank in a mid-sized town. A <strong>credit union</strong> is a bank that is owned by the people who bank there, not by outside investors. Members elect the board. Profits come back to members as better rates instead of going to shareholders.</p>
-<p>Riverbend has two branches and four loan officers. A <strong>loan officer</strong> is the person who walks a member through applying for a car loan, a home loan, or a small business loan, and gets it approved and signed. "Closing" a loan means finishing that whole process. Last quarter, the four officers closed these numbers of loans:</p>
-
-<div class="wf-wrap"><table class="wf-table"><caption>officer_quarter</caption>
-<tr><th>officer_name</th><th>branch</th><th>loans</th></tr>
-<tr><td>Dario Vega</td><td>Riverside</td><td>31</td></tr>
-<tr><td>Nia Okafor</td><td>Riverside</td><td>26</td></tr>
-<tr><td>Sam Whitfield</td><td>Eastgate</td><td>26</td></tr>
-<tr><td>Priya Raman</td><td>Eastgate</td><td>19</td></tr>
-</table></div>
-
-<p>The branch manager wants a short report for the quarterly member meeting. She wants every officer listed by name, in order, with a placement beside each one, so she can read the whole list out loud and thank people. She also wants the two officers who tied at 26 to be shown as tied, because they genuinely are.</p>
-<p>If you reach for <code>GROUP BY</code> here, you will get a summary and lose the people. Here is what each approach actually returns.</p>
+<h2>1. Four sellers, two homerooms</h2>
+<p>The table <code>ticket_sales</code> has one row per student. A homeroom is the class a student starts the school day in. The picture shows the table, then what two different queries do with it.</p>
 
 <svg class="mlrk-illustration" viewBox="0 0 880 580" role="img" aria-labelledby="wfTitle wfDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="wfTitle">GROUP BY collapses rows; a window function keeps them</title>
-  <desc id="wfDesc">A source table named officer_quarter holds four rows: Dario Vega (Riverside, 31), Nia Okafor (Riverside, 26), Sam Whitfield (Eastgate, 26), and Priya Raman (Eastgate, 19). Two connectors lead down from it. On the left, a GROUP BY branch result holds only two rows, Riverside with a total of 57 and Eastgate with a total of 45, and the caption reads four rows in, two rows out, the officer rows are gone. On the right, a RANK() OVER (ORDER BY loans DESC) result still holds all four officer rows with an added rnk column reading 1, 2, 2, and 4, and the caption reads four rows in, four rows out, every row stays with a rank beside it.</desc>
+  <desc id="wfDesc">A source table named ticket_sales holds four rows: Mia (Room 4, 31 tickets), Theo (Room 4, 26), Zara (Room 7, 26), and Leo (Room 7, 19). Two arrows lead down from it. On the left, a GROUP BY homeroom result holds only two rows, Room 4 with a total of 57 and Room 7 with a total of 45, and the caption reads four rows in, two rows out, the student rows are gone. On the right, a RANK() OVER (ORDER BY tickets DESC) result still holds all four student rows with an added rnk column whose values are shown as question marks, and the caption reads four rows in, four rows out, every row stays with a place beside it.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-
     <rect x="100" y="8" width="680" height="36" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="440" y="33" text-anchor="middle" font-weight="700" font-size="19" fill="#261F1D">officer_quarter (one row per loan officer)</text>
+    <text x="440" y="33" text-anchor="middle" font-weight="700" font-size="19" fill="#261F1D">ticket_sales (one row per student)</text>
     <rect x="100" y="44" width="680" height="176" fill="#FFFCF7" stroke="#264326" stroke-width="1.5"/>
     <line x1="400" y1="44" x2="400" y2="220" stroke="#264326" stroke-width="1"/>
     <line x1="580" y1="44" x2="580" y2="220" stroke="#264326" stroke-width="1"/>
@@ -85,13 +64,13 @@
     <line x1="100" y1="150" x2="780" y2="150" stroke="#264326" stroke-width="1"/>
     <line x1="100" y1="185" x2="780" y2="185" stroke="#264326" stroke-width="1"/>
     <g font-size="17" fill="#261F1D" font-weight="700">
-      <text x="110" y="70">officer_name</text><text x="410" y="70">branch</text><text x="590" y="70">loans</text>
+      <text x="110" y="70">student_name</text><text x="410" y="70">homeroom</text><text x="590" y="70">tickets</text>
     </g>
     <g font-size="17" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
-      <text x="110" y="104">Dario Vega</text><text x="410" y="104">Riverside</text><text x="590" y="104">31</text>
-      <text x="110" y="139">Nia Okafor</text><text x="410" y="139">Riverside</text><text x="590" y="139">26</text>
-      <text x="110" y="174">Sam Whitfield</text><text x="410" y="174">Eastgate</text><text x="590" y="174">26</text>
-      <text x="110" y="209">Priya Raman</text><text x="410" y="209">Eastgate</text><text x="590" y="209">19</text>
+      <text x="110" y="104">Mia</text><text x="410" y="104">Room 4</text><text x="590" y="104">31</text>
+      <text x="110" y="139">Theo</text><text x="410" y="139">Room 4</text><text x="590" y="139">26</text>
+      <text x="110" y="174">Zara</text><text x="410" y="174">Room 7</text><text x="590" y="174">26</text>
+      <text x="110" y="209">Leo</text><text x="410" y="209">Room 7</text><text x="590" y="209">19</text>
     </g>
 
     <line x1="330" y1="222" x2="240" y2="288" stroke="#83671C" stroke-width="2.5"/>
@@ -100,25 +79,25 @@
     <polygon points="640,288 626.8,285.6 634,276" fill="#2274B5"/>
 
     <rect x="20" y="292" width="400" height="36" rx="8" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="220" y="317" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">GROUP BY branch</text>
+    <text x="220" y="317" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">GROUP BY homeroom</text>
     <rect x="20" y="328" width="400" height="106" fill="#FFFCF7" stroke="#83671C" stroke-width="1.5"/>
     <line x1="220" y1="328" x2="220" y2="434" stroke="#83671C" stroke-width="1"/>
     <line x1="20" y1="364" x2="420" y2="364" stroke="#83671C" stroke-width="1"/>
     <line x1="20" y1="399" x2="420" y2="399" stroke="#83671C" stroke-width="1"/>
     <g font-size="17" fill="#261F1D" font-weight="700">
-      <text x="30" y="354">branch</text><text x="230" y="354">total_loans</text>
+      <text x="30" y="354">homeroom</text><text x="230" y="354">total_tickets</text>
     </g>
     <g font-size="17" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
-      <text x="30" y="388">Riverside</text><text x="230" y="388">57</text>
-      <text x="30" y="423">Eastgate</text><text x="230" y="423">45</text>
+      <text x="30" y="388">Room 4</text><text x="230" y="388">57</text>
+      <text x="30" y="423">Room 7</text><text x="230" y="423">45</text>
     </g>
     <g font-size="17" fill="#261F1D" text-anchor="middle">
       <text x="220" y="462" font-weight="700">4 rows in, 2 rows out.</text>
-      <text x="220" y="484">The officer rows are gone.</text>
+      <text x="220" y="484">The student rows are gone.</text>
     </g>
 
     <rect x="460" y="292" width="400" height="36" rx="8" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-    <text x="660" y="317" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">RANK() OVER (ORDER BY loans DESC)</text>
+    <text x="660" y="317" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">RANK() OVER (ORDER BY tickets DESC)</text>
     <rect x="460" y="328" width="400" height="176" fill="#FFFCF7" stroke="#2274B5" stroke-width="1.5"/>
     <line x1="700" y1="328" x2="700" y2="504" stroke="#2274B5" stroke-width="1"/>
     <line x1="790" y1="328" x2="790" y2="504" stroke="#2274B5" stroke-width="1"/>
@@ -127,283 +106,205 @@
     <line x1="460" y1="434" x2="860" y2="434" stroke="#2274B5" stroke-width="1"/>
     <line x1="460" y1="469" x2="860" y2="469" stroke="#2274B5" stroke-width="1"/>
     <g font-size="17" fill="#261F1D" font-weight="700">
-      <text x="470" y="354">officer_name</text><text x="710" y="354">loans</text><text x="800" y="354">rnk</text>
+      <text x="470" y="354">student_name</text><text x="710" y="354">tickets</text><text x="800" y="354">rnk</text>
     </g>
     <g font-size="17" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
-      <text x="470" y="388">Dario Vega</text><text x="710" y="388">31</text><text x="800" y="388">1</text>
-      <text x="470" y="423">Nia Okafor</text><text x="710" y="423">26</text><text x="800" y="423">2</text>
-      <text x="470" y="458">Sam Whitfield</text><text x="710" y="458">26</text><text x="800" y="458">2</text>
-      <text x="470" y="493">Priya Raman</text><text x="710" y="493">19</text><text x="800" y="493">4</text>
+      <text x="470" y="388">Mia</text><text x="710" y="388">31</text><text x="800" y="388">?</text>
+      <text x="470" y="423">Theo</text><text x="710" y="423">26</text><text x="800" y="423">?</text>
+      <text x="470" y="458">Zara</text><text x="710" y="458">26</text><text x="800" y="458">?</text>
+      <text x="470" y="493">Leo</text><text x="710" y="493">19</text><text x="800" y="493">?</text>
     </g>
     <g font-size="17" fill="#261F1D" text-anchor="middle">
       <text x="660" y="532" font-weight="700">4 rows in, 4 rows out.</text>
-      <text x="660" y="554">Every row stays, with a rank beside it.</text>
+      <text x="660" y="554">Every row stays, with a place beside it.</text>
     </g>
   </g>
 </svg>
 
-<p>Look at the two results side by side. The gold one on the left ran <code>GROUP BY branch</code>. It added the loans up per branch and returned two rows. The totals are correct, but Dario, Nia, Sam and Priya are no longer anywhere in the result. Their rows were folded into the totals and then dropped.</p>
-<p>The blue one on the right ran a <strong>window function</strong>. That is a calculation that looks across a set of rows and writes one value onto each row, without folding any rows together. All four officers are still there. A new column named <code>rnk</code> now holds each one's placement. Notice that Nia and Sam both show <code>2</code>, because they really did tie, and Priya shows <code>4</code> rather than <code>3</code>.</p>
-
+<p>You already know how to sort rows with <code>ORDER BY</code> and summarize them with <code>GROUP BY</code>. This matters because requests like "show where every seller ranks" need the individual rows back, and <code>GROUP BY</code> hands back a summary with no error to warn you.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> "give me the top 5 sales reps," "flag each customer's most recent order," "show me where every store ranks" are ordinary requests in an analyst job, and none of them can be answered by collapsing rows into a summary. The person asking wants the individual rows back, labeled. Choosing <code>GROUP BY</code> here does not throw an error. It just hands back a report that answers a question nobody asked. Interviewers lean on this because it separates people who have written real reports from people who have only memorized aggregate syntax.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to sort rows with <code>ORDER BY</code> and how to summarize them with <code>GROUP BY</code> and a count. This reading adds a third move that sits between those two: keep every row exactly as it is, and attach a computed number to each one. Once that idea is solid, the same clause extends to ranking inside groups, running totals, and comparing a row against the row before it.</p>
+<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what <code>psql</code> prints when it runs that file. On your own laptop you'd type <code>psql -d school_play -f name.sql</code>. The <code>-f</code> tells <code>psql</code> to run every statement in the file, top to bottom.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall check</h2>
-<p>Three skills are prerequisites for this reading: sorting with <code>ORDER BY</code>, summarizing with <code>GROUP BY</code> plus an aggregate function, and renaming a result column with <code>AS</code>. Test each one before moving on.</p>
+<h2>2. Recall</h2>
+<p>A window function sorts rows and names its result column. Check both skills.</p>
 
-<div class="mlrk-card" id="card-orderby"><p><strong>What does <code>ORDER BY</code> do to the number of rows a query returns?</strong></p>
-<button type="button" class="mlrk-choice" data-a="same">Nothing. It changes the sequence of the rows, not how many there are.</button>
-<button type="button" class="mlrk-choice" data-a="fewer">It removes rows that are out of order.</button>
-<button type="button" class="mlrk-choice" data-a="groups">It combines rows that share a value into one row.</button>
-<div id="orderbyfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-card" id="card-recall-order"><p><strong>Predict:</strong> <code>ticket_sales</code> has 4 rows. How many rows does <code>by_tickets.sql</code> return?</p>
+<div class="mlrk-code" data-file="by_tickets.sql"><div class="mlrk-screen">SELECT student_name, tickets
+FROM ticket_sales
+ORDER BY tickets;</div></div>
+<button type="button" class="mlrk-btn" data-run="by_tickets.sql" data-after="q-order">Run by_tickets.sql</button>
+<div class="mlrk-run" data-file="by_tickets.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d school_play -f by_tickets.sql</div><pre> student_name | tickets
+--------------+---------
+ Leo          |      19
+ Theo         |      26
+ Zara         |      26
+ Mia          |      31
+(4 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="four">4</button>
+<button type="button" class="mlrk-choice" data-a="three">3, because the two 26s join into one row</button>
+<button type="button" class="mlrk-choice" data-a="one">1, the top seller</button>
+<div id="orderfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-groupby" style="margin-top:.8rem"><p><strong>Coding check:</strong> a table has 4 rows. Two rows have <code>branch = 'Riverside'</code> and two have <code>branch = 'Eastgate'</code>. <strong>How many rows does <code>SELECT branch, SUM(loans) FROM officer_quarter GROUP BY branch;</code> return?</strong></p>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="1">1</button>
-<div id="groupbyfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-alias" style="margin-top:.8rem"><p><strong>What does <code>AS</code> do in <code>SELECT SUM(loans) AS total_loans</code>?</strong></p>
-<button type="button" class="mlrk-choice" data-a="name">It gives that result column the name <code>total_loans</code>.</button>
-<button type="button" class="mlrk-choice" data-a="filter">It filters the result down to rows where total_loans is set.</button>
-<button type="button" class="mlrk-choice" data-a="create">It adds a permanent new column called <code>total_loans</code> to the stored table.</button>
-<div id="aliasfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">A window function leans on all three of these. It uses an <code>ORDER BY</code> of its own to decide what "first" means, it is deliberately not a <code>GROUP BY</code>, and its result almost always gets an <code>AS</code> name so you can refer to the new column.</div>
+<div class="mlrk-card" id="card-recall-as" style="margin-top:.8rem"><p><strong>What does <code>AS</code> do in <code>SELECT SUM(tickets) AS total_tickets</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="name">It names that result column <code>total_tickets</code>.</button>
+<button type="button" class="mlrk-choice" data-a="filter">It keeps only the rows where <code>total_tickets</code> has a value.</button>
+<button type="button" class="mlrk-choice" data-a="store">It adds a permanent <code>total_tickets</code> column to the table.</button>
+<div id="asfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Concept overview: two queries, the same four numbers</h2>
-<p>Here is the table again, so you do not have to scroll back up.</p>
-<div class="wf-wrap"><table class="wf-table"><caption>officer_quarter</caption>
-<tr><th>officer_name</th><th>branch</th><th>loans</th></tr>
-<tr><td>Dario Vega</td><td>Riverside</td><td>31</td></tr>
-<tr><td>Nia Okafor</td><td>Riverside</td><td>26</td></tr>
-<tr><td>Sam Whitfield</td><td>Eastgate</td><td>26</td></tr>
-<tr><td>Priya Raman</td><td>Eastgate</td><td>19</td></tr>
-</table></div>
+<h2>3. A window function keeps every row</h2>
+<p>First, the summary the teacher did not ask for:</p>
+<div class="mlrk-code" data-file="homeroom_totals.sql"><div class="mlrk-screen">SELECT homeroom, SUM(tickets) AS total_tickets
+FROM ticket_sales
+GROUP BY homeroom
+ORDER BY homeroom;</div></div>
+<div class="mlrk-run" data-file="homeroom_totals.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d school_play -f homeroom_totals.sql</div><pre> homeroom | total_tickets
+----------+---------------
+ Room 4   |            57
+ Room 7   |            45
+(2 rows)</pre></div>
+<p>The totals are right, but Mia, Theo, Zara and Leo are gone. A <strong>window function</strong> works differently. It looks across a set of rows and writes one value onto each row, without folding any rows together.</p>
 
-<p>First, the summary the branch manager did not ask for:</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT branch, SUM(loans) AS total_loans
-FROM officer_quarter
-GROUP BY branch;</div></div>
-<p><code>GROUP BY branch</code> gathers every row that shares a branch value, adds the <code>loans</code> column up across that group, and emits <em>one</em> row for the whole group. The four original rows are consumed in the process. There is no way to ask that result who Dario is, because Dario's row no longer exists in it.</p>
+<div class="mlrk-card" id="card-rows"><p><strong>Predict:</strong> <code>rank_sellers.sql</code> is the query from the blue side of the picture. Theo and Zara both sold 26. What does <code>rnk</code> show for the two of them?</p>
+<div class="mlrk-code" data-file="rank_sellers.sql"><div class="mlrk-screen">SELECT student_name, tickets,
+  RANK() OVER (ORDER BY tickets DESC) AS rnk
+FROM ticket_sales;</div></div>
+<button type="button" class="mlrk-btn" data-run="rank_sellers.sql" data-after="q-rows">Run rank_sellers.sql</button>
+<div class="mlrk-run" data-file="rank_sellers.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d school_play -f rank_sellers.sql</div><pre> student_name | tickets | rnk
+--------------+---------+-----
+ Mia          |      31 |   1
+ Theo         |      26 |   2
+ Zara         |      26 |   2
+ Leo          |      19 |   4
+(4 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="same">2 for Theo and 2 for Zara</button>
+<button type="button" class="mlrk-choice" data-a="diff">2 for Theo and 3 for Zara</button>
+<button type="button" class="mlrk-choice" data-a="three">3 for both of them</button>
+<div id="rowsfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<p>Now the report she actually wanted:</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT officer_name, loans,
-  RANK() OVER (ORDER BY loans DESC) AS rnk
-FROM officer_quarter;</div></div>
-<p>There is no <code>GROUP BY</code> in that query at all. Every row from <code>officer_quarter</code> comes out the other side untouched, with one extra column bolted on. The new piece is <code>OVER (ORDER BY loans DESC)</code>. That is the <strong>OVER clause</strong>, and it tells <code>RANK()</code> which rows to look across and in what order. Without it, <code>RANK()</code> would have no idea what "first place" even means.</p>
-
-<div class="mlrk-callout mlrk-callout-green">
-<p>The one-sentence version worth memorizing: <strong><code>GROUP BY</code> replaces rows with a summary. A window function leaves the rows alone and writes a value onto each of them.</strong></p>
-</div>
-
-<div class="mlrk-card" id="card-rowsgroup"><p><strong>The <code>GROUP BY branch</code> query above was given 4 rows. How many rows does it return?</strong></p>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="6">6</button>
-<div id="rowsgroupfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-rowswin" style="margin-top:.8rem"><p><strong>The <code>RANK() OVER (...)</code> query above was given the same 4 rows. How many rows does it return?</strong></p>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<button type="button" class="mlrk-choice" data-a="1">1</button>
-<div id="rowswinfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>The new piece is <code>OVER (ORDER BY tickets DESC)</code>. That is the <strong>OVER clause</strong>: it tells <code>RANK()</code> which rows to look across and in what order. Without it, <code>RANK()</code> would not know what first place means. The parentheses right after <code>RANK</code> stay empty.</p>
+<p><code>AS rnk</code> is an <strong>alias</strong>: a name you give a result column inside a query. It shows up only in this query's output and changes nothing in the stored table. The rule to remember: <code>GROUP BY</code> replaces rows with a summary, and a window function keeps the rows and adds a value to each.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Technical vocabulary</h2>
-<p>Flip each card before the practice activities below.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>window function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Window function</strong><br>A calculation that looks across a set of rows and writes one value onto each row, without folding any rows together. Row count in equals row count out.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>OVER clause</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>OVER clause</strong><br>The part written as <code>OVER (...)</code> that tells a window function which rows to look across and in what order, for example <code>OVER (ORDER BY loans DESC)</code>.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>RANK()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>RANK()</strong><br>A window function that numbers rows by position. Rows with the same value share a number, and the count then picks back up past however many rows tied.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>ROW_NUMBER()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>ROW_NUMBER()</strong><br>A window function that gives every row its own number, counting 1, 2, 3 and onward with no repeats and no skips, even when values are identical.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>tie</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Tie</strong><br>Two or more rows holding the exact same value in the column you are ordering by. A tie is the only situation where RANK() and ROW_NUMBER() give different answers.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>alias (AS)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Alias (AS)</strong><br>A name you give a result column inside a query, such as <code>AS rnk</code>. It exists only in that query's output and changes nothing in the stored table.</span></button>
-</div>
+<h2>4. Ties and RANK()</h2>
+<p>That shared 2 comes from a tie. A <strong>tie</strong> is two or more rows with the same value in the column you order by. <strong><code>RANK()</code></strong> numbers rows by position, and tied rows share a number.</p>
+
+<div class="mlrk-card" id="card-skip"><p><strong>In the <code>rank_sellers.sql</code> output, why does Leo get 4 and not 3?</strong></p>
+<button type="button" class="mlrk-choice" data-a="skip">Theo and Zara fill places 2 and 3 together, so the next free place is 4.</button>
+<button type="button" class="mlrk-choice" data-a="bug">It is a mistake. <code>RANK()</code> should have given Leo 3.</button>
+<button type="button" class="mlrk-choice" data-a="room">Leo is in a different homeroom, so <code>RANK()</code> adds one.</button>
+<div id="skipfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>So <code>RANK()</code> gives 1, 2, 2, 4. It reports the tie as a tie, then skips the place the tie used up.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Write the clause yourself</h2>
-<p>A window function is always two pieces: the function name with empty parentheses, then the <code>OVER (...)</code> part that defines what it looks across. Here is the query with one keyword removed.</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT officer_name, loans,
-  RANK() ______ (ORDER BY loans DESC) AS rnk
-FROM officer_quarter;</div></div>
-<div class="mlrk-fillblank">
-  <label for="overblank">Type the missing keyword:</label>
-  <input type="text" id="overblank" autocomplete="off">
-  <button type="button" id="overblankcheck" class="mlrk-btn">Check</button>
-</div>
-<details class="mlrk-hint"><summary>Need a hint?</summary><p>It is a single short word. It sits between the function's empty parentheses and the parentheses holding the <code>ORDER BY</code>. Section 3 named it out loud.</p></details>
-<div id="overblankfb" class="mlrk-feedback" tabindex="-1"></div>
-
-<p style="margin-top:1rem">Two details are easy to trip on, so read them slowly.</p>
+<h2>5. ROW_NUMBER() never repeats</h2>
+<p><strong><code>ROW_NUMBER()</code></strong> gives every row its own number: 1, 2, 3, 4, with no repeats and no skips, even when values are the same. Finish the file to try it.</p>
+<div class="mlrk-code" data-file="number_sellers.sql"><div class="mlrk-screen">SELECT student_name, tickets,
+  ROW_NUMBER() ____ (ORDER BY tickets DESC) AS rn
+FROM ticket_sales;</div></div>
+<button type="button" class="mlrk-btn" data-run="number_sellers.sql" data-after="q-over" data-after-note="Solve the blank first. Then you can run it.">Run number_sellers.sql</button>
+<div class="mlrk-run" data-file="number_sellers.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d school_play -f number_sellers.sql</div><pre> student_name | tickets | rn
+--------------+---------+----
+ Mia          |      31 |  1
+ Theo         |      26 |  2
+ Zara         |      26 |  3
+ Leo          |      19 |  4
+(4 rows)</pre></div>
 <ol class="mlrk-steplist">
-  <li>The parentheses right after <code>RANK</code> stay empty. Nothing goes inside them.</li>
-  <li>The <code>ORDER BY</code> inside <code>OVER (...)</code> is a separate thing from a query's own final <code>ORDER BY</code>. This one decides how rows get numbered. A query can have both, and they do not have to match.</li>
+  <li>Type the one keyword that goes between the function's empty parentheses and <code>(ORDER BY ...)</code>. It is the same keyword <code>rank_sellers.sql</code> used.</li>
+  <li>Type only the keyword: no parentheses. Capital letters or lowercase both work.</li>
+  <li>Press <strong>Check</strong>. Then the Run button unlocks.</li>
 </ol>
-</section>
-
-<section class="mlrk-section">
-<h2>6. The tie, and two honest answers to it</h2>
-<p>Nia and Sam both closed 26 loans. That is a real tie, not a data error. <code>RANK()</code> and <code>ROW_NUMBER()</code> handle it differently, and neither one is wrong.</p>
-
-<div class="wf-side-by-side">
-<div class="wf-wrap"><table class="wf-table"><caption>RANK() OVER (ORDER BY loans DESC)</caption>
-<tr><th>officer_name</th><th>loans</th><th>rnk</th></tr>
-<tr><td>Dario Vega</td><td>31</td><td>1</td></tr>
-<tr><td>Nia Okafor</td><td>26</td><td>2</td></tr>
-<tr><td>Sam Whitfield</td><td>26</td><td>2</td></tr>
-<tr><td>Priya Raman</td><td>19</td><td>4</td></tr>
-</table></div>
-<div class="wf-wrap"><table class="wf-table"><caption>ROW_NUMBER() OVER (ORDER BY loans DESC)</caption>
-<tr><th>officer_name</th><th>loans</th><th>rn</th></tr>
-<tr><td>Dario Vega</td><td>31</td><td>1</td></tr>
-<tr><td>Nia Okafor</td><td>26</td><td>2</td></tr>
-<tr><td>Sam Whitfield</td><td>26</td><td>3</td></tr>
-<tr><td>Priya Raman</td><td>19</td><td>4</td></tr>
-</table></div>
-</div>
-
-<p><code>RANK()</code> reports the tie as a tie: 1, 2, 2, 4. Two officers share second place, so third place is skipped and the next distinct value lands on 4. That skip is not a bug. Two people already occupied the second and third slots, so the fourth slot is genuinely the next one free.</p>
-<p><code>ROW_NUMBER()</code> refuses to repeat a number: 1, 2, 3, 4. Sam gets 3 purely because the database had to put the two tied rows in some order. Nothing in the data says Nia beat Sam. <code>ROW_NUMBER()</code> made that call anyway, because it was asked to.</p>
-
 <div class="mlrk-fillblank">
-  <label for="samrank">Under <code>RANK()</code>, what number does Sam Whitfield get?</label>
-  <input type="text" id="samrank" autocomplete="off">
-  <button type="button" id="samrankcheck" class="mlrk-btn">Check</button>
+  <label for="overInput">Missing keyword:</label>
+  <input type="text" id="overInput" autocomplete="off">
+  <button type="button" id="overCheck" class="mlrk-btn">Check</button>
 </div>
-<div id="samrankfb" class="mlrk-feedback" tabindex="-1"></div>
+<div id="overfb" class="mlrk-feedback" tabindex="-1"></div>
 
-<div class="mlrk-card" id="card-priya" style="margin-top:1rem"><p><strong>Under <code>RANK()</code>, what number does Priya Raman get?</strong></p>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="5">5</button>
-<div id="priyafb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-samrn" style="margin-top:.8rem"><p><strong>Under <code>ROW_NUMBER()</code> instead, what number does Sam Whitfield get?</strong></p>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<div id="samrnfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-red">
-<p><strong>The real decision:</strong> a tie in the data is not a problem to fix. It means somebody has to choose a tie-breaking rule on purpose. <code>RANK()</code> says "these two are equal, and I will say so." <code>ROW_NUMBER()</code> says "I will put them in some order because you need a clean list." Pick based on what the report has to promise, and say which one you picked and why.</p>
-</div>
+<div class="mlrk-card" id="card-zara" style="margin-top:1rem"><p><strong>Nothing in the data says Theo beat Zara. Why does Zara get 3 in <code>number_sellers.sql</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="order"><code>ROW_NUMBER()</code> never repeats a number, so it had to put the two tied rows in some order.</button>
+<button type="button" class="mlrk-choice" data-a="fewer">Zara really sold fewer tickets than Theo.</button>
+<button type="button" class="mlrk-choice" data-a="alpha"><code>ROW_NUMBER()</code> always breaks ties in alphabetical order.</button>
+<div id="zarafb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>Neither function is wrong. <code>RANK()</code> says "these two are equal." <code>ROW_NUMBER()</code> says "you get a clean 1, 2, 3, 4." Pick the one that matches what the report has to promise.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>7. Sort each statement</h2>
-<p>Referring to the two result tables in section 6, drag each statement into the function it describes, then self-check.</p>
+<h2>6. Mixed check</h2>
+<p>Drag each statement into the function it describes, then press the check button.</p>
 <div id="dragarea">
 <div class="mlrk-drag-source" id="dragsource">
   <span id="chip1" class="mlrk-draggable">Two rows with equal values get the same number</span>
   <span id="chip2" class="mlrk-draggable">A number is skipped right after a tie</span>
   <span id="chip3" class="mlrk-draggable">Every row gets a different number, tie or no tie</span>
-  <span id="chip4" class="mlrk-draggable">Safest when a report must return exactly N rows</span>
+  <span id="chip4" class="mlrk-draggable">Always counts 1, 2, 3, 4 with no gaps</span>
 </div>
 <div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>Describes RANK()</strong></p><div class="mlrk-dropzone" id="zoneRank"></div></div>
-  <div><p class="mlrk-small"><strong>Describes ROW_NUMBER()</strong></p><div class="mlrk-dropzone" id="zoneRowNum"></div></div>
+  <div><p><strong>Describes RANK()</strong></p><div class="mlrk-dropzone" id="zoneRank"></div></div>
+  <div><p><strong>Describes ROW_NUMBER()</strong></p><div class="mlrk-dropzone" id="zoneRowNum"></div></div>
 </div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches</button></div>
 <div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>8. What the database does under the hood</h2>
-<p>Click the steps below in the order the database actually carries them out for <code>RANK() OVER (ORDER BY loans DESC)</code>, then self-check.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="gather"><span class="mlrk-order-num"></span> Collect the rows the query already selected, all four of them.</li>
-  <li class="mlrk-orderitem" data-step="sort"><span class="mlrk-order-num"></span> Put those rows in order using the ORDER BY written inside the OVER clause.</li>
-  <li class="mlrk-orderitem" data-step="number"><span class="mlrk-order-num"></span> Walk the sorted rows and assign each one a number using the function's tie rule.</li>
-  <li class="mlrk-orderitem" data-step="attach"><span class="mlrk-order-num"></span> Hand back every original row, now carrying its number in a new column.</li>
-</ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-
-<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem">
-<p><strong>This matters when an AI assistant writes the query for you.</strong> Asking an AI tool to draft a ranking query is fine. Trusting it without checking is not. AI tools mix up <code>RANK()</code> and <code>ROW_NUMBER()</code> often, because the difference only shows up on rows that tie, and most sample data has no ties in it. Verify it the way you just walked through: pick a tie you already know exists, and check by hand what number each side of it got.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>9. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A window function returns the same number of rows it was handed.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> <code>RANK()</code> and <code>ROW_NUMBER()</code> always produce identical numbers.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> <code>RANK()</code> and <code>ROW_NUMBER()</code> both need an <code>OVER (...)</code> clause to know how to number rows.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> <code>GROUP BY</code> keeps every original row and adds a summary column beside it.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
-<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>10. Watch: the same three functions on one tie</h2>
-<p>As you watch, notice how the tied rows are the only place the numbers come apart. Everything above and below the tie looks identical across the functions. The video also covers a third function, <code>DENSE_RANK()</code>, which shares a number on a tie like <code>RANK()</code> does but then continues counting without skipping. You do not need it to finish this reading, so treat it as a preview.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=W_5wCBzSQDY" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which of the three functions would you reach for first, and what kind of report made you pick it?</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>11. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>"Explain the difference between <code>GROUP BY</code> and a window function" is asked constantly in data interviews, and so is the follow-up: "<code>RANK()</code> or <code>ROW_NUMBER()</code>, and why?" A strong answer names the mechanism, not just the syntax. <code>GROUP BY</code> collapses rows into one per group. A window function keeps all of them and adds a value to each.</p>
-<p>The version that stands out goes one step further and asks a clarifying question back. "Top 3" is ambiguous the moment a tie is possible. An interviewer who hears you notice that before you start typing has learned more about you than any correct query would show.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> your manager asks for "the top 3 loan officers this quarter" for a slide that has exactly three lines on it. Two officers are tied at third. What is the strongest response?</p>
-<button type="button" class="mlrk-choice" data-a="clarify">Say the tie out loud, confirm the slide really needs exactly three lines, and use <code>ROW_NUMBER()</code> so the result is always three rows.</button>
-<button type="button" class="mlrk-choice" data-a="rank">Use <code>RANK()</code>, since it is guaranteed to return exactly three rows.</button>
-<button type="button" class="mlrk-choice" data-a="group">Use <code>GROUP BY officer_name</code> and keep the three highest totals.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Summary and critical thinking</h2>
-<p>Two ideas carried this whole reading. First, a window function does not collapse anything: the rows you hand it are the rows you get back, each with a computed value attached. Second, <code>RANK()</code> and <code>ROW_NUMBER()</code> only disagree on rows that tie, and choosing between them is a decision about what the report has to promise, not a matter of one being more correct.</p>
-
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a food co-op grocery ranks its six delivery drivers by on-time deliveries last month. The report must list all six drivers by name, and two drivers with identical counts must show the same placement. Which approach delivers that?</p>
-<button type="button" class="mlrk-choice" data-a="rank"><code>RANK() OVER (ORDER BY on_time DESC)</code>, with no <code>GROUP BY</code> in the query.</button>
-<button type="button" class="mlrk-choice" data-a="rownum"><code>ROW_NUMBER() OVER (ORDER BY on_time DESC)</code>, with no <code>GROUP BY</code> in the query.</button>
-<button type="button" class="mlrk-choice" data-a="group"><code>GROUP BY driver_name</code> with a <code>COUNT()</code>, sorted highest first.</button>
-<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<label for="ownwords"><strong>In your own words:</strong> describe a real list from your own life, school, or a job, where you would want every item kept and labeled with its placement, instead of squashed into one summary number. What would somebody lose if you handed them the summary instead?</label>
-<textarea id="ownwords" class="mlrk-response" data-save placeholder="Try starting with: I'd want every row kept when..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>13. Thinking ahead</h2>
-<p>Every query in this reading ranked all four officers against each other, across the whole table. Riverbend has two branches, though, and the branch manager will eventually want a separate first place inside each branch rather than one list for the whole credit union. The same <code>OVER (...)</code> clause handles that. It takes one more instruction that says "restart the numbering for each branch," and the function name and the <code>ORDER BY</code> stay exactly as they are. The same clause also carries running totals and row-to-row comparisons, so the syntax you just typed is the foundation for a whole family of calculations, not a single trick.</p>
-</section>
-
-<section class="mlrk-section">
-<h2>14. Go further</h2>
-<p>Optional, and not counted in the time estimate above.</p>
+<h2>7. Wrap-up</h2>
 <ul>
-<li><a href="https://www.postgresql.org/docs/current/tutorial-window.html" target="_blank" rel="noopener">PostgreSQL Tutorial: Window Functions</a> — the official reference, written by the people who build the database.</li>
-<li><a href="https://mode.com/sql-tutorial/sql-window-functions/" target="_blank" rel="noopener">Mode: SQL Window Functions</a> — a live in-browser editor where you write and run real ranking queries against a sample dataset.</li>
-<li><a href="https://www.sql-practice.com/" target="_blank" rel="noopener">SQL Practice</a> — free hands-on question sets against a small hospital database, with a query runner built into the page.</li>
-<li><a href="https://www.postgresql.org/docs/current/functions-window.html" target="_blank" rel="noopener">PostgreSQL: Window function reference</a> — the full list of ranking functions, including the ones this reading did not cover.</li>
-<li><a href="https://datalemur.com/sql-tutorial/sql-rank-dense_rank-row_number-window-function" target="_blank" rel="noopener">DataLemur: Ranking window functions</a> — the same three functions framed around real interview questions.</li>
+<li><code>GROUP BY</code> replaces rows with a summary. A window function keeps every row and adds a value to each.</li>
+<li>The <code>OVER (ORDER BY ...)</code> clause tells the function which rows to look across and in what order.</li>
+<li><code>RANK()</code> and <code>ROW_NUMBER()</code> only disagree on ties. Choose based on what the report must promise.</li>
 </ul>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> the teacher's thank-you slide has exactly three numbered lines: 1, 2 and 3. No number may repeat, even if two sellers tie. Which query fits?</p>
+<button type="button" class="mlrk-choice" data-a="rownum"><code>ROW_NUMBER() OVER (ORDER BY tickets DESC)</code>, with no <code>GROUP BY</code></button>
+<button type="button" class="mlrk-choice" data-a="rank"><code>RANK() OVER (ORDER BY tickets DESC)</code>, with no <code>GROUP BY</code></button>
+<button type="button" class="mlrk-choice" data-a="group"><code>GROUP BY student_name</code> with <code>SUM(tickets)</code>, sorted highest first</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p><strong>In interviews:</strong> "What is the difference between <code>GROUP BY</code> and a window function?" and "<code>RANK()</code> or <code>ROW_NUMBER()</code>, and why?" are common. Mention ties before you start typing.</p>
+<p><strong>Where this goes next:</strong> the same <code>OVER</code> clause can restart the numbering inside each group, so each homeroom gets its own first place.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>15. Your score and keeping a copy of your work</h2>
+<h2>8. Reflection</h2>
+<label for="strategy"><strong>Your example:</strong> describe a list from school, a job, or daily life where you would want every item kept and given a place, instead of one summary number.</label>
+<ol class="mlrk-steplist">
+  <li>Write 1 or 2 sentences, at least 8 words. The counter under the box tells you when it counts.</li>
+  <li>Try starting with: "One list I'd want ranked is..."</li>
+</ol>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="One list I'd want ranked is..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Key terms review</h2>
+<p>Flip each card to check that you can explain the term.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Window function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Window function</strong><br>A calculation that looks across a set of rows and writes one value onto each row, without folding any rows together. Rows in equals rows out.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>OVER clause</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>OVER clause</strong><br>The <code>OVER (...)</code> part that tells a window function which rows to look across and in what order, for example <code>OVER (ORDER BY tickets DESC)</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>RANK()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>RANK()</strong><br>Numbers rows by position. Tied rows share a number, and the count then skips past the places the tie used.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>ROW_NUMBER()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>ROW_NUMBER()</strong><br>Gives every row its own number, 1, 2, 3 and on, with no repeats and no skips, even when values are the same.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Tie</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Tie</strong><br>Two or more rows with the same value in the column you order by. Ties are the only place <code>RANK()</code> and <code>ROW_NUMBER()</code> differ.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Alias (AS)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Alias (AS)</strong><br>A name you give a result column inside a query, such as <code>AS rnk</code>. It changes nothing in the stored table.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Go further (optional)</h2>
+<p>This video is optional and isn't part of the time estimate or your score. As you watch, notice that the tied rows are the only place the numbers differ. The video also shows <code>DENSE_RANK()</code>, which shares a number on a tie like <code>RANK()</code> but does not skip the next number.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/W_5wCBzSQDY" title="RANK, DENSE_RANK and ROW_NUMBER, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=W_5wCBzSQDY" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Your score and keeping a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -470,6 +371,18 @@ git push</pre></li>
     <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
   </div>
 </div>
+
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://www.postgresql.org/docs/current/tutorial-window.html" target="_blank" rel="noopener">PostgreSQL Tutorial: Window Functions</a> — the official reference, written by the people who build the database.</li>
+<li><a href="https://mode.com/sql-tutorial/sql-window-functions/" target="_blank" rel="noopener">Mode: SQL Window Functions</a> — a live in-browser editor where you write and run ranking queries against a sample dataset.</li>
+<li><a href="https://www.postgresql.org/docs/current/functions-window.html" target="_blank" rel="noopener">PostgreSQL: Window function reference</a> — the full list of ranking functions, including ones this reading did not cover.</li>
+<li><a href="https://datalemur.com/sql-tutorial/sql-rank-dense_rank-row_number-window-function" target="_blank" rel="noopener">DataLemur: Ranking window functions</a> — the same functions framed around interview questions.</li>
+</ul>
 </section>
 
 </div></main>
@@ -489,137 +402,81 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-orderby", buttonSelector:"#card-orderby .mlrk-choice", feedbackSelector:"#orderbyfb", correct:"same",
-    feedback:{same:"ORDER BY only re-sequences rows that already qualified. Four rows go in, four rows come out.",
-              fewer:"Rows are never out of order before sorting, so there is nothing for ORDER BY to remove. Filtering is what WHERE does.",
-              groups:"Combining rows that share a value is GROUP BY's job. ORDER BY leaves every row intact."}});
+  K.quiz({id:"q-order", buttonSelector:"#card-recall-order .mlrk-choice", feedbackSelector:"#orderfb", correct:"four",
+    feedback:{four:"Right. ORDER BY changes the order of the rows, not how many there are.",
+              three:"ORDER BY never joins rows. Theo and Zara both stay, one after the other.",
+              one:"ORDER BY keeps every row. It only puts them in order, smallest tickets first here."}});
 
-  K.quiz({id:"q-groupby", buttonSelector:"#card-groupby .mlrk-choice", feedbackSelector:"#groupbyfb", correct:"2",
-    feedback:{"2":"There are two distinct branch values, so GROUP BY emits one row per branch. The four original rows are consumed.",
-              "4":"That is the input count. GROUP BY replaces those rows with one row per group, so the output is smaller here.",
-              "1":"You would get 1 row only if every row shared the same branch, or if there were no GROUP BY at all."}});
+  K.quiz({id:"q-as", buttonSelector:"#card-recall-as .mlrk-choice", feedbackSelector:"#asfb", correct:"name",
+    feedback:{name:"Right. AS gives the result column a name in this query's output.",
+              filter:"AS does not filter. WHERE and HAVING filter.",
+              store:"AS changes only what the output calls the column. The stored table stays the same."}});
 
-  K.quiz({id:"q-alias", buttonSelector:"#card-alias .mlrk-choice", feedbackSelector:"#aliasfb", correct:"name",
-    feedback:{name:"AS labels a result column inside this one query, which makes the output readable and lets you refer to the column by name.",
-              filter:"AS never filters anything. Filtering happens in WHERE or HAVING.",
-              create:"Nothing about AS changes the stored table. The name exists only in the result of that query."}});
+  K.quiz({id:"q-rows", buttonSelector:"#card-rows .mlrk-choice", feedbackSelector:"#rowsfb", correct:"same",
+    feedback:{same:"Right. RANK() gives rows with the same value the same number, so both get 2. All 4 rows come back.",
+              diff:"Theo and Zara have the same tickets value, and RANK() treats equal values as equal. Run it and look at their rnk.",
+              three:"Mia is the only seller ahead of them, so the tied pair starts at place 2, not 3."}});
 
-  K.quiz({id:"q-rowsgroup", buttonSelector:"#card-rowsgroup .mlrk-choice", feedbackSelector:"#rowsgroupfb", correct:"2",
-    feedback:{"2":"Two branches, so two rows. The officer-level rows are folded in and then dropped.",
-              "4":"GROUP BY does not preserve the input rows. It replaces them with one row per group.",
-              "6":"GROUP BY never produces more rows than it started with. It can only collapse."}});
+  K.quiz({id:"q-skip", buttonSelector:"#card-skip .mlrk-choice", feedbackSelector:"#skipfb", correct:"skip",
+    feedback:{skip:"Right. Two students share place 2, which uses up places 2 and 3, so Leo is the 4th row and gets 4.",
+              bug:"It is not a mistake. RANK() is built to skip after a tie. The function that would count straight on comes next.",
+              room:"The homeroom is not part of OVER (ORDER BY tickets DESC). Only tickets decides the place."}});
 
-  K.quiz({id:"q-rowswin", buttonSelector:"#card-rowswin .mlrk-choice", feedbackSelector:"#rowswinfb", correct:"4",
-    feedback:{"4":"Row count in equals row count out. That is the defining behavior of a window function.",
-              "2":"That is what GROUP BY branch returned. The RANK() query has no GROUP BY in it at all, so nothing gets collapsed.",
-              "1":"Nothing in that query collapses rows. Each officer keeps a row and gains a rnk column."}});
-
-  K.Scoring.register("q-overblank",1,"quiz");
+  K.Scoring.register("q-over",1,"quiz");
   let overAttempts=0, overDone=false;
-  $("#overblankcheck").addEventListener("click",()=>{
+  $("#overCheck").addEventListener("click",()=>{
     if(overDone) return;
     overAttempts++;
-    const ok = $("#overblank").value.trim().toLowerCase()==="over";
-    const fb=$("#overblankfb");
+    const v=$("#overInput").value.trim().toUpperCase().replace(/[`'"]/g,"").replace(/\s*\(\s*\)?$/,"");
+    const ok = v==="OVER";
+    const fb=$("#overfb");
     if(ok){
-      K.Scoring.award("q-overblank", overAttempts===1?1:0.5);
+      K.Scoring.award("q-over", overAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> <code>OVER</code> is what turns RANK() into a window function. It introduces the clause that says which rows to look across and in what order.";
+      fb.innerHTML="<strong>Correct"+(overAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> OVER tells ROW_NUMBER() which rows to number and in what order. Run the file to see the numbers.";
       overDone=true;
     } else if(overAttempts>=2){
-      K.Scoring.award("q-overblank",0);
+      K.Scoring.award("q-over",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The keyword is <code>OVER</code>.";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The keyword is <code>OVER</code>, the same one rank_sellers.sql uses.";
       overDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> It is one four-letter word, and section 3 called it out by name. One more try.";
+      fb.innerHTML="<strong>Not quite yet.</strong> Look at rank_sellers.sql in section 3. Find the short word right after RANK().";
     }
-    fb.setAttribute("tabindex","-1");fb.focus();
+    fb.setAttribute("tabindex","-1"); fb.focus();
+    if(overDone) K.markDone("q-over");
   });
 
-  K.Scoring.register("q-samrank",1,"quiz");
-  let samAttempts=0, samDone=false;
-  $("#samrankcheck").addEventListener("click",()=>{
-    if(samDone) return;
-    samAttempts++;
-    const ok = $("#samrank").value.trim()==="2";
-    const fb=$("#samrankfb");
-    if(ok){
-      K.Scoring.award("q-samrank", samAttempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> Sam closed 26, the same as Nia, so RANK() gives both of them 2.";
-      samDone=true;
-    } else if(samAttempts>=2){
-      K.Scoring.award("q-samrank",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> Sam gets <code>2</code>, the same number Nia gets, because their loan counts are equal.";
-      samDone=true;
-    } else {
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> Check what number Nia has in the RANK() table, and remember that Sam's loan count is identical to hers. One more try.";
-    }
-    fb.setAttribute("tabindex","-1");fb.focus();
-  });
-
-  K.quiz({id:"q-priya", buttonSelector:"#card-priya .mlrk-choice", feedbackSelector:"#priyafb", correct:"4",
-    feedback:{"4":"Two officers already filled the second and third slots by tying, so the next distinct value picks up at 4.",
-              "3":"Third place is already taken. Two rows tied at 2, which uses up both the second and third slots.",
-              "5":"RANK() skips only as many numbers as there were tied rows. One two-row tie skips exactly one number, landing on 4."}});
-
-  K.quiz({id:"q-samrn", buttonSelector:"#card-samrn .mlrk-choice", feedbackSelector:"#samrnfb", correct:"3",
-    feedback:{"3":"ROW_NUMBER() never repeats a number, so the second of the two tied rows gets 3 even though the counts are equal.",
-              "2":"That is Sam's RANK() number. ROW_NUMBER() refuses to hand the same number to two rows.",
-              "4":"ROW_NUMBER() also never skips. It counts 1, 2, 3, 4 straight through, so 4 belongs to Priya."}});
+  K.quiz({id:"q-zara", buttonSelector:"#card-zara .mlrk-choice", feedbackSelector:"#zarafb", correct:"order",
+    feedback:{order:"Right. ROW_NUMBER() must give each row a different number, so the database picked an order for the tie. Nothing in the data decided it.",
+              fewer:"Both sold 26. The 2 and 3 come from the function, not from the tickets.",
+              alpha:"There is no alphabet rule. The database picks some order for tied rows, and that order is not promised."}});
 
   K.dragDrop("#dragarea", "act-drag-classify");
   K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
     chip1:{expectedId:"zoneRank", label:"Two rows with equal values get the same number", expectedLabel:"Describes RANK()"},
     chip2:{expectedId:"zoneRank", label:"A number is skipped right after a tie", expectedLabel:"Describes RANK()"},
     chip3:{expectedId:"zoneRowNum", label:"Every row gets a different number, tie or no tie", expectedLabel:"Describes ROW_NUMBER()"},
-    chip4:{expectedId:"zoneRowNum", label:"Safest when a report must return exactly N rows", expectedLabel:"Describes ROW_NUMBER()"}
+    chip4:{expectedId:"zoneRowNum", label:"Always counts 1, 2, 3, 4 with no gaps", expectedLabel:"Describes ROW_NUMBER()"}
   }});
 
-  K.orderSteps("#ordersteps", {id:"act-order-mechanism", correctOrder:["gather","sort","number","attach"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"rownum",
+    feedback:{rownum:"Right. ROW_NUMBER() never repeats a number, so the slide can use places 1, 2 and 3 even with a tie.",
+              rank:"RANK() gives tied sellers the same number, so the slide could get 1, 2, 2. The teacher asked for no repeats.",
+              group:"GROUP BY student_name with SUM just gives each student's total again. It adds no place number."}});
+
   K.flipCards("#vocab", "act-flip-vocab");
-
-  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"A window function returns the same number of rows it was handed.", correct:true,
-      hint:"Compare the two result tables in the diagram: how many rows went into the blue one, and how many came out?",
-      explain:"Row count in equals row count out. That is what separates a window function from an aggregate with GROUP BY."},
-    {value:"b", label:"RANK() and ROW_NUMBER() always produce identical numbers.", correct:false,
-      hint:"Look at what number Sam Whitfield gets in each of the two tables in section 6.",
-      explain:"They match everywhere except on tied rows, which is exactly where the choice between them matters."},
-    {value:"c", label:"RANK() and ROW_NUMBER() both need an OVER (...) clause to know how to number rows.", correct:true,
-      hint:"Think about what information the function would be missing if you deleted the OVER part.",
-      explain:"Without OVER (ORDER BY ...), neither function has any definition of what first place means."},
-    {value:"d", label:"GROUP BY keeps every original row and adds a summary column beside it.", correct:false,
-      hint:"Count the rows in the gold result table in the diagram against the rows in the source table above it.",
-      explain:"GROUP BY replaces the rows of a group with one row. Keeping every row and adding a value is the window function's job."}
-  ]});
-
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"W_5wCBzSQDY"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
-  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:10});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"clarify",
-    feedback:{clarify:"Naming the ambiguity first is the part interviewers are listening for. ROW_NUMBER() then guarantees exactly three rows, and you can say why you picked it.",
-              rank:"RANK() would hand back four rows here, since both tied officers share third place. That breaks a slide with exactly three lines.",
-              group:"GROUP BY officer_name would collapse each officer to one row and give you no placement column at all. It also skips the real question about the tie."}});
-
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"rank",
-    feedback:{rank:"All six drivers keep their rows because there is no GROUP BY, and RANK() reports the tied pair with the same placement, which is exactly what the report promised.",
-              rownum:"ROW_NUMBER() keeps all six rows, but it would give the two tied drivers different placements. The report specifically said they must match.",
-              group:"GROUP BY collapses the driver rows into summaries and produces no placement column, so the report cannot list all six with a rank beside each."}});
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
 
   const AI_PROMPTS = [
-    "Think of a ranked list you have actually seen, like a class roster or a sports table. Where would a tie have been genuinely misleading if the list had forced the two into different spots?",
-    "How would you explain the difference between GROUP BY and a window function to someone who has only ever used a spreadsheet?",
-    "If a manager asked you for 'the top 5' and you knew a tie was likely, what exact question would you ask before writing any SQL?"
+    "Think of a race where two runners cross the line at the same time. Would you rather report them as tied, or give them different places? Why?",
+    "What would someone lose if you handed them only a team total instead of each player's score?",
+    "Name a list from your week, like songs you played or steps you walked each day. Would you rank it with ties or without?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.style.display="block";
+    box.hidden=false;
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 

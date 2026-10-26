@@ -6,9 +6,8 @@
 <style>
 .mlrk-illustration{width:100%;max-width:640px;height:auto;margin:1.1rem 0;display:block}
 .jt-wrap{overflow-x:auto;margin:1rem 0}
-.jt-table{border-collapse:collapse;min-width:280px;font-family:var(--mlrk-font-code);font-size:.95rem}
-.jt-table caption{caption-side:top;text-align:left;font-family:var(--mlrk-font-body);font-weight:700;
-  margin-bottom:.4rem;color:var(--mlrk-ink-900)}
+.jt-table{border-collapse:collapse;min-width:240px;font-family:var(--mlrk-font-code);font-size:.95rem}
+.jt-table caption{caption-side:top;text-align:left;font-family:var(--mlrk-font-body);font-weight:700;margin-bottom:.4rem;color:var(--mlrk-ink-900)}
 .jt-table th,.jt-table td{border:1px solid var(--mlrk-divider-on-light);padding:.45rem .8rem;text-align:left}
 .jt-table th{background:var(--mlrk-bg-light-alt);font-weight:700}
 .jt-side-by-side{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;margin:1rem 0}
@@ -20,11 +19,11 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>The Donor Who Never Donated</h1>
-<p class="mlrk-lead">A small nonprofit keeps a list of every supporter who has ever signed up to hear from them, and a separate list of every donation anyone has actually made. Most supporters show up on both lists — but one shows up on only one of them. Whether that supporter disappears from your results or stays visible with a gap depends entirely on one word in your query: <code>INNER</code> or <code>LEFT</code>.</p>
+<p class="mlrk-lead">Bright Path Literacy is a small charity that teaches adults to read. It keeps one table of supporters and another of donations. Jo signed up but hasn't given yet. Ask both tables one question, and Jo either disappears or stays with a blank. One word in your query decides which: <code>INNER</code> or <code>LEFT</code>.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~40–43 minutes</span>
+  <span class="mlrk-pill">~22–25 minutes</span>
   <span class="mlrk-pill">Interactive</span>
-  <span class="mlrk-pill">No setup needed</span>
+  <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
 </div>
 </div></header>
@@ -54,155 +53,8 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Introduction</h2>
-<p>Bright Path Literacy is a small nonprofit with two spreadsheets that never quite talk to each other. One lists every <strong>supporter</strong> who has ever signed up for their mailing list. The other lists every <strong>donation</strong> anyone has actually made. Most supporters appear in both. One supporter — Jo Alvarez, who signed up six months ago and has been meaning to give — appears in the first list and nowhere in the second.</p>
-<p>The development coordinator asks two very different questions of the exact same two tables: <em>"Show me everyone who has actually donated, and how much,"</em> and separately, <em>"Show me every single supporter we have, whether they've given yet or not, so I know who to follow up with."</em> Both questions require combining the two tables. They do not require the same combination.</p>
-
-<svg class="mlrk-illustration" viewBox="0 0 590 400" role="img" aria-labelledby="joinTitle joinDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="joinTitle">Two source tables and two different join results</title>
-  <desc id="joinDesc">A supporters table with three rows (Priya, Marcus, Jo) and a donations table with two rows (matching Priya and Marcus by id). Dashed lines connect the matching rows; Jo has no line to the donations table. Below, an INNER JOIN result table shows only Priya and Marcus with their amounts, while a LEFT JOIN result table shows all three supporters, with Jo's amount shown as NULL.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <!-- supporters table -->
-    <rect x="20" y="60" width="250" height="32" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="145" y="81" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">supporters</text>
-    <rect x="20" y="92" width="250" height="112" fill="#FFFCF7" stroke="#264326" stroke-width="1.5"/>
-    <line x1="90" y1="92" x2="90" y2="204" stroke="#264326" stroke-width="1"/>
-    <line x1="20" y1="120" x2="270" y2="120" stroke="#264326" stroke-width="1"/>
-    <line x1="20" y1="148" x2="270" y2="148" stroke="#264326" stroke-width="1"/>
-    <line x1="20" y1="176" x2="270" y2="176" stroke="#264326" stroke-width="1"/>
-    <g font-size="12" fill="#261F1D" font-weight="700">
-      <text x="28" y="111">id</text><text x="98" y="111">name</text>
-    </g>
-    <g font-size="12" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
-      <text x="28" y="139">101</text><text x="98" y="139">Priya</text>
-      <text x="28" y="167">102</text><text x="98" y="167">Marcus</text>
-      <text x="28" y="195">103</text><text x="98" y="195">Jo</text>
-    </g>
-
-    <!-- donations table -->
-    <rect x="320" y="60" width="250" height="32" rx="8" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-    <text x="445" y="81" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">donations</text>
-    <rect x="320" y="92" width="250" height="84" fill="#FFFCF7" stroke="#2274B5" stroke-width="1.5"/>
-    <line x1="430" y1="92" x2="430" y2="176" stroke="#2274B5" stroke-width="1"/>
-    <line x1="320" y1="120" x2="570" y2="120" stroke="#2274B5" stroke-width="1"/>
-    <line x1="320" y1="148" x2="570" y2="148" stroke="#2274B5" stroke-width="1"/>
-    <g font-size="12" fill="#261F1D" font-weight="700">
-      <text x="328" y="111">supporter_id</text><text x="438" y="111">amount</text>
-    </g>
-    <g font-size="12" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
-      <text x="328" y="139">101</text><text x="438" y="139">$50</text>
-      <text x="328" y="167">102</text><text x="438" y="167">$75</text>
-    </g>
-
-    <!-- matching connectors: row1-row1 and row2-row2 only, none to Jo -->
-    <line x1="270" y1="134" x2="320" y2="134" stroke="#83671C" stroke-width="2" stroke-dasharray="5 4"/>
-    <line x1="270" y1="162" x2="320" y2="162" stroke="#83671C" stroke-width="2" stroke-dasharray="5 4"/>
-    <text x="295" y="151" text-anchor="middle" font-size="9.5" fill="#83671C" font-weight="700">id matches</text>
-
-    <!-- INNER JOIN result -->
-    <rect x="20" y="234" width="250" height="32" rx="8" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="145" y="255" text-anchor="middle" font-weight="700" font-size="13.5" fill="#261F1D">INNER JOIN result</text>
-    <rect x="20" y="266" width="250" height="84" fill="#FFFCF7" stroke="#83671C" stroke-width="1.5"/>
-    <line x1="160" y1="266" x2="160" y2="350" stroke="#83671C" stroke-width="1"/>
-    <line x1="20" y1="294" x2="270" y2="294" stroke="#83671C" stroke-width="1"/>
-    <line x1="20" y1="322" x2="270" y2="322" stroke="#83671C" stroke-width="1"/>
-    <g font-size="12" fill="#261F1D" font-weight="700">
-      <text x="28" y="285">name</text><text x="168" y="285">amount</text>
-    </g>
-    <g font-size="12" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
-      <text x="28" y="313">Priya</text><text x="168" y="313">$50</text>
-      <text x="28" y="341">Marcus</text><text x="168" y="341">$75</text>
-    </g>
-
-    <!-- LEFT JOIN result -->
-    <rect x="320" y="234" width="250" height="32" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="445" y="255" text-anchor="middle" font-weight="700" font-size="13.5" fill="#261F1D">LEFT JOIN result</text>
-    <rect x="320" y="266" width="250" height="112" fill="#FFFCF7" stroke="#264326" stroke-width="1.5"/>
-    <line x1="460" y1="266" x2="460" y2="378" stroke="#264326" stroke-width="1"/>
-    <line x1="320" y1="294" x2="570" y2="294" stroke="#264326" stroke-width="1"/>
-    <line x1="320" y1="322" x2="570" y2="322" stroke="#264326" stroke-width="1"/>
-    <line x1="320" y1="350" x2="570" y2="350" stroke="#264326" stroke-width="1"/>
-    <g font-size="12" fill="#261F1D" font-weight="700">
-      <text x="328" y="285">name</text><text x="468" y="285">amount</text>
-    </g>
-    <g font-size="12" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
-      <text x="328" y="313">Priya</text><text x="468" y="313">$50</text>
-      <text x="328" y="341">Marcus</text><text x="468" y="341">$75</text>
-      <text x="328" y="369" font-style="italic" fill="#327A5F">Jo</text><text x="468" y="369" font-style="italic" fill="#327A5F">NULL</text>
-    </g>
-  </g>
-</svg>
-
-<p>Notice the dashed lines: they connect Priya's row and Marcus's row across both tables, because their <code>id</code> and <code>supporter_id</code> values match. There's no line to Jo, because nothing in <code>donations</code> matches her <code>id</code> of 103. The <strong>INNER JOIN result</strong> only keeps rows where that connection exists, so Jo disappears entirely. The <strong>LEFT JOIN result</strong> keeps every row from <code>supporters</code> regardless, and simply fills in <code>NULL</code> wherever no match was found.</p>
-
-<div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> "which of our INNER JOIN and LEFT JOIN would return the same result if the data always matched perfectly?" is a trap. Real data almost never matches perfectly — new supporters who haven't given yet, orders with a missing shipping record, employees who haven't finished onboarding. Picking the wrong join type doesn't crash your program or throw an error. It just silently produces a report that's missing exactly the people or records you most needed to see. That's a real, recurring risk in any job that touches a relational database, and it's one of the single most commonly asked SQL interview questions at every level.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to write a <code>SELECT</code> against one table, filter it with <code>WHERE</code>, and sort it with <code>ORDER BY</code>. This reading is about the next move: pulling matching rows from <em>two</em> related tables into a single result set, and deciding on purpose whether "no match" should mean "leave it out" or "show it anyway, with a gap." Once that distinction is solid, summarizing what a join returns — counting, grouping, totaling — builds directly on top of it.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>2. Recall before joining</h2>
-<p class="mlrk-small">Three skills are prerequisites for this reading: filtering with <code>WHERE</code>, sorting with <code>ORDER BY</code>, and the idea of a foreign key pointing at another table's primary key. Test each before moving on.</p>
-
-<div class="mlrk-card" id="card-orderby"><p><strong>What does <code>ORDER BY</code> do in a <code>SELECT</code> query?</strong></p>
-<button type="button" class="mlrk-choice" data-a="sorts">Sorts the rows in the result, without removing any of them.</button>
-<button type="button" class="mlrk-choice" data-a="filters">Removes rows that don't match a condition.</button>
-<button type="button" class="mlrk-choice" data-a="groups">Collapses multiple rows into one per category.</button>
-<div id="orderbyfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-where" style="margin-top:.8rem"><p><strong>Coding check:</strong> a <code>donations</code> table has three rows with <code>amount</code> values 50, 75, and 20. Which rows does <code>WHERE amount > 50</code> return?</p>
-<button type="button" class="mlrk-choice" data-a="75only">Only the row with 75.</button>
-<button type="button" class="mlrk-choice" data-a="75and20">The rows with 75 and 20.</button>
-<button type="button" class="mlrk-choice" data-a="all">All three rows.</button>
-<div id="wherefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-fk" style="margin-top:.8rem"><p><strong>Scenario check:</strong> the <code>supporters</code> table's primary key is <code>id</code>. The <code>donations</code> table has a column called <code>supporter_id</code> that stores the <code>id</code> of whoever made that donation. What is <code>supporter_id</code> called?</p>
-<button type="button" class="mlrk-choice" data-a="foreign">A foreign key: a column that references another table's primary key.</button>
-<button type="button" class="mlrk-choice" data-a="primary">A second primary key for the donations table.</button>
-<button type="button" class="mlrk-choice" data-a="duplicate">An accidental duplicate that should be removed.</button>
-<div id="fkfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">A join always connects rows using exactly this kind of relationship: a foreign key in one table matching a primary key in another. Nothing about joining changes how <code>WHERE</code> or <code>ORDER BY</code> work either — both still apply normally to a joined result, exactly as they do here.</div>
-</section>
-
-<section class="mlrk-section">
-<h2>3. Concept overview: one query, two very different answers</h2>
-<p>Both of Bright Path's tables exist independently. <code>supporters</code> has one row per person on the mailing list. <code>donations</code> has one row per gift, and only people who've actually given appear in it at all. To answer either of the coordinator's questions, both tables have to be combined in a single query using a <strong>join</strong> — and the <code>ON</code> clause that connects them is called the <strong>join condition</strong>.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">SELECT s.name, d.amount
-FROM supporters AS s
-INNER JOIN donations AS d
-  ON s.id = d.supporter_id;</div></div>
-<p><code>INNER JOIN</code> only keeps a row when the join condition finds a real match on both sides. Priya matches, Marcus matches, Jo doesn't — so Jo's row from <code>supporters</code> simply never makes it into the result. This is also what a plain <code>JOIN</code> means by default in SQL: unqualified <code>JOIN</code> and <code>INNER JOIN</code> are the exact same thing.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">SELECT s.name, d.amount
-FROM supporters AS s
-LEFT JOIN donations AS d
-  ON s.id = d.supporter_id;</div></div>
-<p>Change one word — <code>LEFT</code> instead of <code>INNER</code> — and the meaning flips. <code>LEFT JOIN</code> keeps <em>every</em> row from the table named first (the "left" table, <code>supporters</code>), whether or not the join condition finds a match. When there's no match, every column that would have come from the right-hand table (<code>donations</code>) is filled in with <code>NULL</code> instead of being left out. Jo stays in the result, with <code>NULL</code> sitting where her donation amount would be.</p>
-
-<div class="mlrk-callout mlrk-callout-red">
-<p><strong>A related trap:</strong> once you have a result with a <code>NULL</code> in it, you might try <code>WHERE amount = NULL</code> to find those rows. That comparison silently returns nothing, always — <code>NULL</code> means "unknown/absent," and SQL never considers an unknown value equal to anything, even another unknown value. The only correct way to check is <code>WHERE amount IS NULL</code>.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>4. Technical vocabulary</h2>
-<p>Flip each card before the practice activities below.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>INNER JOIN</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>INNER JOIN</strong><br>Combines two tables and keeps only the rows where the join condition finds a match on both sides.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>LEFT JOIN</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>LEFT JOIN</strong><br>Keeps every row from the left (first-named) table, matched or not, filling unmatched right-side columns with NULL.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>join condition</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Join condition</strong><br>The <code>ON</code> clause that says which column in one table has to equal which column in the other for two rows to be combined.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>left table</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Left table</strong><br>The table named right after <code>FROM</code>, before the word <code>JOIN</code>. In a LEFT JOIN, this is the table every row is guaranteed to come from.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>matched row</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Matched row</strong><br>A row where the join condition found a real value on both sides that are equal to each other.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>NULL</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>NULL</strong><br>SQL's way of representing "no value here" — not zero, not an empty string, and never equal to anything when compared with <code>=</code>.</span></button>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>5. Predict the result table: the donor list</h2>
-<p>Same two tables from the introduction. Predict each answer before checking.</p>
+<h2>1. Two tables, two questions</h2>
+<p>A <em>charity</em> is a group that raises money to help people. A <em>supporter</em> is someone on Bright Path's mailing list, and a <em>donation</em> is one gift of money. Here are the two tables:</p>
 <div class="jt-side-by-side">
 <div class="jt-wrap"><table class="jt-table"><caption>supporters</caption>
 <tr><th>id</th><th>name</th></tr>
@@ -211,176 +63,263 @@ LEFT JOIN donations AS d
 <tr><td>103</td><td>Jo</td></tr>
 </table></div>
 <div class="jt-wrap"><table class="jt-table"><caption>donations</caption>
-<tr><th>supporter_id</th><th>amount</th></tr>
-<tr><td>101</td><td>$50</td></tr>
-<tr><td>102</td><td>$75</td></tr>
+<tr><th>donation_id</th><th>supporter_id</th><th>amount</th></tr>
+<tr><td>1</td><td>101</td><td>50</td></tr>
+<tr><td>2</td><td>102</td><td>75</td></tr>
+<tr><td>3</td><td>102</td><td>40</td></tr>
 </table></div>
 </div>
+<p>The staff ask two questions. "Show me every gift and who gave it." And: "Show me every supporter, gift or not, so we know who to call." Both need the two tables combined, but in different ways. The picture shows both answers.</p>
+<svg class="mlrk-illustration" viewBox="0 0 590 430" role="img" aria-labelledby="joinTitle joinDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="joinTitle">Two source tables and two different join results</title>
+  <desc id="joinDesc">A supporters table with three rows: Priya 101, Marcus 102, Jo 103. A donations table with three rows: 101 gave 50, 102 gave 75, 102 gave 40. Dashed lines connect Priya to the first donation and Marcus to the second and third. Jo has no line. Below, the INNER JOIN result has three rows: Priya 50, Marcus 75, Marcus 40. The LEFT JOIN result has four rows: the same three, plus Jo with NULL for the amount.</desc>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="20" y="20" width="250" height="32" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="145" y="41" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">supporters</text>
+    <rect x="20" y="52" width="250" height="112" fill="#FFFCF7" stroke="#264326" stroke-width="1.5"/>
+    <line x1="90" y1="52" x2="90" y2="164" stroke="#264326" stroke-width="1"/>
+    <line x1="20" y1="80" x2="270" y2="80" stroke="#264326" stroke-width="1"/>
+    <line x1="20" y1="108" x2="270" y2="108" stroke="#264326" stroke-width="1"/>
+    <line x1="20" y1="136" x2="270" y2="136" stroke="#264326" stroke-width="1"/>
+    <g font-size="14" fill="#261F1D" font-weight="700"><text x="28" y="71">id</text><text x="98" y="71">name</text></g>
+    <g font-size="14" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
+      <text x="28" y="99">101</text><text x="98" y="99">Priya</text>
+      <text x="28" y="127">102</text><text x="98" y="127">Marcus</text>
+      <text x="28" y="155">103</text><text x="98" y="155">Jo</text>
+    </g>
 
-<div class="mlrk-card" id="card-s1inner"><p><strong>How many rows does this return?</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT s.name, d.amount FROM supporters s
-INNER JOIN donations d ON s.id = d.supporter_id;</div></div>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="1">1</button>
-<div id="s1innerfb" class="mlrk-feedback" tabindex="-1"></div></div>
+    <rect x="320" y="20" width="250" height="32" rx="8" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="445" y="41" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">donations</text>
+    <rect x="320" y="52" width="250" height="112" fill="#FFFCF7" stroke="#2274B5" stroke-width="1.5"/>
+    <line x1="450" y1="52" x2="450" y2="164" stroke="#2274B5" stroke-width="1"/>
+    <line x1="320" y1="80" x2="570" y2="80" stroke="#2274B5" stroke-width="1"/>
+    <line x1="320" y1="108" x2="570" y2="108" stroke="#2274B5" stroke-width="1"/>
+    <line x1="320" y1="136" x2="570" y2="136" stroke="#2274B5" stroke-width="1"/>
+    <g font-size="14" fill="#261F1D" font-weight="700"><text x="328" y="71">supporter_id</text><text x="458" y="71">amount</text></g>
+    <g font-size="14" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
+      <text x="328" y="99">101</text><text x="458" y="99">50</text>
+      <text x="328" y="127">102</text><text x="458" y="127">75</text>
+      <text x="328" y="155">102</text><text x="458" y="155">40</text>
+    </g>
 
-<div class="mlrk-card" id="card-s1left" style="margin-top:1rem"><p><strong>Now the exact same query, but with <code>LEFT JOIN</code> instead of <code>INNER JOIN</code>. How many rows does it return?</strong></p>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<div id="s1leftfb" class="mlrk-feedback" tabindex="-1"></div></div>
+    <line x1="270" y1="94" x2="320" y2="94" stroke="#83671C" stroke-width="2" stroke-dasharray="5 4"/>
+    <line x1="270" y1="122" x2="320" y2="122" stroke="#83671C" stroke-width="2" stroke-dasharray="5 4"/>
+    <line x1="270" y1="122" x2="320" y2="150" stroke="#83671C" stroke-width="2" stroke-dasharray="5 4"/>
+    <text x="295" y="186" text-anchor="middle" font-size="14" fill="#83671C" font-weight="700">Jo: no match</text>
 
+    <rect x="20" y="214" width="250" height="32" rx="8" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
+    <text x="145" y="235" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">INNER JOIN result</text>
+    <rect x="20" y="246" width="250" height="112" fill="#FFFCF7" stroke="#83671C" stroke-width="1.5"/>
+    <line x1="160" y1="246" x2="160" y2="358" stroke="#83671C" stroke-width="1"/>
+    <line x1="20" y1="274" x2="270" y2="274" stroke="#83671C" stroke-width="1"/>
+    <line x1="20" y1="302" x2="270" y2="302" stroke="#83671C" stroke-width="1"/>
+    <line x1="20" y1="330" x2="270" y2="330" stroke="#83671C" stroke-width="1"/>
+    <g font-size="14" fill="#261F1D" font-weight="700"><text x="28" y="265">name</text><text x="168" y="265">amount</text></g>
+    <g font-size="14" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
+      <text x="28" y="293">Priya</text><text x="168" y="293">50</text>
+      <text x="28" y="321">Marcus</text><text x="168" y="321">75</text>
+      <text x="28" y="349">Marcus</text><text x="168" y="349">40</text>
+    </g>
+
+    <rect x="320" y="214" width="250" height="32" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="445" y="235" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">LEFT JOIN result</text>
+    <rect x="320" y="246" width="250" height="140" fill="#FFFCF7" stroke="#264326" stroke-width="1.5"/>
+    <line x1="460" y1="246" x2="460" y2="386" stroke="#264326" stroke-width="1"/>
+    <line x1="320" y1="274" x2="570" y2="274" stroke="#264326" stroke-width="1"/>
+    <line x1="320" y1="302" x2="570" y2="302" stroke="#264326" stroke-width="1"/>
+    <line x1="320" y1="330" x2="570" y2="330" stroke="#264326" stroke-width="1"/>
+    <line x1="320" y1="358" x2="570" y2="358" stroke="#264326" stroke-width="1"/>
+    <g font-size="14" fill="#261F1D" font-weight="700"><text x="328" y="265">name</text><text x="468" y="265">amount</text></g>
+    <g font-size="14" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
+      <text x="328" y="293">Priya</text><text x="468" y="293">50</text>
+      <text x="328" y="321">Marcus</text><text x="468" y="321">75</text>
+      <text x="328" y="349">Marcus</text><text x="468" y="349">40</text>
+      <text x="328" y="377" font-style="italic" fill="#327A5F">Jo</text><text x="468" y="377" font-style="italic" fill="#327A5F">NULL</text>
+    </g>
+    <text x="295" y="418" text-anchor="middle" font-size="14" fill="#261F1D">INNER keeps matches only. LEFT keeps every supporter.</text>
+  </g>
+</svg>
+<p>This matters because picking the wrong join causes no error. The report just quietly leaves out the people you most needed to see. You already know how to <code>SELECT</code> from one table, filter with <code>WHERE</code>, and sort with <code>ORDER BY</code>. Now you'll combine two tables in one query.</p>
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what psql prints when you type <code>psql -d brightpath -f name.sql</code> in the terminal, where <code>brightpath</code> is the database name.</p>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. Recall</h2>
+<p>Joins lean on two things you already know: filtering with <code>WHERE</code>, and foreign keys.</p>
+<div class="mlrk-card" id="card-where"><p><strong>The <code>donations</code> table above has amounts 50, 75, and 40. How many rows does <code>WHERE amount &gt; 50</code> keep?</strong></p>
+<button type="button" class="mlrk-choice" data-a="one">1 row: the 75</button>
+<button type="button" class="mlrk-choice" data-a="two">2 rows: the 50 and the 75</button>
+<button type="button" class="mlrk-choice" data-a="three">All 3 rows</button>
+<div id="wherefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-fk" style="margin-top:.8rem"><p><strong>In <code>donations</code>, the column <code>supporter_id</code> holds the <code>id</code> of the supporter who gave. What is <code>supporter_id</code>?</strong></p>
+<button type="button" class="mlrk-choice" data-a="foreign">A foreign key: it holds another table's primary key.</button>
+<button type="button" class="mlrk-choice" data-a="primary">A second primary key for <code>donations</code>.</button>
+<button type="button" class="mlrk-choice" data-a="duplicate">A copy by mistake that should be deleted.</button>
+<div id="fkfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>3. INNER JOIN keeps the matches</h2>
+<p>A <strong>join</strong> combines rows from two tables into one result. The <strong>join condition</strong> is the <code>ON</code> part. It says which columns must be equal for two rows to go together. Here, <code>s.id = d.supporter_id</code> pairs each gift with the supporter who gave it. A row that finds a partner this way is a <strong>matched row</strong>.</p>
+<p><strong>INNER JOIN</strong> keeps only matched rows. A plain <code>JOIN</code> means the same thing.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>supporters AS s</code> gives the table a short nickname, <code>s</code>. Then <code>s.name</code> means "the <code>name</code> column from <code>supporters</code>." <code>ORDER BY d.donation_id</code> lists the gifts in the order they came in.</p></div>
+<div class="mlrk-card" id="card-inner"><p><strong>Predict:</strong> how many rows does <code>inner_join.sql</code> print?</p>
+<pre class="mlrk-code" data-file="inner_join.sql">SELECT s.name, d.amount
+FROM supporters AS s
+INNER JOIN donations AS d
+  ON s.id = d.supporter_id
+ORDER BY d.donation_id;</pre>
+<button type="button" class="mlrk-btn" data-run="inner_join.sql" data-after="q-inner" data-cmd="psql -d brightpath -f inner_join.sql"></button>
+<div class="mlrk-run" data-file="inner_join.sql" data-cmd="psql -d brightpath -f inner_join.sql" hidden><pre>  name  | amount
+--------+--------
+ Priya  |     50
+ Marcus |     75
+ Marcus |     40
+(3 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="three">3</button>
+<button type="button" class="mlrk-choice" data-a="two">2</button>
+<button type="button" class="mlrk-choice" data-a="four">4</button>
+<div id="innerfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>Marcus shows up twice because Marcus gave twice. A join makes one row for each match, so one person can fill many rows. Jo is missing, because no gift matches Jo's <code>id</code> of 103.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>4. LEFT JOIN keeps everyone on the left</h2>
+<p>The <strong>left table</strong> is the one named right after <code>FROM</code>, before the word <code>JOIN</code>. <strong>LEFT JOIN</strong> keeps every row of the left table, matched or not. When a left row has no match, the columns from the other table get <strong>NULL</strong>, which is SQL's word for "no value here." NULL is not zero and not an empty word.</p>
+<div class="mlrk-card" id="card-left"><p><strong>Predict:</strong> <code>left_join.sql</code> changes one word. How many rows does it print?</p>
+<pre class="mlrk-code" data-file="left_join.sql">SELECT s.name, d.amount
+FROM supporters AS s
+LEFT JOIN donations AS d
+  ON s.id = d.supporter_id
+ORDER BY d.donation_id;</pre>
+<button type="button" class="mlrk-btn" data-run="left_join.sql" data-after="q-left" data-cmd="psql -d brightpath -f left_join.sql"></button>
+<div class="mlrk-run" data-file="left_join.sql" data-cmd="psql -d brightpath -f left_join.sql" hidden><pre>  name  | amount
+--------+--------
+ Priya  |     50
+ Marcus |     75
+ Marcus |     40
+ Jo     |
+(4 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="four">4</button>
+<button type="button" class="mlrk-choice" data-a="three">3</button>
+<button type="button" class="mlrk-choice" data-a="five">5</button>
+<div id="leftfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>Jo is back, at the bottom. Jo has no <code>donation_id</code>, and PostgreSQL sorts rows with no value last.</p>
+
+<h3>What is in Jo's amount?</h3>
+<ol class="mlrk-steplist">
+  <li>Look at Jo's row in the <code>left_join.sql</code> output. The <code>amount</code> spot looks empty.</li>
+  <li>Type the SQL word for "no value here." It is one word, four letters. Capital letters or not, either is fine.</li>
+  <li>Press <strong>Check</strong>. You get 2 tries.</li>
+</ol>
 <div class="mlrk-fillblank">
-  <label for="s1blank">Type what appears in the <code>amount</code> column for Jo's row in the LEFT JOIN result:</label>
-  <input type="text" id="s1blank" autocomplete="off">
-  <button type="button" id="s1blankcheck" class="mlrk-btn">Check</button>
+  <label for="joblank">Jo's amount is:</label>
+  <input type="text" id="joblank" autocomplete="off">
+  <button type="button" id="joblankcheck" class="mlrk-btn">Check</button>
 </div>
-<div id="s1blankfb" class="mlrk-feedback" tabindex="-1"></div>
+<div id="joblankfb" class="mlrk-feedback" tabindex="-1"></div>
 
-<div class="mlrk-code" style="margin-top:1rem"><div id="s1screen" class="mlrk-screen">-- Results appear here once you've answered both questions above.</div></div>
+<div class="mlrk-card" id="card-count" style="margin-top:1rem"><p><strong>Bright Path now has 500 supporters. The LEFT JOIN version returns 500 rows, and the INNER JOIN version returns 320. What is the most likely reason?</strong></p>
+<button type="button" class="mlrk-choice" data-a="never">180 supporters have never given. INNER JOIN drops them, and LEFT JOIN keeps them with NULL amounts.</button>
+<button type="button" class="mlrk-choice" data-a="dup">LEFT JOIN copied 180 rows by mistake.</button>
+<button type="button" class="mlrk-choice" data-a="broken">The tables are broken, since both joins should return the same count.</button>
+<div id="countfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Predict the result table: a second scenario</h2>
-<p>A neighborhood library tracks its <code>members</code> and their <code>checkouts</code>. Ben has never checked out a book. Chen has checked out two.</p>
-<div class="jt-side-by-side">
-<div class="jt-wrap"><table class="jt-table"><caption>members</caption>
-<tr><th>member_id</th><th>name</th></tr>
-<tr><td>201</td><td>Amara</td></tr>
-<tr><td>202</td><td>Ben</td></tr>
-<tr><td>203</td><td>Chen</td></tr>
-</table></div>
-<div class="jt-wrap"><table class="jt-table"><caption>checkouts</caption>
-<tr><th>member_id</th><th>book_title</th></tr>
-<tr><td>201</td><td>Beloved</td></tr>
-<tr><td>203</td><td>Dune</td></tr>
-<tr><td>203</td><td>Kindred</td></tr>
-</table></div>
-</div>
-
-<div class="mlrk-card" id="card-s2inner"><p><strong>How many rows does <code>members INNER JOIN checkouts</code> (matched on <code>member_id</code>) return?</strong></p>
-<details class="mlrk-hint"><summary>Need a hint?</summary><p>Chen has two rows in <code>checkouts</code>, so the join condition finds two separate matches for her — that's two rows in the result, not one, even though Chen is one person.</p></details>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<div id="s2innerfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-s2left" style="margin-top:1rem"><p><strong>How many rows does the LEFT JOIN version return?</strong></p>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="5">5</button>
-<div id="s2leftfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-fillblank">
-  <label for="s2blank">Type what appears in the <code>book_title</code> column for Ben's row in the LEFT JOIN result:</label>
-  <input type="text" id="s2blank" autocomplete="off">
-  <button type="button" id="s2blankcheck" class="mlrk-btn">Check</button>
-</div>
-<div id="s2blankfb" class="mlrk-feedback" tabindex="-1"></div>
-
-<div class="mlrk-code" style="margin-top:1rem"><div id="s2screen" class="mlrk-screen">-- Results appear here once you've answered both questions above.</div></div>
-<p class="mlrk-small">Chen appearing twice isn't a bug — it's two real, correct checkout records. A join never invents rows; it only ever reflects how many real matches actually exist.</p>
+<h2>5. Find the supporters who haven't given</h2>
+<p>To call the people who haven't given, keep only the LEFT JOIN rows where the amount is NULL. Here is a first try.</p>
+<div class="mlrk-card" id="card-eqnull"><p><strong>Predict:</strong> what does <code>equals_null.sql</code> print?</p>
+<pre class="mlrk-code" data-file="equals_null.sql">SELECT s.name, d.amount
+FROM supporters AS s
+LEFT JOIN donations AS d
+  ON s.id = d.supporter_id
+WHERE d.amount = NULL;</pre>
+<button type="button" class="mlrk-btn" data-run="equals_null.sql" data-after="q-eqnull" data-cmd="psql -d brightpath -f equals_null.sql"></button>
+<div class="mlrk-run" data-file="equals_null.sql" data-cmd="psql -d brightpath -f equals_null.sql" hidden><pre> name | amount
+------+--------
+(0 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="zero">No rows at all</button>
+<button type="button" class="mlrk-choice" data-a="jo">One row: Jo</button>
+<button type="button" class="mlrk-choice" data-a="error">An error message</button>
+<div id="eqnullfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>SQL never counts NULL as equal to anything, not even another NULL, so <code>= NULL</code> is never true. It gives no error, just no rows. The rule: test for a missing value with <code>IS NULL</code>.</p>
+<pre class="mlrk-code" data-file="no_gift_yet.sql">SELECT s.name, d.amount
+FROM supporters AS s
+LEFT JOIN donations AS d
+  ON s.id = d.supporter_id
+WHERE d.amount IS NULL;</pre>
+<div class="mlrk-run" data-file="no_gift_yet.sql" data-cmd="psql -d brightpath -f no_gift_yet.sql"><pre> name | amount
+------+--------
+ Jo   |
+(1 row)</pre></div>
 </section>
 
 <section class="mlrk-section">
-<h2>7. Classify: does this row survive the join?</h2>
-<p>Back to Bright Path's donor list. Drag each fact into the zone that describes where it shows up, then self-check.</p>
-<div id="dragarea">
-<div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">Priya's row (she has a donation on file)</span>
-  <span id="chip2" class="mlrk-draggable">Marcus's row (he has a donation on file)</span>
-  <span id="chip3" class="mlrk-draggable">Jo's row (she has no donation on file)</span>
-</div>
-<div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>Appears in BOTH the INNER and LEFT result</strong></p><div class="mlrk-dropzone" id="zoneBoth"></div></div>
-  <div><p class="mlrk-small"><strong>Appears ONLY in the LEFT result</strong></p><div class="mlrk-dropzone" id="zoneLeftOnly"></div></div>
-</div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
-<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-
-<div class="mlrk-card" id="card-truefalse" style="margin-top:1.2rem"><p><strong>True or False: a row can appear in an INNER JOIN result but NOT in the LEFT JOIN result built from the exact same tables and join condition.</strong></p>
-<button type="button" class="mlrk-choice" data-a="false">False</button>
-<button type="button" class="mlrk-choice" data-a="true">True</button>
-<div id="truefalsefb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>8. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about INNER JOIN and LEFT JOIN.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> Plain <code>JOIN</code> with no keyword in front of it means the same thing as <code>INNER JOIN</code>.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> The columns used in a join condition must have identical names in both tables.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A LEFT JOIN can never return fewer rows than the equivalent INNER JOIN.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> <code>WHERE amount = NULL</code> correctly finds every row with a missing amount.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<h2>6. Mixed check</h2>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE about INNER JOIN and LEFT JOIN.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A plain <code>JOIN</code> means the same thing as <code>INNER JOIN</code>.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> The two columns in a join condition must have the same name.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A LEFT JOIN never returns fewer rows than the INNER JOIN of the same tables.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> <code>WHERE amount = NULL</code> finds every row with a missing amount.</label>
+<p><button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button></p>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>9. Debugging a join that returns fewer rows than expected</h2>
-<p>You expected every supporter to show up in a report and only some did. Click the steps below, in the order you'd actually check them, then self-check.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="jointype"><span class="mlrk-order-num"></span> Confirm which join keyword you actually used — INNER or LEFT.</li>
-  <li class="mlrk-orderitem" data-step="condition"><span class="mlrk-order-num"></span> Re-read the join condition for a typo or a wrong column.</li>
-  <li class="mlrk-orderitem" data-step="sample"><span class="mlrk-order-num"></span> Pick one row you expected to see and check it by hand against the raw source tables.</li>
-  <li class="mlrk-orderitem" data-step="compare"><span class="mlrk-order-num"></span> Compare the total row count to what you'd predict from a small, known sample.</li>
+<h2>7. Wrap-up</h2>
+<ul>
+<li>A join combines two tables, and its <code>ON</code> condition says which rows go together. One row comes out for each match.</li>
+<li>INNER JOIN keeps matched rows only. LEFT JOIN keeps every left-table row and fills the gaps with NULL.</li>
+<li>Find the gaps with <code>IS NULL</code>, never <code>= NULL</code>.</li>
 </ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-
-<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem">
-<p><strong>This applies even when an AI assistant wrote the query.</strong> Asking an AI tool to draft a join is fine — trusting its output without checking it isn't. The same habit practiced above (picking one row you know the right answer for, and checking it by hand against the source tables) is exactly how you'd verify an AI-written join actually did what you asked before you rely on it for anything real.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>10. Watch: joins, visually</h2>
-<p>As you watch, notice how the video builds the two tables from scratch and writes the INNER JOIN first before changing a single word to get the LEFT JOIN — that's the same "change one word, get a different set of rows" idea from section 3.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=tgx3hFGi_mc" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one moment in the video where the LEFT JOIN result surprised you, or matched exactly what you already expected?</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>11. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>"What's the difference between an INNER JOIN and a LEFT JOIN, and when would you use each?" is one of the single most commonly asked SQL questions in data interviews, at every level from first internship to senior analyst. Interviewers ask it because it's a fast, reliable way to tell whether a candidate has actually written real joins against real data, or only memorized the definitions.</p>
-<p>A strong answer names the mechanical difference (matched-only vs. every-left-row-plus-NULL) <em>and</em> gives a real reason to choose one over the other — "I'd use LEFT JOIN here because I specifically need to find the supporters who haven't donated yet, and INNER JOIN would hide exactly those rows." Naming a real use case is what separates a memorized definition from a demonstrated skill.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> you LEFT JOIN a <code>customers</code> table (1,000 rows) with an <code>orders</code> table on customer id, and get back 1,000 rows. The equivalent INNER JOIN on the same tables returns only 640 rows. What's the most likely explanation?</p>
-<button type="button" class="mlrk-choice" data-a="never">360 customers have never placed an order, so INNER JOIN drops them and LEFT JOIN keeps them with NULL order columns.</button>
-<button type="button" class="mlrk-choice" data-a="dup">The LEFT JOIN duplicated 360 rows by accident.</button>
-<button type="button" class="mlrk-choice" data-a="keys">The two tables must have different primary key types.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Summary &amp; critical thinking</h2>
-<p>Two ideas carried this whole reading: a join needs a condition connecting two tables on matching values, and the join type you pick decides what happens to a row on one side that has no match at all — INNER JOIN drops it, LEFT JOIN keeps it and fills the gap with NULL.</p>
-
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a food delivery app has a <code>drivers</code> table and a <code>deliveries</code> table. Management wants a list of every driver who has NEVER completed a single delivery, so they can follow up. Which approach gets there?</p>
-<button type="button" class="mlrk-choice" data-a="leftnull">LEFT JOIN drivers to deliveries, then filter for rows where the deliveries columns are NULL.</button>
-<button type="button" class="mlrk-choice" data-a="inner">INNER JOIN drivers to deliveries — the drivers with no matches will be the only ones left.</button>
-<button type="button" class="mlrk-choice" data-a="leftnoeq">LEFT JOIN drivers to deliveries, then filter with <code>WHERE delivery_id = NULL</code>.</button>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> Bright Path also has a <code>tutors</code> table and a <code>classes</code> table. Staff want every tutor listed, including tutors who don't teach a class yet. Which query fits?</p>
+<button type="button" class="mlrk-choice" data-a="left"><code>tutors</code> LEFT JOIN <code>classes</code>, with <code>tutors</code> named first after <code>FROM</code></button>
+<button type="button" class="mlrk-choice" data-a="inner"><code>tutors</code> INNER JOIN <code>classes</code></button>
+<button type="button" class="mlrk-choice" data-a="eq"><code>tutors</code> INNER JOIN <code>classes</code>, then <code>WHERE class_id = NULL</code></button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<label for="ownwords"><strong>In your own words:</strong> describe a real situation (from a job, a project, or daily life) where you'd specifically want "everyone, gaps included" instead of "only the matches." What would go wrong if you used the other join type by mistake?</label>
-<textarea id="ownwords" class="mlrk-response" data-save placeholder="Try starting with: I'd want every record from..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+<p><strong>In interviews:</strong> "What is the difference between INNER JOIN and LEFT JOIN?" is one of the most common SQL questions, and a strong answer gives a real reason to pick one, like finding supporters who haven't given yet.</p>
+<p><strong>Where this goes next:</strong> a join repeats a supporter once per gift, so the next step is collapsing those rows back to one per supporter before you count or total them.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>13. Thinking ahead</h2>
-<p>Section 6's library scenario had Chen show up twice in the joined result, because she genuinely had two checkouts. That's correct and expected, but it also means counting rows straight out of a join doesn't always tell you what you think it does. The moment you start summarizing a joined result (how many books did each member check out, how much has each supporter given in total), you have to account for the fact that a join can multiply rows for anything with more than one match on the "many" side. Holding that in mind now makes the next skill, collapsing those rows back down per real-world entity before counting or totaling them, much easier to reason about.</p>
+<h2>8. Reflection</h2>
+<label for="ownwords"><strong>Your own example:</strong> describe a situation where you'd want "everyone, gaps included" instead of "only the matches." What would go wrong with the other join?</label>
+<ol class="mlrk-steplist">
+  <li>Write 2 or 3 sentences, at least 10 words. The counter under the box tells you when it counts.</li>
+  <li>Try starting with: "I'd want everyone when..."</li>
+</ol>
+<textarea id="ownwords" class="mlrk-response" data-save placeholder="I'd want everyone when..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
 </section>
 
 <section class="mlrk-section">
-<h2>14. Your score &amp; keep a copy of your work</h2>
+<h2>9. Key terms review</h2>
+<p>Flip each card to check that you can explain the term.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>INNER JOIN</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>INNER JOIN</strong><br>Combines two tables and keeps only the rows where the join condition finds a match.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>LEFT JOIN</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>LEFT JOIN</strong><br>Keeps every row of the left table, matched or not, and fills unmatched columns with NULL.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Join condition</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Join condition</strong><br>The <code>ON</code> part of a join: which column in one table must equal which column in the other.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Left table</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Left table</strong><br>The table named right after <code>FROM</code>. A LEFT JOIN keeps all of its rows.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Matched row</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Matched row</strong><br>A row where the join condition found equal values on both sides.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>NULL</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>NULL</strong><br>"No value here." Not zero, not empty text, and never equal to anything. Test it with <code>IS NULL</code>.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Go further (optional)</h2>
+<p>This video is optional and isn't part of the time estimate or your score. As you watch, notice that changing one word, INNER to LEFT, changes which rows come back.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/tgx3hFGi_mc" title="SQL joins, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=tgx3hFGi_mc" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -477,176 +416,94 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-orderby", buttonSelector:"#card-orderby .mlrk-choice", feedbackSelector:"#orderbyfb", correct:"sorts",
-    feedback:{sorts:"ORDER BY only changes the order rows appear in. It never adds or removes rows.",
-              filters:"That's what WHERE does. ORDER BY only re-arranges rows that already passed any filtering.",
-              groups:"That's closer to GROUP BY. ORDER BY doesn't combine rows together, it just sorts them."}});
-
-  K.quiz({id:"q-where", buttonSelector:"#card-where .mlrk-choice", feedbackSelector:"#wherefb", correct:"75only",
-    feedback:{"75only":"Only 75 is strictly greater than 50. 50 itself doesn't satisfy a strict > comparison, and 20 is smaller.",
-              "75and20":"20 is less than 50, so it fails the amount > 50 condition. Only 75 passes.",
-              all:"50 fails a strict > 50 comparison (it isn't greater than itself), so not all three rows qualify."}});
+  K.quiz({id:"q-where", buttonSelector:"#card-where .mlrk-choice", feedbackSelector:"#wherefb", correct:"one",
+    feedback:{one:"Right. Only 75 is greater than 50. The 50 is equal, not greater, and 40 is smaller.",
+              two:"50 > 50 is false, because 50 is equal to 50, not greater. Only the 75 stays.",
+              three:"WHERE drops rows where the condition is false. 50 and 40 are not greater than 50."}});
 
   K.quiz({id:"q-fk", buttonSelector:"#card-fk .mlrk-choice", feedbackSelector:"#fkfb", correct:"foreign",
-    feedback:{foreign:"A foreign key stores another table's primary key value, which is exactly the relationship a join condition relies on.",
-              primary:"A table can only have one primary key, and supporter_id doesn't uniquely identify a row in donations by itself.",
-              duplicate:"This is a deliberate, meaningful column: it's what makes it possible to connect a donation back to who gave it."}});
+    feedback:{foreign:"Right. supporter_id holds a value from supporters.id, so each gift points at one supporter.",
+              primary:"donations has its own primary key, donation_id. supporter_id can repeat, since Marcus gave twice.",
+              duplicate:"It isn't a copy. It is the link that says who gave each gift."}});
 
-  K.quiz({id:"q-s1inner", buttonSelector:"#card-s1inner .mlrk-choice", feedbackSelector:"#s1innerfb", correct:"2",
-    feedback:{"2":"Priya and Marcus both have matching donation rows. Jo has none, so INNER JOIN drops her entirely: 2 rows.",
-              "3":"That's the total number of supporters, but INNER JOIN only keeps rows with a real match on both sides.",
-              "1":"Two supporters have a matching donation row (Priya and Marcus), not just one."},
-    onDone(){revealS1()}});
+  K.quiz({id:"q-inner", buttonSelector:"#card-inner .mlrk-choice", feedbackSelector:"#innerfb", correct:"three",
+    feedback:{three:"Right. Each of the 3 gifts matches one supporter, so 3 rows. Jo has no gift, so no row.",
+              two:"Two people gave, but Marcus gave twice. A join makes one row per match, not one per person.",
+              four:"4 would include Jo. INNER JOIN keeps matched rows only, and no gift matches Jo."}});
 
-  K.quiz({id:"q-s1left", buttonSelector:"#card-s1left .mlrk-choice", feedbackSelector:"#s1leftfb", correct:"3",
-    feedback:{"3":"LEFT JOIN keeps every row from supporters. Priya and Marcus keep their real amounts; Jo's row stays too, with NULL.",
-              "2":"That's the INNER JOIN count. LEFT JOIN adds Jo's row back in with NULL instead of dropping it.",
-              "4":"There are only 3 supporters total, so the LEFT JOIN result can't have more than 3 rows here."},
-    onDone(){revealS1()}});
+  K.quiz({id:"q-left", buttonSelector:"#card-left .mlrk-choice", feedbackSelector:"#leftfb", correct:"four",
+    feedback:{four:"Right. The 3 matched rows, plus Jo with no match, kept because supporters is the left table.",
+              three:"That is the INNER JOIN count. LEFT JOIN also keeps Jo, who has no match.",
+              five:"Jo gets one row with NULL, not two. The other rows are the same 3 matches."}});
 
-  K.Scoring.register("q-s1blank",1,"quiz");
-  let s1Attempts=0, s1Done=false;
-  $("#s1blankcheck").addEventListener("click",()=>{
-    if(s1Done) return;
-    s1Attempts++;
-    const ok = $("#s1blank").value.trim().toLowerCase()==="null";
-    const fb=$("#s1blankfb");
-    if(ok){
-      K.Scoring.award("q-s1blank", s1Attempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> There's no matching donation row for Jo, so the amount column comes back as NULL.";
-      s1Done=true;
-    } else if(s1Attempts>=2){
-      K.Scoring.award("q-s1blank",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The value is <code>NULL</code>.";
-      s1Done=true;
-    } else {
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> One more try.";
-    }
-    fb.setAttribute("tabindex","-1");fb.focus();
-  });
+  K.quiz({id:"q-count", buttonSelector:"#card-count .mlrk-choice", feedbackSelector:"#countfb", correct:"never",
+    feedback:{never:"Right. 500 minus 320 is 180 supporters with no match. LEFT JOIN keeps them, INNER JOIN drops them.",
+              dup:"LEFT JOIN doesn't copy rows by mistake. It adds one row per unmatched supporter, with NULL amounts.",
+              broken:"Different counts are normal whenever some left rows have no match, like Jo."}});
 
-  function revealS1(){
-    $("#s1screen").textContent = `SELECT s.name, d.amount FROM supporters s
-INNER JOIN donations d ON s.id = d.supporter_id;
-[Output: 2 rows]
-Priya   | 50
-Marcus  | 75
+  K.quiz({id:"q-eqnull", buttonSelector:"#card-eqnull .mlrk-choice", feedbackSelector:"#eqnullfb", correct:"zero",
+    feedback:{zero:"Right. = NULL is never true, so WHERE drops every row, and no error warns you.",
+              jo:"It feels like it should find Jo, but NULL is never equal to anything, so = NULL is never true.",
+              error:"SQL accepts this query without an error. It just keeps no rows, because = NULL is never true."}});
 
-SELECT s.name, d.amount FROM supporters s
-LEFT JOIN donations d ON s.id = d.supporter_id;
-[Output: 3 rows]
-Priya   | 50
-Marcus  | 75
-Jo      | NULL`;
-  }
-
-  K.quiz({id:"q-s2inner", buttonSelector:"#card-s2inner .mlrk-choice", feedbackSelector:"#s2innerfb", correct:"3",
-    feedback:{"3":"Amara has one match, Chen has two (Dune and Kindred). Ben has none. That's 1 + 2 = 3 matched rows.",
-              "2":"Chen alone contributes two rows to the result, since she has two separate checkout records.",
-              "4":"Ben has zero checkouts, so INNER JOIN drops him. Only Amara's 1 plus Chen's 2 make it in."},
-    onDone(){revealS2()}});
-
-  K.quiz({id:"q-s2left", buttonSelector:"#card-s2left .mlrk-choice", feedbackSelector:"#s2leftfb", correct:"4",
-    feedback:{"4":"The 3 INNER JOIN rows (Amara, Chen, Chen) plus Ben's row with a NULL book_title: 4 total.",
-              "3":"That's the INNER JOIN count. LEFT JOIN adds Ben's row back with NULL instead of dropping it.",
-              "5":"There's no third checkout row hiding anywhere to account for a 5th row here."},
-    onDone(){revealS2()}});
-
-  K.Scoring.register("q-s2blank",1,"quiz");
-  let s2Attempts=0, s2Done=false;
-  $("#s2blankcheck").addEventListener("click",()=>{
-    if(s2Done) return;
-    s2Attempts++;
-    const ok = $("#s2blank").value.trim().toLowerCase()==="null";
-    const fb=$("#s2blankfb");
-    if(ok){
-      K.Scoring.award("q-s2blank", s2Attempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> Ben has no checkout row to match, so book_title comes back as NULL.";
-      s2Done=true;
-    } else if(s2Attempts>=2){
-      K.Scoring.award("q-s2blank",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The value is <code>NULL</code>.";
-      s2Done=true;
-    } else {
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> One more try.";
-    }
-    fb.setAttribute("tabindex","-1");fb.focus();
-  });
-
-  function revealS2(){
-    $("#s2screen").textContent = `SELECT m.name, c.book_title FROM members m
-INNER JOIN checkouts c ON m.member_id = c.member_id;
-[Output: 3 rows]
-Amara | Beloved
-Chen  | Dune
-Chen  | Kindred
-
-SELECT m.name, c.book_title FROM members m
-LEFT JOIN checkouts c ON m.member_id = c.member_id;
-[Output: 4 rows]
-Amara | Beloved
-Chen  | Dune
-Chen  | Kindred
-Ben   | NULL`;
-  }
-
-  K.dragDrop("#dragarea", "act-drag-classify");
-  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneBoth", label:"Priya's row (has a donation)", expectedLabel:"Appears in BOTH the INNER and LEFT result"},
-    chip2:{expectedId:"zoneBoth", label:"Marcus's row (has a donation)", expectedLabel:"Appears in BOTH the INNER and LEFT result"},
-    chip3:{expectedId:"zoneLeftOnly", label:"Jo's row (no donation)", expectedLabel:"Appears ONLY in the LEFT result"}
-  }});
-
-  K.quiz({id:"q-truefalse", buttonSelector:"#card-truefalse .mlrk-choice", feedbackSelector:"#truefalsefb", correct:"false", maxAttempts:1,
-    feedback:{false:"Every row an INNER JOIN returns has a real match, so a LEFT JOIN (same tables, same condition) always keeps it too. LEFT JOIN can only add unmatched rows, never remove matched ones.",
-              true:"LEFT JOIN keeps everything INNER JOIN keeps, plus unmatched left-table rows. It can't lose a matched row that INNER JOIN found."}});
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"left",
+    feedback:{left:"Right. tutors is the left table, so every tutor stays, and tutors with no class get NULL class columns.",
+              inner:"INNER JOIN drops tutors with no class, the very people staff asked about.",
+              eq:"INNER JOIN already dropped the tutors with no class, and = NULL is never true anyway."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"Plain JOIN with no keyword in front of it means the same thing as INNER JOIN.", correct:true,
-      hint:"Think back to section 3 — what did the plain JOIN keyword default to?",
-      explain:"Unqualified JOIN is shorthand for INNER JOIN in standard SQL."},
-    {value:"b", label:"The columns used in a join condition must have identical names in both tables.", correct:false,
-      hint:"Look back at the supporters/donations example: are id and supporter_id spelled the same?",
-      explain:"The join condition compares values, not column names — id and supporter_id matched fine despite being named differently."},
-    {value:"c", label:"A LEFT JOIN can never return fewer rows than the equivalent INNER JOIN.", correct:true,
-      hint:"This is the same idea tested in the true/false question above it.",
-      explain:"LEFT JOIN's result always contains the INNER JOIN's result, plus possibly more unmatched rows — never fewer."},
-    {value:"d", label:"WHERE amount = NULL correctly finds every row with a missing amount.", correct:false,
-      hint:"Revisit the callout in section 3 about comparing to NULL with =.",
-      explain:"= NULL never matches anything, even another NULL. IS NULL is the only correct way to check."}
+    {value:"a", label:"A plain JOIN means the same thing as INNER JOIN.", correct:true,
+      hint:"What does SQL assume when no word comes before JOIN?",
+      explain:"JOIN on its own is an INNER JOIN."},
+    {value:"b", label:"The two columns in a join condition must have the same name.", correct:false,
+      hint:"Look at the ON line in inner_join.sql.",
+      explain:"s.id = d.supporter_id joins two columns with different names. Only the values must match."},
+    {value:"c", label:"A LEFT JOIN never returns fewer rows than the INNER JOIN of the same tables.", correct:true,
+      hint:"LEFT JOIN keeps every matched row. What does it add?",
+      explain:"LEFT JOIN has all of INNER JOIN's rows, plus one for each unmatched left row."},
+    {value:"d", label:"WHERE amount = NULL finds every row with a missing amount.", correct:false,
+      hint:"What did equals_null.sql print?",
+      explain:"= NULL is never true, so it finds nothing. Use IS NULL."}
   ]});
 
-  K.orderSteps("#ordersteps", {id:"act-order-debug", correctOrder:["jointype","condition","sample","compare"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
   K.flipCards("#vocab", "act-flip-vocab");
-
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"tgx3hFGi_mc"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
   K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:10});
 
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"never",
-    feedback:{never:"That's exactly the pattern: LEFT JOIN keeps every customer, INNER JOIN only keeps ones with at least one order.",
-              dup:"A join doesn't duplicate rows by accident. Every row it produces reflects either a real match or, in a LEFT JOIN, a real absence of one.",
-              keys:"Mismatched key types would usually cause matches to fail entirely or an error, not this specific 1,000-vs-640 pattern."}});
-
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"leftnull",
-    feedback:{leftnull:"LEFT JOIN keeps every driver, matched or not, and the ones with no deliveries are exactly the rows where the deliveries columns come back NULL.",
-              inner:"INNER JOIN removes unmatched drivers entirely instead of keeping them — there'd be nothing left to identify as \"never delivered.\"",
-              leftnoeq:"Close, but = NULL never matches anything. The filter needs IS NULL, not = NULL."}});
+  K.Scoring.register("q-joblank",1,"quiz");
+  let joAttempts=0, joDone=false;
+  $("#joblankcheck").addEventListener("click",()=>{
+    if(joDone) return;
+    joAttempts++;
+    const v=$("#joblank").value.trim().toLowerCase().replace(/[`'"]/g,"");
+    const fb=$("#joblankfb");
+    if(v==="null"){
+      K.Scoring.award("q-joblank", joAttempts===1?1:0.5);
+      fb.className="mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML="<strong>Correct"+(joAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> Jo's amount is NULL. psql shows a NULL as an empty spot.";
+      joDone=true;
+    } else if(joAttempts>=2){
+      K.Scoring.award("q-joblank",0);
+      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> It is <code>NULL</code>, SQL's word for no value.";
+      joDone=true;
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML=(v==="0"||v==="zero")
+        ? "<strong>Not quite yet.</strong> Zero is a real amount. Jo gave nothing at all, so there is no value. Type SQL's four-letter word for that."
+        : "<strong>Not quite yet.</strong> Type the four-letter word from section 4 that means \"no value here.\"";
+    }
+    fb.setAttribute("tabindex","-1"); fb.focus();
+    if(joDone) K.markDone("q-joblank");
+  });
 
   const AI_PROMPTS = [
-    "Think of two lists you've personally kept that overlap but don't perfectly match, like a guest list and an RSVP list. Which join type would answer 'who hasn't RSVP'd yet'?",
-    "If you had to explain the difference between INNER JOIN and LEFT JOIN to a friend using something from daily life, what comparison would you reach for?",
-    "Where might 'only show me the matches' quietly hide a problem in something you've worked on, the way it hides Jo in this reading's example?"
+    "Think of a class roster and a list of turned-in homework. Which list should be the left table if a teacher wants to see who hasn't turned it in?",
+    "Picture a sports team list and a list of who came to practice. When would the coach want every player, even ones who never came?",
+    "When might a report that quietly leaves people out cause a real problem, like someone never getting a call back?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.style.display="block";
+    box.hidden=false;
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 

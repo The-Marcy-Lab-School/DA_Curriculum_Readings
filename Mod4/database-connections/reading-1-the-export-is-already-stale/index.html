@@ -21,9 +21,9 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>The Export Is Already Stale</h1>
-<p class="mlrk-lead">A file saved yesterday afternoon stopped being true the moment somebody placed the next order. The fix is to stop working from a saved file and let Python talk to the database directly, so the rows arrive fresh every time you run your code. Two libraries can do that. Both end at the same table in Python, and both come with two responsibilities nobody notices until they get skipped.</p>
+<p class="mlrk-lead">An online plant shop saved its orders table to a file yesterday at 5:02 PM. This morning an analyst used that file to count the orders still waiting to ship, and the number was wrong. Nothing in the code was broken. The file was just old. The fix is to let Python ask the live database directly.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~40–44 minutes</span>
+  <span class="mlrk-pill">~20–23 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -55,10 +55,8 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Introduction</h2>
-<p>Fernhaven is an online plant nursery. It grows houseplants in a warehouse, customers order them on its website, and the team packs and ships them out every day. Every order is one row in a table called <code>orders</code>, stored in a <strong>database</strong>: a program that holds an organization's data and answers questions about it. Fernhaven's database is <strong>PostgreSQL</strong>, one specific brand of database, usually shortened to Postgres.</p>
-
-<p>Yesterday at 5:02 PM, an analyst on the team exported that table to a <strong>CSV file</strong>, a plain text file with one line per row, and saved it to her laptop. She opened it in Python this morning to answer a simple question from the shipping lead: how many orders are still waiting to go out? The number she got was wrong, and nothing in her code was broken.</p>
+<h2>1. A saved file goes out of date</h2>
+<p>Fernhaven is an online plant shop. Every order is one row in an <code>orders</code> table, in a <strong>PostgreSQL</strong> database (often called "Postgres").</p>
 
 <svg class="mlrk-illustration svg-stale" viewBox="0 0 820 276" role="img" aria-labelledby="staleTitle staleDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="staleTitle">A saved CSV file compared with the live orders table at 9:15 in the morning</title>
@@ -84,49 +82,81 @@
   </g>
 </svg>
 
-<p>The file was correct at 5:02 PM. It was already out of date by 5:03. A saved export is a photograph of a table, and Fernhaven's table keeps changing after the photo is taken. Refreshing that file by hand every morning is a chore somebody will forget, and the day they forget, a real number goes out to a real person and nobody can tell it is stale by looking at it.</p>
-
-<div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> most analyst work is not one question asked once. It is the same question asked every day against data that moved overnight. That is why "connect to the database from Python" shows up in analyst job descriptions and why a very common interview prompt is some version of "walk me through how you would connect a script to a real database and pull the results into pandas." The interviewer is listening for three specific things, and two of them have nothing to do with getting the rows: where the password lives, and whether you gave the connection back when you were done.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to ask a database for rows with SQL, and you already know how to work with a table of data in pandas. What has been missing is the piece in the middle. This reading fills it in, so a query and a DataFrame become two ends of one line of code instead of two things joined by a file you saved by hand. Once that line exists, every habit built around it, including the safety ones, is the same whether the table has a thousand rows or a hundred million.</p>
-</div>
+<p>The file was right at 5:02 PM and behind by 5:03. Analysts ask the same questions every day, so a file someone must remember to re-save will sooner or later give a wrong number. You already know SQL and pandas. Connecting them means fresh rows every time the code runs.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall first</h2>
-<p>Three skills get leaned on later in this reading: looking a value up by name in a Python dictionary, knowing which block of code runs even after an error, and knowing what a set of raw values still needs before it can become a labeled table. Check each one before moving on.</p>
+<h2>2. Recall before you start</h2>
+<p>Looking up a value in a dict and catching an error with <code>try</code>/<code>except</code> are prerequisite skills for this reading. Check both before moving on.</p>
 
-<div class="mlrk-card" id="card-dict"><p><strong>Given the code below, what does the last line print?</strong></p>
-<div class="mlrk-code"><div class="mlrk-screen">settings = {"city": "Newark", "warehouse": "B"}
-
+<div class="mlrk-card" id="card-dict"><p><strong>Coding check:</strong> what does <code>settings.py</code> print?</p>
+<div class="mlrk-code" data-file="settings.py"><div class="mlrk-screen">settings = {"city": "Newark", "warehouse": "B"}
 print(settings["city"])</div></div>
-<button type="button" class="mlrk-choice" data-a="value">Newark</button>
-<button type="button" class="mlrk-choice" data-a="key">city</button>
-<button type="button" class="mlrk-choice" data-a="both">city: Newark</button>
+<button type="button" class="mlrk-btn" data-run="settings.py" data-after="q-dict"></button>
+<div class="mlrk-run" data-file="settings.py" hidden><pre>Newark</pre></div>
+<button type="button" class="mlrk-choice" data-a="value"><code>Newark</code></button>
+<button type="button" class="mlrk-choice" data-a="key"><code>city</code></button>
+<button type="button" class="mlrk-choice" data-a="both"><code>city: Newark</code></button>
 <div id="dictfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-finally" style="margin-top:.8rem"><p><strong>In a Python <code>try</code> statement, which block runs whether or not the code inside <code>try</code> raised an error?</strong></p>
-<button type="button" class="mlrk-choice" data-a="finally"><code>finally</code></button>
-<button type="button" class="mlrk-choice" data-a="except"><code>except</code></button>
-<button type="button" class="mlrk-choice" data-a="else"><code>else</code></button>
-<div id="finallyfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-cols" style="margin-top:.8rem"><p>A query hands you back five rows of values and nothing else. No headers, no labels, just the values themselves. <strong>What else do you need in order to turn those values into a proper table in pandas?</strong></p>
-<button type="button" class="mlrk-choice" data-a="names">The column names, in the same order as the values.</button>
-<button type="button" class="mlrk-choice" data-a="count">The total number of rows in the table.</button>
-<button type="button" class="mlrk-choice" data-a="key">The name of the table the values came from.</button>
-<div id="colsfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">Nothing below changes how any of these work on their own. Each one turns up again in a place you might not expect it.</div>
+<div class="mlrk-card" id="card-try" style="margin-top:.8rem"><p><strong>Coding check:</strong> what does <code>try_number.py</code> print?</p>
+<div class="mlrk-code" data-file="try_number.py"><div class="mlrk-screen">try:
+    count = int("ten")
+    print("Count:", count)
+except ValueError:
+    print("That was not a number.")</div></div>
+<button type="button" class="mlrk-btn" data-run="try_number.py" data-after="q-try"></button>
+<div class="mlrk-run" data-file="try_number.py" hidden><pre>That was not a number.</pre></div>
+<button type="button" class="mlrk-choice" data-a="except"><code>That was not a number.</code></button>
+<button type="button" class="mlrk-choice" data-a="both"><code>Count: ten</code>, then <code>That was not a number.</code></button>
+<button type="button" class="mlrk-choice" data-a="crash">A <code>ValueError</code> message, and the program stops.</button>
+<div id="tryfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Concept overview: what a live connection actually is</h2>
-<p>Fernhaven's database is not on the analyst's laptop. It runs on a <strong>server</strong>, a computer that stays on all the time and holds the company's data for everyone. Python, on its own, has no idea how to talk to it. Python does not speak PostgreSQL.</p>
+<h2>3. The first way: a driver and a cursor</h2>
+<p>Fernhaven's database runs on a <strong>server</strong>, a computer that stays on all the time. Python needs a <strong>driver</strong> to talk to it: a library that speaks one specific database's language for you. The usual PostgreSQL driver is <code>psycopg2</code>.</p>
+<ul>
+<li>A <strong>connection</strong> is an open, live link between your running program and the database. It stays open until something closes it.</li>
+<li>A <strong>cursor</strong> is the <code>psycopg2</code> object you send SQL through and read rows back from. It works on top of an open connection.</li>
+</ul>
+<p>The files in this reading need a running database, so the Run button shows what each one prints against Fernhaven's real <code>orders</code> table.</p>
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>New in this file:</strong> <code>os.environ["DATABASE_URL"]</code> reads a setting called <code>DATABASE_URL</code> that your computer stores outside the file. Section 5 explains why. <code>cur.execute(sql)</code> sends the query, and <code>cur.fetchall()</code> brings back every matching row. <code>cur.description</code> has one entry per column, and the first item in each entry, <code>column[0]</code>, is that column's name.</p>
+</div>
+<p><strong>Predict:</strong> what does the first <code>print</code> in <code>open_orders_psycopg2.py</code> show?</p>
+<div class="mlrk-code" data-file="open_orders_psycopg2.py"><div class="mlrk-screen">import os
+import psycopg2
+import pandas as pd
 
-<p>So something has to translate. That something is a <strong>driver</strong>: a library whose entire job is speaking one specific database's own language on your behalf. For PostgreSQL and Python, the most widely used driver is called <code>psycopg2</code>. If you have ever installed a printer driver, it is the same idea in a different place. A driver is whatever knows how to talk to one particular piece of software or hardware so you do not have to.</p>
+sql = "SELECT order_id, plant, status FROM orders WHERE status = 'open' LIMIT 3"
 
-<p>Once the driver is installed, running one query looks like this from end to end.</p>
+conn = psycopg2.connect(os.environ["DATABASE_URL"])
+cur = conn.cursor()
+cur.execute(sql)
+rows = cur.fetchall()
+print(rows)
+
+cols = []
+for column in cur.description:
+    cols.append(column[0])
+
+open_orders = pd.DataFrame(rows, columns=cols)
+print(open_orders)
+conn.close()</div></div>
+<button type="button" class="mlrk-btn" data-run="open_orders_psycopg2.py" data-after="q-rows"></button>
+<div class="mlrk-run" data-file="open_orders_psycopg2.py" hidden><pre>[(5521, 'Snake plant', 'open'), (5524, 'Pothos', 'open'), (5530, 'Monstera', 'open')]
+   order_id        plant status
+0      5521  Snake plant   open
+1      5524       Pothos   open
+2      5530     Monstera   open</pre></div>
+<div class="mlrk-card" id="card-rows" style="margin-top:1rem"><p><strong>What does <code>print(rows)</code> show?</strong></p>
+<button type="button" class="mlrk-choice" data-a="tuples">A list with one tuple of values per row, and no column names.</button>
+<button type="button" class="mlrk-choice" data-a="table">A table with the column names <code>order_id</code>, <code>plant</code>, and <code>status</code> across the top.</button>
+<button type="button" class="mlrk-choice" data-a="sql">The SQL text, because the query has not run yet.</button>
+<div id="rowsfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div data-show-after="q-rows" hidden>
+<p>The driver sent back values with the labels stripped off. The <code>for</code> loop collected the column names, and <code>pd.DataFrame(rows, columns=cols)</code> put the two back together.</p>
 
 <svg class="mlrk-illustration svg-flow" viewBox="0 0 860 648" role="img" aria-labelledby="flowTitle flowDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="flowTitle">The five steps a single query passes through, from your Python script to a pandas DataFrame</title>
@@ -182,306 +212,210 @@ print(settings["city"])</div></div>
     <text x="40" y="624" font-size="17" fill="#261F1D">Closing it is your job, not the database's.</text>
   </g>
 </svg>
-
-<p>Three words in that picture are worth pinning down now, because they sound like the same thing and are not.</p>
-<ul>
-<li>A <strong>connection</strong> is the open link between your running Python program and the database. Opening one is not free. Postgres starts a real, separate process on the server for each connection you open, with its own slice of the server's memory.</li>
-<li>A <strong>cursor</strong> is the object you actually send SQL through and read rows back from, once a connection exists. One open connection can have several cursors running on it, which is exactly why they are two separate things.</li>
-<li>A <strong>tuple</strong> is Python's name for a small fixed group of values kept in order. Step 4 above hands back one tuple per row: the values, and only the values. The column names are not attached to them.</li>
-</ul>
-
-<div class="mlrk-callout mlrk-callout-red">
-<p><strong>The part people get wrong:</strong> a connection is a shared resource, not a private one. Your program is not the only thing connecting to Fernhaven's database. The website connects. The warehouse dashboard connects. Other analysts connect. A Postgres server has a fixed ceiling on how many connections can exist at once, and the common default setting is 100. Every connection you open and forget about is one that nobody else can use, and the server does not reclaim it for you just because your code moved on.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Technical vocabulary</h2>
-<p>Flip each card before the practice below.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>connection</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Connection</strong><br>An open, live link between your running Python program and a database. It stays open until something closes it.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>cursor</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Cursor</strong><br>The object you send SQL through and read rows back from. It runs on top of a connection that is already open.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>driver</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Driver</strong><br>A library whose job is speaking one specific database's own language for you. <code>psycopg2</code> is the common one for PostgreSQL.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>engine</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Engine</strong><br>SQLAlchemy's reusable connection manager for one database. It knows where the database is and hands out connections when something asks.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>environment variable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Environment variable</strong><br>A value your computer holds for a running program, stored outside the program's own files. A password kept here never gets committed to GitHub.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>tuple</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Tuple</strong><br>A small fixed group of Python values kept in order. A raw query result comes back as one tuple per row, with no column names attached.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>connection limit</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Connection limit</strong><br>The fixed number of connections a database server will allow at once. Past it, new requests are refused rather than slowed down.</span></button>
+<h2>4. The second way: an engine and one call</h2>
+<p><strong>SQLAlchemy</strong> is a Python toolkit for databases. Its <strong>engine</strong> is a reusable connection manager for one database: it knows where the database is and hands out a connection when you ask. Underneath, SQLAlchemy still uses <code>psycopg2</code>.</p>
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>New in this file:</strong> <code>from sqlalchemy import create_engine</code> brings in one name from a library. <code>with engine.connect() as connection:</code> works like <code>with open(...) as f:</code>. You borrow a connection, and it is given back when the indented block ends, even if something inside fails.</p>
 </div>
-</section>
-
-<section class="mlrk-section">
-<h2>5. The first path: the driver, up close</h2>
-<p>Here is the whole thing in one block. The shipping lead wants the orders that are still open, so the query filters on <code>status</code>.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">import os
-import psycopg2
+<p><strong>Predict:</strong> compared with the table <code>open_orders_psycopg2.py</code> printed, what does <code>open_orders_sqlalchemy.py</code> print?</p>
+<div class="mlrk-code" data-file="open_orders_sqlalchemy.py"><div class="mlrk-screen">import os
 import pandas as pd
+from sqlalchemy import create_engine
 
-sql = "SELECT * FROM orders WHERE status = 'open'"
-
-conn = psycopg2.connect(os.environ["DATABASE_URL"])
-cur = conn.cursor()
-
-cur.execute(sql)
-rows = cur.fetchall()
-cols = [d[0] for d in cur.description]
-
-open_orders = pd.DataFrame(rows, columns=cols)</div></div>
-
-<p>Reading it line by line:</p>
-<ol class="mlrk-steplist">
-  <li><code>os.environ</code> is a dictionary-style collection holding every <strong>environment variable</strong> your computer is currently keeping for this program. Looking up <code>"DATABASE_URL"</code> in it pulls out one string that says where the database is, who is connecting, and the password. That whole string lives outside this file, which is the entire point, and section 7 comes back to why.</li>
-  <li><code>psycopg2.connect(...)</code> opens the real link. From this moment there is one live connection sitting on Fernhaven's server with your name on it.</li>
-  <li><code>conn.cursor()</code> gives you the thing you actually send SQL through.</li>
-  <li><code>cur.execute(sql)</code> sends the query. <code>cur.fetchall()</code> brings every matching row back, as a list of tuples.</li>
-  <li><code>cur.description</code> is the cursor's own record of the query it just ran, one entry per column, and the first item in each entry is that column's name. So <code>[d[0] for d in cur.description]</code> reads as "give me each column's name."</li>
-  <li><code>pd.DataFrame(rows, columns=cols)</code> puts the values and the names back together into a real table.</li>
-</ol>
-
-<p>That last step is worth noticing, because it is work you did by hand. The driver handed back values with the labels stripped off, and you reattached them yourself. Hold onto that. The second path removes it.</p>
-
-<h3>Type the missing piece</h3>
-<p>The line below opens the connection without a password written anywhere in the file. Fill in what goes inside the square brackets, exactly as you would type it in real code, quotes included.</p>
-<div class="mlrk-code"><div class="mlrk-screen">conn = psycopg2.connect(os.environ[ ______________ ])</div></div>
-<div class="mlrk-fillblank">
-  <label for="envinput">Type what goes inside the square brackets:</label>
-  <input type="text" id="envinput" autocomplete="off" placeholder='"SOME_NAME"'>
-  <button type="button" id="envcheck" class="mlrk-btn">Check</button>
-</div>
-<div id="envfb" class="mlrk-feedback" tabindex="-1"></div>
-<details class="mlrk-hint"><summary>Need a hint?</summary>
-<p>It is a name being looked up in a dictionary-style collection, so it is a string in quotes. The name is the one used in the code block above this one, written in capital letters with an underscore in the middle.</p>
-</details>
-</section>
-
-<section class="mlrk-section">
-<h2>6. The second path: an engine, and one call</h2>
-<p><strong>SQLAlchemy</strong> is a Python toolkit for working with databases. The piece of it you meet here is the <strong>engine</strong>: an object that knows where one database lives and hands out connections when something asks for one. You build an engine once and reuse it.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">from sqlalchemy import create_engine
+sql = "SELECT order_id, plant, status FROM orders WHERE status = 'open' LIMIT 3"
 
 engine = create_engine(os.environ["DATABASE_URL"])
-
 with engine.connect() as connection:
-    open_orders_2 = pd.read_sql(sql, connection)
+    open_orders = pd.read_sql(sql, connection)
 
-print("Same table both ways?", open_orders.equals(open_orders_2))</div></div>
-
-<p>Same URL string. Same <code>sql</code> string. The cursor, the fetch, and the column-name reassembly all collapsed into <code>pd.read_sql(sql, connection)</code>, because pandas knows how to read from a SQLAlchemy connection directly and brings the column names along with the values.</p>
-
-<p>Two details in that block carry real weight:</p>
-<ul>
-<li>The <code>with</code> block is Python's way of saying "borrow this, and give it back automatically when the block ends." The connection is handed back to the engine on the last line of the block, whether the query worked or blew up. There is nothing to remember to close here.</li>
-<li>An engine is not a second, separate road to the database. Underneath, for PostgreSQL, SQLAlchemy is using <code>psycopg2</code>, the same driver as the first path. Your code sits on top, then SQLAlchemy, then the driver, then PostgreSQL. It is a stack, not a fork in the road.</li>
-</ul>
-
-<p><code>.equals()</code> is not a loose comparison. It checks the shape, the column names, and every column's data type. Printing <code>True</code> means the two paths produced genuinely identical tables, not merely similar-looking output.</p>
-
-<h3>Sort each line by the path it belongs to</h3>
-<p>Referring to the two code blocks in sections 5 and 6, drag each line into the path where you would actually write it, then use the self-check button.</p>
-<div id="dragarea">
-<div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable"><code>cur = conn.cursor()</code></span>
-  <span id="chip2" class="mlrk-draggable"><code>rows = cur.fetchall()</code></span>
-  <span id="chip3" class="mlrk-draggable"><code>engine = create_engine(...)</code></span>
-  <span id="chip4" class="mlrk-draggable"><code>pd.read_sql(sql, connection)</code></span>
-</div>
-<div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>You write this on the psycopg2 path</strong></p><div class="mlrk-dropzone" id="zoneDriver"></div></div>
-  <div><p class="mlrk-small"><strong>You write this on the SQLAlchemy path</strong></p><div class="mlrk-dropzone" id="zoneEngine"></div></div>
-</div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
-<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-
-<div class="mlrk-card" id="card-equals" style="margin-top:1.2rem"><p>Your script runs both paths against the same table and prints <code>Same table both ways? True</code>. <strong>What has that actually proved?</strong></p>
-<button type="button" class="mlrk-choice" data-a="identical">The two paths produced tables with the same shape, the same column names, and the same column types.</button>
-<button type="button" class="mlrk-choice" data-a="faster">That SQLAlchemy is the faster of the two paths.</button>
-<button type="button" class="mlrk-choice" data-a="closed">That both connections were closed properly.</button>
-<div id="equalsfb" class="mlrk-feedback" tabindex="-1"></div></div>
+print(open_orders)</div></div>
+<button type="button" class="mlrk-btn" data-run="open_orders_sqlalchemy.py" data-after="q-engine"></button>
+<div class="mlrk-run" data-file="open_orders_sqlalchemy.py" hidden><pre>   order_id        plant status
+0      5521  Snake plant   open
+1      5524       Pothos   open
+2      5530     Monstera   open</pre></div>
+<div class="mlrk-card" id="card-engine" style="margin-top:1rem"><p><strong>What does <code>open_orders_sqlalchemy.py</code> print?</strong></p>
+<button type="button" class="mlrk-choice" data-a="same">The same table, with the same column names, from one <code>pd.read_sql</code> call.</button>
+<button type="button" class="mlrk-choice" data-a="tuples">A list of tuples, because no line adds the column names.</button>
+<button type="button" class="mlrk-choice" data-a="numbers">A table with the columns named <code>0</code>, <code>1</code>, and <code>2</code>.</button>
+<div id="enginefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p data-show-after="q-engine" hidden>The cursor, the fetch, and the loop that collected names all turned into <code>pd.read_sql(sql, connection)</code>, because pandas reads from a SQLAlchemy connection directly and brings the column names along.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>7. Where the password lives</h2>
-<p>A connection needs credentials. Somebody has to say who is connecting and prove it. The tempting move is to type that straight into the file, because it works immediately:</p>
+<h2>5. Keep the password out of the file</h2>
+<p>A connection needs a password. The quick way is to type it into the file, and it works right away:</p>
+<div class="mlrk-code" data-file="hardcoded.py"><div class="mlrk-screen">import psycopg2
 
-<div class="mlrk-code"><div class="mlrk-screen">conn = psycopg2.connect("postgresql://analyst:Spring2026@fernhaven-db/store")</div></div>
+conn = psycopg2.connect("postgresql://analyst:Spring2026@fernhaven-db/store")</div></div>
+<p>Now the password is part of the file. Push it to GitHub and the password is on GitHub, and deleting the line later doesn't help, because git keeps old versions. An <strong>environment variable</strong> fixes this: a value your computer holds for a program, stored outside the code. You set <code>DATABASE_URL</code> once, the code reads it by name, and the password never appears in anything you commit.</p>
 
-<p>That line runs. It also means the password is now part of the file, and files get shared. Push that file to GitHub and the password is on GitHub. Deleting the line later does not help, because the old version of the file is still sitting in the project's history, and anyone who can read the project can read the history.</p>
-
-<p>The alternative is an <strong>environment variable</strong>: a value your computer holds for a running program, stored outside the program's own files. You set <code>DATABASE_URL</code> once on the machine where the code runs, the code reads it by name, and the secret itself never appears in anything you commit.</p>
-
-<div class="st-wrap"><table class="st-table"><caption>The same connection, two ways of getting the credential</caption>
-<tr><th></th><th>Password typed into the file</th><th>Password in an environment variable</th></tr>
-<tr><td>Does the script run?</td><td>Yes</td><td>Yes</td></tr>
-<tr><td>Safe to push to GitHub?</td><td>No</td><td>Yes</td></tr>
-<tr><td>Changing the password</td><td>Edit code, commit, review, deploy</td><td>Change one value on the machine</td></tr>
-<tr><td>Different database for testing</td><td>Edit the code every time</td><td>Same code, different value</td></tr>
-</table></div>
-
-<p>That third row is the part people underrate. When the credential lives outside the code, rotating it is a one-line change to a setting. When it lives inside the code, rotating it is a code change, a commit, and a review, so in practice it gets put off.</p>
-
-<div class="mlrk-callout mlrk-callout-gold">
-<p><strong>One honest limit:</strong> an environment variable is not encrypted. It is just a value the operating system holds for your program, and it can still end up in a log file or a crash report. What it genuinely buys you is that the secret is no longer inside the file you commit and share, which is the thing that actually goes wrong in real life. Larger teams add a dedicated secrets tool on top. This is the baseline everyone should already be at.</p>
+<h3>Your turn: fix <code>hardcoded.py</code></h3>
+<ol class="mlrk-steplist">
+<li>Type only what goes inside the parentheses of <code>psycopg2.connect( )</code>, so the address and password come from the environment.</li>
+<li>Use the same lookup that <code>open_orders_psycopg2.py</code> uses: <code>os.environ</code>, then the setting's name in quotes inside square brackets.</li>
+<li>Press <strong>Check</strong>. You get 2 tries. Single or double quotes both work. Why: the file then holds only the setting's name, never the password itself.</li>
+</ol>
+<div class="mlrk-fillblank">
+  <label for="envinput"><code>conn = psycopg2.connect(</code></label>
+  <input type="text" id="envinput" autocomplete="off" spellcheck="false">
+  <span><code>)</code></span>
 </div>
+<div class="mlrk-actions"><button type="button" id="envcheck" class="mlrk-btn">Check</button></div>
+<div id="envfb" class="mlrk-feedback" tabindex="-1"></div>
 
-<div class="mlrk-card" id="card-env"><p>A teammate says the typed-in password is fine because the repository is private. <strong>What is the strongest reason to move it out anyway?</strong></p>
-<button type="button" class="mlrk-choice" data-a="history">A repository's visibility can be changed, projects get copied, and the password stays in the history even after the line is deleted.</button>
+<div class="mlrk-card" id="card-env" style="margin-top:1.2rem"><p>A teammate says the typed-in password is fine because the GitHub repo is private. <strong>What is the best reason to move it out anyway?</strong></p>
+<button type="button" class="mlrk-choice" data-a="history">A repo can be made public or copied later, and the password stays in its history even after the line is deleted.</button>
 <button type="button" class="mlrk-choice" data-a="speed">Reading a value from the environment makes the connection open faster.</button>
-<button type="button" class="mlrk-choice" data-a="encrypt">An environment variable encrypts the password so nobody can read it.</button>
+<button type="button" class="mlrk-choice" data-a="encrypt">An environment variable locks the password so nobody on the computer can read it.</button>
 <div id="envquizfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>8. The bug that arrives a day late</h2>
-<p>Fernhaven's warehouse has a small dashboard script that refreshes the open-order count every 15 minutes. It starts up Monday morning and stays running. Every refresh, it opens a connection, runs the query, builds a DataFrame, and moves on. It never closes anything.</p>
+<h2>6. Close what you open, every time</h2>
+<p>The website and other analysts connect to Fernhaven's database too. A PostgreSQL server has a <strong>connection limit</strong>, a fixed number of connections it allows at once (often 100). Past it, new requests are refused with an error like <code>too many clients already</code>. A script that runs all day without closing its connections fills those slots, and the error lands on someone else.</p>
+<p><code>open_orders_psycopg2.py</code> calls <code>conn.close()</code> on its last line. But if <code>cur.execute(sql)</code> fails, Python stops at that line and the close never runs. Python has a block for this.</p>
+<div class="mlrk-callout mlrk-callout-blue">
+<p><strong>New in this file:</strong> <code>finally:</code> pairs with <code>try:</code>. Python runs the <code>finally</code> block on the way out of the <code>try</code>, whether the <code>try</code> block finished or hit an error.</p>
+</div>
+<p><strong>Predict:</strong> <code>finally_demo.py</code> stands in for a query that fails. Which lines print?</p>
+<div class="mlrk-code" data-file="finally_demo.py"><div class="mlrk-screen">try:
+    print("Running the query...")
+    count = int("five")
+    print("Got", count, "rows")
+finally:
+    print("Closing the connection.")</div></div>
+<button type="button" class="mlrk-btn" data-run="finally_demo.py" data-after="q-finally"></button>
+<div class="mlrk-run" data-file="finally_demo.py" hidden><pre>Running the query...
+Closing the connection.
+Traceback (most recent call last):
+  File "finally_demo.py", line 3, in &lt;module&gt;
+    count = int("five")
+ValueError: invalid literal for int() with base 10: 'five'</pre></div>
+<div class="mlrk-card" id="card-finally" style="margin-top:1rem"><p><strong>Which lines does <code>finally_demo.py</code> print before the error message?</strong></p>
+<button type="button" class="mlrk-choice" data-a="both"><code>Running the query...</code>, then <code>Closing the connection.</code></button>
+<button type="button" class="mlrk-choice" data-a="first">Only <code>Running the query...</code>, because the error stops the program.</button>
+<button type="button" class="mlrk-choice" data-a="all">All three lines, because <code>finally</code> runs the whole <code>try</code> block anyway.</button>
+<div id="finallyfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p data-show-after="q-finally" hidden>The error still shows, so you learn what went wrong, but the connection gets closed first.</p>
+<p>Here is the safe version of the Fernhaven file, with <code>conn.close()</code> in a <code>finally</code> block:</p>
+<div class="mlrk-code" data-file="open_orders_safe.py"><div class="mlrk-screen">import os
+import psycopg2
+import pandas as pd
 
-<p>Monday is fine. Nothing is slow. Nothing looks wrong. Four connections an hour pile up quietly on the server, none of them doing anything, all of them holding a slot.</p>
+sql = "SELECT order_id, plant, status FROM orders WHERE status = 'open' LIMIT 3"
 
-<p>Tuesday around mid-morning, somebody in shipping opens their own dashboard and gets this:</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">FATAL:  sorry, too many clients already</div></div>
-
-<p>Three things make this bug genuinely nasty, and they are worth naming out loud:</p>
-<ol class="mlrk-steplist">
-  <li><strong>The failure is not gradual.</strong> A database at its connection limit does not get slower. It refuses. The hundred-and-first request gets an error, not a wait.</li>
-  <li><strong>The failure lands on somebody else.</strong> The script that caused it kept working the whole time, because it already had its connections. The person who found the problem had nothing to do with it.</li>
-  <li><strong>The failure is a day late.</strong> The code that caused it was written and tested on Monday, and on Monday it passed. Nobody connects a Tuesday error to a Monday change.</li>
-</ol>
-
-<p>The fix is small. The connection has to be released even when something in the middle goes wrong, because a query can fail and a network can drop. Putting <code>conn.close()</code> on the last line is not enough: if the line above it raises an error, the last line never runs and the connection is stranded. So the close goes in a block that runs no matter what.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">conn = psycopg2.connect(os.environ["DATABASE_URL"])
-
+conn = psycopg2.connect(os.environ["DATABASE_URL"])
 try:
-    with conn.cursor() as cur:
-        cur.execute(sql)
-        rows = cur.fetchall()
-        cols = [d[0] for d in cur.description]
+    cur = conn.cursor()
+    cur.execute(sql)
+    rows = cur.fetchall()
+    cols = []
+    for column in cur.description:
+        cols.append(column[0])
 finally:
     conn.close()
 
-open_orders = pd.DataFrame(rows, columns=cols)</div></div>
-
-<p>Notice the asymmetry: the cursor gets a <code>with</code> block and the connection does not. That is deliberate. Wrapping a connection in <code>with</code> in <code>psycopg2</code> does not close it. It finishes the transaction and deliberately leaves the connection open so it can be reused, which surprises almost everyone the first time. The connection still needs an explicit <code>conn.close()</code>, and <code>finally</code> is what guarantees it runs.</p>
-
-<div class="mlrk-fillblank">
-  <label for="finallyinput">Type the Python keyword that starts the block that always runs, even after an error:</label>
-  <input type="text" id="finallyinput" autocomplete="off" placeholder="keyword">
-  <button type="button" id="finallycheck" class="mlrk-btn">Check</button>
-</div>
-<div id="finallyblankfb" class="mlrk-feedback" tabindex="-1"></div>
-
-<h3>Put the safe recipe in order</h3>
-<p>Click the steps below in the order you would actually carry them out in a script, then self-check.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="read"><span class="mlrk-order-num"></span> Read the connection string out of the environment, so no password is written in the file.</li>
-  <li class="mlrk-orderitem" data-step="open"><span class="mlrk-order-num"></span> Open the connection with that string.</li>
-  <li class="mlrk-orderitem" data-step="work"><span class="mlrk-order-num"></span> Inside a <code>try</code> block, run the query and read the rows back.</li>
-  <li class="mlrk-orderitem" data-step="close"><span class="mlrk-order-num"></span> In a <code>finally</code> block, close the connection.</li>
-  <li class="mlrk-orderitem" data-step="frame"><span class="mlrk-order-num"></span> Build the DataFrame from the rows you already have in hand.</li>
-</ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
+open_orders = pd.DataFrame(rows, columns=cols)
+print(open_orders)</div></div>
+<button type="button" class="mlrk-btn" data-run="open_orders_safe.py"></button>
+<div class="mlrk-run" data-file="open_orders_safe.py" hidden><pre>   order_id        plant status
+0      5521  Snake plant   open
+1      5524       Pothos   open
+2      5530     Monstera   open</pre></div>
 </section>
 
 <section class="mlrk-section">
-<h2>9. Review this function before it ships</h2>
-<p>A teammate at Fernhaven opens a pull request with the function below. It runs. It returns the right rows. Read it as a reviewer would, then answer both questions underneath.</p>
+<h2>7. Mixed check: review a teammate's function</h2>
+<p>A teammate wrote <code>load_open_orders</code>. It runs and returns the right rows.</p>
+<div class="mlrk-code" data-file="load_open_orders.py"><div class="mlrk-screen">import psycopg2
+import pandas as pd
 
-<div class="mlrk-code"><div class="mlrk-screen"> 1  import psycopg2
- 2  import pandas as pd
- 3
- 4  def load_open_orders():
- 5      conn = psycopg2.connect("postgresql://analyst:Spring2026@fernhaven-db/store")
- 6      cur = conn.cursor()
- 7      cur.execute("SELECT * FROM orders WHERE status = 'open'")
- 8      rows = cur.fetchall()
- 9      cols = [d[0] for d in cur.description]
-10      return pd.DataFrame(rows, columns=cols)</div></div>
-
-<div class="mlrk-card" id="card-line"><p><strong>Which single line hands the database password to anyone who can read this file?</strong></p>
-<button type="button" class="mlrk-choice" data-a="l5">Line 5</button>
-<button type="button" class="mlrk-choice" data-a="l6">Line 6</button>
-<button type="button" class="mlrk-choice" data-a="l7">Line 7</button>
-<button type="button" class="mlrk-choice" data-a="l9">Line 9</button>
-<div id="linefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<h3>Now the whole function</h3>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about this function.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> If this file is pushed to GitHub, deleting the password line later does not remove it from the project's history.</label>
+def load_open_orders():
+    conn = psycopg2.connect("postgresql://analyst:Spring2026@fernhaven-db/store")
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM orders WHERE status = 'open'")
+    rows = cur.fetchall()
+    cols = []
+    for column in cur.description:
+        cols.append(column[0])
+    return pd.DataFrame(rows, columns=cols)</div></div>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE about <code>load_open_orders</code>.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> The <code>psycopg2.connect</code> line puts the database password in the file, where anyone who can read the file can see it.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Every call to this function leaves one more connection open on the server.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Moving the password into an environment variable would also fix the connection problem.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Because the function returns a value, Python closes the connection on its own at that point.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> If <code>cur.execute</code> on line 7 raised an error, the connection would be left open with no code path that closes it.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> If the <code>cur.execute</code> line raised an error, nothing in this function would close the connection.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> Because the function returns a value, Python closes the connection on its own at that point.</label>
 <button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
-
-<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem">
-<p><strong>This applies to AI-written code too.</strong> Ask an assistant for "a function that loads open orders from Postgres into pandas" and you will very often get something close to the function above: correct, runnable, with the credential in the call and no close anywhere. The assistant has no idea whether your script exits in two seconds or runs all week, and that difference is the whole risk. Reading a suggestion and asking two questions, "where is the password" and "who closes this," is what catches it before it merges.</p>
-</div>
 </section>
 
 <section class="mlrk-section">
-<h2>10. Watch: pandas reading straight from a database</h2>
-<p>As you watch, keep two things in view. First, watch how much disappears once an engine exists: the whole fetch-and-relabel step from section 5 collapses into one <code>read_sql</code> call. Second, notice that the engine is built once, near the top, and then reused for everything after it. The video uses a different brand of database than Postgres, and that is worth seeing on purpose: <code>create_engine</code> and <code>read_sql</code> are written the same way regardless, and only the connection string changes.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=M-4EpNdlSuY" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: name one step from section 5's psycopg2 code that the video never had to write, and say what took its place.</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>11. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>"Walk me through how you would connect a Python script to a real database and pull the results into pandas" is a standard data analyst question. Plenty of candidates answer it by naming a library and stopping. The stronger answer treats it as a short plan with a beginning, a middle, and an end: read the credentials from the environment rather than the file, open the connection, run the query, load the result into a DataFrame, and release the connection in a block that runs even if the query fails. Then check the row count and column names against what you expected, because "it ran" and "it returned what I wanted" are two different claims.</p>
-<p>A second question shows up almost as often, and it is really a debugging question wearing a trivia costume: "a teammate's daily script has started failing with a <em>too many connections</em> error, how would you investigate?" The move that separates a strong answer is naming a hypothesis and the evidence that would confirm it, instead of jumping to a fix. Something is opening connections without releasing them until the server's limit is reached. You would count the open connections on the server, then read the code for any path that opens one outside a <code>try</code> with a matching close.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: a script that opens a connection and never closes it ran fine for months as a small one-off job. It broke the week it was moved onto a schedule that keeps it running. What changed?</strong></p>
-<button type="button" class="mlrk-choice" data-a="exit">While it was a short job, the process ended after each run and the server released the connection. A long-running process never ends, so the connections pile up.</button>
-<button type="button" class="mlrk-choice" data-a="query">The query itself became slower once it ran on a schedule.</button>
-<button type="button" class="mlrk-choice" data-a="perms">The scheduled job runs as a different user with fewer database permissions.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Summary and critical thinking</h2>
-<p>Three ideas carried this reading. A saved export is a photograph, and a live connection is a window, which is why connecting beats exporting for anything you have to answer more than once. A driver is what lets Python speak to one particular database, and an engine is a manager that hands out connections built on top of that same driver, so the two paths here were never really two roads. And the two habits that make connection code safe to ship, the credential outside the file and the close that always runs, are both things nobody notices until the day they were skipped.</p>
-
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a hospital's scheduling team runs a Python script every morning that opens a connection, reads yesterday's appointments into a DataFrame, writes a report, and exits. The password is typed into the file. The connection is never closed. <strong>Which review comment is the more urgent one, and why?</strong></p>
-<button type="button" class="mlrk-choice" data-a="password">The password, because the script exiting each morning does release its connection, while a committed credential stays in the project's history permanently.</button>
-<button type="button" class="mlrk-choice" data-a="connection">The connection, because an unclosed connection is always the more serious of the two problems.</button>
-<button type="button" class="mlrk-choice" data-a="neither">Neither, because the script has been running successfully every morning.</button>
+<h2>8. Wrap-up</h2>
+<ul>
+<li>A live connection gets fresh rows every time the code runs. A saved file is only true for the moment it was saved.</li>
+<li>With <code>psycopg2</code>, you use a cursor and add the column names yourself. With a SQLAlchemy engine, <code>pd.read_sql</code> does it in one call, and <code>psycopg2</code> still does the talking underneath.</li>
+<li>Keep the password in an environment variable, and close every connection in a <code>finally</code> block or a <code>with</code> block.</li>
+</ul>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> Fernhaven runs a short script every morning. It opens a connection, reads yesterday's orders, writes a report, and stops. The password is typed into the file, and the connection is never closed. <strong>Which review comment is more urgent, and why?</strong></p>
+<button type="button" class="mlrk-choice" data-a="password">The password, because the script stops each morning, which releases its connection, while a committed password stays in the project's history.</button>
+<button type="button" class="mlrk-choice" data-a="connection">The connection, because an unclosed connection is always the more serious problem.</button>
+<button type="button" class="mlrk-choice" data-a="neither">Neither, because the script has worked every morning so far.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<label for="ownwords" style="display:block;margin-top:1.2rem"><strong>In your own words:</strong> a colleague says closing a connection is just tidiness, like putting a file away. Where does that comparison hold up, and where does it break down badly enough to cause a real outage?</label>
-<textarea id="ownwords" class="mlrk-response" data-save placeholder="Try starting with: it holds up because..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+<p>In interviews, "walk me through connecting a Python script to a database" is common, and a strong answer names both habits: where the password lives and how the connection gets closed.</p>
+<p>Next comes choosing between the two libraries, since both return the same table but cost different things underneath.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>13. Thinking ahead</h2>
-<p>Both paths in this reading did exactly the same job, and nothing here gave you a reason to prefer one over the other. That question is real and it has real answers: a raw driver gives you precise control over one database and stays out of your way, while a toolkit like SQLAlchemy hands you connection management, a common shape across different database brands, and a much shorter path into pandas. The interesting version of that question is never "which library is better." It is "what does this particular project actually need, and what am I giving up by picking the other one." Every library choice you make later is that same trade in different clothes.</p>
+<h2>9. Reflect</h2>
+<div class="mlrk-callout mlrk-callout-blue">
+<label for="ownwords"><strong>In your own words:</strong> a classmate says closing a connection is just being tidy, like putting a book back on a shelf. Where does that comparison work, and where does it miss a real problem?</label>
+<textarea id="ownwords" class="mlrk-response" data-save placeholder="Start with: It works because... but it misses..."></textarea>
+<p>Stuck? <button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Key terms review</h2>
+<p>Flip each card and check that you could explain the term to a classmate.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>connection</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Connection</strong><br>An open, live link between your running Python program and a database. It stays open until something closes it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>cursor</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Cursor</strong><br>The <code>psycopg2</code> object you send SQL through and read rows back from. It works on top of an open connection.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>driver</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Driver</strong><br>A library that speaks one specific database's language for you. <code>psycopg2</code> is the usual one for PostgreSQL.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>engine</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Engine</strong><br>SQLAlchemy's reusable connection manager for one database. It knows where the database is and hands out connections when asked.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>environment variable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Environment variable</strong><br>A value your computer holds for a program, stored outside the code. A password kept there never gets committed to GitHub.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>connection limit</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Connection limit</strong><br>The fixed number of connections a database server allows at once. Past it, new requests are refused, not slowed down.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Go further (optional video)</h2>
+<p>Optional, about 12 minutes. It isn't counted in the time above or in your points. As you watch, notice that the engine is built once near the top and reused, and that one <code>read_sql</code> call replaces the fetch-and-name steps from <code>open_orders_psycopg2.py</code>. The video uses a different database than PostgreSQL, and only the connection address changes.</p>
+<div class="mlrk-video-wrap" id="ytplayer" data-title="Python Pandas Tutorial 14: Read Write Data From Database"></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=M-4EpNdlSuY" target="_blank" rel="noopener">Watch on YouTube</a>
 </section>
 
 <section class="mlrk-section">
 <h2>Additional resources</h2>
 <p class="mlrk-small">Not counted in the time estimate above.</p>
 <ul>
-<li><a href="https://pgexercises.com/" target="_blank" rel="noopener">PostgreSQL Exercises</a> — free interactive practice writing real queries against a live PostgreSQL database in the browser, so the SQL half of a connection is second nature by the time you write the Python half.</li>
-<li><a href="https://pynative.com/python-database-programming-exercise-with-solution/" target="_blank" rel="noopener">PyNative: Python database programming exercises</a> — hands-on exercises that walk the connect, query, fetch, close cycle, with solutions to check yourself against.</li>
-<li><a href="https://www.psycopg.org/docs/usage.html" target="_blank" rel="noopener">psycopg2 documentation: basic usage</a> — the driver's own guide, including its warning about what a <code>with</code> block does and does not close.</li>
-<li><a href="https://docs.sqlalchemy.org/en/20/core/engines.html" target="_blank" rel="noopener">SQLAlchemy: engine configuration</a> — what an engine is, and how a connection string is built, from the people who make it.</li>
-<li><a href="https://pandas.pydata.org/docs/reference/api/pandas.read_sql.html" target="_blank" rel="noopener">pandas: <code>read_sql</code> reference</a> — every argument the one-call path accepts, including how to read a very large result in chunks.</li>
-<li><a href="https://12factor.net/config" target="_blank" rel="noopener">The Twelve-Factor App: Config</a> — the short, widely cited write-up of why credentials belong in the environment and not in code.</li>
+<li><a href="https://pgexercises.com/" target="_blank" rel="noopener">PostgreSQL Exercises</a> — free practice writing real queries against a live PostgreSQL database in the browser.</li>
+<li><a href="https://pynative.com/python-database-programming-exercise-with-solution/" target="_blank" rel="noopener">PyNative: Python database programming exercises</a> — hands-on practice with the connect, query, fetch, close steps.</li>
+<li><a href="https://www.psycopg.org/docs/usage.html" target="_blank" rel="noopener">psycopg2 documentation: basic usage</a> — the driver's own guide.</li>
+<li><a href="https://docs.sqlalchemy.org/en/20/core/engines.html" target="_blank" rel="noopener">SQLAlchemy: engine configuration</a> — what an engine is, and how a connection address is built.</li>
+<li><a href="https://pandas.pydata.org/docs/reference/api/pandas.read_sql.html" target="_blank" rel="noopener">pandas: <code>read_sql</code> reference</a> — every option the one-call way accepts.</li>
+<li><a href="https://12factor.net/config" target="_blank" rel="noopener">The Twelve-Factor App: Config</a> — a short, widely shared explanation of why passwords belong outside the code.</li>
 </ul>
 </section>
 
 <section class="mlrk-section">
-<h2>14. Your score &amp; keep a copy of your work</h2>
+<h2>Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -567,145 +501,125 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
+  function reveal(id){ document.querySelectorAll('[data-show-after="' + id + '"]').forEach(el => { el.hidden = false; }); }
+
   K.quiz({id:"q-dict", buttonSelector:"#card-dict .mlrk-choice", feedbackSelector:"#dictfb", correct:"value",
-    feedback:{value:"Square brackets with a name inside look that name up and hand back the value stored under it.",
-              key:"The name in the brackets is what you are looking up. What comes back is the value stored under it.",
-              both:"Printing the pair together would take extra code. A plain lookup gives you the value on its own."}});
+    feedback:{value:"Right. Looking up the key \"city\" gives back the value stored under it, Newark.",
+              key:"\"city\" is the key you look up with. The lookup returns the value stored under it.",
+              both:"print shows only the value. Nothing in the file prints the key."}});
 
-  K.quiz({id:"q-finally", buttonSelector:"#card-finally .mlrk-choice", feedbackSelector:"#finallyfb", correct:"finally",
-    feedback:{"finally":"That is exactly what finally is for. It runs on the way out either way, which is why cleanup belongs there.",
-              "except":"except runs only when a matching error was raised. A run with no error skips it entirely.",
-              "else":"else is the opposite case. It runs only when nothing was raised."}});
+  K.quiz({id:"q-try", buttonSelector:"#card-try .mlrk-choice", feedbackSelector:"#tryfb", correct:"except",
+    feedback:{except:"Right. int(\"ten\") raises a ValueError, so Python skips the rest of the try block and runs the except block.",
+              both:"The error happens on the int(\"ten\") line, so the print right after it never runs.",
+              crash:"The except ValueError block catches that error, so the program keeps going and prints its message."}});
 
-  K.quiz({id:"q-cols", buttonSelector:"#card-cols .mlrk-choice", feedbackSelector:"#colsfb", correct:"names",
-    feedback:{names:"Values alone have no labels. The column names, in matching order, are what turn a pile of values into a readable table.",
-              count:"A row count tells you how much came back. It does not tell you what any of the values mean.",
-              key:"Knowing the source table is useful context, but it does not label the individual columns for you."}});
+  K.quiz({id:"q-rows", buttonSelector:"#card-rows .mlrk-choice", feedbackSelector:"#rowsfb", correct:"tuples",
+    feedback:{tuples:"Right. fetchall() gives back one tuple of values per row. The column names live separately, in cur.description.",
+              table:"That's what the second print shows, after pd.DataFrame adds the names. The first print shows the raw rows.",
+              sql:"cur.execute(sql) already ran the query, so rows holds what the database sent back."},
+    onDone(){ reveal("q-rows"); }});
 
-  K.flipCards("#vocab", "act-flip-vocab");
+  K.quiz({id:"q-engine", buttonSelector:"#card-engine .mlrk-choice", feedbackSelector:"#enginefb", correct:"same",
+    feedback:{same:"Right. pd.read_sql runs the query and builds the DataFrame with the column names attached, so both ways give the same table.",
+              tuples:"pd.read_sql returns a DataFrame, not raw rows. It handles the column names for you.",
+              numbers:"Numbered columns are what you'd get if nobody passed the names. pd.read_sql brings them along from the database."},
+    onDone(){ reveal("q-engine"); }});
 
-  /* typed blank 1: the environment variable name */
-  K.Scoring.register("q-env",1,"quiz");
-  let envAttempts=0, envDone=false;
-  function normalizeEnv(s){ return s.trim().replace(/\s+/g,"").replace(/'/g,'"'); }
-  $("#envcheck").addEventListener("click",()=>{
+  // Fill-in: the environment variable lookup
+  K.Scoring.register("act-fill-env", 1, "activity");
+  let envAttempts = 0, envDone = false;
+  $("#envcheck").addEventListener("click", () => {
     if(envDone) return;
+    const fb = $("#envfb");
+    const raw = $("#envinput").value.trim();
+    if(!raw){
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>The box is empty.</strong> Follow the numbered steps.";
+      fb.setAttribute("tabindex","-1"); fb.focus();
+      return;
+    }
     envAttempts++;
-    const ok = normalizeEnv($("#envinput").value) === '"DATABASE_URL"';
-    const fb=$("#envfb");
+    const t = raw.replace(/\s+/g, "").replace(/'/g, '"');
+    const ok = t === 'os.environ["DATABASE_URL"]' || t === 'os.getenv("DATABASE_URL")' || t === 'os.environ.get("DATABASE_URL")';
+    let hint;
+    if(t.includes("postgresql://") || t.includes("Spring2026")) hint = "That still puts the address and password in the file. Look the setting up by name instead.";
+    else if(t.startsWith("os.environ[") && !t.includes('"')) hint = "The setting's name needs quotes inside the square brackets.";
+    else if(t.toUpperCase().includes("DATABASE_URL") && !t.includes("DATABASE_URL")) hint = "The setting's name is in capital letters: DATABASE_URL.";
+    else if(!t.startsWith("os.")) hint = "Start with os.environ, the collection of settings your computer holds for this program.";
+    else hint = "Use os.environ, then the name DATABASE_URL in quotes inside square brackets.";
     if(ok){
-      K.Scoring.award("q-env", envAttempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> The code names the value it wants, and the machine supplies it. The password itself is never written in the file.";
-      envDone=true;
-    } else if(envAttempts>=2){
-      K.Scoring.award("q-env",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The blank is <code>\"DATABASE_URL\"</code>, quotes included.";
-      envDone=true;
+      K.Scoring.award("act-fill-env", 1);
+      fb.className = "mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML = "<strong>That works.</strong> The file now names the setting, and the password itself stays on your computer, outside anything you commit.";
+      envDone = true; K.markDone("act-fill-env");
+    } else if(envAttempts >= 2){
+      K.Scoring.award("act-fill-env", 0);
+      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML = "<strong>Here's how it's written. You'll get it next time.</strong> <code>os.environ[\"DATABASE_URL\"]</code>";
+      envDone = true; K.markDone("act-fill-env");
     } else {
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> Check two things: the name must be in quotes, and it must match the name used in the code block above, capital letters and underscore included. One more try.";
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>Not quite yet.</strong> " + hint + " You have one more try.";
     }
-    fb.setAttribute("tabindex","-1");fb.focus();
-    K.Storage.save(READING_ID, K.snapshot(READING_ID,TITLE));
+    fb.setAttribute("tabindex","-1"); fb.focus();
+    K.Storage.save(READING_ID, K.snapshot(READING_ID, TITLE));
   });
 
-  K.dragDrop("#dragarea", "act-drag-paths");
-  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneDriver", label:"cur = conn.cursor()", expectedLabel:"You write this on the psycopg2 path"},
-    chip2:{expectedId:"zoneDriver", label:"rows = cur.fetchall()", expectedLabel:"You write this on the psycopg2 path"},
-    chip3:{expectedId:"zoneEngine", label:"engine = create_engine(...)", expectedLabel:"You write this on the SQLAlchemy path"},
-    chip4:{expectedId:"zoneEngine", label:"pd.read_sql(sql, connection)", expectedLabel:"You write this on the SQLAlchemy path"}
-  }});
+  K.quiz({id:"q-env", buttonSelector:"#card-env .mlrk-choice", feedbackSelector:"#envquizfb", correct:"history",
+    feedback:{history:"Right. A private repo doesn't stay private forever, and git keeps every old version of the file.",
+              speed:"Reading the setting doesn't change how fast the connection opens. The reason is where the password is stored.",
+              encrypt:"An environment variable is not locked or scrambled. What it does is keep the password out of the file you share."}});
 
-  K.quiz({id:"q-equals", buttonSelector:"#card-equals .mlrk-choice", feedbackSelector:"#equalsfb", correct:"identical",
-    feedback:{identical:"That is the whole check. Shape, column names, and every column's type matched, so the two paths really did return the same table.",
-              faster:"Speed is not part of the comparison at all. The check looks only at the two tables that came back.",
-              closed:"Closing is a separate concern the comparison knows nothing about. Two tables can match perfectly with a connection still hanging open."}});
-
-  K.quiz({id:"q-envquiz", buttonSelector:"#card-env .mlrk-choice", feedbackSelector:"#envquizfb", correct:"history",
-    feedback:{history:"All three of those are real. A private project can be made public, copies travel, and git keeps the old version of every file forever.",
-              speed:"The lookup takes almost no time either way. Speed is not why this rule exists.",
-              encrypt:"An environment variable is stored as plain text. What it changes is where the secret lives, not whether it is scrambled."}});
-
-  /* typed blank 2: the finally keyword */
-  K.Scoring.register("q-finallyblank",1,"quiz");
-  let fbAttempts=0, fbDone=false;
-  $("#finallycheck").addEventListener("click",()=>{
-    if(fbDone) return;
-    fbAttempts++;
-    const ok = $("#finallyinput").value.trim().toLowerCase().replace(/:$/,"") === "finally";
-    const fb=$("#finallyblankfb");
-    if(ok){
-      K.Scoring.award("q-finallyblank", fbAttempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> A finally block runs on the way out of a try statement whether the code inside succeeded or raised, which is exactly what \"always close it\" needs.";
-      fbDone=true;
-    } else if(fbAttempts>=2){
-      K.Scoring.award("q-finallyblank",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The keyword is <code>finally</code>.";
-      fbDone=true;
-    } else {
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> It is one word, and it is the block that runs on the way out no matter what happened inside the try. One more try.";
-    }
-    fb.setAttribute("tabindex","-1");fb.focus();
-    K.Storage.save(READING_ID, K.snapshot(READING_ID,TITLE));
-  });
-
-  K.orderSteps("#ordersteps", {id:"act-order-safe", correctOrder:["read","open","work","close","frame"],
-    feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
-
-  K.quiz({id:"q-line", buttonSelector:"#card-line .mlrk-choice", feedbackSelector:"#linefb", correct:"l5",
-    answerLabel:"Line 5",
-    feedback:{l5:"The connection string spells out the user name and the password in plain text, so anyone who can open this file has both.",
-              l6:"Line 6 makes a cursor from a connection that is already open. It carries no credential of its own.",
-              l7:"Line 7 is the query. It names a table and a filter, which is not a secret.",
-              l9:"Line 9 reads the column names off the cursor. Useful, but nothing private is in it."}});
+  K.quiz({id:"q-finally", buttonSelector:"#card-finally .mlrk-choice", feedbackSelector:"#finallyfb", correct:"both",
+    feedback:{both:"Right. The error stops the try block at int(\"five\"), then Python runs the finally block before showing the error.",
+              first:"The error does stop the try block, but Python runs the finally block on the way out, before the program stops.",
+              all:"\"Got\" never prints. The try block stops at the error, and finally runs only its own block."},
+    onDone(){ reveal("q-finally"); }});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"If this file is pushed to GitHub, deleting the password line later does not remove it from the project's history.", correct:true,
-      hint:"Think about what git keeps when a line is edited. Does the old version of the file disappear?",
-      explain:"Git stores every earlier version, so the password stays readable in the history long after the line is gone."},
+    {value:"a", label:"The psycopg2.connect line puts the database password in the file, where anyone who can read the file can see it.", correct:true,
+      hint:"Compare the psycopg2.connect line with hardcoded.py in section 5.",
+      explain:"Spring2026 is the password, typed right into the connection address."},
     {value:"b", label:"Every call to this function leaves one more connection open on the server.", correct:true,
-      hint:"Trace the function to its last line. Is there anything that hands the connection back?",
-      explain:"Nothing in the function closes the connection, so each call adds one more open connection to the server's fixed supply."},
+      hint:"Look for conn.close() anywhere in the function.",
+      explain:"Nothing closes conn, so each call adds one more open connection."},
     {value:"c", label:"Moving the password into an environment variable would also fix the connection problem.", correct:false,
-      hint:"Those are two separate problems. Would changing where the credential is read from change what happens at the end of the function?",
-      explain:"Where the credential comes from has nothing to do with whether the connection gets closed. Both need fixing, separately."},
-    {value:"d", label:"Because the function returns a value, Python closes the connection on its own at that point.", correct:false,
-      hint:"Compare this with section 8. What released the connections there, and is that the same thing as a function returning?",
-      explain:"Returning from a function ends the function, not the connection. Only the whole process ending, or an explicit close, releases it."},
-    {value:"e", label:"If cur.execute on line 7 raised an error, the connection would be left open with no code path that closes it.", correct:true,
-      hint:"Imagine line 7 throwing. Which of the remaining lines still run, and is a close among them?",
-      explain:"An error on line 7 skips everything below it, and since there is no finally block, nothing closes what was opened."}
+      hint:"Where the password lives and whether the connection closes are two separate questions. Does one fix the other?",
+      explain:"An environment variable keeps the password out of the file. It does nothing about closing the connection."},
+    {value:"d", label:"If the cur.execute line raised an error, nothing in this function would close the connection.", correct:true,
+      hint:"Is there a try with a finally anywhere in the function?",
+      explain:"With no finally block, an error on the cur.execute line leaves the connection open."},
+    {value:"e", label:"Because the function returns a value, Python closes the connection on its own at that point.", correct:false,
+      hint:"Think about the connection limit in section 6. Would that problem exist if returning closed connections?",
+      explain:"Returning doesn't close a database connection. Your code has to."}
   ]});
 
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"M-4EpNdlSuY"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:8});
-  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:12});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"exit",
-    feedback:{exit:"That is the real answer, and it is why the old habit looked safe for so long. A process that ends releases what it held. A process that keeps running never does.",
-              query:"A schedule does not change how fast a query runs. The error names connections, not query time.",
-              perms:"A permissions problem shows up as a refusal on the very first run, not as a failure that builds up over time."}});
-
   K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"password",
-    feedback:{password:"Both are worth fixing, and the credential is the one that cannot be undone later. A short script that exits does hand its connection back.",
-              connection:"An unclosed connection is serious when the code keeps running, which this script does not. Ranking it first here misses what the script actually does.",
-              neither:"Running successfully is not the same as being safe to ship. The credential is already exposed in every copy of the file."}});
+    feedback:{password:"Right. When a short script stops, the server releases its connection. A password in git history stays there for good.",
+              connection:"An unclosed connection matters most in a script that keeps running. This one stops each morning, which releases it.",
+              neither:"Working so far doesn't make the password safe. Anyone who can read the project's history can read it."}});
+
+  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:12});
+  K.flipCards("#vocab", "act-flip-vocab");
+
+  // Optional video: not scored, so it stays out of the reading's points.
+  const yt = $("#ytplayer");
+  const frame = document.createElement("iframe");
+  frame.src = "https://www.youtube.com/embed/M-4EpNdlSuY";
+  frame.title = yt.dataset.title;
+  frame.loading = "lazy";
+  frame.allowFullscreen = true;
+  yt.appendChild(frame);
 
   const AI_PROMPTS = [
-    "Think of a shared resource you have seen someone hold onto after they were done with it, at school, at work, or anywhere else. Who ended up paying for it, and how long did it take anyone to notice?",
-    "If you had to explain \"the password does not belong in the file\" to someone with no programming background, what everyday situation would you use to make it obvious?",
-    "Where else in your life do you work from a saved copy of something that keeps changing? What would have to go wrong before you noticed the copy was out of date?"
+    "Think of something shared that only works if people give it back, like library books or shopping carts. What happens to the next person when someone forgets?",
+    "How would you explain \"the file was right when it was saved, but it's old now\" to someone who has never written code?",
+    "Where else have you seen a secret, like a password or a code, written somewhere it shouldn't be? What would have been a safer place for it?"
   ];
-  $("#aiprompt").addEventListener("click",()=>{
-    const box=$("#aipromptbox");
-    box.style.display="block";
-    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  $("#aiprompt").addEventListener("click", () => {
+    const box = $("#aipromptbox");
+    box.style.display = "block";
+    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random() * AI_PROMPTS.length)];
   });
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";

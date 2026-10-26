@@ -5,7 +5,8 @@
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
 .mlrk-illustration{width:100%;max-width:860px;height:auto;margin:1.1rem 0;display:block}
-.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:12rem}
 @media(max-width:650px){.mlrk-illustration{max-width:100%}}
 </style>
 </head><body>
@@ -13,9 +14,9 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Beneath the Total</h1>
-<p class="mlrk-lead">Riverbend Mutual, a small regional auto insurer, hands a new data analyst a quarter's worth of claims: which region filed each one, what type of claim it was, whether the policy carries a roadside-assistance add-on, how many days it took to close, and how much it paid out. The VP of Claims asks one question: "What's actually going on with our claims costs this quarter?" It would be easy to answer with the total. It's a real number, and it's true. It's also not a finding, just a fact anyone could have pulled from a spreadsheet without really looking at anything. This reading is about telling the difference between a number that restates what's already visible and a pattern that's actually worth someone's attention.</p>
+<p class="mlrk-lead">Starlight Cinema is a neighborhood movie theater. The manager hands you a month of snack-bar orders and asks, "What's going on with snack sales?" You could answer with the total. It's true, but it doesn't tell the manager anything new. This reading is about finding a pattern that does.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~38–42 minutes</span>
+  <span class="mlrk-pill">~20–23 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -47,250 +48,207 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Concept overview</h2>
-<p>Picture the spreadsheet the VP just handed over: 240 rows, one per claim, with columns for region (metro or rural), claim type, whether the policy carries a roadside-assistance add-on, days to close, and payout amount. The easiest thing to do with 240 rows is add them up: $700,800 paid out this quarter, an average of $2,920 per claim. True. Reportable. And exactly what anyone would expect to hear, because it doesn't say anything about how or why. A single overall number describes the whole dataset at once, which means it can't say anything about how the dataset differs from itself. Restating a total, or restating an already-known fact ("collision is our most common claim type" is true, and also something everyone in the room already assumed), is what this reading means by <strong>surface-level</strong>.</p>
-
-<p>Mining for a real pattern means doing something a total can't: splitting the data into segments and asking whether those segments actually differ from each other. Region is one plausible segment here, plausible because a regional insurer might reasonably expect its rural and metro service areas to behave differently. Grouping by region and comparing the averages is one line:</p>
-<div class="mlrk-code"><div class="mlrk-screen">claims.groupby("region")["payout_amount"].mean()
-
-[Output]
-region
-metro    2300.0
-rural    3850.0
-Name: payout_amount, dtype: float64</div></div>
-<p>Metro claims average $2,300 across 144 claims. Rural claims average $3,850 across 96 claims, about 67% higher, even though rural claims make up fewer than half of everything filed this quarter. That's a real comparison, backed by a real slice of the data on each side, and specific enough that the VP could actually act on it: something about rural claims costs more, and someone should find out what.</p>
-
+<h2>1. A total versus a finding</h2>
+<p>You already know how to group rows and work out a mean or a count for each group. This reading adds no new syntax. It's about judgment: which groups to compare, and when a difference is worth telling someone.</p>
 <svg class="mlrk-illustration" viewBox="0 0 860 300" role="img" aria-labelledby="patternTitle patternDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="patternTitle">A flat total on the left contrasted with a real comparison between two groups on the right</title>
-  <desc id="patternDesc">Left panel: a single flat box showing the $700,800 total across 240 claims, labeled as a surface-level restatement with nothing to compare it to. Right panel: two bars, a shorter sage-green metro bar at $2,300 and a taller gold rural bar at $3,850, with a callout reading 67% higher, rural vs. metro, labeled a genuinely non-obvious finding.</desc>
+  <title id="patternTitle">One total on the left, a comparison between two groups on the right</title>
+  <desc id="patternDesc">Left panel: a single box showing $3,120 in snack sales across 240 orders, labeled a surface-level restatement with nothing to compare it to. Right panel: two bars of different heights, one for a segment and one for its comparison group, labeled a non-obvious pattern. No values are shown yet.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-    <text x="190" y="30" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Surface-level restatement</text>
+    <text x="190" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Surface-level restatement</text>
     <rect x="40" y="55" width="300" height="170" rx="16" fill="#E4E7EB" stroke="#B3BBB0" stroke-width="3"/>
-    <text x="190" y="130" text-anchor="middle" font-weight="800" font-size="32" fill="#261F1D">$700,800</text>
-    <text x="190" y="160" text-anchor="middle" font-weight="600" font-size="13" fill="#261F1D">Total paid out, 240 claims</text>
-    <text x="190" y="195" text-anchor="middle" font-size="12" fill="#261F1D">One number. Nothing to compare it to.</text>
-
-    <circle cx="420" cy="140" r="17" fill="#FFFCF7" stroke="#B3BBB0" stroke-width="2"/>
-    <text x="420" y="145" text-anchor="middle" font-weight="800" font-size="13" fill="#261F1D">vs</text>
-    <line x1="420" y1="58" x2="420" y2="123" stroke="#B3BBB0" stroke-width="2" stroke-dasharray="6 5"/>
-    <line x1="420" y1="157" x2="420" y2="222" stroke="#B3BBB0" stroke-width="2" stroke-dasharray="6 5"/>
-
-    <text x="650" y="30" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Genuinely non-obvious finding</text>
-    <text x="650" y="62" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">67% higher, rural vs. metro</text>
-
+    <text x="190" y="130" text-anchor="middle" font-weight="800" font-size="34" fill="#261F1D">$3,120</text>
+    <text x="190" y="162" text-anchor="middle" font-weight="600" font-size="15" fill="#261F1D">Snack sales, 240 orders</text>
+    <text x="190" y="196" text-anchor="middle" font-size="15" fill="#261F1D">Nothing to compare it to.</text>
+    <circle cx="420" cy="140" r="18" fill="#FFFCF7" stroke="#B3BBB0" stroke-width="2"/>
+    <text x="420" y="145" text-anchor="middle" font-weight="800" font-size="14" fill="#261F1D">vs</text>
+    <line x1="420" y1="58" x2="420" y2="122" stroke="#B3BBB0" stroke-width="2" stroke-dasharray="6 5"/>
+    <line x1="420" y1="158" x2="420" y2="222" stroke="#B3BBB0" stroke-width="2" stroke-dasharray="6 5"/>
+    <text x="650" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Non-obvious pattern</text>
+    <text x="650" y="58" text-anchor="middle" font-size="15" fill="#261F1D">Two groups, side by side</text>
     <line x1="540" y1="230" x2="810" y2="230" stroke="#261F1D" stroke-width="2"/>
-    <rect x="560" y="152" width="90" height="78" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="605" y="142" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">$2,300</text>
-    <text x="605" y="248" text-anchor="middle" font-weight="600" font-size="13" fill="#261F1D">Metro</text>
-
+    <rect x="560" y="156" width="90" height="74" rx="8" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="605" y="146" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">?</text>
+    <text x="605" y="252" text-anchor="middle" font-weight="600" font-size="15" fill="#261F1D">Comparison group</text>
     <rect x="700" y="100" width="90" height="130" rx="8" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
-    <text x="745" y="90" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">$3,850</text>
-    <text x="745" y="248" text-anchor="middle" font-weight="600" font-size="13" fill="#261F1D">Rural</text>
+    <text x="745" y="90" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">?</text>
+    <text x="745" y="252" text-anchor="middle" font-weight="600" font-size="15" fill="#261F1D">Segment</text>
   </g>
 </svg>
-
-<p>Three things separate that rural-vs-metro gap from the plain total sitting next to it. First, it's a comparison between at least two groups, not one number standing alone. Second, the gap is a size a reasonable person would call meaningful, not a rounding difference that could just as easily be noise. Third, and easiest to skip past: a stakeholder who already knows the business wouldn't have already assumed it. "Collision is our most common claim type" fails that third test even though it's a real, checkable fact about the data, because everyone in the room already knew it before the analysis started.</p>
-<p>That third test is also where sample size sneaks back in. A gap only counts as a finding once it's built on a <strong>reliable slice</strong> of the data: enough rows that the number would probably look similar if pulled again, not two or three claims that happened to be expensive. A pattern built on a handful of rows can look exactly as dramatic as a real one and still not be trustworthy, which is worth checking before repeating a number to a stakeholder, not after.</p>
-
+<p>The file <code>orders.csv</code> has 240 rows, one per snack order, with four columns:</p>
+<ul>
+<li><code>show_time</code>: <code>matinee</code> (an afternoon show) or <code>evening</code></li>
+<li><code>bought_online</code>: <code>True</code> if the movie ticket was bought online, <code>False</code> if it was bought at the counter</li>
+<li><code>tickets</code>: how many movie tickets came with the order</li>
+<li><code>snack_dollars</code>: how much the order spent on snacks</li>
+</ul>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> almost every real data role eventually asks some version of "what did you actually find?" A report that only hands back a total or an already-known fact reads as busywork, not analysis, and stakeholders notice the difference fast. Learning to tell a real, comparison-backed finding apart from a restated number is one of the most transferable judgment calls in the job.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to group rows by a category and compute a mean, median, or count for each group, and how to filter a DataFrame down to the rows you care about. This reading doesn't add new syntax to any of that. It's entirely about the judgment call that comes after the syntax: which segment is even worth grouping by, how big a gap has to be before it means something, and how to tell a pattern a stakeholder would find genuinely useful apart from a fact they already knew.</p>
+<p><strong>How the examples work:</strong> each example is a <code>.py</code> file that reads <code>orders.csv</code>. The Run button shows what the file prints. On your own laptop, you'd type <code>python3 name.py</code> in the terminal.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall before mining</h2>
-<p class="mlrk-small">Grouping, filtering, and matching a statistic to a variable's shape are prerequisite skills for this reading. Test each one before moving on.</p>
+<h2>2. Recall</h2>
+<p>Two earlier skills come back in this reading. Check each one.</p>
 
-<div class="mlrk-card" id="card-recall1"><p><strong>Coding check:</strong> <code>claims.groupby("region")["payout_amount"].mean()</code> — what does this return?</p>
-<button type="button" class="mlrk-choice" data-a="series">A Series with one average payout value per region</button>
-<button type="button" class="mlrk-choice" data-a="single">A single number: the average payout across every claim</button>
-<button type="button" class="mlrk-choice" data-a="newdf">A new DataFrame with every original column still intact</button>
+<div class="mlrk-card" id="card-recall1"><p><strong>What does <code>orders.groupby("show_time")["snack_dollars"].mean()</code> give you?</strong></p>
+<button type="button" class="mlrk-choice" data-a="series">One average snack amount for each show time</button>
+<button type="button" class="mlrk-choice" data-a="single">One average across every order</button>
+<button type="button" class="mlrk-choice" data-a="newdf">The whole table, sorted by show time</button>
 <div id="recall1fb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-recall2" style="margin-top:.8rem"><p><strong>Trace check:</strong> <code>claims[claims["claim_type"] == "collision"]</code> — what does this return?</p>
-<button type="button" class="mlrk-choice" data-a="filtered">A DataFrame containing only the rows where claim_type is "collision"</button>
-<button type="button" class="mlrk-choice" data-a="count">The single count of how many claims are collision claims</button>
-<button type="button" class="mlrk-choice" data-a="bool">A Series of True/False values, one per row, with no rows removed</button>
-<div id="recall2fb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-recall3" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> Riverbend Mutual's <code>payout_amount</code> column is heavily right-skewed: a handful of catastrophic-loss claims pull the numbers up. Which statistic gives a more honest sense of what a "typical" claim actually costs?</p>
-<button type="button" class="mlrk-choice" data-a="median">Median</button>
-<button type="button" class="mlrk-choice" data-a="mean">Mean</button>
-<button type="button" class="mlrk-choice" data-a="mode">Mode</button>
+<div class="mlrk-card" id="card-recall3" style="margin-top:.8rem"><p><strong>A few birthday parties spent far more on snacks than anyone else, so <code>snack_dollars</code> is skewed right. Which number better describes a typical order?</strong></p>
+<button type="button" class="mlrk-choice" data-a="median">The median</button>
+<button type="button" class="mlrk-choice" data-a="mean">The mean</button>
+<button type="button" class="mlrk-choice" data-a="max">The largest order</button>
 <div id="recall3fb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">Grouping, filtering, and reading skew all show up again below exactly as they work here. This reading only adds judgment about what to do with them, not new syntax.</div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Technical vocabulary</h2>
-<p>Flip each card before the practice below.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>segment</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Segment</strong><br>A subset of rows that share a category or condition, used to compare against the rest of the data, like every rural claim, or every claim with a roadside-assistance add-on.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>comparison group</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Comparison group</strong><br>Whatever a segment's number gets measured against. A number about one group alone means nothing until it sits next to something to compare it with.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>surface-level restatement</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Surface-level restatement</strong><br>A true statement about the data that doesn't compare anything, like a single grand total, an overall average, or a fact the business already assumed.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>non-obvious pattern</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Non-obvious pattern</strong><br>A real, checkable difference between comparison groups that a stakeholder wouldn't have already guessed, sized enough to actually change what they do next.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>reliable slice</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Reliable slice</strong><br>Enough rows behind a segment's number that the gap isn't just a coincidence built from a handful of records.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>known/obvious fact</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Known (obvious) fact</strong><br>Something people in that business already assume is true. It can be completely accurate and still not be worth reporting as a finding.</span></button>
-</div>
+<h2>3. What a total can and can't tell you</h2>
+<div class="mlrk-card" id="card-total"><p><strong>Predict:</strong> <code>total.py</code> prints the total snack sales and the average per order. What can those two numbers tell the manager?</p>
+<div class="mlrk-code" data-file="total.py"><div class="mlrk-screen">import pandas as pd
+
+orders = pd.read_csv("orders.csv")
+print(orders["snack_dollars"].sum().round(2))
+print(orders["snack_dollars"].mean().round(2))</div></div>
+<button type="button" class="mlrk-btn" data-run="total.py" data-after="q-total"></button>
+<div class="mlrk-run" data-file="total.py" hidden><pre>3120.0
+13.0</pre></div>
+<button type="button" class="mlrk-choice" data-a="overall">How much snack money came in overall, and nothing about which orders differ</button>
+<button type="button" class="mlrk-choice" data-a="which">Which kind of show sells the most snacks</button>
+<button type="button" class="mlrk-choice" data-a="why">Why snack sales went up or down this month</button>
+<div id="totalfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>$3,120 and $13 per order are true. But one number describes the whole month at once, so it can't show how one part of the data differs from another. A true statement that compares nothing is a <strong>surface-level restatement</strong>. So is a <strong>known fact</strong>: something the manager already believes, like "popcorn is our best seller." It can be accurate and still not be news.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Predict, then check: a second segment</h2>
-<p>Region isn't the only plausible segment sitting in the claims data. Riverbend Mutual also tracks whether a policy includes a roadside-assistance add-on, and how many days each claim took to close.</p>
-<div class="mlrk-card" id="card-predict"><p><strong>Predict first:</strong> based only on the fact that a policy includes roadside assistance, do you expect claims tied to it to close faster, slower, or about the same as claims without it?</p>
-<button type="button" class="mlrk-choice" data-a="faster">Faster (fewer days to close)</button>
-<button type="button" class="mlrk-choice" data-a="slower">Slower (more days to close)</button>
+<h2>4. Split the data and compare</h2>
+<p>To find a pattern, split the rows into a <strong>segment</strong>, a group of rows that share a category, and measure it against a <strong>comparison group</strong>, the rows you compare it to. Matinee orders against evening orders is one segment to try. <code>by_show.py</code> asks for the count and the mean of each group at once.</p>
+
+<div class="mlrk-card" id="card-show"><p><strong>Predict:</strong> which group spends more on snacks per order?</p>
+<div class="mlrk-code" data-file="by_show.py"><div class="mlrk-screen">import pandas as pd
+
+orders = pd.read_csv("orders.csv")
+print(orders.groupby("show_time")["snack_dollars"].agg(["count", "mean"]))</div></div>
+<button type="button" class="mlrk-btn" data-run="by_show.py" data-after="q-show"></button>
+<div class="mlrk-run" data-file="by_show.py" hidden><pre>           count  mean
+show_time
+evening      144  10.0
+matinee       96  17.5</pre></div>
+<button type="button" class="mlrk-choice" data-a="matinee">Matinee orders</button>
+<button type="button" class="mlrk-choice" data-a="evening">Evening orders</button>
 <button type="button" class="mlrk-choice" data-a="same">About the same</button>
-<div id="predictfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<div class="mlrk-code"><div id="roadsideScreen" class="mlrk-screen">claims.groupby("has_roadside_assistance")["days_to_close"].mean()</div>
-<div class="mlrk-actions"><button type="button" id="roadsiderun" class="mlrk-btn">Reveal actual output</button></div></div>
-<p class="mlrk-small">Payout amounts for the two groups turn out to be nearly identical, within about $40 of each other, which is exactly what makes the closing-time gap worth a second look instead of being explained away by cost alone.</p>
+<div id="showfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>Matinee orders spend $17.50 on average, which is 75% more than the $10.00 for evening orders. That is a <strong>non-obvious pattern</strong>: a real difference between groups, big enough to matter, that the manager didn't already expect. The manager could act on it, for example by opening a second snack line before afternoon shows.</p>
+
+<div class="mlrk-card" id="card-count" style="margin-top:.8rem"><p><strong>The same output shows 144 evening orders and 96 matinee orders. On its own, is "we had more evening orders" a non-obvious pattern?</strong></p>
+<button type="button" class="mlrk-choice" data-a="no">No. It only counts rows in each group and says nothing about what those orders spent.</button>
+<button type="button" class="mlrk-choice" data-a="yes">Yes. It comes from grouping by show time, so it counts as a finding.</button>
+<div id="countfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Classify it: surface-level or genuinely non-obvious?</h2>
-<p>Select every statement below that clears the bar for a genuinely non-obvious finding, not a restated total or an already-known fact.</p>
-<div class="mlrk-card"><p><strong>Select every statement that is a genuinely non-obvious finding.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> This quarter, Riverbend Mutual paid out $700,800 across 240 claims.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Rural claims average $3,850, about 67% higher than metro claims' $2,300 average, across 96 rural and 144 metro claims.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Collision claims are the most common claim type we handle.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Claims tied to a roadside-assistance add-on close in about 9 days on average, compared to 19 days for claims without it, even though their payout amounts are nearly identical.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> The average claim payout was $2,920.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<h2>5. Check that enough rows stand behind it</h2>
+<p>A difference only counts once it rests on a <strong>reliable slice</strong>: enough rows that the number would likely look similar if you collected the data again. The matinee number comes from 96 orders, which is plenty. Two or three orders can look just as dramatic by luck.</p>
+
+<div class="mlrk-card" id="card-small"><p><strong>The 3 orders from the late-night horror marathon averaged $31 on snacks. Should you tell the manager that marathon crowds spend the most?</strong></p>
+<button type="button" class="mlrk-choice" data-a="notyet">Not yet. 3 orders is too small a slice to call it a pattern.</button>
+<button type="button" class="mlrk-choice" data-a="yes">Yes. $31 is far above the $13 average, so it's a finding.</button>
+<div id="smallfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<h3>Fill in the blank: try a second segment</h3>
+<p>Do people who buy their movie ticket online spend differently at the snack bar? Group by the column that answers that.</p>
+<div class="mlrk-code" data-file="by_online.py"><div class="mlrk-screen">import pandas as pd
+
+orders = pd.read_csv("orders.csv")
+print(orders.groupby("____")["snack_dollars"].agg(["count", "mean"]))
+print(orders.groupby("____")["tickets"].mean().round(1))</div></div>
+<button type="button" class="mlrk-btn" data-run="by_online.py" data-after="q-blank" data-after-note="Solve the blank first. Then you can run it."></button>
+<div class="mlrk-run" data-file="by_online.py" hidden><pre>               count  mean
+bought_online
+False            120  16.8
+True             120   9.2
+bought_online
+False    2.2
+True     2.2
+Name: tickets, dtype: float64</pre></div>
+<ol class="mlrk-steplist">
+  <li>Look at the column list in section 1 and find the column that says where the ticket was bought.</li>
+  <li>Type the column name exactly as it is spelled there, with no quotes. Both blanks get the same name.</li>
+  <li>Press <strong>Check</strong>. You get 2 tries. Then run the file.</li>
+</ol>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Column name:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+<p>Counter buyers spend $16.80 per order and online buyers spend $9.20, with 120 orders on each side. The second line rules out one easy explanation: both groups bring 2.2 tickets per order, so bigger groups don't explain the gap.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Mixed check</h2>
+<div class="mlrk-card"><p><strong>Select every statement that is a non-obvious pattern, not a surface-level restatement.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> Starlight sold $3,120 in snacks this month across 240 orders.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> Matinee orders spend $17.50 on snacks, 75% more than evening orders at $10.00, across 96 and 144 orders.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Popcorn is our best-selling snack.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Counter buyers spend $16.80 per order and online buyers $9.20, with 120 orders each and the same group size.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> The average order spent $13 on snacks.</label>
+<p><button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button></p>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Two more, one at a time</h2>
-<div class="mlrk-card" id="card-classifyA"><p><strong>A claims adjuster who joined mid-quarter has only closed 3 claims so far, and those 3 average $9,100, well above the $2,920 quarterly average. Is this a genuinely non-obvious finding worth telling the VP right now?</strong></p>
-<button type="button" class="mlrk-choice" data-a="notyet">Not yet. It's worth watching, but 3 claims is too small a slice to call this a real pattern.</button>
-<button type="button" class="mlrk-choice" data-a="yes">Yes. It's a comparison against the quarterly average, so it counts as a finding.</button>
-<div id="classifyAfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-classifyB" style="margin-top:.8rem"><p><strong>Metro claims were filed more often than rural claims this quarter (144 vs. 96). On its own, is naming that split a genuinely non-obvious finding?</strong></p>
-<button type="button" class="mlrk-choice" data-a="no">No. It describes how many rows fall into each group, but says nothing about cost, time, or anything else about the claims themselves.</button>
-<button type="button" class="mlrk-choice" data-a="yes">Yes. Grouping by region and counting rows is exactly the mining process this reading describes.</button>
-<div id="classifyBfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>7. Sort by role</h2>
-<p>Drag each statement into the zone describing what kind of claim it actually is, then use the self-check button to confirm your matches.</p>
-<div id="dragarea">
-<div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">"We paid $700,800 across 240 claims this quarter."</span>
-  <span id="chip2" class="mlrk-draggable">"Rural claims average 67% more than metro claims, across 96 and 144 claims respectively."</span>
-  <span id="chip3" class="mlrk-draggable">"Claims filed during the office's one-week system migration average $9,400, but that's only 2 claims all quarter."</span>
-</div>
-<div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>Surface-level restatement</strong></p><div class="mlrk-dropzone" id="zoneSurface"></div></div>
-  <div><p class="mlrk-small"><strong>Genuinely non-obvious finding</strong></p><div class="mlrk-dropzone" id="zoneNonObvious"></div></div>
-  <div><p class="mlrk-small"><strong>Real-looking gap, not a reliable slice</strong></p><div class="mlrk-dropzone" id="zoneUnreliable"></div></div>
-</div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
-<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>8. Which comparison would actually reveal it?</h2>
-<div class="mlrk-card" id="card-compareA"><p><strong>The VP wonders whether claims tied to a roadside-assistance add-on close faster than claims without it. Which comparison would actually test that?</strong></p>
-<button type="button" class="mlrk-choice" data-a="right"><code>claims.groupby("has_roadside_assistance")["days_to_close"].mean()</code></button>
-<button type="button" class="mlrk-choice" data-a="wrongtotal"><code>claims["days_to_close"].mean()</code></button>
-<button type="button" class="mlrk-choice" data-a="wrongvar"><code>claims.groupby("claim_type")["payout_amount"].mean()</code></button>
-<div id="compareAfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-compareB" style="margin-top:.8rem"><p><strong>A separate question: does payout actually differ by region? Which comparison would test that?</strong></p>
-<button type="button" class="mlrk-choice" data-a="right"><code>claims.groupby("region")["payout_amount"].mean()</code></button>
-<button type="button" class="mlrk-choice" data-a="wrongcount"><code>claims["region"].value_counts()</code></button>
-<button type="button" class="mlrk-choice" data-a="wrongsort"><code>claims.sort_values("payout_amount")</code></button>
-<div id="compareBfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>9. Fill in the blank</h2>
-<p>Referring back to the region comparison from section 1:</p>
-<div class="mlrk-code"><div class="mlrk-screen">claims.groupby("region")["payout_amount"].____()</div></div>
-<div class="mlrk-fillblank">
-  <label for="blankinput">Type the missing method that computes each region's average payout:</label>
-  <input type="text" id="blankinput" autocomplete="off">
-  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
-</div>
-<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>10. Order the steps: the mining process</h2>
-<p>Click steps, in order, to build the process actually used above to go from a total to a real finding. Click a step again to remove it if you change your mind, then press "Check my order" when ready. This is a self-check, not graded on correctness.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="surface"><span class="mlrk-order-num"></span> Name the surface-level fact everyone would already restate: a total or an overall average.</li>
-  <li class="mlrk-orderitem" data-step="pick"><span class="mlrk-order-num"></span> Pick a segment that might plausibly explain a difference, not just any column that happens to exist.</li>
-  <li class="mlrk-orderitem" data-step="compare"><span class="mlrk-order-num"></span> Compute each segment's number and compare it against the other segment(s).</li>
-  <li class="mlrk-orderitem" data-step="reliable"><span class="mlrk-order-num"></span> Check whether the gap is actually built on enough rows to trust, not a handful of records.</li>
-  <li class="mlrk-orderitem" data-step="state"><span class="mlrk-order-num"></span> State the finding by naming the segment and the size of the gap, not just repeating the overall number.</li>
+<h2>7. Wrap-up</h2>
+<ul>
+<li>A total or a known fact is true but compares nothing, so it isn't a finding.</li>
+<li>A pattern comes from splitting the rows into a segment and a comparison group, and finding a real difference.</li>
+<li>Check the count behind each number before you repeat it.</li>
 </ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>11. Watch: talking about your own findings</h2>
-<p>As you watch, notice how the strong example answers name a specific comparison and a real number, while the weak ones stay vague or generic, the exact same distinction this reading has been practicing between a surface-level restatement and a genuinely non-obvious finding.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=rLKC--8UYSw" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one thing a strong answer did that a weak answer skipped?</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>"Walk me through an interesting finding you made in a dataset" is one of the single most common prompts in a data-analyst interview, and a vague or surface-level answer is an immediate red flag. Interviewers aren't just checking whether you touched real data, they're checking whether you can tell a restated total apart from something that actually required digging, and whether you checked the gap held up before repeating it.</p>
-<p>A near-guaranteed follow-up: "how did you know it wasn't just a coincidence?" A confident answer names the sample size or the comparison you checked it against. "I just thought it looked interesting" is exactly the kind of answer this reading's reliable-slice check exists to prevent.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>An interviewer says, "Walk me through an interesting finding you made in a project." Which answer actually clears the bar?</strong></p>
-<button type="button" class="mlrk-choice" data-a="specific">"[Segment] averaged [a specific, sized gap] compared to [comparison group], based on enough rows to trust it, and here's why it mattered."</button>
-<button type="button" class="mlrk-choice" data-a="vague1">"I found that our top-selling product did really well this quarter."</button>
-<button type="button" class="mlrk-choice" data-a="vague2">"I noticed something interesting in the data, but I don't remember the exact numbers anymore."</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>13. Judgment check + reflection</h2>
-<div class="mlrk-card" id="card-judgment"><p><strong>You spot a segment where a number looks strikingly different from the rest of the data. Before calling it a real finding, what should you check?</strong></p>
-<button type="button" class="mlrk-choice" data-a="rows">How many rows actually sit behind that segment's number, and whether the gap holds up against the most relevant comparison group.</button>
-<button type="button" class="mlrk-choice" data-a="impressive">Whether the number is dramatic enough to be worth mentioning in a meeting.</button>
-<button type="button" class="mlrk-choice" data-a="first">Whether it's the very first unusual-looking number you happened to notice.</button>
-<div id="judgmentfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>Your judgment process:</strong> in 1-2 sentences, describe how you'd decide whether a striking-looking gap in a dataset is a real finding or just a small sample dressed up to look like one.</label>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: First I'd check..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>14. Summary &amp; critical thinking</h2>
-<p>Two habits carried this whole reading: telling a genuine comparison-based finding apart from a total or an already-known fact restated as if it were news, and checking that a real-looking gap is actually built on enough rows to trust. Together, they're what turns "here's a number from the data" into "here's something worth changing because of the data."</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a community clinic network logs every visit: which location, the reason for the visit, insurance type, and how long the patient waited. An intake coordinator wants to know what's actually going on with wait times, not just the overall average. Which of these is a genuinely non-obvious finding, not a surface-level restatement?</p>
-<button type="button" class="mlrk-choice" data-a="compare">Visits at the downtown location average 22 minutes longer than the same visit type at the suburban location, across 80-plus visits at each site.</button>
-<button type="button" class="mlrk-choice" data-a="surface">Patients waited an average of 38 minutes across all visits.</button>
-<button type="button" class="mlrk-choice" data-a="count">The clinic saw more visits this month than the month before.</button>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> the manager now asks about movie tickets, not snacks. Which statement is a non-obvious pattern?</p>
+<button type="button" class="mlrk-choice" data-a="compare">Orders for 3D showings include 3.1 tickets on average, compared with 2.0 for regular showings, across more than 100 orders each.</button>
+<button type="button" class="mlrk-choice" data-a="surface">We sold 5,000 movie tickets this month.</button>
+<button type="button" class="mlrk-choice" data-a="known">Friday and Saturday nights are our busiest nights.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> why might a business fact that's true and checkable still fail to count as a real finding?</label>
-<textarea id="clue" class="mlrk-response" data-save></textarea>
+<p><strong>In interviews:</strong> "Tell me about an interesting finding in a dataset" is a common question. A strong answer names the segment, the comparison group, the size of the gap, and how many rows stood behind it.</p>
+<p><strong>Where this goes next:</strong> once you find a pattern, the next step is questioning the data under it: where it came from and what it might be missing.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>15. Thinking ahead</h2>
-<p>Mining a dataset for a real pattern and then questioning whether that pattern deserves your trust are two different skills. Once spotting a genuine, comparison-backed finding starts to feel natural, the next real question turns toward the data underneath it: where it actually came from, how complete it is, and what would make someone reasonably skeptical of trusting it at all. A companion resource on asking specific, checkable questions about a dataset's origin and completeness picks up exactly there, whenever you're ready for it.</p>
+<h2>8. Reflection</h2>
+<label for="strategy"><strong>Your checking habit:</strong> you spot a group whose number looks very different from the rest. What would you check before calling it a finding?</label>
+<ol class="mlrk-steplist">
+  <li>Write 1 or 2 sentences, at least 8 words. The counter under the box tells you when it counts.</li>
+  <li>Try starting with: "First I'd check how many rows..."</li>
+</ol>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="First I'd check how many rows..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
 </section>
 
 <section class="mlrk-section">
-<h2>16. Your score &amp; keep a copy of your work</h2>
+<h2>9. Key terms review</h2>
+<p>Flip each card to check that you can explain the term.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Segment</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Segment</strong><br>A group of rows that share a category, like every matinee order, used to compare against other rows.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Comparison group</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Comparison group</strong><br>The rows a segment is measured against. A number about one group means little until it sits next to another.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Surface-level restatement</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Surface-level restatement</strong><br>A true statement that compares nothing, like a grand total or an overall average.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Known (obvious) fact</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Known (obvious) fact</strong><br>Something people already believe is true. It can be accurate and still not be worth reporting as a finding.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Non-obvious pattern</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Non-obvious pattern</strong><br>A real difference between groups, big enough to matter, that people didn't already expect.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Reliable slice</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Reliable slice</strong><br>Enough rows behind a group's number that the difference isn't just luck from a handful of rows.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Go further (optional)</h2>
+<p>This video is optional and isn't part of the time estimate or your score. As you watch, notice how the strong answers name a specific comparison and a real number, while the weak ones stay vague.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/rLKC--8UYSw" title="Talking about your data findings, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=rLKC--8UYSw" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -388,134 +346,93 @@ git push</pre></li>
   K.Scoring.renderChip("#scorechip");
 
   K.quiz({id:"q-recall1", buttonSelector:"#card-recall1 .mlrk-choice", feedbackSelector:"#recall1fb", correct:"series",
-    feedback:{series:"Grouping by a column and calling mean() on a selected column returns a Series: one average value per group, indexed by the group's values.",
-              single:"That's what claims[\"payout_amount\"].mean() alone would return, with no groupby. Grouping first keeps the regions separate.",
-              newdf:"groupby().mean() collapses each group down to its summary statistic. It doesn't preserve every original column for every original row."}});
-
-  K.quiz({id:"q-recall2", buttonSelector:"#card-recall2 .mlrk-choice", feedbackSelector:"#recall2fb", correct:"filtered",
-    feedback:{filtered:"Wrapping the boolean comparison in claims[...] uses it to filter, returning a DataFrame with only the matching rows.",
-              count:"This expression returns rows, not a count. len() on the result would give you the count.",
-              bool:"claims[\"claim_type\"] == \"collision\" alone returns that boolean Series. Wrapping it in claims[...] uses it to filter down to matching rows instead."}});
+    feedback:{series:"Right. groupby splits the rows by show_time, and .mean() gives one average for each group.",
+              single:"An overall average would be orders[\"snack_dollars\"].mean(). The groupby makes one average per show time.",
+              newdf:"Sorting uses .sort_values(). groupby plus .mean() gives one average per group."}});
 
   K.quiz({id:"q-recall3", buttonSelector:"#card-recall3 .mlrk-choice", feedbackSelector:"#recall3fb", correct:"median",
-    feedback:{median:"The median isn't pulled around by a few extreme outliers, so on a right-skewed column it stays closer to what a typical claim actually costs.",
-              mean:"A right-skewed column's mean gets dragged upward by the same handful of catastrophic claims that cause the skew in the first place.",
-              mode:"The mode names the single most frequent value, which usually isn't a useful summary for a continuous dollar amount like payout."}});
+    feedback:{median:"Right. The median is the middle value, so a few huge orders can't pull it up the way they pull up the mean.",
+              mean:"The mean adds every order, so the few birthday parties pull it above what a typical order spends.",
+              max:"The largest order is one birthday party, the opposite of a typical order."}});
 
-  K.quiz({id:"q-predict", buttonSelector:"#card-predict .mlrk-choice", feedbackSelector:"#predictfb", correct:"faster", maxAttempts:1,
-    feedback:{faster:"That's what the real numbers show: claims with roadside assistance average 9.1 days to close, versus 19.4 days without it. A guess only becomes a finding once it's actually checked against real numbers, not intuition.",
-              slower:"Not what the real numbers show. Claims with roadside assistance actually close faster, 9.1 days versus 19.4, the opposite direction. That's exactly why you check instead of assuming.",
-              same:"Not what the real numbers show. There's a real gap here: 9.1 days with roadside assistance versus 19.4 days without it."},
-    onDone(){revealRoadside()}});
+  K.quiz({id:"q-total", buttonSelector:"#card-total .mlrk-choice", feedbackSelector:"#totalfb", correct:"overall",
+    feedback:{overall:"Right. A total and an overall average describe the whole month at once. Neither one splits the orders into groups.",
+              which:"Nothing in total.py splits orders by show. To compare shows, you need a groupby.",
+              why:"One month's total has nothing to compare against, so it can't say why anything changed."}});
 
-  K.quiz({id:"q-classifyA", buttonSelector:"#card-classifyA .mlrk-choice", feedbackSelector:"#classifyAfb", correct:"notyet", maxAttempts:1,
-    feedback:{notyet:"Three claims is nowhere near a reliable slice. The $9,100 average could easily change once this adjuster closes another dozen claims. Worth watching, not worth reporting yet.",
-              yes:"A comparison against the quarterly average is the right shape for a finding, but the size of the slice behind it matters just as much as the shape. Three claims isn't enough to trust."}});
+  K.quiz({id:"q-show", buttonSelector:"#card-show .mlrk-choice", feedbackSelector:"#showfb", correct:"matinee",
+    feedback:{matinee:"Right. Matinee orders average $17.50 and evening orders $10.00.",
+              evening:"Evening has more orders, 144, but each one spends less: $10.00 against $17.50 for matinees.",
+              same:"The gap is $7.50 per order, too big to call the same."}});
 
-  K.quiz({id:"q-classifyB", buttonSelector:"#card-classifyB .mlrk-choice", feedbackSelector:"#classifyBfb", correct:"no", maxAttempts:1,
-    feedback:{no:"Counting rows per group answers a different question, how many, not anything about cost, time, or outcome. A row count alone isn't a finding about the claims themselves.",
-              yes:"Grouping is the right mechanic, but counting rows per group only describes volume. It says nothing about payout, closing time, or anything else worth acting on."}});
+  K.quiz({id:"q-count", buttonSelector:"#card-count .mlrk-choice", feedbackSelector:"#countfb", correct:"no", maxAttempts:1,
+    feedback:{no:"Right. A count of rows per group is a restatement. The finding is in what the groups spent.",
+              yes:"Grouping is a tool, not a finding. Counting rows per group doesn't say anything about spending."}});
 
-  K.quiz({id:"q-compareA", buttonSelector:"#card-compareA .mlrk-choice", feedbackSelector:"#compareAfb", correct:"right",
-    feedback:{right:"Grouping by has_roadside_assistance and averaging days_to_close directly compares the two groups the question is actually about.",
-              wrongtotal:"This averages every claim's closing time together, with no split by roadside assistance at all. It can't answer a comparison question.",
-              wrongvar:"This groups by the wrong column and averages the wrong variable entirely, neither has_roadside_assistance nor days_to_close appears here."}});
-
-  K.quiz({id:"q-compareB", buttonSelector:"#card-compareB .mlrk-choice", feedbackSelector:"#compareBfb", correct:"right",
-    feedback:{right:"Grouping by region and averaging payout_amount directly compares the two regions on the exact variable the question asks about.",
-              wrongcount:"value_counts() counts how many claims fall in each region. It says nothing about payout amount.",
-              wrongsort:"Sorting reorders the rows by payout. It doesn't group or compare anything across regions."}});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"specific",
-    feedback:{specific:"Naming the segment, the comparison group, the size of the gap, and why it mattered is exactly what separates a real finding from a vague memory of one.",
-              vague1:"Real, maybe, but there's no comparison group and no size to the gap. It restates a result instead of describing a finding.",
-              vague2:"Not remembering the numbers means there's no way to check whether the gap was real or just a coincidence. This is the answer interviewers are listening for and hoping not to hear."}});
-
-  K.quiz({id:"q-judgment", buttonSelector:"#card-judgment .mlrk-choice", feedbackSelector:"#judgmentfb", correct:"rows",
-    feedback:{rows:"Sample size and a real comparison group are what separate a trustworthy finding from a coincidence that happens to look dramatic.",
-              impressive:"How dramatic a number looks has nothing to do with whether it's actually reliable. A striking number from 2 rows is still just 2 rows.",
-              first:"The order you happened to notice something in says nothing about whether it holds up. Plenty of real findings aren't the first thing anyone spots."}});
+  K.quiz({id:"q-small", buttonSelector:"#card-small .mlrk-choice", feedbackSelector:"#smallfb", correct:"notyet", maxAttempts:1,
+    feedback:{notyet:"Right. With only 3 orders, one big family could make that number. Watch it, but don't report it yet.",
+              yes:"The gap looks big, but it rests on 3 orders. That's too small a slice to trust."}});
 
   K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"compare",
-    feedback:{compare:"Two named locations, a real gap, and a large enough slice behind each side. That's the shape a genuinely non-obvious finding needs.",
-              surface:"A single overall average describes the whole clinic at once. It can't say anything about how wait times differ by location.",
-              count:"A visit-count comparison over time says nothing about how long anyone actually waited."}});
+    feedback:{compare:"Right. It compares two groups, the gap is large, and more than 100 orders stand behind each number.",
+              surface:"A total ticket count compares nothing. It's a surface-level restatement.",
+              known:"The manager already knows weekends are busy. It's a known fact, not news."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"This quarter, Riverbend Mutual paid out $700,800 across 240 claims.", correct:false,
-      hint:"Does this compare anything, or is it a single total added across every claim in the dataset?",
-      explain:"A grand total describes the whole dataset at once. It can't say anything about how the data differs from itself."},
-    {value:"b", label:"Rural claims average $3,850, about 67% higher than metro claims' $2,300 average, across 96 rural and 144 metro claims.", correct:true,
-      hint:"This one names two groups, a sized gap, and a real count behind each side. Compare it against option (a).",
-      explain:"Two named groups, both built on a real number of claims, with a gap most people wouldn't have already assumed. That's the bar."},
-    {value:"c", label:"Collision claims are the most common claim type we handle.", correct:false,
-      hint:"Is this something a claims VP would already expect to be true before ever opening a spreadsheet?",
-      explain:"True and checkable, but not surprising. An already-assumed fact about the business doesn't clear the non-obvious bar just because it's accurate."},
-    {value:"d", label:"Claims tied to a roadside-assistance add-on close in about 9 days on average, compared to 19 days for claims without it, even though their payout amounts are nearly identical.", correct:true,
-      hint:"Look for a named comparison group and a gap most people wouldn't guess ahead of time.",
-      explain:"A real comparison between two groups, with a gap large enough to matter and a direction most people wouldn't guess, since similar payouts make the closing-time gap genuinely surprising."},
-    {value:"e", label:"The average claim payout was $2,920.", correct:false,
-      hint:"Same question as option (a): is anything here being compared to anything else?",
-      explain:"Same problem as the total above: one number for the whole dataset, with no comparison group anywhere in it."}
+    {value:"a", label:"Starlight sold $3,120 in snacks this month across 240 orders.", correct:false,
+      hint:"Does this compare one group with another?",
+      explain:"A total compares nothing. It's a surface-level restatement."},
+    {value:"b", label:"Matinee orders spend $17.50 on snacks, 75% more than evening orders at $10.00, across 96 and 144 orders.", correct:true,
+      hint:"Look for a segment, a comparison group, and a count behind each number.",
+      explain:"It has all three: two groups, a big gap, and enough rows."},
+    {value:"c", label:"Popcorn is our best-selling snack.", correct:false,
+      hint:"Would the manager be surprised to hear this?",
+      explain:"The manager already believes it. It's a known fact."},
+    {value:"d", label:"Counter buyers spend $16.80 per order and online buyers $9.20, with 120 orders each and the same group size.", correct:true,
+      hint:"Think about by_online.py's output.",
+      explain:"Two groups, a large gap, 120 orders each, and group size ruled out."},
+    {value:"e", label:"The average order spent $13 on snacks.", correct:false,
+      hint:"Is this one number for the whole month?",
+      explain:"An overall average compares nothing, so it's a restatement."}
   ]});
 
-  K.dragDrop("#dragarea", "act-drag-sort");
-  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneSurface", label:"\"We paid $700,800 across 240 claims this quarter.\"", expectedLabel:"Surface-level restatement"},
-    chip2:{expectedId:"zoneNonObvious", label:"\"Rural claims average 67% more than metro claims, across 96 and 144 claims respectively.\"", expectedLabel:"Genuinely non-obvious finding"},
-    chip3:{expectedId:"zoneUnreliable", label:"\"Claims filed during the office's one-week system migration average $9,400, but that's only 2 claims all quarter.\"", expectedLabel:"Real-looking gap, not a reliable slice"}
-  }});
-  K.orderSteps("#ordersteps", {id:"act-order-mining", correctOrder:["surface","pick","compare","reliable","state"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
   K.flipCards("#vocab", "act-flip-vocab");
-
-  function revealRoadside(){
-    $("#roadsideScreen").textContent = `claims.groupby("has_roadside_assistance")["days_to_close"].mean()
-
-[Output]
-has_roadside_assistance
-False    19.4
-True      9.1
-Name: days_to_close, dtype: float64`;
-  }
-  $("#roadsiderun").addEventListener("click", revealRoadside);
-
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"rLKC--8UYSw"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
   K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
-  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
 
   K.Scoring.register("q-blank",1,"quiz");
   let blankAttempts=0, blankDone=false;
   $("#blankcheck").addEventListener("click",()=>{
     if(blankDone) return;
     blankAttempts++;
-    const ok = $("#blankinput").value.trim().toLowerCase()==="mean";
+    const v = $("#blankinput").value.trim().toLowerCase().replace(/[`'"\[\]\s]/g,"");
+    const ok = v==="bought_online";
     const fb=$("#blankfb");
     if(ok){
       K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> mean() computes each region's average payout_amount.";
+      fb.innerHTML="<strong>Correct"+(blankAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> bought_online splits the orders into online buyers and counter buyers. Run the file to compare them.";
       blankDone=true;
     } else if(blankAttempts>=2){
       K.Scoring.award("q-blank",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing method is <code>mean</code>.";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The column is <code>bought_online</code>.";
       blankDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+      fb.innerHTML="<strong>Not quite yet.</strong> The column is True or False depending on whether the ticket was bought online. Check the spelling, including the underscore.";
     }
-    fb.setAttribute("tabindex","-1");fb.focus();
+    fb.setAttribute("tabindex","-1"); fb.focus();
+    if(blankDone) K.markDone("q-blank");
   });
 
   const AI_PROMPTS = [
-    "Think about a claim you'd make about a group you're part of, like a team or a class. What comparison group would you actually need to check it against before calling it a real pattern instead of a guess?",
-    "If you had to explain the difference between a total and a finding to a friend using something from your own daily life, like a budget or a fitness tracker, what would you compare it to?",
-    "Where have you seen a small, dramatic-looking number get treated as a real trend before anyone checked how many data points it was actually built on?"
+    "Think about a claim you'd make about a group you belong to, like a team or a class. What group would you compare it with before calling it a real pattern?",
+    "How would you explain the difference between a total and a finding to a friend, using something like a weekly budget?",
+    "Where have you seen a dramatic number from just a few examples get treated as a trend?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.style.display="block";
+    box.hidden=false;
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 

@@ -4,27 +4,23 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:880px;height:auto;display:block;
-  margin-top:1.1rem;margin-bottom:1.1rem;margin-left:auto;margin-right:auto}
-.pt-wrap{overflow-x:auto;margin:1rem 0}
-.pt-table{border-collapse:collapse;min-width:320px;font-family:var(--mlrk-font-code);font-size:.95rem}
-.pt-table caption{caption-side:top;text-align:left;font-family:var(--mlrk-font-body);font-weight:700;
-  margin-bottom:.4rem;color:var(--mlrk-ink-900)}
-.pt-table th,.pt-table td{border:1px solid var(--mlrk-divider-on-light);padding:.45rem .8rem;text-align:left}
-.pt-table th{background:var(--mlrk-bg-light-alt);font-weight:700}
+.mlrk-illustration{width:100%;max-width:820px;height:auto;margin:1.1rem 0;display:block}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
-.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:11rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:12rem}
+.data-table{border-collapse:collapse;margin:.6rem 0 1rem;font-size:.95rem}
+.data-table th,.data-table td{border:1px solid var(--mlrk-divider-on-light);padding:.4rem .7rem;text-align:left}
+.data-table th{background:var(--mlrk-bg-light-alt)}
 </style>
 </head><body>
 
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>A Number One in Every Depot</h1>
-<p class="mlrk-lead">A delivery company ranks all of its drivers by how many packages they got out the door last month. One name lands at the top, and every other name lands somewhere underneath it. Then a manager asks a sharper question: who is the best driver at <em>each</em> warehouse? One flat list cannot answer that. One extra keyword can.</p>
+<p class="mlrk-lead">A delivery company ranks all its drivers by how many packages they delivered last month. One name lands on top. Then the manager asks a different question: who is the best driver at each depot? The company wants to give one award per depot. That takes a ranking that starts over inside each group.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~36–39 minutes</span>
+  <span class="mlrk-pill">~20–23 minutes</span>
   <span class="mlrk-pill">Interactive</span>
-  <span class="mlrk-pill">No setup needed</span>
+  <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
 </div>
 </div></header>
@@ -54,9 +50,20 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Introduction</h2>
-<p>Northline Parcel is a made-up regional package-delivery company. It picks up boxes, sorts them overnight, and gets them to homes and small businesses across one corner of the country. Northline runs three <strong>depots</strong>. A depot is just the local warehouse a driver starts and ends their shift at: they clock in there, load a van there, drive their route, and return there once the route is done. Every driver belongs to exactly one depot.</p>
-<p>At the start of the month, the operations manager pulls a list of every driver and how many packages each one delivered. She sorts it from most to fewest and reads off the top name. That tells her who the single busiest driver in the whole company is. It does not tell her who the busiest driver at the Hillcrest warehouse is, and that is the number she actually needs, because she wants to hand out one recognition award per depot.</p>
+<h2>1. Seven drivers, three depots</h2>
+<p>A depot is the warehouse where a driver starts and ends each shift. Every driver belongs to one depot. The table <code>driver_month</code> has one row per driver with last month's package total:</p>
+<table class="data-table">
+<thead><tr><th>name</th><th>depot</th><th>packages</th></tr></thead>
+<tbody>
+<tr><td>Tasha Boone</td><td>Riverside</td><td>412</td></tr>
+<tr><td>Priya Nadar</td><td>Eastgate</td><td>401</td></tr>
+<tr><td>Omar Reyes</td><td>Riverside</td><td>388</td></tr>
+<tr><td>Luis Ferrer</td><td>Eastgate</td><td>372</td></tr>
+<tr><td>Grace Okafor</td><td>Hillcrest</td><td>366</td></tr>
+<tr><td>Dee Whitfield</td><td>Riverside</td><td>355</td></tr>
+<tr><td>Sam Beckett</td><td>Hillcrest</td><td>344</td></tr>
+</tbody>
+</table>
 
 <svg class="mlrk-illustration" viewBox="0 0 880 510" role="img" aria-labelledby="pbTitle pbDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="pbTitle">One company-wide ranking compared with a ranking that restarts inside each depot</title>
@@ -123,80 +130,70 @@
   </g>
 </svg>
 
-<p>Look at Grace on both sides. She delivered the same number of packages either way. On the left she is fifth, buried in the middle of a list. On the right she is first, because the only drivers she is being measured against are the other drivers who load their vans at Hillcrest. Nothing about Grace changed. What changed is the group she is being compared to.</p>
-
+<p>Look at Grace in the picture. Grace delivered the same number of packages on both sides. On the left, Grace is fifth. On the right, Grace is first, because Grace is only compared with Sam, the other Hillcrest driver. You already know <code>RANK() OVER (ORDER BY ...)</code> and <code>WITH</code>. "Best in each group" is one of the most common requests an analyst gets, and this reading joins those two tools to answer it.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> "best in each group" is one of the most common things a manager will ever ask an analyst for. Top-selling product in each store. Highest-paid employee in each job title. Longest wait time at each clinic. Best-performing ad in each region. It comes up so often that interviewers have a name for it and ask for it by that name, and a candidate who reaches for a separate query per group, or for a sort-and-eyeball approach, signals pretty quickly that they have not written this pattern for real.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to number rows by some value using a ranking function, and you already know how to name a finished query's result so a second query can read from it. This reading connects those two ideas. First you tell the ranking which group each row belongs to, so the numbering restarts group by group. Then you use the naming trick to hand back only the rows you actually wanted. Once that clicks, the same "compare each row to its own group" idea opens up a lot more than ranking: comparing a driver to their own depot's average, or a month to its own year's running total, works the same way.</p>
+<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what <code>psql</code> prints when it runs that file. On your own laptop you'd type <code>psql -d deliveries -f name.sql</code>. The <code>-f</code> tells <code>psql</code> to run every statement in the file, top to bottom.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall these first</h2>
-<p>Three skills are prerequisites for this reading: ranking rows with <code>RANK()</code> and an <code>OVER</code> clause, naming a finished query's result with <code>WITH</code>, and knowing what <code>ORDER BY</code> on the outer query does. Check each one before moving on.</p>
+<h2>2. Recall</h2>
+<p>This reading leans on <code>RANK()</code> and on naming a result with <code>WITH</code>. Check both.</p>
 
-<div class="mlrk-card" id="card-rank"><p><strong>What does <code>RANK() OVER (ORDER BY packages DESC)</code> add to a query's result?</strong></p>
-<button type="button" class="mlrk-choice" data-a="numbercol">A new column holding each row's position, counting from the largest <code>packages</code> value down.</button>
-<button type="button" class="mlrk-choice" data-a="sorts">Nothing new. It only re-sorts the rows that were already there.</button>
-<button type="button" class="mlrk-choice" data-a="removes">It removes every row except the highest <code>packages</code> value.</button>
+<div class="mlrk-card" id="card-recall-rank"><p><strong>What does <code>RANK() OVER (ORDER BY packages DESC)</code> add to a query's result?</strong></p>
+<button type="button" class="mlrk-choice" data-a="col">A new column with each row's place, counting from the most packages down.</button>
+<button type="button" class="mlrk-choice" data-a="sort">Nothing new. It only sorts the rows that were already there.</button>
+<button type="button" class="mlrk-choice" data-a="top">It removes every row except the one with the most packages.</button>
 <div id="rankfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-cte" style="margin-top:.8rem"><p><strong>Coding check:</strong> what does the <code>WITH</code> block do in the query below?</p>
-<div class="mlrk-code"><div class="mlrk-screen">WITH busy AS (
-  SELECT name, packages FROM drivers WHERE packages > 300
+<div class="mlrk-card" id="card-recall-with" style="margin-top:.8rem"><p><strong>Predict:</strong> how many rows does <code>busy_drivers.sql</code> return?</p>
+<div class="mlrk-code" data-file="busy_drivers.sql"><div class="mlrk-screen">WITH busy AS (
+    SELECT name, packages
+    FROM driver_month
+    WHERE packages &gt; 380
 )
 SELECT * FROM busy;</div></div>
-<button type="button" class="mlrk-choice" data-a="names">It runs the inner query first and gives its result the name <code>busy</code>, so the outer query can select from that name.</button>
-<button type="button" class="mlrk-choice" data-a="table">It permanently creates a new table called <code>busy</code> in the database.</button>
-<button type="button" class="mlrk-choice" data-a="comment">It is a comment. The database ignores everything inside the parentheses.</button>
-<div id="ctefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-orderby" style="margin-top:.8rem"><p><strong>Scenario check:</strong> a query already produces a numbered ranking. You add <code>ORDER BY depot</code> to the very end of it. What happens to the numbers in the ranking column?</p>
-<button type="button" class="mlrk-choice" data-a="unchanged">Nothing. The numbers stay exactly as they were. Only the order the rows print in changes.</button>
-<button type="button" class="mlrk-choice" data-a="restart">The numbers restart at 1 for each depot.</button>
-<button type="button" class="mlrk-choice" data-a="error">The query fails, because a ranking cannot be sorted afterward.</button>
-<div id="orderbyfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">Hold on to that last one. Sorting how a result prints and deciding who a row is being measured against are two completely separate jobs, and mixing them up is the single most common wrong guess in this whole topic.</div>
+<button type="button" class="mlrk-btn" data-run="busy_drivers.sql" data-after="q-with">Run busy_drivers.sql</button>
+<div class="mlrk-run" data-file="busy_drivers.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f busy_drivers.sql</div><pre>    name     | packages
+-------------+----------
+ Tasha Boone |      412
+ Priya Nadar |      401
+ Omar Reyes  |      388
+(3 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="three">3</button>
+<button type="button" class="mlrk-choice" data-a="seven">7</button>
+<button type="button" class="mlrk-choice" data-a="zero">0, because <code>busy</code> is not a real table</button>
+<div id="withfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Concept overview: one list, then three</h2>
-<p>Here is what the operations manager is actually working from. Northline's database has already counted up last month's deliveries per driver, so each row is one driver, their depot, and their package total.</p>
-
-<div class="pt-wrap"><table class="pt-table"><caption>driver_month</caption>
-<tr><th>name</th><th>depot</th><th>packages</th></tr>
-<tr><td>Tasha Boone</td><td>Riverside</td><td>412</td></tr>
-<tr><td>Priya Nadar</td><td>Eastgate</td><td>401</td></tr>
-<tr><td>Omar Reyes</td><td>Riverside</td><td>388</td></tr>
-<tr><td>Luis Ferrer</td><td>Eastgate</td><td>372</td></tr>
-<tr><td>Grace Okafor</td><td>Hillcrest</td><td>366</td></tr>
-<tr><td>Dee Whitfield</td><td>Riverside</td><td>355</td></tr>
-<tr><td>Sam Beckett</td><td>Hillcrest</td><td>344</td></tr>
-</table></div>
-
-<p>Her first query ranks everybody against everybody:</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT name, depot, packages,
+<h2>3. PARTITION BY starts the count over</h2>
+<p>Here is the manager's first query. It ranks everyone against everyone:</p>
+<div class="mlrk-code" data-file="company_rank.sql"><div class="mlrk-screen">SELECT name, depot, packages,
        RANK() OVER (ORDER BY packages DESC) AS rnk
 FROM driver_month
 ORDER BY rnk;</div></div>
-<p>The <code>OVER (...)</code> part is what makes <code>RANK()</code> a <strong>window function</strong>: a function that looks at a set of other rows while it works out a value for the current row. The rows it is allowed to look at are called its <strong>window</strong>. Right now the window is the entire table, so Tasha gets rank 1 and everyone else falls in behind her. Grace, the fastest driver at Hillcrest, comes back as rank 5.</p>
+<div class="mlrk-run" data-file="company_rank.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f company_rank.sql</div><pre>     name      |   depot   | packages | rnk
+---------------+-----------+----------+-----
+ Tasha Boone   | Riverside |      412 |   1
+ Priya Nadar   | Eastgate  |      401 |   2
+ Omar Reyes    | Riverside |      388 |   3
+ Luis Ferrer   | Eastgate  |      372 |   4
+ Grace Okafor  | Hillcrest |      366 |   5
+ Dee Whitfield | Riverside |      355 |   6
+ Sam Beckett   | Hillcrest |      344 |   7
+(7 rows)</pre></div>
+<p><code>RANK()</code> is a <strong>window function</strong>: it looks at a set of other rows while it works out a value for the current row, and it keeps every row. The <strong>OVER clause</strong>, the <code>OVER (...)</code> part, says which rows it may look at and in what order. Right now it looks at the whole table.</p>
+<p><strong>PARTITION BY</strong> goes inside the <code>OVER (...)</code> parentheses, before <code>ORDER BY</code>. It splits the rows into groups first, and the ranking starts over at 1 inside each group. Each group is called a <strong>partition</strong>. Here, one partition is one depot's drivers.</p>
 
-<div class="mlrk-card" id="card-flatones"><p><strong>In that company-wide ranking, how many rows come back holding <code>rnk = 1</code>?</strong></p>
-<button type="button" class="mlrk-choice" data-a="1">1</button>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="7">7</button>
-<div id="flatonesfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<p style="margin-top:1.2rem">Now the manager adds two words. Everything else about the query is identical:</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT name, depot, packages,
-       RANK() OVER (PARTITION BY depot
+<h3>Fill in the blank: rank inside each depot</h3>
+<div class="mlrk-code" data-file="depot_rank.sql"><div class="mlrk-screen">SELECT name, depot, packages,
+       RANK() OVER (____ depot
                     ORDER BY packages DESC) AS rnk
 FROM driver_month
 ORDER BY depot, rnk;</div></div>
-<p><code>PARTITION BY depot</code> tells the window function to split the rows into groups by depot first, and then do its counting separately inside each group. Each of those groups is called a <strong>partition</strong>. Riverside's three drivers get numbered 1, 2, 3 among themselves. Eastgate's two drivers get numbered 1, 2 among themselves. Hillcrest's two get 1, 2. Grace goes from rank 5 to rank 1 without delivering a single extra package.</p>
-
-<div class="mlrk-code"><div class="mlrk-screen">     name      |  depot    | packages | rnk
+<button type="button" class="mlrk-btn" data-run="depot_rank.sql" data-after="q-partition" data-after-note="Solve the blank first. Then you can run it.">Run depot_rank.sql</button>
+<div class="mlrk-run" data-file="depot_rank.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f depot_rank.sql</div><pre>     name      |   depot   | packages | rnk
 ---------------+-----------+----------+-----
  Priya Nadar   | Eastgate  |      401 |   1
  Luis Ferrer   | Eastgate  |      372 |   2
@@ -205,207 +202,156 @@ ORDER BY depot, rnk;</div></div>
  Tasha Boone   | Riverside |      412 |   1
  Omar Reyes    | Riverside |      388 |   2
  Dee Whitfield | Riverside |      355 |   3
-(7 rows)</div></div>
-
-<div class="mlrk-card" id="card-rowcount"><p><strong>Seven rows went into that query. How many rows came back out?</strong></p>
-<button type="button" class="mlrk-choice" data-a="7">7</button>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="21">21</button>
-<div id="rowcountfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-red" style="margin-top:1rem">
-<p><strong>The trap worth naming out loud:</strong> <code>PARTITION BY depot</code> and <code>GROUP BY depot</code> share the word "group" and do opposite things to your row count. <code>GROUP BY depot</code> squeezes the table down to one row per depot, and the individual driver names vanish. <code>PARTITION BY depot</code> never removes or merges a row. All seven drivers keep their own row, their own name, and their own package total. The only thing that changed is which other rows each rank was measured against.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>4. Type the keyword yourself</h2>
-<p>Below is the same per-depot query with one piece removed. Type the missing keyword into the box, exactly as it would appear in the query.</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT name, depot, packages,
-       RANK() OVER ( ____________ depot
-                     ORDER BY packages DESC) AS rnk
-FROM driver_month;</div></div>
-<details class="mlrk-hint"><summary>Need a hint?</summary><p>It is two words, and it goes inside the <code>OVER (...)</code> parentheses ahead of <code>ORDER BY</code>. The grammar requires that order, so it is not a style choice you can flip around.</p></details>
+(7 rows)</pre></div>
+<ol class="mlrk-steplist">
+  <li>Type the two-word keyword that splits rows into groups inside <code>OVER (...)</code>. It was named in bold just above.</li>
+  <li>Type both words with one space between them. Capital letters or lowercase both work.</li>
+  <li>Press <strong>Check</strong>. Then the Run button unlocks.</li>
+</ol>
 <div class="mlrk-fillblank">
-  <label for="kwblank">The missing keyword:</label>
-  <input type="text" id="kwblank" autocomplete="off">
-  <button type="button" id="kwcheck" class="mlrk-btn">Check</button>
+  <label for="kwInput">Missing keyword:</label>
+  <input type="text" id="kwInput" autocomplete="off">
+  <button type="button" id="kwCheck" class="mlrk-btn">Check</button>
 </div>
 <div id="kwfb" class="mlrk-feedback" tabindex="-1"></div>
 
-<div class="mlrk-fillblank" style="margin-top:1.4rem">
-  <label for="graceblank">Grace Okafor is rank 5 in the company-wide ranking. Type the number she gets in the per-depot ranking:</label>
-  <input type="text" id="graceblank" autocomplete="off">
-  <button type="button" id="gracecheck" class="mlrk-btn">Check</button>
-</div>
-<div id="gracefb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-card" id="card-dee" style="margin-top:1rem"><p><strong>Dee Whitfield is 6th in <code>company_rank.sql</code> but 3rd in <code>depot_rank.sql</code>. Why?</strong></p>
+<button type="button" class="mlrk-choice" data-a="partition">Dee is only compared with the other Riverside drivers, and two of them delivered more.</button>
+<button type="button" class="mlrk-choice" data-a="more">Dee delivered more packages in the second query.</button>
+<button type="button" class="mlrk-choice" data-a="alpha"><code>PARTITION BY</code> sorts the drivers by name.</button>
+<div id="fb-dee" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Technical vocabulary</h2>
-<p>Flip each card before the activities below.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>window function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Window function</strong><br>A function that looks at a set of other rows while working out a value for the current row, without collapsing any rows together. It is marked by an <code>OVER (...)</code> clause.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>OVER clause</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>OVER clause</strong><br>The parentheses after a window function that describe which rows it may look at and in what order.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>PARTITION BY</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>PARTITION BY</strong><br>The part of an <code>OVER</code> clause that splits rows into groups, so the window function starts its counting over inside each group.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>partition</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Partition</strong><br>One group of rows that a window function treats separately from every other group. Here, one depot's drivers.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>CTE</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>CTE</strong><br>Short for common table expression. A <code>WITH name AS (...)</code> block that runs a query, names its finished result, and lets the rest of the statement select from that name.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>top-N per group</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Top-N per group</strong><br>The name for a query that returns the highest-ranked rows inside each group instead of just the highest overall. "Best driver per depot" is a top-1 per group question.</span></button>
-</div>
+<h2>4. PARTITION BY is not GROUP BY</h2>
+<p>Both words sound like "make groups," but they do opposite things to your row count.</p>
+<div class="mlrk-card" id="card-group"><p><strong>Predict:</strong> <code>depot_max.sql</code> uses <code>GROUP BY depot</code>. What does it return?</p>
+<div class="mlrk-code" data-file="depot_max.sql"><div class="mlrk-screen">SELECT depot, MAX(packages) AS most_packages
+FROM driver_month
+GROUP BY depot
+ORDER BY depot;</div></div>
+<button type="button" class="mlrk-btn" data-run="depot_max.sql" data-after="q-group">Run depot_max.sql</button>
+<div class="mlrk-run" data-file="depot_max.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f depot_max.sql</div><pre>   depot   | most_packages
+-----------+---------------
+ Eastgate  |           401
+ Hillcrest |           366
+ Riverside |           412
+(3 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="three">3 rows, one per depot, with no driver names</button>
+<button type="button" class="mlrk-choice" data-a="seven">7 rows, one per driver, with names</button>
+<button type="button" class="mlrk-choice" data-a="names">3 rows, each with the winning driver's name</button>
+<div id="groupfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p><code>GROUP BY depot</code> squeezes the table down to one row per depot, and the names are gone. <code>PARTITION BY depot</code> never removes a row. It only changes which rows each rank is compared against.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Sort it: what changes your row count?</h2>
-<p>Referring to the two queries in section 3, drag each statement into the clause it describes, then self-check.</p>
-<div id="dragarea">
-<div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">Seven rows come back as three, one per depot</span>
-  <span id="chip2" class="mlrk-draggable">All seven drivers keep their own row</span>
-  <span id="chip3" class="mlrk-draggable">Individual driver names disappear from the result</span>
-  <span id="chip4" class="mlrk-draggable">Each row gets a number showing where it stands inside its depot</span>
-</div>
-<div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>GROUP BY depot</strong></p><div class="mlrk-dropzone" id="zoneGroup"></div></div>
-  <div><p class="mlrk-small"><strong>PARTITION BY depot</strong></p><div class="mlrk-dropzone" id="zonePartition"></div></div>
-</div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
-<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-
-<div class="mlrk-card" id="card-truefalse" style="margin-top:1.2rem"><p><strong>True or False: adding <code>PARTITION BY depot</code> to the <code>OVER</code> clause reduces the number of rows the query returns.</strong></p>
-<button type="button" class="mlrk-choice" data-a="false">False</button>
-<button type="button" class="mlrk-choice" data-a="true">True</button>
-<div id="truefalsefb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>7. Why you cannot just add WHERE rnk = 1</h2>
-<p>The manager has her per-depot ranking on screen. She wants the three winners and nothing else. The obvious move is to tack a filter onto the end of the query she already has:</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT name, depot, packages,
+<h2>5. Keep only the winners</h2>
+<p>The manager wants the three winners and nothing else. The first try adds a filter to the end of the query.</p>
+<div class="mlrk-card" id="card-where"><p><strong>Predict:</strong> what happens when <code>winners_try.sql</code> runs?</p>
+<div class="mlrk-code" data-file="winners_try.sql"><div class="mlrk-screen">SELECT name, depot, packages,
        RANK() OVER (PARTITION BY depot
                     ORDER BY packages DESC) AS rnk
 FROM driver_month
 WHERE rnk = 1;</div></div>
-<div class="mlrk-code"><div class="mlrk-screen">ERROR:  column "rnk" does not exist
+<button type="button" class="mlrk-btn" data-run="winners_try.sql" data-after="q-where">Run winners_try.sql</button>
+<div class="mlrk-run" data-file="winners_try.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f winners_try.sql</div><pre>psql:winners_try.sql:5: ERROR:  column "rnk" does not exist
 LINE 5: WHERE rnk = 1;
-              ^</div></div>
-<p>That error is not the database being fussy about where you typed something. It is telling the literal truth. A query does not run top to bottom in the order you wrote it. The database works through it in stages, and two of those stages matter here:</p>
-<ol class="mlrk-steplist">
-  <li>It gathers the rows from the table named in <code>FROM</code>.</li>
-  <li>It throws out the rows that fail <code>WHERE</code>.</li>
-  <li>It works out the values listed in <code>SELECT</code>, and that is where a window function like <code>RANK() OVER (...)</code> finally runs.</li>
-  <li>It sorts whatever survived, using <code>ORDER BY</code>.</li>
-</ol>
-<p><code>WHERE</code> finishes at step 2. The rank is not worked out until step 3. So at the moment <code>WHERE</code> is deciding which rows to keep, <code>rnk</code> genuinely does not exist yet. There is nothing there to compare against 1.</p>
-<p>The fix is to let the ranking finish completely, and only then filter. A <strong>CTE</strong> (common table expression) does exactly that. You wrap the ranking query in a <code>WITH name AS (...)</code> block, which runs it to completion and gives the finished result a name. By the time anything reads from that name, <code>rnk</code> is an ordinary column sitting there like <code>depot</code> or <code>packages</code>, and an outer <code>WHERE</code> can filter on it with no trouble at all.</p>
+              ^</pre></div>
+<button type="button" class="mlrk-choice" data-a="error">An error: the column <code>rnk</code> does not exist</button>
+<button type="button" class="mlrk-choice" data-a="three">It returns the three winners</button>
+<button type="button" class="mlrk-choice" data-a="seven">It returns all seven drivers</button>
+<div id="wherefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-code"><div class="mlrk-screen">WITH ranked AS (
-  SELECT name, depot, packages,
-         RANK() OVER (PARTITION BY depot
-                      ORDER BY packages DESC) AS rnk
-  FROM driver_month
+<p>The database does not run a query in the order it is written. It gathers rows from <code>FROM</code>, then throws out rows that fail <code>WHERE</code>, then works out the <code>SELECT</code> list, where <code>RANK()</code> runs. So when <code>WHERE</code> runs, <code>rnk</code> does not exist yet. (<code>HAVING</code> also runs before the <code>SELECT</code> list, so it fails the same way.)</p>
+<p>The fix is to finish the ranking first. A <strong>CTE</strong> (common table expression) is a <code>WITH name AS (...)</code> block that runs a query, names its finished result, and lets the rest of the statement select from that name. Outside the CTE, <code>rnk</code> is an ordinary column:</p>
+<div class="mlrk-code" data-file="winners.sql"><div class="mlrk-screen">WITH ranked AS (
+    SELECT name, depot, packages,
+           RANK() OVER (PARTITION BY depot
+                        ORDER BY packages DESC) AS rnk
+    FROM driver_month
 )
 SELECT name, depot, packages
 FROM ranked
 WHERE rnk = 1
 ORDER BY depot;</div></div>
+<div class="mlrk-run" data-file="winners.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f winners.sql</div><pre>     name     |   depot   | packages
+--------------+-----------+----------
+ Priya Nadar  | Eastgate  |      401
+ Grace Okafor | Hillcrest |      366
+ Tasha Boone  | Riverside |      412
+(3 rows)</pre></div>
+<p>Three rows, one award per depot. This shape has a name: <strong>top-N per group</strong>, a query that returns the highest-ranked rows inside each group instead of only the highest overall. "Best driver per depot" is a top-1 per group question.</p>
+</section>
 
-<div class="mlrk-code"><div class="mlrk-screen">     name      |  depot    | packages
----------------+-----------+----------
- Priya Nadar   | Eastgate  |      401
- Grace Okafor  | Hillcrest |      366
- Tasha Boone   | Riverside |      412
-(3 rows)</div></div>
-
-<p>Three rows, one award per depot. This shape has a name that interviewers use out loud: <strong>top-N per group</strong>. Rank inside each group, then keep the top rows of each group. Change <code>rnk = 1</code> to <code>rnk &lt;= 3</code> and you have a top-three-per-depot report from the exact same query.</p>
-
-<div class="mlrk-card" id="card-wherefails"><p><strong>Why does <code>WHERE rnk = 1</code> fail in the first version of that query?</strong></p>
-<button type="button" class="mlrk-choice" data-a="timing"><code>WHERE</code> has already finished running by the time the database works out the ranking, so <code>rnk</code> does not exist yet.</button>
-<button type="button" class="mlrk-choice" data-a="notallowed"><code>RANK()</code> is not allowed in any query that also contains a <code>WHERE</code> clause.</button>
-<button type="button" class="mlrk-choice" data-a="alias">Window function aliases have to be full words, so <code>rnk</code> is too short to be valid.</button>
-<div id="wherefailsfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem">
-<p><strong>A note on <code>HAVING</code>:</strong> if you learned <code>HAVING</code> as "the <code>WHERE</code> for grouped results," you may be tempted to try <code>HAVING rnk = 1</code> next. That fails for the same reason. <code>HAVING</code> also runs before the <code>SELECT</code> list is worked out, so the rank does not exist yet there either. The CTE wrapper is the fix in both cases.</p>
+<section class="mlrk-section">
+<h2>6. Mixed check</h2>
+<p>Drag each statement into the clause it describes, then press the check button.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">Seven rows come back as three, one per depot</span>
+  <span id="chip2" class="mlrk-draggable">All seven drivers keep their own row</span>
+  <span id="chip3" class="mlrk-draggable">Driver names disappear from the result</span>
+  <span id="chip4" class="mlrk-draggable">Each row gets its place inside its own depot</span>
+</div>
+<div class="mlrk-grid">
+  <div><p><strong>GROUP BY depot</strong></p><div class="mlrk-dropzone" id="zoneGroup"></div></div>
+  <div><p><strong>PARTITION BY depot</strong></p><div class="mlrk-dropzone" id="zonePartition"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>8. Build it in the right order</h2>
-<p>Referring to the winners-only query above, click the steps in the order you would actually write it, then self-check.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="rank"><span class="mlrk-order-num"></span> Write the ranking query on its own and look at its output to confirm the numbers restart per depot.</li>
-  <li class="mlrk-orderitem" data-step="wrap"><span class="mlrk-order-num"></span> Wrap that whole query in a <code>WITH ranked AS (...)</code> block so its result has a name.</li>
-  <li class="mlrk-orderitem" data-step="select"><span class="mlrk-order-num"></span> Write an outer query that selects from <code>ranked</code>.</li>
-  <li class="mlrk-orderitem" data-step="filter"><span class="mlrk-order-num"></span> Add <code>WHERE rnk = 1</code> to that outer query.</li>
+<h2>7. Wrap-up</h2>
+<ul>
+<li><code>PARTITION BY</code> inside <code>OVER (...)</code> splits rows into groups, and the ranking starts over in each group. Every row stays.</li>
+<li><code>GROUP BY</code> folds rows together; <code>PARTITION BY</code> never does.</li>
+<li>A window function runs after <code>WHERE</code>, so rank inside a CTE and filter in the outer query.</li>
 </ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-
-<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem">
-<p><strong>This matters just as much when an AI assistant writes the query.</strong> Asking an AI tool for a "best driver per depot" query will usually get you something that looks right, and a wrong grouping column is almost invisible on a large result. The check is cheap: pick one depot, count its drivers by hand from the raw table, and confirm the query named the same winner you did. Do that before you send the numbers to anyone.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>9. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about <code>PARTITION BY</code>.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> It splits rows into groups, and the ranking starts over at 1 inside each group.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A query using it returns fewer rows than the same query without it.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> It goes inside the <code>OVER (...)</code> parentheses, ahead of <code>ORDER BY</code>.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> You can filter on the resulting rank inside the <code>WHERE</code> clause of that same query.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
-<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>10. Watch: partitions in action</h2>
-<p>As you watch, notice two things. First, watch what the presenter's row count does when the partition is added: the rows stay put, only the numbering changes. Second, listen for the moment the ranking has to be filtered down to the top rows, and compare the wrapper used there to the <code>WITH ranked AS (...)</code> block in section 7. The examples run in a different database product than the one you are practicing in, but the <code>OVER (PARTITION BY ...)</code> syntax is identical across all of them.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=lrJ1-D7T8sA" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which of the video's examples came closest to a question you could imagine a real manager asking, and what would the partition column be?</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>11. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>Interviewers ask for this pattern constantly, usually phrased as "the top two highest-paid employees in each department," "the best-selling product in each category," or "the most recent order for each customer." They are all the same question wearing different clothes, and the phrase for it is top-N per group.</p>
-<p>What separates a strong answer is saying the plan out loud before writing anything. Something like: "I would rank inside each department with <code>PARTITION BY department ORDER BY salary DESC</code>, put that in a CTE, then filter the outer query on the rank, because a window function is not available to <code>WHERE</code> in the same query." Naming <em>why</em> the wrapper is needed is what shows you have actually run into that error rather than memorized a template. If the interviewer asks about a ranking function you have never used, say so honestly and reason out loud from the ones you have used. That reads far better than a confident guess.</p>
-<p>This is not only a data-analyst question. Backend and full-stack engineering interviews ask for the same shape any time a feature needs "the latest row per user" or "the top comment per post," and the same CTE wrapper is the answer there too.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> an interviewer asks for the two highest-paid employees in each job title, from one <code>employees</code> table. Which plan gets there?</p>
-<button type="button" class="mlrk-choice" data-a="cte">Rank with <code>PARTITION BY job_title ORDER BY salary DESC</code>, wrap that in a CTE, then keep rows where the rank is 2 or less.</button>
-<button type="button" class="mlrk-choice" data-a="limit">Sort the whole table by salary, then take the first two rows with <code>LIMIT 2</code>.</button>
-<button type="button" class="mlrk-choice" data-a="inlinewhere">Add <code>WHERE RANK() OVER (PARTITION BY job_title ORDER BY salary DESC) &lt;= 2</code> to a single query.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Summary &amp; critical thinking</h2>
-<p>Two ideas carried this whole reading. First, <code>PARTITION BY</code> inside an <code>OVER</code> clause decides which other rows a ranking is measured against, and the ranking restarts inside each of those groups while every row stays exactly where it was. Second, a window function is worked out after <code>WHERE</code> has already finished, so filtering on a rank means finishing the ranking inside a CTE and putting the filter in the outer query.</p>
-
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a coffee chain has one table with one row per drink sold per store, already totaled up as <code>store</code>, <code>drink</code>, and <code>cups_sold</code>. The owner wants the single best-selling drink at each store, by name. Which approach gets there?</p>
-<button type="button" class="mlrk-choice" data-a="partitioncte">Rank with <code>PARTITION BY store ORDER BY cups_sold DESC</code>, wrap it in a CTE, and filter the outer query for rank 1.</button>
-<button type="button" class="mlrk-choice" data-a="groupmax"><code>GROUP BY store</code> and select <code>MAX(cups_sold)</code>.</button>
-<button type="button" class="mlrk-choice" data-a="eyeball"><code>ORDER BY store, cups_sold DESC</code> and read the first row of each block by eye.</button>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> next month the company gives awards to the top two drivers at each depot. Starting from <code>winners.sql</code>, what is the only change you need?</p>
+<button type="button" class="mlrk-choice" data-a="lte">Change the outer <code>WHERE rnk = 1</code> to <code>WHERE rnk &lt;= 2</code>.</button>
+<button type="button" class="mlrk-choice" data-a="inner">Move <code>WHERE rnk &lt;= 2</code> inside the CTE, under <code>FROM driver_month</code>.</button>
+<button type="button" class="mlrk-choice" data-a="group">Replace <code>PARTITION BY depot</code> with <code>GROUP BY depot</code>.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<label for="ownwords"><strong>In your own words:</strong> describe a real situation, from a job, a project, or daily life, where "best overall" and "best in each group" would give you genuinely different answers. Who would be hidden by the overall ranking, and why would that matter to someone?</label>
-<textarea id="ownwords" class="mlrk-response" data-save placeholder="Try starting with: If you ranked everyone together, the person who'd disappear is..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+<p><strong>In interviews:</strong> "the top two in each department" is the same top-N per group question. Say the plan out loud: rank with <code>PARTITION BY</code>, wrap it in a CTE, then filter on the rank.</p>
+<p><strong>Where this goes next:</strong> <code>PARTITION BY</code> works with other window functions too, such as each driver's own depot average shown beside their total.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>13. Thinking ahead</h2>
-<p>Ranking is only the first thing a window function can do with a partition. The same <code>PARTITION BY</code> idea attaches to other functions too. Ask for an average over a partition and every driver's row can carry their own depot's average beside their personal total, so you can see at a glance who is above or below their local pace. Ask for a running total over a partition ordered by date and each row can carry the year-to-date figure for its own group. In every one of those cases the question you are really answering is the same one from this reading: compared to whom? Getting comfortable naming the right partition column is most of the work, and it carries straight over.</p>
+<h2>8. Reflection</h2>
+<label for="strategy"><strong>Your example:</strong> describe a situation from school, a job, or daily life where "best overall" and "best in each group" would name different people. Who would the overall ranking hide?</label>
+<ol class="mlrk-steplist">
+  <li>Write 1 or 2 sentences, at least 8 words. The counter under the box tells you when it counts.</li>
+  <li>Try starting with: "At my school, the best overall..."</li>
+</ol>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="At my school, the best overall..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
 </section>
 
 <section class="mlrk-section">
-<h2>14. Your score &amp; keep a copy of your work</h2>
+<h2>9. Key terms review</h2>
+<p>Flip each card to check that you can explain the term.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Window function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Window function</strong><br>A function that looks at a set of other rows while working out a value for the current row, without folding any rows together. It is marked by an <code>OVER (...)</code> clause.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>OVER clause</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>OVER clause</strong><br>The parentheses after a window function that say which rows it may look at and in what order.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>PARTITION BY</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>PARTITION BY</strong><br>The part of an <code>OVER</code> clause that splits rows into groups, so the window function starts counting over inside each group.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Partition</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Partition</strong><br>One group of rows that a window function treats separately from every other group. Here, one depot's drivers.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>CTE</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>CTE</strong><br>Short for common table expression. A <code>WITH name AS (...)</code> block that runs a query, names its finished result, and lets the rest of the statement select from that name.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Top-N per group</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Top-N per group</strong><br>A query that returns the highest-ranked rows inside each group instead of only the highest overall. "Best driver per depot" is top-1 per group.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Go further (optional)</h2>
+<p>This video is optional and isn't part of the time estimate or your score. As you watch, notice that the row count stays the same when the partition is added. The examples use a different database product, but the <code>OVER (PARTITION BY ...)</code> syntax is the same.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/lrJ1-D7T8sA" title="PARTITION BY in SQL window functions, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=lrJ1-D7T8sA" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -472,15 +418,16 @@ git push</pre></li>
     <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
   </div>
 </div>
+
 </section>
 
 <section class="mlrk-section">
-<h2>Go further</h2>
+<h2>Additional resources</h2>
 <p class="mlrk-small">Not counted in the time estimate above.</p>
 <ul>
 <li><a href="https://mode.com/sql-tutorial/sql-window-functions/" target="_blank" rel="noopener">Mode: SQL Window Functions</a> — a tutorial with a query editor built into the page, so you can change a partition column and rerun it without installing anything.</li>
-<li><a href="https://www.practicewindowfunctions.com/learn/how_window_functions_work" target="_blank" rel="noopener">Practice Window Functions</a> — free browser practice problems, several of them exactly the top-per-group shape from this reading.</li>
-<li><a href="https://www.postgresql.org/docs/current/tutorial-window.html" target="_blank" rel="noopener">PostgreSQL Tutorial: Window Functions</a> — the official walkthrough, including the plain statement of why a window function cannot appear in <code>WHERE</code>.</li>
+<li><a href="https://www.practicewindowfunctions.com/learn/how_window_functions_work" target="_blank" rel="noopener">Practice Window Functions</a> — free browser practice problems, several of them the top-per-group shape from this reading.</li>
+<li><a href="https://www.postgresql.org/docs/current/tutorial-window.html" target="_blank" rel="noopener">PostgreSQL Tutorial: Window Functions</a> — the official walkthrough, including why a window function cannot appear in <code>WHERE</code>.</li>
 <li><a href="https://www.sqltutorial.org/sql-window-functions/sql-partition-by/" target="_blank" rel="noopener">SQL Tutorial: the PARTITION BY clause</a> — a short written reference with a few more worked examples.</li>
 </ul>
 </section>
@@ -502,137 +449,82 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-rank", buttonSelector:"#card-rank .mlrk-choice", feedbackSelector:"#rankfb", correct:"numbercol",
-    feedback:{numbercol:"Right. Every row keeps its place and picks up one extra value: its position in the ranking.",
-              sorts:"Sorting is what ORDER BY does on its own. RANK() adds a brand new column of position numbers to the result.",
-              removes:"A ranking function never drops rows. All of them come back, each carrying a number."}});
+  K.quiz({id:"q-rank", buttonSelector:"#card-recall-rank .mlrk-choice", feedbackSelector:"#rankfb", correct:"col",
+    feedback:{col:"Right. RANK() keeps every row and writes each row's place into a new column.",
+              sort:"Sorting alone adds nothing. RANK() adds a column of places.",
+              top:"RANK() keeps all the rows. Keeping only the top row takes a filter, which comes later in this reading."}});
 
-  K.quiz({id:"q-cte", buttonSelector:"#card-cte .mlrk-choice", feedbackSelector:"#ctefb", correct:"names",
-    feedback:{names:"Exactly. The inner query finishes first, its result gets the name busy, and the outer query reads from that name.",
-              table:"Nothing is saved to the database. The name only exists for the length of this one statement.",
-              comment:"The database definitely runs it. A comment in SQL starts with two hyphens, and this is real executable code."}});
+  K.quiz({id:"q-with", buttonSelector:"#card-recall-with .mlrk-choice", feedbackSelector:"#withfb", correct:"three",
+    feedback:{three:"Right. busy holds the drivers with more than 380 packages: Tasha, Priya and Omar.",
+              seven:"The WHERE inside busy keeps only drivers above 380. Check each packages value against 380.",
+              zero:"Inside this query, WITH makes busy usable like a table, so SELECT * FROM busy works."}});
 
-  K.quiz({id:"q-orderby", buttonSelector:"#card-orderby .mlrk-choice", feedbackSelector:"#orderbyfb", correct:"unchanged",
-    feedback:{unchanged:"Correct. A final ORDER BY only rearranges the printout. The numbers were already decided before it ran.",
-              restart:"Sorting by a column and restarting a count inside that column are two different jobs. ORDER BY only does the first one.",
-              error:"No error here. Sorting a result that already contains a ranking column is completely normal."}});
-
-  K.quiz({id:"q-flatones", buttonSelector:"#card-flatones .mlrk-choice", feedbackSelector:"#flatonesfb", correct:"1",
-    feedback:{"1":"Right. The window is the whole table, so there is a single top spot and Tasha has it.",
-              "3":"Three is what you get once the ranking restarts per depot. This query has not been told about depots yet.",
-              "7":"All seven rows come back, but they carry ranks 1 through 7. Only one of them holds rank 1."}});
-
-  K.quiz({id:"q-rowcount", buttonSelector:"#card-rowcount .mlrk-choice", feedbackSelector:"#rowcountfb", correct:"7",
-    feedback:{"7":"Correct. PARTITION BY changes who each row is compared against. It never adds, removes, or merges a row.",
-              "3":"Three is what GROUP BY depot would give you, one row per depot, with the driver names gone. A window function leaves every row standing.",
-              "21":"Nothing here multiplies rows. There is no join, and a window function only reads other rows, it never copies them."}});
-
-  K.Scoring.register("q-kwblank",1,"quiz");
+  K.Scoring.register("q-partition",1,"quiz");
   let kwAttempts=0, kwDone=false;
-  $("#kwcheck").addEventListener("click",()=>{
+  $("#kwCheck").addEventListener("click",()=>{
     if(kwDone) return;
     kwAttempts++;
-    const val=$("#kwblank").value.trim().toLowerCase().replace(/\s+/g," ");
+    const v=$("#kwInput").value.trim().toUpperCase().replace(/[`'"]/g,"").replace(/\s+/g," ").replace(/ DEPOT$/,"");
+    const ok = v==="PARTITION BY";
     const fb=$("#kwfb");
-    if(val==="partition by"){
-      K.Scoring.award("q-kwblank", kwAttempts===1?1:0.5);
+    if(ok){
+      K.Scoring.award("q-partition", kwAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> <code>PARTITION BY depot</code> tells the ranking to start over inside each depot.";
+      fb.innerHTML="<strong>Correct"+(kwAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> PARTITION BY depot splits the drivers by depot, and RANK() starts over at 1 in each one.";
       kwDone=true;
     } else if(kwAttempts>=2){
-      K.Scoring.award("q-kwblank",0);
+      K.Scoring.award("q-partition",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing keyword is <code>PARTITION BY</code>.";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The keyword is <code>PARTITION BY</code>.";
       kwDone=true;
     } else {
+      const hint = v==="GROUP BY" ? "GROUP BY folds rows together and does not go inside OVER. You want the keyword that keeps every row." : (v==="PARTITION" ? "That is the first word. Add the second word." : "It is two words, the first one starting with P. It was in bold in the paragraph above the file.");
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> Two words, and the second one is <code>BY</code>. One more try.";
+      fb.innerHTML="<strong>Not quite yet.</strong> "+hint;
     }
-    fb.setAttribute("tabindex","-1");fb.focus();
+    fb.setAttribute("tabindex","-1"); fb.focus();
+    if(kwDone) K.markDone("q-partition");
   });
 
-  K.Scoring.register("q-graceblank",1,"quiz");
-  let graceAttempts=0, graceDone=false;
-  $("#gracecheck").addEventListener("click",()=>{
-    if(graceDone) return;
-    graceAttempts++;
-    const val=$("#graceblank").value.trim().toLowerCase();
-    const fb=$("#gracefb");
-    if(val==="1"||val==="one"){
-      K.Scoring.award("q-graceblank", graceAttempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> Inside Hillcrest she is only measured against Sam, and she is ahead of him, so she is rank 1.";
-      graceDone=true;
-    } else if(graceAttempts>=2){
-      K.Scoring.award("q-graceblank",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> Grace is rank <code>1</code>, because Hillcrest's partition holds only her and Sam.";
-      graceDone=true;
-    } else {
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> Count only the drivers whose depot is Hillcrest, and see where Grace lands among them. One more try.";
-    }
-    fb.setAttribute("tabindex","-1");fb.focus();
-  });
+  K.quiz({id:"q-dee", buttonSelector:"#card-dee .mlrk-choice", feedbackSelector:"#fb-dee", correct:"partition",
+    feedback:{partition:"Right. Inside the Riverside partition, only Tasha (412) and Omar (388) delivered more than Dee's 355.",
+              more:"Dee has 355 in both queries. The packages did not change; the group Dee is compared with did.",
+              alpha:"The ORDER BY inside OVER still sorts by packages. PARTITION BY only decides the groups."}});
 
-  K.flipCards("#vocab", "act-flip-vocab");
+  K.quiz({id:"q-group", buttonSelector:"#card-group .mlrk-choice", feedbackSelector:"#groupfb", correct:"three",
+    feedback:{three:"Right. GROUP BY depot folds each depot into one row. MAX finds the top number, but the driver's name is gone.",
+              seven:"GROUP BY does not keep every row. It makes one row per depot.",
+              names:"The query never selects name, and it can't: a grouped query can only show grouped columns and totals. That is why a ranking is needed."}});
+
+  K.quiz({id:"q-where", buttonSelector:"#card-where .mlrk-choice", feedbackSelector:"#wherefb", correct:"error",
+    feedback:{error:"Right. WHERE runs before the SELECT list, so rnk has not been worked out yet when WHERE looks for it.",
+              three:"That is what the manager wanted, but WHERE runs before RANK() does. Run it to see the message.",
+              seven:"The query does not get far enough to return rows. WHERE cannot find rnk."}});
 
   K.dragDrop("#dragarea", "act-drag-classify");
   K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
     chip1:{expectedId:"zoneGroup", label:"Seven rows come back as three, one per depot", expectedLabel:"GROUP BY depot"},
     chip2:{expectedId:"zonePartition", label:"All seven drivers keep their own row", expectedLabel:"PARTITION BY depot"},
-    chip3:{expectedId:"zoneGroup", label:"Individual driver names disappear from the result", expectedLabel:"GROUP BY depot"},
-    chip4:{expectedId:"zonePartition", label:"Each row gets a number showing where it stands inside its depot", expectedLabel:"PARTITION BY depot"}
+    chip3:{expectedId:"zoneGroup", label:"Driver names disappear from the result", expectedLabel:"GROUP BY depot"},
+    chip4:{expectedId:"zonePartition", label:"Each row gets its place inside its own depot", expectedLabel:"PARTITION BY depot"}
   }});
 
-  K.quiz({id:"q-truefalse", buttonSelector:"#card-truefalse .mlrk-choice", feedbackSelector:"#truefalsefb", correct:"false", maxAttempts:1,
-    feedback:{false:"Right. Seven rows go in and seven rows come back. The only change is which rows each rank was measured against.",
-              true:"That is GROUP BY's job, not PARTITION BY's. A window function reads other rows without ever merging them together."}});
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"lte",
+    feedback:{lte:"Right. The ranking stays the same; the outer filter now keeps places 1 and 2 in each depot.",
+              inner:"Inside the CTE, rnk does not exist yet when WHERE runs. That is the same error as winners_try.sql.",
+              group:"GROUP BY would fold each depot into one row and lose the names. The ranking needs PARTITION BY."}});
 
-  K.quiz({id:"q-wherefails", buttonSelector:"#card-wherefails .mlrk-choice", feedbackSelector:"#wherefailsfb", correct:"timing",
-    feedback:{timing:"Exactly. The stages run in a fixed order, and the ranking is worked out after WHERE has already made its decisions.",
-              notallowed:"RANK() and WHERE coexist happily. The problem is only that WHERE cannot see a value that has not been worked out yet.",
-              alias:"Short aliases are fine. Postgres would accept rnk anywhere it accepts a column name; the issue is timing, not spelling."}});
-
-  K.orderSteps("#ordersteps", {id:"act-order-build", correctOrder:["rank","wrap","select","filter"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
-
-  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"It splits rows into groups, and the ranking starts over at 1 inside each group.", correct:true,
-      hint:"Compare the two result sets in section 3 and count how many rows hold rank 1 in each.",
-      explain:"That restart is the entire job of the keyword."},
-    {value:"b", label:"A query using it returns fewer rows than the same query without it.", correct:false,
-      hint:"Check the row count printed under the per-depot result in section 3 against the seven rows that went in.",
-      explain:"Seven rows went in and seven came back. A window function never collapses rows."},
-    {value:"c", label:"It goes inside the OVER (...) parentheses, ahead of ORDER BY.", correct:true,
-      hint:"Look again at where the keyword sits in the query in section 3.",
-      explain:"The grammar requires that position. PARTITION BY first, then ORDER BY, both inside OVER."},
-    {value:"d", label:"You can filter on the resulting rank inside the WHERE clause of that same query.", correct:false,
-      hint:"Section 7 shows what the database prints when you try exactly this.",
-      explain:"WHERE finishes before the ranking is worked out, so the rank has to be finished inside a CTE first."}
-  ]});
-
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"lrJ1-D7T8sA"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
-  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:12});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"cte",
-    feedback:{cte:"That is the top-N per group pattern, stated exactly the way an interviewer wants to hear it.",
-              limit:"That returns the two highest-paid people in the whole company, which could easily be two people with the same job title.",
-              inlinewhere:"This is the error from section 7. WHERE runs before the ranking exists, so the database cannot evaluate that condition."}});
-
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"partitioncte",
-    feedback:{partitioncte:"Right. Store is the partition column, cups_sold decides the order, and the CTE lets the outer query keep only rank 1.",
-              groupmax:"That gives you the winning number for each store but not the drink's name, since GROUP BY throws the individual drink rows away.",
-              eyeball:"Sorting puts the winner at the top of each block, but the query still hands back every row and a person has to pick them out by hand. That does not scale past a handful of stores."}});
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
 
   const AI_PROMPTS = [
-    "Think of a group you belong to that sits inside a larger one, like a team inside a company or a class inside a school. What would you look better at, or worse at, if you were only measured against your smaller group?",
-    "Pick a leaderboard you have actually seen, in a game, a sport, or an app. What column would you partition it by to make it more useful, and who would suddenly appear near the top?",
-    "If you had to explain to a manager why 'best in each region' needs a different query than 'best overall,' what one sentence would you lead with?"
+    "Think of a school with several grades. Would the best reader in the whole school be the same as the best reader in each grade? Who gets hidden?",
+    "Picture a list of every store in a city. What changes if you ask for the busiest store in each neighborhood instead?",
+    "When would giving one award per group be fairer than one award overall?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.style.display="block";
+    box.hidden=false;
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 

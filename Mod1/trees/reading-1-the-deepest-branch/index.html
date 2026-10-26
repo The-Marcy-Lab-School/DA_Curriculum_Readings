@@ -4,9 +4,9 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:700px;height:auto;margin:1.1rem 0;display:block}
+.mlrk-illustration{width:100%;max-width:760px;height:auto;margin:1.1rem 0;display:block}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
-.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:8rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
 @media(max-width:650px){.mlrk-illustration{max-width:100%}}
 </style>
 </head><body>
@@ -14,9 +14,9 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading &middot; optional enrichment</div>
 <h1>The Deepest Branch</h1>
-<p class="mlrk-lead">This reading is not required for your current project, but it is a genuinely useful one to work through on your own: tree structures show up everywhere in software once you know to look for them, from the folders on your own computer to the org chart at a company you might interview with. This reading walks you from zero prior knowledge of trees up to comfortably answering one of the most common warm-up questions in a technical interview: "how deep does this tree go?"</p>
+<p class="mlrk-lead">In a guessing game, one player thinks of an animal. The other asks yes-or-no questions, like "Can it fly?" Each answer leads to a new question, until someone makes a guess. Draw every question and answer, and the picture branches like an upside-down tree. Programs store data in this shape too.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~50-55 minutes</span>
+  <span class="mlrk-pill">~21–24 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -48,303 +48,275 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Concept overview</h2>
-<p>Picture a company's org chart. One person sits at the top with no one above them. That person has a couple of people reporting directly to them, and each of those people might have a couple of people reporting to them, and so on, branching outward and downward. You already have words for pieces of this shape without ever having taken a computer science class: the person at the top, the people who report to someone, the people who don't manage anyone at all, and two people who share the same manager.</p>
+<h2>1. The parts of a tree</h2>
+<p>Here is the guessing game drawn out. Going left means the answer was yes. Going right means no.</p>
 
-<svg class="mlrk-illustration" viewBox="0 0 640 260" role="img" aria-labelledby="orgTitle orgDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="orgTitle">A small company org chart shaped like a tree</title>
-  <desc id="orgDesc">The CEO sits at the top with no one above. Two Vice Presidents report directly to the CEO and are connected to each other as siblings. Each Vice President has one manager reporting to them, and those managers have no one reporting to them at all.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <line x1="320" y1="55" x2="200" y2="120" stroke="#264326" stroke-width="3"/>
-    <line x1="320" y1="55" x2="440" y2="120" stroke="#264326" stroke-width="3"/>
-    <line x1="200" y1="150" x2="150" y2="205" stroke="#264326" stroke-width="3"/>
-    <line x1="440" y1="150" x2="490" y2="205" stroke="#264326" stroke-width="3"/>
+<svg class="mlrk-illustration" viewBox="0 0 760 360" role="img" aria-labelledby="gameTitle gameDesc" xmlns="http://www.w3.org/2000/svg" id="svg-game-tree">
+  <title id="gameTitle">The guessing game as a binary tree</title>
+  <desc id="gameDesc">The root question at the top is "Can it fly?". Its yes child is "Is it big?", which leads to eagle for yes and sparrow for no. Its no child is "Does it live in water?", which leads to "Does it have legs?" for yes and dog for no. "Does it have legs?" leads to frog for yes and fish for no. The animals eagle, sparrow, dog, frog, and fish are leaves, drawn as rounded green shapes, with nothing below them.</desc>
+  <g stroke="#264326" stroke-width="3">
+    <line x1="380" y1="62" x2="170" y2="122"/>
+    <line x1="380" y1="62" x2="565" y2="122"/>
+    <line x1="170" y1="162" x2="90" y2="222"/>
+    <line x1="170" y1="162" x2="250" y2="222"/>
+    <line x1="565" y1="162" x2="470" y2="222"/>
+    <line x1="565" y1="162" x2="665" y2="222"/>
+    <line x1="470" y1="262" x2="400" y2="302"/>
+    <line x1="470" y1="262" x2="545" y2="302"/>
+  </g>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#261F1D" text-anchor="middle">
+    <rect x="290" y="22" width="180" height="40" rx="8" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="380" y="48">Can it fly?</text>
+    <text x="482" y="48" fill="#2274B5" text-anchor="start">root</text>
 
-    <rect x="250" y="20" width="140" height="55" rx="12" fill="#2274B5" stroke="#264326" stroke-width="2.5"/>
-    <text x="320" y="43" text-anchor="middle" font-weight="700" font-size="15" fill="#FFFCF7">CEO</text>
-    <text x="320" y="61" text-anchor="middle" font-size="11.5" fill="#FFFCF7">no manager above</text>
+    <rect x="95" y="122" width="150" height="40" rx="8" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="170" y="148">Is it big?</text>
+    <rect x="455" y="122" width="220" height="40" rx="8" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="565" y="148">Does it live in water?</text>
 
-    <rect x="130" y="120" width="140" height="55" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="200" y="143" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">VP Engineering</text>
-    <text x="200" y="161" text-anchor="middle" font-size="11.5" fill="#261F1D">reports to CEO</text>
+    <rect x="40" y="222" width="100" height="40" rx="20" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="90" y="248">eagle</text>
+    <rect x="195" y="222" width="110" height="40" rx="20" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="250" y="248">sparrow</text>
+    <rect x="375" y="222" width="190" height="40" rx="8" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
+    <text x="470" y="248">Does it have legs?</text>
+    <rect x="615" y="222" width="100" height="40" rx="20" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="665" y="248">dog</text>
 
-    <rect x="370" y="120" width="140" height="55" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="440" y="143" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">VP Sales</text>
-    <text x="440" y="161" text-anchor="middle" font-size="11.5" fill="#261F1D">reports to CEO</text>
-
-    <text x="320" y="118" text-anchor="middle" font-size="12" font-weight="600" fill="#83671C">these two share a manager</text>
-
-    <rect x="80" y="205" width="140" height="50" rx="12" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
-    <text x="150" y="227" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Engineering Mgr</text>
-    <text x="150" y="244" text-anchor="middle" font-size="11" fill="#261F1D">manages no one</text>
-
-    <rect x="420" y="205" width="140" height="50" rx="12" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
-    <text x="490" y="227" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Sales Mgr</text>
-    <text x="490" y="244" text-anchor="middle" font-size="11" fill="#261F1D">manages no one</text>
+    <rect x="350" y="302" width="100" height="40" rx="20" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="400" y="328">frog</text>
+    <rect x="495" y="302" width="100" height="40" rx="20" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="545" y="328">fish</text>
+    <text x="140" y="320" font-weight="600" fill="#264326">Rounded shapes are leaves</text>
   </g>
 </svg>
 
-<p>Rename those everyday words and you already know most of the vocabulary of a <strong>tree</strong>: the CEO is the <strong>root</strong>, the one position with nothing above it. VP Engineering and VP Sales are <strong>children</strong> of the CEO, and the CEO is their <strong>parent</strong>. VP Engineering and VP Sales are <strong>siblings</strong> of each other, since they share a parent. The Engineering Manager and Sales Manager manage no one, so they're <strong>leaves</strong>: the ends of their branches.</p>
-<p>A tree, formally, is built out of <strong>nodes</strong>. Each node holds a value (a name, a number, whatever the tree is storing) plus references to its children. That's the entire structure: no separate "tree object" holding a master list, just nodes pointing to other nodes, starting from one root.</p>
-<p>An org chart doesn't limit how many people can report to one manager. But one very useful special case does limit that: a <strong>binary tree</strong> is a tree in which every node has <em>at most two</em> children, conventionally called its left child and its right child. Think of a customer-support chatbot that only ever asks yes-or-no questions: "is your issue about billing?" Yes leads one direction, no leads the other, and each of those questions can branch into one more yes/no question below it. Two branches per question, at most, is exactly what makes it a binary tree.</p>
-
-<div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> "walk me through how you'd find the depth of this tree" or "trace this tree traversal for me" are two of the most common data-structure questions in an entry-level technical interview, specifically because they're quick to draw on a whiteboard and reveal instantly whether a candidate can reason about a structure that isn't a flat list. Outside of interviews, real systems are full of tree shapes: a file system, a webpage's structure, a decision flow.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to write a function and call it, and you're about to lean on one extra idea: a function that calls itself, known as <strong>recursion</strong>, briefly re-explained below exactly where it's first needed. Recursion pairs well with trees specifically because a tree is built out of smaller trees: each child is the root of its own smaller tree, so "handle this whole tree" often reduces to "handle this one node, then let the same logic handle its children." If you've explored recursion as its own topic already, that habit of thought will feel very familiar here.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>2. Recall before trees</h2>
-<p class="mlrk-small">A few skills get reused heavily later in this reading: what a function's <code>return</code> value actually is, comparing two numbers to find the larger one, and the basic idea of a function calling itself. Test each one below before moving on.</p>
-
-<div class="mlrk-card" id="card-return"><p><strong>Coding check:</strong></p>
-<pre class="mlrk-code" data-file="add_one.py">def add_one(n):
-    return n + 1
-
-result = add_one(4)
-print(result)</pre>
-<p><strong>What prints?</strong></p>
-<button type="button" class="mlrk-choice" data-a="5">5</button>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="none">None</button>
-<div id="returnfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-maxof" style="margin-top:.8rem"><p><strong>Which built-in function returns the larger of two numbers?</strong></p>
-<button type="button" class="mlrk-choice" data-a="max"><code>max(a, b)</code></button>
-<button type="button" class="mlrk-choice" data-a="sorted"><code>sorted(a, b)</code></button>
-<button type="button" class="mlrk-choice" data-a="len"><code>len(a, b)</code></button>
-<div id="maxoffb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-selfcall" style="margin-top:.8rem"><p><strong>Critical thinking:</strong> a function that calls itself needs at least one case where it stops calling itself and just returns a plain value directly, with no further call. Why would leaving that case out be a problem?</p>
-<button type="button" class="mlrk-choice" data-a="forever">Without it, the calls never stop, since nothing ever tells the function to just return an answer instead of calling itself again.</button>
-<button type="button" class="mlrk-choice" data-a="syntax">Python won't let you define a function that calls itself at all.</button>
-<button type="button" class="mlrk-choice" data-a="speed">It would only make the function run slightly slower, nothing more.</button>
-<div id="selfcallfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">None of this changes once trees are introduced: <code>return</code>, <code>max()</code>, and the need for a stopping case all work exactly the same way here as they do on their own. Get each one right in isolation first.</div>
-</section>
-
-<section class="mlrk-section">
-<h2>3. Technical vocabulary</h2>
-<p>Flip each card before the practice below.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>node</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Node</strong><br>A single unit in a tree. It holds a value and references to its children (if it has any).</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>root</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Root</strong><br>The one node at the very top of a tree. It has no parent.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>parent</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Parent</strong><br>A node that has at least one node connected directly below it.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>child</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Child</strong><br>A node connected directly below another node, its parent.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>sibling</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Sibling</strong><br>Two or more nodes that share the same parent.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>leaf</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Leaf</strong><br>A node with no children. It's the end of a branch.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>edge</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Edge</strong><br>The connection between a parent and one of its children.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>binary tree</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Binary tree</strong><br>A tree in which every node has at most two children, usually called its left and right child.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>depth</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Depth (of a tree)</strong><br>How many levels the tree has, counted from the root down to its farthest leaf. A tree with just one node has a depth of 1.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>traversal</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Traversal</strong><br>A systematic way of visiting every node in a tree exactly once, in a defined order.</span></button>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>4. A labeled binary tree</h2>
-<p>Here's a plain binary tree with letters standing in for real values, so the shape is easy to talk about on its own.</p>
-
-<svg class="mlrk-illustration" viewBox="0 0 560 300" role="img" aria-labelledby="btTitle btDesc" xmlns="http://www.w3.org/2000/svg" id="svg-labeled-tree">
-  <title id="btTitle">A labeled binary tree with root, parent, child, sibling, and leaf callouts</title>
-  <desc id="btDesc">Node A is the root at the top. It has two children, B and C, which are siblings. B has two children, D and E. C has two children, F and G. D, E, F, and G have no children of their own, so they are the tree's leaves.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <line x1="280" y1="55" x2="170" y2="120" stroke="#264326" stroke-width="3"/>
-    <line x1="280" y1="55" x2="390" y2="120" stroke="#264326" stroke-width="3"/>
-    <line x1="170" y1="150" x2="100" y2="215" stroke="#264326" stroke-width="3"/>
-    <line x1="170" y1="150" x2="240" y2="215" stroke="#264326" stroke-width="3"/>
-    <line x1="390" y1="150" x2="320" y2="215" stroke="#264326" stroke-width="3"/>
-    <line x1="390" y1="150" x2="460" y2="215" stroke="#264326" stroke-width="3"/>
-
-    <circle cx="280" cy="35" r="26" fill="#2274B5" stroke="#264326" stroke-width="2.5"/>
-    <text x="280" y="42" text-anchor="middle" font-weight="700" font-size="18" fill="#FFFCF7">A</text>
-    <text x="280" y="-2" text-anchor="middle" font-size="12" font-weight="700" fill="#2274B5" transform="translate(0,10)">root</text>
-
-    <circle cx="170" cy="135" r="26" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="170" y="142" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">B</text>
-    <circle cx="390" cy="135" r="26" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="390" y="142" text-anchor="middle" font-weight="700" font-size="18" fill="#261F1D">C</text>
-    <text x="280" y="113" text-anchor="middle" font-size="11.5" font-weight="700" fill="#83671C">siblings (share parent A)</text>
-    <text x="215" y="128" text-anchor="middle" font-size="11.5" font-weight="700" fill="#264326">parent</text>
-    <text x="170" y="188" text-anchor="middle" font-size="11.5" font-weight="700" fill="#264326">child</text>
-
-    <circle cx="100" cy="230" r="24" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="100" y="237" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">D</text>
-    <circle cx="240" cy="230" r="24" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="240" y="237" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">E</text>
-    <circle cx="320" cy="230" r="24" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="320" y="237" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">F</text>
-    <circle cx="460" cy="230" r="24" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="460" y="237" text-anchor="middle" font-weight="700" font-size="17" fill="#261F1D">G</text>
-    <text x="280" y="280" text-anchor="middle" font-size="13" font-weight="700" fill="#83671C">D, E, F, and G are leaves: no children below them</text>
-  </g>
-</svg>
-
-<div class="mlrk-card" id="card-howmany"><p><strong>Referring to the diagram above: how many children does node B have?</strong></p>
-<button type="button" class="mlrk-choice" data-a="2">2 (D and E)</button>
-<button type="button" class="mlrk-choice" data-a="1">1</button>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<div id="howmanyfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-whichroot" style="margin-top:.8rem"><p><strong>Which single node is the root of this tree?</strong></p>
-<button type="button" class="mlrk-choice" data-a="a">A</button>
-<button type="button" class="mlrk-choice" data-a="b">B</button>
-<button type="button" class="mlrk-choice" data-a="d">D</button>
-<div id="whichrootfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>5. Real places trees show up</h2>
-<p>Trees aren't just an abstract diagram. Here are three you've almost certainly already used, whether or not anyone called them "trees" at the time:</p>
+<p>Each box is a <strong>node</strong>: one item in the tree, holding a value. Each line joining two nodes is an <strong>edge</strong>. The tree words come from family trees:</p>
 <ul>
-<li><strong>A company's org chart</strong> — the exact shape from section 1: one person at the top, everyone else reporting to exactly one manager.</li>
-<li><strong>A computer's file system</strong> — a folder can contain other folders and files; each folder or file has exactly one parent folder, all the way back up to one root folder.</li>
-<li><strong>A webpage's structure (the DOM)</strong> — a page element like a <code>&lt;div&gt;</code> can contain other elements, which can each contain more elements, all nested inside one outer <code>&lt;html&gt;</code> root.</li>
+<li>The <strong>root</strong> is the one node at the top, with nothing above it: "Can it fly?"</li>
+<li>A node's <strong>children</strong> are the nodes joined to it one level down. That node is their <strong>parent</strong>. "Is it big?" is the parent of eagle and sparrow.</li>
+<li><strong>Siblings</strong> are nodes with the same parent, like eagle and sparrow.</li>
+<li>A <strong>leaf</strong> is a node with no children. In this game, every leaf is an animal, which is a guess.</li>
 </ul>
+<p>Every node here has at most two children, a left one and a right one. A tree with that rule is a <strong>binary tree</strong>. Folders on a laptop and the parts of a web page are trees too. "How deep does this tree go?" is a common interview question, and this reading builds up to the answer.</p>
 
-<svg class="mlrk-illustration" viewBox="0 0 520 260" role="img" aria-labelledby="fsTitle fsDesc" xmlns="http://www.w3.org/2000/svg" id="svg-filesystem">
-  <title id="fsTitle">A small project folder shown as a tree</title>
-  <desc id="fsDesc">The project folder is the root. It contains two items: a src folder and a README file. The src folder contains one item, a utils folder. The utils folder contains one item, a file called helpers dot py.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <line x1="90" y1="55" x2="90" y2="100" stroke="#264326" stroke-width="3"/>
-    <line x1="90" y1="55" x2="330" y2="100" stroke="#264326" stroke-width="3"/>
-    <line x1="90" y1="140" x2="90" y2="185" stroke="#264326" stroke-width="3"/>
-    <line x1="90" y1="225" x2="90" y2="225" stroke="#264326" stroke-width="3"/>
-    <line x1="90" y1="180" x2="90" y2="180" stroke="#264326" stroke-width="3"/>
-
-    <rect x="30" y="20" width="120" height="38" rx="10" fill="#2274B5" stroke="#264326" stroke-width="2.5"/>
-    <text x="90" y="44" text-anchor="middle" font-weight="700" font-size="14" fill="#FFFCF7">project/</text>
-
-    <rect x="30" y="100" width="120" height="38" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="90" y="124" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">src/</text>
-
-    <rect x="270" y="100" width="140" height="38" rx="10" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="340" y="124" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">README.md</text>
-
-    <rect x="30" y="185" width="120" height="38" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="90" y="209" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">utils/</text>
-
-    <line x1="90" y1="223" x2="90" y2="266" stroke="#264326" stroke-width="3"/>
-    <rect x="20" y="266" width="140" height="38" rx="10" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="90" y="290" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">helpers.py</text>
-  </g>
-</svg>
-
-<div class="mlrk-card" id="card-fsleaf"><p><strong>In the project folder above, which items are leaves (nothing else contained inside them)?</strong></p>
-<button type="button" class="mlrk-choice" data-a="both"><code>README.md</code> and <code>helpers.py</code></button>
-<button type="button" class="mlrk-choice" data-a="src"><code>src/</code> and <code>utils/</code></button>
-<button type="button" class="mlrk-choice" data-a="root"><code>project/</code> only</button>
-<div id="fsleaffb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-select-treeshapes" style="margin-top:1rem"><p><strong>Select every situation below that is naturally shaped like a tree.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A folder that can contain other folders, which can contain other folders.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A single playlist of songs, each one played right after the previous one.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A company reporting structure, where each employee has exactly one manager.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Nested HTML elements, where a section contains paragraphs, and a paragraph contains a link.</label>
-<button type="button" id="sasubmit-shapes" class="mlrk-btn">Check my selections</button>
-<div id="safbshapes" class="mlrk-feedback" tabindex="-1"></div>
+<div id="dragarea" style="margin-top:1.2rem">
+<p><strong>Sort the nodes:</strong> put each node from the guessing game into the box that describes it, then press the check button.</p>
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chipRoot" class="mlrk-draggable">Can it fly?</span>
+  <span id="chipWater" class="mlrk-draggable">Does it live in water?</span>
+  <span id="chipDog" class="mlrk-draggable">dog</span>
+  <span id="chipFrog" class="mlrk-draggable">frog</span>
+</div>
+<div class="mlrk-grid">
+  <div><p><strong>The root</strong></p><div class="mlrk-dropzone" id="zoneRoot"></div></div>
+  <div><p><strong>A parent that isn't the root</strong></p><div class="mlrk-dropzone" id="zoneParent"></div></div>
+  <div><p><strong>A leaf</strong></p><div class="mlrk-dropzone" id="zoneLeaf"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my sorting</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Visiting every node: traversal</h2>
-<p>Sometimes you don't need to find one specific node. You need to visit <em>every</em> node, in some predictable order, the way a file-search tool has to look inside every folder to find a file. That's a <strong>traversal</strong>.</p>
-<p>One common order is called <strong>pre-order</strong>: visit the current node first, then fully traverse its entire left side, then fully traverse its entire right side. Notice the recursive shape of that description: "traverse the left side" means doing this exact same process again, starting from the left child instead of the root. That's recursion in action: the same rule, visit-then-go-left-then-go-right, applies at every single node, all the way down to the leaves, which just have no children left to traverse into.</p>
+<h2>2. Recall before you start</h2>
+<p>Reading an object's attributes, checking <code>is None</code>, and using a function's return value are prerequisite skills for this reading. Check them before moving on.</p>
 
-<svg class="mlrk-illustration" viewBox="0 0 560 300" role="img" aria-labelledby="travTitle travDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="travTitle">Pre-order traversal visiting order on the same labeled binary tree</title>
-  <desc id="travDesc">Visiting order: A first, then B, then D, then E, then C, then F, then G. Numbered circles show the order 1 through 7, and a dashed path with arrowheads connects each stop to the next in that sequence.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <line x1="280" y1="55" x2="170" y2="120" stroke="#CFD9E3" stroke-width="3"/>
-    <line x1="280" y1="55" x2="390" y2="120" stroke="#CFD9E3" stroke-width="3"/>
-    <line x1="170" y1="150" x2="100" y2="215" stroke="#CFD9E3" stroke-width="3"/>
-    <line x1="170" y1="150" x2="240" y2="215" stroke="#CFD9E3" stroke-width="3"/>
-    <line x1="390" y1="150" x2="320" y2="215" stroke="#CFD9E3" stroke-width="3"/>
-    <line x1="390" y1="150" x2="460" y2="215" stroke="#CFD9E3" stroke-width="3"/>
+<p><strong>Coding check:</strong> what does <code>recall_question.py</code> print?</p>
+<pre class="mlrk-code" data-file="recall_question.py">class Question:
+    def __init__(self, text, hint):
+        self.text = text
+        self.hint = hint
 
-    <path d="M280,61 C240,90 200,105 176,116" fill="none" stroke="#EF541E" stroke-width="2.5" stroke-dasharray="6 4"/>
-    <polygon points="176,116 189,112 184,124" fill="#EF541E"/>
-    <path d="M170,159 C140,180 115,200 103,212" fill="none" stroke="#EF541E" stroke-width="2.5" stroke-dasharray="6 4"/>
-    <polygon points="103,212 116,209 109,221" fill="#EF541E"/>
-    <path d="M118,230 C160,230 190,230 218,230" fill="none" stroke="#EF541E" stroke-width="2.5" stroke-dasharray="6 4"/>
-    <polygon points="218,230 206,224 206,236" fill="#EF541E"/>
-    <path d="M250,213 C300,175 340,120 372,80" fill="none" stroke="#EF541E" stroke-width="2.5" stroke-dasharray="6 4"/>
-    <polygon points="372,80 367,93 359,84" fill="#EF541E"/>
-    <path d="M390,159 C365,180 340,200 328,212" fill="none" stroke="#EF541E" stroke-width="2.5" stroke-dasharray="6 4"/>
-    <polygon points="328,212 341,209 334,221" fill="#EF541E"/>
-    <path d="M338,230 C380,230 420,230 448,230" fill="none" stroke="#EF541E" stroke-width="2.5" stroke-dasharray="6 4"/>
-    <polygon points="448,230 436,224 436,236" fill="#EF541E"/>
+q = Question("Can it fly?", None)
+print(q.text)
+print(q.hint is None)</pre>
+<button type="button" class="mlrk-btn" data-run="recall_question.py" data-after="q-recall"></button>
+<div class="mlrk-run" data-file="recall_question.py" hidden><pre>Can it fly?
+True</pre></div>
+<div class="mlrk-card" id="card-recall">
+<button type="button" class="mlrk-choice" data-a="right"><code>Can it fly?</code>, then <code>True</code></button>
+<button type="button" class="mlrk-choice" data-a="none"><code>Can it fly?</code>, then <code>None</code></button>
+<button type="button" class="mlrk-choice" data-a="label"><code>text</code>, then <code>hint</code></button>
+<div id="recfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-    <circle cx="280" cy="35" r="26" fill="#2274B5" stroke="#264326" stroke-width="2.5"/>
-    <text x="280" y="30" text-anchor="middle" font-weight="700" font-size="17" fill="#FFFCF7">A</text>
-    <text x="280" y="45" text-anchor="middle" font-size="11" fill="#FECC5B">1st</text>
+<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem"><p><strong>New in this file:</strong> <code>max(a, b)</code> works like <code>min(a, b)</code>, but it gives back the larger of the two numbers.</p></div>
+<p><strong>Coding check:</strong> what does <code>bigger.py</code> print?</p>
+<pre class="mlrk-code" data-file="bigger.py">def bigger(a, b):
+    return max(a, b)
 
-    <circle cx="170" cy="135" r="26" fill="#2274B5" stroke="#264326" stroke-width="2.5"/>
-    <text x="170" y="130" text-anchor="middle" font-weight="700" font-size="17" fill="#FFFCF7">B</text>
-    <text x="170" y="145" text-anchor="middle" font-size="11" fill="#FECC5B">2nd</text>
-
-    <circle cx="390" cy="135" r="26" fill="#2274B5" stroke="#264326" stroke-width="2.5"/>
-    <text x="390" y="130" text-anchor="middle" font-weight="700" font-size="17" fill="#FFFCF7">C</text>
-    <text x="390" y="145" text-anchor="middle" font-size="11" fill="#FECC5B">5th</text>
-
-    <circle cx="100" cy="230" r="24" fill="#2274B5" stroke="#264326" stroke-width="2.5"/>
-    <text x="100" y="225" text-anchor="middle" font-weight="700" font-size="16" fill="#FFFCF7">D</text>
-    <text x="100" y="240" text-anchor="middle" font-size="10.5" fill="#FECC5B">3rd</text>
-
-    <circle cx="240" cy="230" r="24" fill="#2274B5" stroke="#264326" stroke-width="2.5"/>
-    <text x="240" y="225" text-anchor="middle" font-weight="700" font-size="16" fill="#FFFCF7">E</text>
-    <text x="240" y="240" text-anchor="middle" font-size="10.5" fill="#FECC5B">4th</text>
-
-    <circle cx="320" cy="230" r="24" fill="#2274B5" stroke="#264326" stroke-width="2.5"/>
-    <text x="320" y="225" text-anchor="middle" font-weight="700" font-size="16" fill="#FFFCF7">F</text>
-    <text x="320" y="240" text-anchor="middle" font-size="10.5" fill="#FECC5B">6th</text>
-
-    <circle cx="460" cy="230" r="24" fill="#2274B5" stroke="#264326" stroke-width="2.5"/>
-    <text x="460" y="225" text-anchor="middle" font-weight="700" font-size="16" fill="#FFFCF7">G</text>
-    <text x="460" y="240" text-anchor="middle" font-size="10.5" fill="#FECC5B">7th</text>
-
-    <text x="280" y="280" text-anchor="middle" font-size="13" font-weight="700" fill="#83671C">Pre-order: A, B, D, E, C, F, G</text>
-  </g>
-</svg>
-
-<div class="mlrk-card" id="card-traversal-order"><p><strong>Using the same A-G tree from section 4: after visiting A, then B, pre-order visits B's left child next before doing anything with C. Which node is that?</strong></p>
-<button type="button" class="mlrk-choice" data-a="d">D</button>
-<button type="button" class="mlrk-choice" data-a="c">C</button>
-<button type="button" class="mlrk-choice" data-a="e">E</button>
-<div id="travfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<p style="margin-top:1.2rem">Click through the full pre-order visit yourself below.</p>
-<div id="tracestep-traversal"></div>
+print(1 + bigger(2, 3))</pre>
+<button type="button" class="mlrk-btn" data-run="bigger.py" data-after="q-max"></button>
+<div class="mlrk-run" data-file="bigger.py" hidden><pre>4</pre></div>
+<div class="mlrk-card" id="card-max">
+<button type="button" class="mlrk-choice" data-a="4"><code>4</code></button>
+<button type="button" class="mlrk-choice" data-a="3"><code>3</code></button>
+<button type="button" class="mlrk-choice" data-a="6"><code>6</code></button>
+<div id="maxfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>7. The deepest branch: finding a tree's maximum depth</h2>
-<p>Here's one of the most common tree questions asked in technical interviews, and it's a great one to start with because it's almost entirely visual: given a binary tree, how many levels deep does it go? This is usually called the tree's <strong>depth</strong> (or sometimes <strong>height</strong>) — the number of levels counted from the root down to its single farthest leaf. A tree with only one node, just a root and nothing else, has a depth of 1.</p>
+<h2>3. Build the tree in Python</h2>
+<p>A small class can hold one node. Each <code>Node</code> object stores its text and its two children. A leaf has no children, so its <code>left</code> and <code>right</code> are <code>None</code>.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>left=None</code> in the <code>def</code> line gives the parameter a default value. If a call leaves it out, as in <code>Node("frog")</code>, it is <code>None</code>.</p></div>
+<p>The file builds the tree from the bottom up, because each node needs its children to exist before it can store them. To read <code>root.right.left</code>, start at <code>root</code>, go to its right child, then to that node's left child.</p>
+<p><strong>Predict:</strong> what does the third <code>print</code> line in <code>game_tree.py</code> show?</p>
+<pre class="mlrk-code" data-file="game_tree.py">class Node:
+    def __init__(self, text, left=None, right=None):
+        self.text = text
+        self.left = left    # the "yes" answer
+        self.right = right  # the "no" answer
 
-<p>Let's use the project folder from section 5 again, since it's already a tree you understand: <code>project/</code> contains <code>src/</code> and <code>README.md</code>; <code>src/</code> contains <code>utils/</code>; <code>utils/</code> contains <code>helpers.py</code>.</p>
+legs = Node("Does it have legs?", Node("frog"), Node("fish"))
+water = Node("Does it live in water?", legs, Node("dog"))
+big = Node("Is it big?", Node("eagle"), Node("sparrow"))
+root = Node("Can it fly?", big, water)
 
-<div class="mlrk-card" id="card-predict-depth"><p><strong>Predict first, before any counting: just by looking at the picture in section 5, how many levels deep is the deepest branch of this folder tree?</strong></p>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<div id="predictdepthfb" class="mlrk-feedback" tabindex="-1"></div></div>
+print(root.text)
+print(root.right.text)
+print(root.right.left.left.text)
+print(root.right.right.left)</pre>
+<button type="button" class="mlrk-btn" data-run="game_tree.py" data-after="q-path"></button>
+<div class="mlrk-run" data-file="game_tree.py" hidden><pre>Can it fly?
+Does it live in water?
+frog
+None</pre></div>
+<div class="mlrk-card" id="card-path">
+<button type="button" class="mlrk-choice" data-a="frog"><code>frog</code></button>
+<button type="button" class="mlrk-choice" data-a="fish"><code>fish</code></button>
+<button type="button" class="mlrk-choice" data-a="eagle"><code>eagle</code></button>
+<div id="pathfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">The last line prints <code>None</code>: <code>root.right.right</code> is dog, a leaf, so it has no left child.</p>
+</section>
 
-<p style="margin-top:1.2rem"><strong>Level by level, the plain way:</strong> start at the root and count one level per step down the longest branch, ignoring shorter branches until you're sure you've found the longest one. Click through it below.</p>
-<div id="tracestep-levels"></div>
+<section class="mlrk-section">
+<h2>4. Visit every node: traversal</h2>
+<p>A <strong>traversal</strong> visits every node in a tree once, in a set order. One common order is <strong>pre-order</strong>: visit the node, then everything on its left side, then everything on its right side.</p>
+<p>"Everything on its left side" is a smaller tree with the left child as its root. So the same steps work on it. That is <strong>recursion</strong>: a function that calls itself on a smaller piece of the problem. <code>show</code> prints a node, then calls <code>show</code> on each child. When it reaches a missing child (<code>None</code>), it returns without calling itself again. That stopping branch is the <strong>base case</strong>.</p>
+<p><strong>Predict:</strong> in the output of <code>show_all.py</code>, which line comes right after <code>sparrow</code>?</p>
+<pre class="mlrk-code" data-file="show_all.py">class Node:
+    def __init__(self, text, left=None, right=None):
+        self.text = text
+        self.left = left    # the "yes" answer
+        self.right = right  # the "no" answer
 
-<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1.2rem">
-<p><strong>Now the way code actually computes it (recursion, re-explained):</strong> a function can't "look at the picture." It only ever knows about one node at a time, plus whatever its children's own results were. So the rule becomes recursive: the depth of a node is 1 (for itself) plus whichever of its two children reports back the bigger depth. A node with no child on one side just treats that missing side as depth 0. The recursion bottoms out at the leaves, which have no children at all, so both sides come back as 0 and the leaf reports depth 1.</p>
+legs = Node("Does it have legs?", Node("frog"), Node("fish"))
+water = Node("Does it live in water?", legs, Node("dog"))
+big = Node("Is it big?", Node("eagle"), Node("sparrow"))
+root = Node("Can it fly?", big, water)
+
+def show(node):
+    if node is None:
+        return
+    print(node.text)
+    show(node.left)
+    show(node.right)
+
+show(root)</pre>
+<button type="button" class="mlrk-btn" data-run="show_all.py" data-after="q-order"></button>
+<div class="mlrk-run" data-file="show_all.py" hidden><pre>Can it fly?
+Is it big?
+eagle
+sparrow
+Does it live in water?
+Does it have legs?
+frog
+fish
+dog</pre></div>
+<div class="mlrk-card" id="card-order">
+<button type="button" class="mlrk-choice" data-a="water"><code>Does it live in water?</code></button>
+<button type="button" class="mlrk-choice" data-a="frog"><code>frog</code></button>
+<button type="button" class="mlrk-choice" data-a="dog"><code>dog</code></button>
+<div id="orderfb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>5. The deepest branch</h2>
+<p>The <strong>depth</strong> of a tree is how many levels it has, counted from the root down to its farthest leaf. A tree with only a root has a depth of 1. In the game, depth tells you the most questions and guesses a player could need.</p>
+
+<div class="mlrk-card" id="card-levels"><p><strong>Look at the picture in section 1.</strong> Count the levels from "Can it fly?" down to frog. What is this tree's depth?</p>
+<button type="button" class="mlrk-choice" data-a="4"><code>4</code></button>
+<button type="button" class="mlrk-choice" data-a="3"><code>3</code></button>
+<button type="button" class="mlrk-choice" data-a="9"><code>9</code></button>
+<div id="levelsfb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1rem">Code can't look at a picture. It only sees one node at a time. So <code>max_depth</code> uses a recursive rule:</p>
+<ol class="mlrk-steplist">
+<li>Base case: a missing node (<code>None</code>) has depth 0.</li>
+<li>Recursive case: ask the left child for its depth, and ask the right child for its depth.</li>
+<li>Return 1 (for this node) plus the larger of the two answers.</li>
+</ol>
+<pre class="mlrk-code" data-file="max_depth.py">class Node:
+    def __init__(self, text, left=None, right=None):
+        self.text = text
+        self.left = left    # the "yes" answer
+        self.right = right  # the "no" answer
+
+legs = Node("Does it have legs?", Node("frog"), Node("fish"))
+water = Node("Does it live in water?", legs, Node("dog"))
+big = Node("Is it big?", Node("eagle"), Node("sparrow"))
+root = Node("Can it fly?", big, water)
+
+def max_depth(node):
+    if node is None:
+        return 0
+    left = max_depth(node.left)
+    right = max_depth(node.right)
+    return 1 + max(left, ____)
+
+print(max_depth(root))
+print(max_depth(big))</pre>
+<button type="button" class="mlrk-btn" data-run="max_depth.py" data-after="act-fill-depth" data-after-note="Fill in the blank first. Then you can run it."></button>
+<div class="mlrk-run" data-file="max_depth.py" hidden><pre>4
+2</pre></div>
+<ol class="mlrk-steplist">
+<li>Find the last line of <code>max_depth</code>: <code>return 1 + max(left, ____)</code>.</li>
+<li>Type only the variable name that holds the right child's depth. No <code>node.</code>, no parentheses.</li>
+<li>Press <strong>Check</strong>. You get 2 tries.</li>
+</ol>
+<p>Why: the rule compares the two children's depths, and <code>left</code> is already there.</p>
+<div class="mlrk-fillblank">
+  <label for="blankinput"><strong>The missing name:</strong></label>
+  <input type="text" id="blankinput" autocomplete="off" spellcheck="false">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
 </div>
+<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+<p style="margin-top:1rem">The second line prints 2. <code>big</code> is a smaller tree: "Is it big?" with two leaves.</p>
+</section>
 
-<p>Here is that rule as code in <code>max_depth.py</code>. The lines at the bottom build the folder tree from section 5, so the file runs on its own.</p>
-<pre class="mlrk-code" data-file="max_depth.py"># Each Node holds a name and up to two children.
-class Node:
-    def __init__(self, name, left=None, right=None):
-        self.name = name
-        self.left = left
-        self.right = right
+<section class="mlrk-section">
+<h2>6. Mixed check</h2>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE about the guessing game tree.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> frog and fish are siblings.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> "Does it live in water?" is a leaf.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> It would still be a binary tree if dog had one child and no second child.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Its depth is 4 even though the eagle branch is only 3 levels.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> A pre-order traversal visits dog before frog.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+</section>
 
+<section class="mlrk-section">
+<h2>7. Wrap-up</h2>
+<ul>
+<li>A tree is nodes joined by edges, starting from one root. A binary tree gives each node at most two children.</li>
+<li>A traversal visits every node once. Pre-order visits a node, then its left side, then its right side.</li>
+<li>Depth is 1 plus the larger of the two children's depths, and a missing child counts as 0.</li>
+</ul>
+<p><strong>New situation:</strong> to tell an eel from a fish, you replace the fish leaf with a new question, "Is it long and thin?". Yes leads to eel. No leads to fish.</p>
+<p><strong>Predict:</strong> what does <code>max_depth_eel.py</code> print?</p>
+<pre class="mlrk-code" data-file="max_depth_eel.py">class Node:
+    def __init__(self, text, left=None, right=None):
+        self.text = text
+        self.left = left    # the "yes" answer
+        self.right = right  # the "no" answer
+
+thin = Node("Is it long and thin?", Node("eel"), Node("fish"))
+legs = Node("Does it have legs?", Node("frog"), thin)
+water = Node("Does it live in water?", legs, Node("dog"))
+big = Node("Is it big?", Node("eagle"), Node("sparrow"))
+root = Node("Can it fly?", big, water)
 
 def max_depth(node):
     if node is None:
@@ -353,125 +325,65 @@ def max_depth(node):
     right = max_depth(node.right)
     return 1 + max(left, right)
 
-
-# The project folder from section 5
-helpers = Node("helpers.py")
-utils = Node("utils/", left=helpers)
-src = Node("src/", left=utils)
-readme = Node("README.md")
-project = Node("project/", left=src, right=readme)
-
-print(max_depth(project))</pre>
-
-<div class="mlrk-fillblank">
-  <label for="blankinput">Complete the last line of <code>max_depth</code>: <code>return 1 + max(left, ____)</code></label>
-  <input type="text" id="blankinput" autocomplete="off">
-  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
-</div>
-<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
-
-<p style="margin-top:1.2rem"><strong>Bottom-up, the way the recursion actually resolves:</strong> the deepest node's result comes back first, and each parent combines its children's results as they return. Click through it below on the same folder tree.</p>
-<div id="tracestep-recursive"></div>
-
-<div class="mlrk-card" id="card-finaldepth" style="margin-top:1.2rem"><p><strong>Both methods should agree. What is the project folder's maximum depth?</strong></p>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="5">5</button>
-<div id="finaldepthfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-depth-transfer" style="margin-top:.8rem"><p><strong>Transfer check:</strong> using the labeled A-G tree from section 4 (A is root, B and C are its children, each of B and C has two leaf children), what is that tree's maximum depth?</p>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="7">7</button>
-<button type="button" class="mlrk-choice" data-a="2">2</button>
-<div id="depthtransferfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>8. Is this a valid binary tree?</h2>
-<p>Referring back to the definition from section 1 (at most two children per node), sort out which of these descriptions are actually allowed.</p>
-<div class="mlrk-card"><p><strong>Select every statement below that describes a VALID binary tree.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box2" value="a"> A node with a left child but no right child.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box2" value="b"> A node with three children.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box2" value="c"> A node with no children at all (a leaf).</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box2" value="d"> A tree where one branch is much deeper than another branch.</label>
-<button type="button" id="sasubmit-valid" class="mlrk-btn">Check my selections</button>
-<div id="safbvalid" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-
-<div id="dragarea" style="margin-top:1.2rem">
-<p><strong>Referring to the labeled A-G tree from section 4:</strong> drag each node letter into the category that describes it, then use the self-check button to confirm your matches.</p>
-<div class="mlrk-drag-source" id="dragsource">
-  <span id="chipA" class="mlrk-draggable">A</span>
-  <span id="chipB" class="mlrk-draggable">B</span>
-  <span id="chipD" class="mlrk-draggable">D</span>
-  <span id="chipG" class="mlrk-draggable">G</span>
-</div>
-<div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>The root</strong></p><div class="mlrk-dropzone" id="zoneRoot"></div></div>
-  <div><p class="mlrk-small"><strong>A parent with children of its own (not the root)</strong></p><div class="mlrk-dropzone" id="zoneParent"></div></div>
-  <div><p class="mlrk-small"><strong>A leaf</strong></p><div class="mlrk-dropzone" id="zoneLeaf"></div></div>
-</div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
-<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>9. Watch: binary trees, visually</h2>
-<p>As you watch, notice how the video draws a tree the same way this reading has: a root at the top, branches fanning downward, and leaves at the ends with nothing below them. Pay attention to how it describes moving from a parent to a child.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=1-l_UOFi1Xw" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: which part of a binary tree (root, parent/child, leaf, or depth) felt least intuitive to you before this reading, and what changed?</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>10. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>"Find the maximum depth of a binary tree" is one of the single most common first tree questions asked in technical screens, precisely because it's practiced in this reading: it's visual, it has a clean recursive solution, and it lets an interviewer see whether you can reason about a structure instead of just reciting a definition. Being able to say out loud, "a node's depth is 1 plus the bigger of its two children's depths, and a missing child counts as 0," is exactly the kind of explanation interviewers are listening for.</p>
-<p>Traversal questions show up just as often: "print every node in this tree" or "does this tree contain this value?" both start from the same pre-order idea practiced in section 6, visit the node, then its left side, then its right side.</p>
-<p>A very common follow-up: "what if the tree only has a left child at every level, no right children at all?" That's a valid binary tree (a node can have zero, one, or two children), and it's worth noticing out loud that its depth equals its total number of nodes, since it's a single unbroken branch. Recognizing that edge case, unprompted, is a strong signal.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: a binary tree has one node at the root, with a left child, which has a left child, which has a left child (no right children anywhere). What is this tree's maximum depth?</strong></p>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="1">1</button>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>11. Debugging habit + reflection</h2>
-<div class="mlrk-card" id="card-debug"><p><strong>Your <code>max_depth</code> function returns 0 for every tree, even trees with several nodes. What should you check first?</strong></p>
-<button type="button" class="mlrk-choice" data-a="base">Whether the base case (checking for a missing node) is accidentally triggering for real nodes too, not just missing ones.</button>
-<button type="button" class="mlrk-choice" data-a="import">Whether a missing import is causing the error.</button>
-<button type="button" class="mlrk-choice" data-a="name">Whether the function's name is spelled correctly everywhere it's called.</button>
-<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="strategy"><strong>Your decision rule:</strong> in 1-2 sentences, describe how you'd explain the recursive max-depth solution to someone who has never seen it, without just reading the code out loud.</label>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: Each node asks its children..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Summary &amp; critical thinking</h2>
-<p>A handful of ideas carried this whole reading: a tree is nodes pointing to children, starting from one root; a binary tree caps that at two children per node; a traversal visits every node in a defined order; and a tree's maximum depth is 1 plus the deeper of its two children's depths, all the way down to leaves reporting a depth of 1.</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a family tree app stores each person as a node with references to their children (people can have more than two kids, so this is a general tree, not strictly binary). One branch traces back 5 generations from the person at the root; every other branch stops after 2 generations. What is this tree's maximum depth?</p>
-<button type="button" class="mlrk-choice" data-a="5">5, since maximum depth only cares about the single deepest branch, not the others.</button>
-<button type="button" class="mlrk-choice" data-a="2">2, since most branches stop there.</button>
-<button type="button" class="mlrk-choice" data-a="7">7, by adding the two branch lengths together.</button>
+print(max_depth(root))</pre>
+<button type="button" class="mlrk-btn" data-run="max_depth_eel.py" data-after="q-summary"></button>
+<div class="mlrk-run" data-file="max_depth_eel.py" hidden><pre>5</pre></div>
+<div class="mlrk-card" id="card-summary">
+<button type="button" class="mlrk-choice" data-a="5"><code>5</code></button>
+<button type="button" class="mlrk-choice" data-a="4"><code>4</code></button>
+<button type="button" class="mlrk-choice" data-a="9"><code>9</code></button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="clue"><strong>In your own words:</strong> what question would you ask yourself first to check whether a structure you're looking at is actually a tree at all?</label>
-<textarea id="clue" class="mlrk-response" data-save></textarea>
+<p>In an interview, a good answer to "find the depth of this tree" says the rule out loud: a node's depth is 1 plus the larger of its children's depths, and a missing child counts as 0.</p>
+<p>Next, trees can keep their values in sorted order, which makes searching them fast. That kind of tree is called a binary search tree.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>13. Thinking ahead</h2>
-<p>This reading stuck to binary trees and one traversal order, but the same root-and-children shape scales up in a few directions worth knowing about: a node can be allowed more than two children (a general tree, like the family-tree example above, or the org chart from section 1 before it was narrowed to binary), the values themselves can be kept in a sorted arrangement to make searching fast (a binary search tree), and once connections are allowed to point anywhere rather than strictly downward, the structure becomes a graph, which trees are technically a special case of. Recursion is worth deepening separately too. It's the exact same tool that made the traversal and the depth calculation in this reading work, and it comes up constantly once code needs to repeat a process on smaller and smaller pieces of the same structure.</p>
+<h2>8. Reflect</h2>
+<div class="mlrk-callout mlrk-callout-blue">
+<label for="strategy"><strong>In your own words:</strong> explain how <code>max_depth</code> finds the deepest branch to someone who has never seen the code.</label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Start with: Each node asks its children..."></textarea>
+<p>Stuck? <button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</div>
 </section>
 
 <section class="mlrk-section">
-<h2>14. Your score &amp; keep a copy of your work</h2>
+<h2>9. Key terms review</h2>
+<p>Flip each card and check that you could explain the term to a classmate.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>node</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Node</strong><br>One item in a tree. It holds a value and links to its children, if it has any.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>root</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Root</strong><br>The one node at the top of a tree. It has no parent.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>parent</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Parent</strong><br>A node with at least one child joined to it one level down.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>child</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Child</strong><br>A node joined to another node, its parent, one level up.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>sibling</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Sibling</strong><br>Nodes that share the same parent.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>leaf</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Leaf</strong><br>A node with no children. It's the end of a branch.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>edge</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Edge</strong><br>The link between a parent and one of its children.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>binary tree</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Binary tree</strong><br>A tree where every node has at most two children, called left and right.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>depth</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Depth (of a tree)</strong><br>How many levels the tree has, from the root down to its farthest leaf. A tree with just a root has a depth of 1.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>traversal</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Traversal</strong><br>Visiting every node in a tree once, in a set order, such as pre-order.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>Go further (optional video)</h2>
+<p>Optional, about 10 minutes. It isn't counted in the time above or in your points. As you watch, look for the root, the leaves, and how the video moves from a parent to its children.</p>
+<div class="mlrk-video-wrap" id="ytplayer" data-title="Introduction to Trees"></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=1-l_UOFi1Xw" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://www.w3schools.com/dsa/dsa_theory_trees.php" target="_blank" rel="noopener">W3Schools: Tree Data Structures</a> — a short reference for the same terms.</li>
+<li><a href="https://www.geeksforgeeks.org/dsa/introduction-to-binary-tree/" target="_blank" rel="noopener">GeeksforGeeks: Introduction to Binary Tree</a> — more worked examples.</li>
+<li><a href="https://visualgo.net/en/bst" target="_blank" rel="noopener">VisuAlgo: Binary Search Trees</a> — build a tree and watch it change, one node at a time.</li>
+<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — paste in <code>max_depth.py</code> and step through each call.</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -506,9 +418,9 @@ print(max_depth(project))</pre>
       <li>Move into your repo folder:
         <pre class="mlrk-code">cd YOUR-REPO</pre></li>
       <li>Move the file you just downloaded out of <code>Downloads</code> and into that folder:
-        <pre class="mlrk-code">mv ~/Downloads/trees-reading1.json .</pre></li>
+        <pre class="mlrk-code">mv ~/Downloads/trees-reading1-the-deepest-branch.json .</pre></li>
       <li>Save it to git and push it up to GitHub:
-        <pre class="mlrk-code">git add trees-reading1.json
+        <pre class="mlrk-code">git add trees-reading1-the-deepest-branch.json
 git commit -m "Complete the deepest branch reading"
 git push</pre></li>
     </ol>
@@ -540,17 +452,6 @@ git push</pre></li>
 </div>
 </section>
 
-<section class="mlrk-section">
-<h2>Additional resources</h2>
-<p class="mlrk-small">Not counted in the time estimate above.</p>
-<ul>
-<li><a href="https://visualgo.net/en/bst" target="_blank" rel="noopener">VisuAlgo: Binary Search Trees</a> — build and animate your own tree, node by node.</li>
-<li><a href="https://www.geeksforgeeks.org/dsa/introduction-to-binary-tree/" target="_blank" rel="noopener">GeeksforGeeks: Introduction to Binary Tree</a> — more worked examples and terminology.</li>
-<li><a href="https://www.w3schools.com/dsa/dsa_theory_trees.php" target="_blank" rel="noopener">W3Schools: Tree Data Structures</a> — a shorter reference pass over the same vocabulary.</li>
-<li><a href="https://pythontutor.com/" target="_blank" rel="noopener">Python Tutor</a> — step through a recursive function like <code>max_depth</code> one call at a time.</li>
-</ul>
-</section>
-
 </div></main>
 
 <footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
@@ -568,171 +469,120 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-return", buttonSelector:"#card-return .mlrk-choice", feedbackSelector:"#returnfb", correct:"5",
-    feedback:{5:"add_one(4) returns 4 + 1, which is 5, and that value gets stored in result before printing.",
-              4:"The function adds 1 before returning, so the value that comes back is one more than 4.",
-              none:"The function has a return statement with a real value, so result isn't None here."}});
-
-  K.quiz({id:"q-maxof", buttonSelector:"#card-maxof .mlrk-choice", feedbackSelector:"#maxoffb", correct:"max",
-    feedback:{max:"max(a, b) returns whichever of the two values is larger. This is exactly what compares two children's depths later in this reading.",
-              sorted:"sorted() arranges values in order and returns a new list. It doesn't return a single largest value by itself.",
-              len:"len() reports how many items something contains. It doesn't compare two numbers."}});
-
-  K.quiz({id:"q-selfcall", buttonSelector:"#card-selfcall .mlrk-choice", feedbackSelector:"#selfcallfb", correct:"forever", maxAttempts:1,
-    feedback:{forever:"Without a stopping case, each call just triggers another call, with nothing ever telling it to stop and hand back a plain answer.",
-              syntax:"Python allows a function to call itself with no special syntax at all. The problem shows up at runtime, not when the code is defined."}});
-
-  K.quiz({id:"q-howmany", buttonSelector:"#card-howmany .mlrk-choice", feedbackSelector:"#howmanyfb", correct:"2",
-    feedback:{2:"B connects down to both D and E, so B has two children.",
-              1:"Look again at both lines coming down from B in the diagram: it connects to two nodes, not one.",
-              3:"A binary tree caps every node at two children at most, so three isn't possible here."}});
-
-  K.quiz({id:"q-whichroot", buttonSelector:"#card-whichroot .mlrk-choice", feedbackSelector:"#whichrootfb", correct:"a", maxAttempts:1,
-    feedback:{a:"A sits at the very top with nothing above it, which is exactly what makes it the root.",
-              b:"B has a parent (A), so B isn't the root."}});
-
-  K.quiz({id:"q-fsleaf", buttonSelector:"#card-fsleaf .mlrk-choice", feedbackSelector:"#fsleaffb", correct:"both",
-    feedback:{both:"Neither README.md nor helpers.py contains anything else, so both are leaves.",
-              src:"src/ and utils/ both contain something else below them, so neither is a leaf.",
-              root:"project/ is the root, not a leaf. It has two things directly inside it."}});
-
-  K.quiz({id:"q-traversal-order", buttonSelector:"#card-traversal-order .mlrk-choice", feedbackSelector:"#travfb", correct:"d",
-    feedback:{d:"Pre-order fully finishes B's left side before touching B's right side or moving to C, and D is B's left child.",
-              c:"C is only visited once the entirety of B's subtree, including both D and E, has already been visited.",
-              e:"E is B's right child. Pre-order visits D, B's left child, first."}});
-
-  K.quiz({id:"q-predictdepth", buttonSelector:"#card-predict-depth .mlrk-choice", feedbackSelector:"#predictdepthfb", correct:"4",
-    feedback:{4:"Counting project/ as level 1, src/ as level 2, utils/ as level 3, and helpers.py as level 4 gives a deepest branch of 4 levels.",
-              2:"That's the depth of the README.md branch, which is shorter. Maximum depth looks for the single deepest branch, not a typical one.",
-              3:"That stops one level short. utils/ still contains helpers.py, one level deeper."}});
-
-  K.quiz({id:"q-finaldepth", buttonSelector:"#card-finaldepth .mlrk-choice", feedbackSelector:"#finaldepthfb", correct:"4", maxAttempts:1,
-    feedback:{4:"Both the level-counting walk-through and the recursive formula land on 4.",
-              3:"Recheck the recursive trace above: src/'s depth already came back as 3, and project/ adds one more on top of that."}});
-
-  K.quiz({id:"q-depthtransfer", buttonSelector:"#card-depth-transfer .mlrk-choice", feedbackSelector:"#depthtransferfb", correct:"3",
-    feedback:{3:"A (level 1) to B or C (level 2) to any of D, E, F, or G (level 3): three levels deep, and every branch happens to be the same length here.",
-              7:"7 is the total count of nodes in the tree, not how many levels deep any single branch goes.",
-              2:"That stops at B and C, but the tree still has a third level underneath them: D, E, F, and G."}});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"4",
-    feedback:{4:"Root, then three left children in a row with no branching at all, is still four levels: a valid, if unbalanced, binary tree.",
-              1:"A depth of 1 would mean only the root exists, with no children below it at all.",
-              3:"That misses the root itself. Counting the root plus all three left children gives four levels total."}});
-
-  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"base",
-    feedback:{base:"If every call returns 0, the function is almost certainly treating real nodes as if they were the missing-node base case, so the recursive calls never actually measure anything.",
-              import:"Trees built from a plain Python class need no special import, so a missing import wouldn't produce this particular symptom.",
-              name:"A misspelled function name would raise an error rather than quietly returning 0 every time."}});
-
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"5",
-    feedback:{5:"Maximum depth is defined by the single deepest branch in the whole tree, regardless of how short every other branch is.",
-              2:"Most branches being shorter doesn't change what maximum depth measures: the longest one still sets the answer.",
-              7:"Depth isn't a sum across branches. It's the length of the one longest path from the root to a leaf."}});
-
-  K.selectAll({id:"q-selectall-shapes", boxSelector:".sa-box", submitSelector:"#sasubmit-shapes", feedbackSelector:"#safbshapes", options:[
-    {value:"a", label:"A folder that can contain other folders, which can contain other folders.", correct:true,
-      hint:"Think back to section 5's file-system example. Does each folder trace back to one root with no cycles?",
-      explain:"Each folder has exactly one parent folder, all tracing back to one root: the same shape as the project/ example."},
-    {value:"b", label:"A single playlist of songs, each one played right after the previous one.", correct:false,
-      hint:"A tree needs branching, or at least the possibility of it. Does a single ordered sequence branch anywhere?",
-      explain:"A plain sequential playlist has exactly one path with no branching at all: that's closer to a straight line than a tree."},
-    {value:"c", label:"A company reporting structure, where each employee has exactly one manager.", correct:true,
-      hint:"Revisit section 1's org chart. Does everyone trace back up to one person at the top through their single manager?",
-      explain:"This is precisely the org chart from section 1: one root (the top of the company) with everyone else branching downward."},
-    {value:"d", label:"Nested HTML elements, where a section contains paragraphs, and a paragraph contains a link.", correct:true,
-      hint:"Think about the DOM example from section 5. Does each element live inside exactly one containing element?",
-      explain:"Each nested element has exactly one containing parent element, all tracing back to one root element: the DOM tree from section 5."}
-  ]});
-
-  K.selectAll({id:"q-selectall-valid", boxSelector:".sa-box2", submitSelector:"#sasubmit-valid", feedbackSelector:"#safbvalid", options:[
-    {value:"a", label:"A node with a left child but no right child.", correct:true,
-      hint:"Section 1's definition says 'at most two.' Does having fewer than two break that rule?",
-      explain:"At most two children allows zero, one, or two. A missing right child is completely normal, as seen in section 10's all-left-children example."},
-    {value:"b", label:"A node with three children.", correct:false,
-      hint:"Recheck the exact wording of the binary tree definition from section 1.",
-      explain:"A binary tree caps every node at two children. Three children makes it a general tree, not a binary tree."},
-    {value:"c", label:"A node with no children at all (a leaf).", correct:true,
-      hint:"Think back to the vocabulary in section 3. Is a leaf disqualified from being part of a binary tree?",
-      explain:"Zero children is well within 'at most two.' Every leaf in section 4's diagram is proof of this."},
-    {value:"d", label:"A tree where one branch is much deeper than another branch.", correct:true,
-      hint:"Recheck section 7's project/ example. Did src/'s branch and README.md's branch need to be the same length?",
-      explain:"Nothing in the definition requires branches to be balanced. Section 7's project/ tree itself has one branch reaching depth 4 and another reaching only depth 2."}
-  ]});
-
   K.dragDrop("#dragarea", "act-drag-parts");
   K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chipA:{expectedId:"zoneRoot", label:"A", expectedLabel:"The root"},
-    chipB:{expectedId:"zoneParent", label:"B", expectedLabel:"A parent with children of its own"},
-    chipD:{expectedId:"zoneLeaf", label:"D", expectedLabel:"A leaf"},
-    chipG:{expectedId:"zoneLeaf", label:"G", expectedLabel:"A leaf"}
+    chipRoot:{expectedId:"zoneRoot", label:"Can it fly?", expectedLabel:"The root"},
+    chipWater:{expectedId:"zoneParent", label:"Does it live in water?", expectedLabel:"A parent that isn't the root"},
+    chipDog:{expectedId:"zoneLeaf", label:"dog", expectedLabel:"A leaf"},
+    chipFrog:{expectedId:"zoneLeaf", label:"frog", expectedLabel:"A leaf"}
   }});
 
+  K.quiz({id:"q-recall", buttonSelector:"#card-recall .mlrk-choice", feedbackSelector:"#recfb", correct:"right",
+    feedback:{right:"Right. q.text holds \"Can it fly?\", and q.hint holds None, so q.hint is None is True.",
+              none:"The second line prints the result of the check q.hint is None, which is True or False.",
+              label:"text and hint are attribute names. q.text gives back the value stored under that name."}});
+
+  K.quiz({id:"q-max", buttonSelector:"#card-max .mlrk-choice", feedbackSelector:"#maxfb", correct:"4",
+    feedback:{"4":"Right. max(2, 3) is 3, bigger returns it, and 1 + 3 is 4.",
+              "3":"3 is what bigger(2, 3) returns. The 1 + in front still gets added.",
+              "6":"max picks the larger number. It doesn't add them, so bigger(2, 3) is 3."}});
+
+  K.quiz({id:"q-path", buttonSelector:"#card-path .mlrk-choice", feedbackSelector:"#pathfb", correct:"frog",
+    feedback:{frog:"Right. root.right is \"Does it live in water?\", its left is \"Does it have legs?\", and that node's left is frog.",
+              fish:"fish is the right child of \"Does it have legs?\". The last step in root.right.left.left goes left.",
+              eagle:"eagle is on the root's left side. root.right.left.left starts by going right from the root."}});
+
+  K.quiz({id:"q-order", buttonSelector:"#card-order .mlrk-choice", feedbackSelector:"#orderfb", correct:"water",
+    feedback:{water:"Right. sparrow finishes the root's whole left side. Next, show(root.right) prints \"Does it live in water?\".",
+              frog:"frog is deeper on the right side. show prints a node before its children, so \"Does it live in water?\" comes first.",
+              dog:"dog is the right child of \"Does it live in water?\". Pre-order prints that node, then its whole left side, before dog."}});
+
+  K.quiz({id:"q-levels", buttonSelector:"#card-levels .mlrk-choice", feedbackSelector:"#levelsfb", correct:"4",
+    feedback:{"4":"Right. Can it fly? (1), Does it live in water? (2), Does it have legs? (3), frog (4).",
+              "3":"That's the eagle branch. The frog branch goes one level further.",
+              "9":"9 is how many nodes the tree has. Depth counts levels on the longest branch."}});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"5",
+    feedback:{"5":"Right. The new question adds a level under \"Does it have legs?\", so the eel branch has 5 levels.",
+              "4":"4 was the depth before. eel and fish now sit one level below the new question.",
+              "9":"Depth counts levels on the deepest branch, not nodes."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"frog and fish are siblings.", correct:true,
+      hint:"Find the parent of frog in the picture. Is it also fish's parent?",
+      explain:"frog and fish share the parent \"Does it have legs?\"."},
+    {value:"b", label:"\"Does it live in water?\" is a leaf.", correct:false,
+      hint:"Does \"Does it live in water?\" have any children?",
+      explain:"It has two children, so it's a parent, not a leaf."},
+    {value:"c", label:"It would still be a binary tree if dog had one child and no second child.", correct:true,
+      hint:"A binary tree allows at most how many children per node?",
+      explain:"At most two children allows zero, one, or two."},
+    {value:"d", label:"Its depth is 4 even though the eagle branch is only 3 levels.", correct:true,
+      hint:"Depth is measured to which leaf?",
+      explain:"Depth counts the farthest leaf. The frog branch has 4 levels."},
+    {value:"e", label:"A pre-order traversal visits dog before frog.", correct:false,
+      hint:"Look at the output of show_all.py.",
+      explain:"show_all.py printed frog, then fish, then dog. The left side comes first."}
+  ]});
+
   K.flipCards("#vocab", "act-flip-vocab");
-
-  K.traceStepper("#tracestep-traversal", {steps:[
-    {cell:"visit A", line:"Visit A (the root itself, first)"},
-    {cell:"go left to B", line:"Go to A's left child, B, and visit it"},
-    {cell:"go left to D", line:"Go to B's left child, D, and visit it (D is a leaf, nothing further down this side)"},
-    {cell:"back up, go right to E", line:"Back up to B, go to B's right child, E, and visit it (E is a leaf)"},
-    {cell:"back up, go right to C", line:"B's entire subtree is done. Back up to A, go to A's right child, C, and visit it"},
-    {cell:"go left to F", line:"Go to C's left child, F, and visit it (F is a leaf)"},
-    {cell:"go right to G", line:"Go to C's right child, G, and visit it (G is a leaf). Every node has now been visited: A, B, D, E, C, F, G"}
-  ]});
-
-  K.traceStepper("#tracestep-levels", {steps:[
-    {cell:"level 1", line:"Level 1: project/ (the root)"},
-    {cell:"level 2", line:"Level 2: src/ and README.md are both one level below the root"},
-    {cell:"level 3", line:"Level 3: utils/ is one level below src/"},
-    {cell:"level 4 (deepest)", line:"Level 4: helpers.py is one level below utils/, and nothing goes any deeper. The deepest branch reaches level 4."}
-  ]});
-
-  K.traceStepper("#tracestep-recursive", {steps:[
-    {cell:"helpers.py", line:"max_depth(helpers.py): it has no children, so left=0 and right=0. Returns 1 + max(0, 0) = 1"},
-    {cell:"utils/", line:"max_depth(utils/): its only child, helpers.py, just returned 1. Returns 1 + max(1, 0) = 2"},
-    {cell:"README.md", line:"max_depth(README.md): it has no children. Returns 1 + max(0, 0) = 1"},
-    {cell:"src/", line:"max_depth(src/): its only child, utils/, just returned 2. Returns 1 + max(2, 0) = 3"},
-    {cell:"project/ (root)", line:"max_depth(project/): its two children returned 3 (src/) and 1 (README.md). Returns 1 + max(3, 1) = 4. Final answer: 4"}
-  ]});
-
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"1-l_UOFi1Xw"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
   K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
-  K.freeResponse({id:"resp-clue", selector:"#clue", minWords:6});
 
-  K.Scoring.register("q-blank",1,"quiz");
-  let blankAttempts=0, blankDone=false;
-  $("#blankcheck").addEventListener("click",()=>{
+  // Optional video: not scored, so it stays out of the reading's points.
+  const yt = $("#ytplayer");
+  const frame = document.createElement("iframe");
+  frame.src = "https://www.youtube.com/embed/1-l_UOFi1Xw";
+  frame.title = yt.dataset.title;
+  frame.loading = "lazy";
+  frame.allowFullscreen = true;
+  yt.appendChild(frame);
+
+  /* ---- fill-in: the last line of max_depth ---- */
+  K.Scoring.register("act-fill-depth", 1, "activity");
+  let blankAttempts = 0, blankDone = false;
+  $("#blankcheck").addEventListener("click", () => {
     if(blankDone) return;
-    blankAttempts++;
-    const ok = $("#blankinput").value.trim().toLowerCase()==="right";
-    const fb=$("#blankfb");
-    if(ok){
-      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> The formula compares the left and right children's depths and keeps the bigger one.";
-      blankDone=true;
-    } else if(blankAttempts>=2){
-      K.Scoring.award("q-blank",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing word is <code>right</code>, as in <code>node.right</code>.";
-      blankDone=true;
-    } else {
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> One more try.";
+    const fb = $("#blankfb");
+    const raw = $("#blankinput").value.trim();
+    if(!raw){
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>The box is empty.</strong> Type the variable name from step 2 above.";
+      fb.setAttribute("tabindex","-1"); fb.focus();
+      return;
     }
-    fb.setAttribute("tabindex","-1");fb.focus();
+    blankAttempts++;
+    const val = raw.toLowerCase().replace(/\s+/g, "").replace(/\)+$/, "");
+    if(val === "right"){
+      K.Scoring.award("act-fill-depth", blankAttempts === 1 ? 1 : 0.5);
+      fb.className = "mlrk-feedback mlrk-show mlrk-good";
+      fb.innerHTML = "<strong>Correct.</strong> <code>max(left, right)</code> keeps the deeper of the two sides. Run the file to see the depths.";
+      blankDone = true;
+      K.markDone("act-fill-depth");
+    } else if(blankAttempts >= 2){
+      K.Scoring.award("act-fill-depth", 0);
+      fb.className = "mlrk-feedback mlrk-show mlrk-reveal";
+      fb.innerHTML = "<strong>Here's the answer. You'll get it next time.</strong> The line is <code>return 1 + max(left, right)</code>.";
+      blankDone = true;
+      K.markDone("act-fill-depth");
+    } else {
+      const hint = val === "node.right" || val === "max_depth(node.right"
+        ? "<code>max_depth(node.right)</code> already ran earlier in <code>max_depth</code>, and its answer was stored in a variable. Type just that variable's name."
+        : "Find the line in <code>max_depth</code> that starts with <code>left =</code>. The next line stores the right child's depth. What is that variable called?";
+      fb.className = "mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML = "<strong>Not quite yet.</strong> " + hint + " You have one more try.";
+    }
+    fb.setAttribute("tabindex","-1"); fb.focus();
   });
 
   const AI_PROMPTS = [
-    "Think about a task where you have to check something, then check something else only if the first check leads somewhere new, over and over. Where does that show up in something you already do?",
-    "If you had to explain 'a node's depth is 1 plus its deepest child's depth' to a friend using something from your own daily life, what would you compare it to?",
-    "Where have you already seen a tree-shaped structure in real life that this reading didn't mention, like a bracket in a sports tournament or a choose-your-own-adventure book?"
+    "Think of a sports bracket or a family tree. Where is the root, and where are the leaves?",
+    "Explain \"a node's depth is 1 plus its deepest child's depth\" to a friend, using people in a line passing a number back to the front.",
+    "Pick a choose-your-own-path story or a yes-or-no quiz you've seen. How many questions deep is its longest path?"
   ];
-  $("#aiprompt").addEventListener("click",()=>{
-    const box=$("#aipromptbox");
-    box.style.display="block";
-    box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
+  $("#aiprompt").addEventListener("click", () => {
+    const box = $("#aipromptbox");
+    box.style.display = "block";
+    box.innerHTML = "<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random() * AI_PROMPTS.length)];
   });
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";

@@ -10,16 +10,15 @@
 .data-table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.95rem}
 .data-table th,.data-table td{border:1px solid var(--mlrk-divider-on-light);padding:.45rem .7rem;text-align:left}
 .data-table th{background:var(--mlrk-bg-light-alt)}
-.code-pair h3{margin:0 0 .4rem;font-size:1.05rem}
 </style>
 </head><body>
 
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Un-Nesting the Query</h1>
-<p class="mlrk-lead">You write a SQL query that answers a real business question, and it's completely correct. Then a teammate reviewing it has to read the innermost parentheses first just to figure out what the outer clause is even comparing against. Correct and readable turned out to be two different things — and SQL has a feature built specifically to close that gap.</p>
+<p class="mlrk-lead">A teacher runs a summer reading challenge. Each week, every student logs how many pages they read. The teacher asks: which students read more pages than the average student? One SQL query answers it. Written with nested subqueries, you read it from the inside out. Written as a <strong>CTE</strong>, you read it from top to bottom.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~32–35 minutes</span>
+  <span class="mlrk-pill">~20–23 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -51,283 +50,291 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Concept overview</h2>
-<p>Harborview Consulting logs every hour its analysts bill, in one table:</p>
-<div class="mlrk-code"><div class="mlrk-screen">hours_logged(client_name, hours, week_ending)</div></div>
-<p>Someone on the finance team asks a fair question: <strong>which clients logged more total hours than the average client, across every logged week?</strong> It's answerable in one query — grouping by client, then comparing each client's total against the average of those totals. Here's a correct way to write it:</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT client_name, SUM(hours) AS total_hours
-FROM hours_logged
-GROUP BY client_name
-HAVING SUM(hours) > (
-    SELECT AVG(client_total)
-    FROM (
-        SELECT SUM(hours) AS client_total
-        FROM hours_logged
-        GROUP BY client_name
-    ) AS client_totals
-);</div></div>
-<p>Every line of that is correct SQL. It's also genuinely hard to trust at a glance: to know what the <code>HAVING</code> clause is even comparing against, you have to find the innermost parentheses first, work out what <code>client_total</code> means, then work out what <code>AVG(client_total)</code> means, then carry that back up three lines to the comparison that started the whole thing. You read it from the inside out — the opposite of how the words appear on the page.</p>
+<h2>1. The reading log</h2>
+<p>The teacher keeps one table, <code>reading_log</code>. Each row is one student's pages for one week. Here are all 8 rows:</p>
+<table class="data-table">
+<thead><tr><th>student_name</th><th>pages</th><th>week_ending</th></tr></thead>
+<tbody>
+<tr><td>Ana</td><td>40</td><td>2026-07-03</td></tr>
+<tr><td>Ben</td><td>20</td><td>2026-07-03</td></tr>
+<tr><td>Cleo</td><td>60</td><td>2026-07-03</td></tr>
+<tr><td>Dev</td><td>30</td><td>2026-07-03</td></tr>
+<tr><td>Ana</td><td>55</td><td>2026-07-10</td></tr>
+<tr><td>Ben</td><td>25</td><td>2026-07-10</td></tr>
+<tr><td>Cleo</td><td>70</td><td>2026-07-10</td></tr>
+<tr><td>Dev</td><td>40</td><td>2026-07-10</td></tr>
+</tbody>
+</table>
 
 <svg class="mlrk-illustration" viewBox="0 0 700 360" role="img" aria-labelledby="cteTitle cteDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="cteTitle">Two ways to write the same query: nested subquery versus a named CTE</title>
-  <desc id="cteDesc">Left: a nested subquery shown as three boxes inside each other, numbered 1, 2, 3 from the innermost outward, showing it must be read inside-out. Right: the same logic as a CTE, shown as two boxes stacked top to bottom, numbered 1 and 2, showing it reads top to bottom instead.</desc>
+  <desc id="cteDesc">Left: a nested subquery shown as three boxes inside each other, numbered 1, 2, 3 from the innermost outward, so it must be read inside out. Right: the same steps as a CTE, shown as two boxes stacked top to bottom, numbered 1 and 2, so it reads top to bottom.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-    <text x="170" y="20" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">The Hard Way: Nested Subquery</text>
+    <text x="170" y="20" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Nested subquery</text>
     <rect x="20" y="36" width="300" height="270" rx="18" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
-    <text x="170" y="62" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">3. Compare &amp; filter</text>
-    <rect x="50" y="86" width="240" height="195" rx="16" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
-    <text x="170" y="112" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">2. Average of totals</text>
-    <rect x="80" y="136" width="180" height="110" rx="14" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="170" y="168" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">1. Per-client totals</text>
-    <text x="170" y="188" text-anchor="middle" font-size="12" fill="#261F1D">(read this first)</text>
-    <text x="170" y="332" text-anchor="middle" font-size="13" fill="#261F1D">Reading order: 1, then 2, then 3 — inside out.</text>
+    <text x="170" y="64" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">3. Compare and filter</text>
+    <rect x="45" y="86" width="250" height="195" rx="16" fill="#FECC5B" stroke="#83671C" stroke-width="3"/>
+    <text x="170" y="114" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">2. Average of the totals</text>
+    <rect x="70" y="136" width="200" height="110" rx="14" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
+    <text x="170" y="180" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">1. Each student's total</text>
+    <text x="170" y="204" text-anchor="middle" font-size="14" fill="#261F1D">(read this first)</text>
+    <text x="170" y="334" text-anchor="middle" font-size="14" fill="#261F1D">Read 1, then 2, then 3: inside out.</text>
 
-    <text x="525" y="20" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">The Readable Way: CTE</text>
+    <text x="525" y="20" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">CTE</text>
     <rect x="370" y="36" width="310" height="110" rx="16" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="525" y="76" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">1. Name the per-client totals</text>
-    <text x="525" y="98" text-anchor="middle" font-size="12" fill="#261F1D">(WITH client_totals AS ...)</text>
-    <text x="525" y="120" text-anchor="middle" font-size="12" fill="#261F1D">computed once, up front</text>
+    <text x="525" y="76" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">1. Name each student's total</text>
+    <text x="525" y="100" text-anchor="middle" font-size="14" fill="#261F1D">WITH student_totals AS (...)</text>
+    <text x="525" y="122" text-anchor="middle" font-size="14" fill="#261F1D">written first, at the top</text>
     <line x1="525" y1="150" x2="525" y2="178" stroke="#264326" stroke-width="3"/>
     <polygon points="515,178 535,178 525,192" fill="#264326"/>
     <rect x="370" y="200" width="310" height="106" rx="16" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
-    <text x="525" y="230" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">2. Use the name twice</text>
-    <text x="525" y="252" text-anchor="middle" font-size="12" fill="#261F1D">(compare each client to the</text>
-    <text x="525" y="270" text-anchor="middle" font-size="12" fill="#261F1D">average, using the same name)</text>
-    <text x="525" y="332" text-anchor="middle" font-size="13" fill="#261F1D">Reading order: 1, then 2 — top to bottom.</text>
+    <text x="525" y="232" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">2. Use the name twice</text>
+    <text x="525" y="256" text-anchor="middle" font-size="14" fill="#261F1D">compare each total with the</text>
+    <text x="525" y="276" text-anchor="middle" font-size="14" fill="#261F1D">average of the same totals</text>
+    <text x="525" y="334" text-anchor="middle" font-size="14" fill="#261F1D">Read 1, then 2: top to bottom.</text>
   </g>
 </svg>
 
-<p>Here's the exact same logic, rewritten as a CTE:</p>
-<div class="mlrk-code"><div class="mlrk-screen">WITH client_totals AS (
-    SELECT client_name, SUM(hours) AS total_hours
-    FROM hours_logged
-    GROUP BY client_name
-)
-SELECT client_name, total_hours
-FROM client_totals
-WHERE total_hours > (SELECT AVG(total_hours) FROM client_totals);</div></div>
-<p>Nothing about the underlying logic changed. What changed is that the per-client totals now have a name, <code>client_totals</code>, given to them up front — before anything else happens. The final query reads like a sentence: get the client totals, then keep the ones above the average of those totals. You never have to hold a nested, anonymous block in your head to know what you're comparing against, because it already has a name.</p>
-
+<p>You already know <code>GROUP BY</code>, <code>HAVING</code>, and subqueries. This matters because a teammate has to check your query before anyone trusts its numbers, and a query that reads top to bottom is faster to check.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> a query being correct and a query being readable are genuinely separate properties, and code review treats them that way. A reviewer (or an instructor grading a project rubric) can run both versions above and get the identical result — but only one of them can be trusted at a glance, without tracing parentheses. Writing SQL other people can review quickly is a real, specific skill, not a stylistic nice-to-have.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to aggregate rows with <code>GROUP BY</code> and filter an aggregate with <code>HAVING</code>, and you already know what a subquery is — a query nested inside another query. This reading is entirely about giving that nested query a name and moving it to the top, so it reads top to bottom. Once that clicks, the same <code>WITH</code> syntax scales up to naming several steps in a row, each one building on the step named before it.</p>
+<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what <code>psql</code> prints when it runs that file. On your own laptop you'd type <code>psql -d reading_club -f name.sql</code>. The <code>-f</code> tells <code>psql</code> to run every statement in the file, top to bottom.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall before rewriting</h2>
-<p class="mlrk-small">Four skills are prerequisites for this reading: aggregating with <code>GROUP BY</code>, filtering an aggregate with <code>HAVING</code>, knowing what a subquery is, and understanding why <code>WHERE</code> can't do what <code>HAVING</code> does. Test each below before moving on.</p>
+<h2>2. Recall</h2>
+<p>Every query in this reading groups rows and filters groups. Check both skills.</p>
 
-<div class="mlrk-card" id="card-recall-agg"><p><strong>A table <code>hours_logged</code> has columns <code>client_name</code> and <code>hours</code>. Which query returns the TOTAL hours logged by each client?</strong></p>
-<button type="button" class="mlrk-choice" data-a="group">SELECT client_name, SUM(hours) FROM hours_logged GROUP BY client_name</button>
-<button type="button" class="mlrk-choice" data-a="order">SELECT client_name, hours FROM hours_logged ORDER BY hours DESC</button>
-<button type="button" class="mlrk-choice" data-a="avgall">SELECT AVG(hours) FROM hours_logged</button>
+<div class="mlrk-card" id="card-recall-agg"><p><strong>Predict:</strong> in the result of <code>recall_totals.sql</code>, what is Cleo's <code>total_pages</code>?</p>
+<div class="mlrk-code" data-file="recall_totals.sql"><div class="mlrk-screen">SELECT student_name, SUM(pages) AS total_pages
+FROM reading_log
+GROUP BY student_name
+ORDER BY student_name;</div></div>
+<button type="button" class="mlrk-btn" data-run="recall_totals.sql" data-after="q-agg">Run recall_totals.sql</button>
+<div class="mlrk-run" data-file="recall_totals.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f recall_totals.sql</div><pre> student_name | total_pages
+--------------+-------------
+ Ana          |          95
+ Ben          |          45
+ Cleo         |         130
+ Dev          |          70
+(4 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="sum">130</button>
+<button type="button" class="mlrk-choice" data-a="last">70</button>
+<button type="button" class="mlrk-choice" data-a="count">2</button>
 <div id="aggfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-recall-having" style="margin-top:.8rem"><p><strong>Scenario check:</strong> you already have each client's total hours from a <code>GROUP BY</code>. You want to keep only the clients whose total is above 100. Which clause do you add?</p>
-<button type="button" class="mlrk-choice" data-a="having">HAVING SUM(hours) > 100</button>
-<button type="button" class="mlrk-choice" data-a="wheresum">WHERE SUM(hours) > 100</button>
-<button type="button" class="mlrk-choice" data-a="whereraw">WHERE hours > 100</button>
+<div class="mlrk-card" id="card-recall-having" style="margin-top:.8rem"><p><strong>The teacher wants only the students whose total is above 100.</strong> Which line goes right after <code>GROUP BY student_name</code>?</p>
+<button type="button" class="mlrk-choice" data-a="having"><code>HAVING SUM(pages) &gt; 100</code></button>
+<button type="button" class="mlrk-choice" data-a="wheresum"><code>WHERE SUM(pages) &gt; 100</code></button>
+<button type="button" class="mlrk-choice" data-a="whereraw"><code>WHERE pages &gt; 100</code></button>
 <div id="havingfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-recall-why" style="margin-top:.8rem"><p><strong>Why does <code>WHERE SUM(hours) > 100</code> raise an error, while <code>HAVING SUM(hours) > 100</code> works?</strong></p>
-<button type="button" class="mlrk-choice" data-a="order">WHERE filters rows before grouping happens, before SUM(hours) has been computed yet.</button>
-<button type="button" class="mlrk-choice" data-a="text">WHERE only works with text columns, not numbers.</button>
-<button type="button" class="mlrk-choice" data-a="naming">There's no real difference — it's just a naming preference.</button>
-<div id="whyfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-recall-subquery" style="margin-top:.8rem"><p><strong>Coding check:</strong> in <code>SELECT * FROM clients WHERE id IN (SELECT client_id FROM invoices WHERE amount > 500)</code>, which part is the subquery?</p>
-<button type="button" class="mlrk-choice" data-a="inner">SELECT client_id FROM invoices WHERE amount > 500 — the part in parentheses</button>
-<button type="button" class="mlrk-choice" data-a="whole">The whole statement, both SELECTs together</button>
-<button type="button" class="mlrk-choice" data-a="cond">Only the amount > 500 condition</button>
-<div id="subqfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">A CTE and a subquery can compute the exact same result. Every one of these four ideas — aggregating, filtering an aggregate, and what a subquery even is — shows up again below exactly as it works here. Get each one solid in isolation first.</div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Technical vocabulary</h2>
-<p>Flip each card before moving into the practice below.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>CTE</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>CTE (Common Table Expression)</strong><br>A named, temporary result set defined with a <code>WITH</code> clause at the top of a query, then used later in that same query as if it were a table.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>WITH clause</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>WITH clause</strong><br>The keyword that starts a CTE definition. <code>WITH name AS ( ...query... )</code> names a result before it's ever used.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>subquery</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Subquery</strong><br>A complete SELECT query nested inside another query, usually in parentheses. A CTE and a subquery can compute the exact same result — the difference is where the definition lives, and whether it has a name.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>named intermediate result</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Named intermediate result</strong><br>A step in a bigger calculation that's been given its own label, instead of being left as an anonymous block of SQL nested inside another block.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>scope</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Scope</strong><br>How far a name's definition reaches. A CTE's name exists only for the one query it's attached to — it's gone the moment that query finishes running.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>readability</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Readability</strong><br>How easily someone other than the original author can trust a query at a glance, without running it. Correctness and readability are separate properties — a query can have either one without the other.</span></button>
-</div>
-</section>
+<h2>3. A CTE gives a step a name</h2>
+<p>A <strong>CTE</strong> (common table expression) is a named, temporary result. You define it at the top of a query, then use it later in the same query as if it were a table. The <strong>WITH clause</strong> is what defines it:</p>
+<div class="mlrk-code"><div class="mlrk-screen">WITH name AS (
+    a complete SELECT query
+)
+the main query, which can use name like a table</div></div>
+<p>The named step is a <strong>named intermediate result</strong>: one step of a bigger calculation, with its own label instead of being an unnamed block inside another block.</p>
 
-<section class="mlrk-section">
-<h2>4. A CTE, by itself first</h2>
-<p>Before rewriting anything, look at a CTE with nothing to compare it to. Here are five real rows from <code>hours_logged</code>:</p>
-<table class="data-table">
-<thead><tr><th>client_name</th><th>hours</th><th>week_ending</th></tr></thead>
-<tbody>
-<tr><td>Alden Retail</td><td>12</td><td>2026-06-06</td></tr>
-<tr><td>Alden Retail</td><td>9</td><td>2026-06-13</td></tr>
-<tr><td>Brightline Legal</td><td>22</td><td>2026-06-06</td></tr>
-<tr><td>Brightline Legal</td><td>18</td><td>2026-06-13</td></tr>
-<tr><td>Casa Nova Design</td><td>6</td><td>2026-06-06</td></tr>
-</tbody>
-</table>
-<div class="mlrk-code"><div id="bareScreen" class="mlrk-screen">WITH heavy_weeks AS (
-    SELECT client_name, hours
-    FROM hours_logged
-    WHERE hours >= 15
+<div class="mlrk-card" id="card-heavy"><p><strong>Predict:</strong> <code>heavy_weeks.sql</code> names the rows where a student read 50 pages or more, then counts them. What number does it print?</p>
+<div class="mlrk-code" data-file="heavy_weeks.sql"><div class="mlrk-screen">WITH heavy_weeks AS (
+    SELECT student_name, pages
+    FROM reading_log
+    WHERE pages &gt;= 50
 )
 SELECT COUNT(*) FROM heavy_weeks;</div></div>
-<p>The <code>WITH</code> clause defines <code>heavy_weeks</code> as its own small query — just rows where <code>hours >= 15</code> — before the real question (<code>SELECT COUNT(*)</code>) ever runs.</p>
+<button type="button" class="mlrk-btn" data-run="heavy_weeks.sql" data-after="q-heavy" data-after-note="Check your prediction first. Then you can run it.">Run heavy_weeks.sql</button>
+<div class="mlrk-run" data-file="heavy_weeks.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f heavy_weeks.sql</div><pre> count
+-------
+     3
+(1 row)</pre></div>
+<ol class="mlrk-steplist">
+  <li>Look at the <code>pages</code> column in the table in section 1. Count the rows with 50 or more. Those are the rows <code>heavy_weeks</code> keeps.</li>
+  <li>Type only the number, like <code>5</code>.</li>
+  <li>Press <strong>Check</strong>. Then the Run button unlocks so you can compare.</li>
+</ol>
 <div class="mlrk-fillblank">
-  <label for="predictInput"><strong>Using the five rows above: what number does this query return?</strong></label>
+  <label for="predictInput">Number printed:</label>
   <input type="text" id="predictInput" autocomplete="off" inputmode="numeric">
   <button type="button" id="predictCheck" class="mlrk-btn">Check</button>
 </div>
 <div id="predictfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
 </section>
 
 <section class="mlrk-section">
-<h2>5. The same query, side by side</h2>
-<p>Back to the full question from section 1: which clients logged more total hours than the average client. Here are both versions again, next to each other.</p>
-<div class="mlrk-grid code-pair">
-<div><h3>Version A: Nested subquery</h3><div class="mlrk-code"><div class="mlrk-screen">SELECT client_name, SUM(hours) AS total_hours
-FROM hours_logged
-GROUP BY client_name
-HAVING SUM(hours) > (
-    SELECT AVG(client_total)
+<h2>4. Rewrite a subquery as a CTE</h2>
+<p>A <strong>subquery</strong> is a complete <code>SELECT</code> written inside parentheses inside another query. Here is the teacher's question, "who read more than the average student?", written with two nested subqueries:</p>
+<div class="mlrk-code" data-file="above_average_nested.sql"><div class="mlrk-screen">SELECT student_name, SUM(pages) AS total_pages
+FROM reading_log
+GROUP BY student_name
+HAVING SUM(pages) &gt; (
+    SELECT AVG(student_total)
     FROM (
-        SELECT SUM(hours) AS client_total
-        FROM hours_logged
-        GROUP BY client_name
-    ) AS client_totals
-);</div></div></div>
-<div><h3>Version B: CTE</h3><div class="mlrk-code"><div class="mlrk-screen">WITH client_totals AS (
-    SELECT client_name, SUM(hours) AS total_hours
-    FROM hours_logged
-    GROUP BY client_name
+        SELECT SUM(pages) AS student_total
+        FROM reading_log
+        GROUP BY student_name
+    ) AS totals
+);</div></div>
+<div class="mlrk-run" data-file="above_average_nested.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f above_average_nested.sql</div><pre> student_name | total_pages
+--------------+-------------
+ Ana          |          95
+ Cleo         |         130
+(2 rows)</pre></div>
+<p>The answer is right. But to know what <code>HAVING</code> compares against, you first find the innermost parentheses (each student's total), then the average of those totals, then carry that back up to <code>HAVING</code>. You read it from the inside out.</p>
+
+<div class="mlrk-card" id="card-same"><p><strong>Predict:</strong> <code>above_average_cte.sql</code> names each student's total first. What does it return?</p>
+<div class="mlrk-code" data-file="above_average_cte.sql"><div class="mlrk-screen">WITH student_totals AS (
+    SELECT student_name, SUM(pages) AS total_pages
+    FROM reading_log
+    GROUP BY student_name
 )
-SELECT client_name, total_hours
-FROM client_totals
-WHERE total_hours > (SELECT AVG(total_hours) FROM client_totals);</div></div></div>
-</div>
-<div class="mlrk-card" id="card-compare" style="margin-top:1rem"><p><strong>Which version is easier to read, and why?</strong></p>
-<button type="button" class="mlrk-choice" data-a="cte">Version B. The per-client totals are named up front, so the final query reads top to bottom instead of inside out.</button>
-<button type="button" class="mlrk-choice" data-a="short">Version A. It has fewer total lines, so it's simpler.</button>
-<button type="button" class="mlrk-choice" data-a="same">They're equally readable — a CTE is just different syntax for identical SQL, with no real difference.</button>
+SELECT student_name, total_pages
+FROM student_totals
+WHERE total_pages &gt; (SELECT AVG(total_pages) FROM student_totals);</div></div>
+<button type="button" class="mlrk-btn" data-run="above_average_cte.sql" data-after="q-same">Run above_average_cte.sql</button>
+<div class="mlrk-run" data-file="above_average_cte.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f above_average_cte.sql</div><pre> student_name | total_pages
+--------------+-------------
+ Ana          |          95
+ Cleo         |         130
+(2 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="same">The same two rows: Ana with 95 and Cleo with 130</button>
+<button type="button" class="mlrk-choice" data-a="cleo">Only Cleo, because a CTE keeps just the top row</button>
+<button type="button" class="mlrk-choice" data-a="error">An error, because <code>student_totals</code> is not a real table</button>
+<div id="samefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p>Notice that <code>student_totals</code> is used twice: once in <code>FROM</code>, and once inside <code>AVG()</code>. The step is written once and used twice.</p>
+<p><strong>Readability</strong> is how easily someone else can trust a query at a glance, without running it. Being correct and being readable are separate: both files above are correct.</p>
+
+<div class="mlrk-card" id="card-compare"><p><strong>Which file is easier to read, and why?</strong></p>
+<button type="button" class="mlrk-choice" data-a="cte"><code>above_average_cte.sql</code>, because each student's total is named at the top, so the main query reads top to bottom.</button>
+<button type="button" class="mlrk-choice" data-a="short"><code>above_average_nested.sql</code>, because it is one single statement.</button>
+<button type="button" class="mlrk-choice" data-a="same">Neither. They return the same rows, so they are equally readable.</button>
 <div id="comparefb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Rewrite it yourself</h2>
-<p>A different question, same table: <strong>which weeks had more total hours logged, across all clients, than the average week?</strong> Here's the nested subquery version:</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT week_ending, SUM(hours) AS week_total
-FROM hours_logged
-GROUP BY week_ending
-HAVING SUM(hours) > (
-    SELECT AVG(week_sum)
-    FROM (
-        SELECT SUM(hours) AS week_sum
-        FROM hours_logged
-        GROUP BY week_ending
-    ) AS week_sums
-);</div></div>
-<p>Complete the CTE rewrite below by typing the two missing keywords.</p>
-<div class="mlrk-code"><div class="mlrk-screen">____ week_sums AS (
-    SELECT week_ending, SUM(hours) AS week_total
-    FROM hours_logged
+<h2>5. Your turn, and how long a name lasts</h2>
+<p>A new question: which weeks had more total pages than the average week? Here is the CTE version with two keywords missing:</p>
+<div class="mlrk-code" data-file="busy_weeks.sql"><div class="mlrk-screen">____(1) week_sums AS (
+    SELECT week_ending, SUM(pages) AS week_total
+    FROM reading_log
     GROUP BY week_ending
 )
 SELECT week_ending, week_total
 FROM week_sums
-____ week_total > (SELECT AVG(week_total) FROM week_sums);</div></div>
-<details class="mlrk-hint"><summary>Need a hint?</summary>
-<p>Blank 1 is the keyword that starts every CTE definition. Blank 2 filters <code>week_total</code> in the final query — but notice the final query doesn't have its own <code>GROUP BY</code>. <code>week_total</code> is already a plain column at that point, not a fresh aggregate, so the clause that only works on aggregates isn't the one you need here.</p>
-</details>
+____(2) week_total &gt; (SELECT AVG(week_total) FROM week_sums);</div></div>
+<button type="button" class="mlrk-btn" data-run="busy_weeks.sql" data-after="q-rewrite" data-after-note="Solve both blanks first. Then you can run it.">Run busy_weeks.sql</button>
+<div class="mlrk-run" data-file="busy_weeks.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f busy_weeks.sql</div><pre> week_ending | week_total
+-------------+------------
+ 2026-07-10  |        190
+(1 row)</pre></div>
+<ol class="mlrk-steplist">
+  <li>In box (1), type the one keyword that starts every CTE. Capital letters or lowercase both work.</li>
+  <li>In box (2), type the one keyword that filters rows in the main query. The main query has no <code>GROUP BY</code> of its own, and <code>week_total</code> is already a plain column of <code>week_sums</code>.</li>
+  <li>Press <strong>Check my rewrite</strong>. The page tells you which blank, if any, needs another look.</li>
+</ol>
 <div class="mlrk-fillblank">
-  <label for="rewriteBlank1">Blank 1</label>
+  <label for="rewriteBlank1">Blank (1):</label>
   <input type="text" id="rewriteBlank1" autocomplete="off">
-  <label for="rewriteBlank2">Blank 2</label>
-  <input type="text" id="rewriteBlank2" autocomplete="off">
-  <button type="button" id="rewriteCheck" class="mlrk-btn">Check my rewrite</button>
 </div>
+<div class="mlrk-fillblank">
+  <label for="rewriteBlank2">Blank (2):</label>
+  <input type="text" id="rewriteBlank2" autocomplete="off">
+</div>
+<p><button type="button" id="rewriteCheck" class="mlrk-btn">Check my rewrite</button></p>
 <div id="rewritefb" class="mlrk-feedback" tabindex="-1"></div>
+
+<p><strong>Scope</strong> is how far a name reaches. A CTE's name belongs to the one query it is attached to. When that query ends at its semicolon, the name is gone. It is never saved as a table.</p>
+<div class="mlrk-card" id="card-scope"><p><strong>Predict:</strong> <code>scope.sql</code> has two statements. The second one is the last line. What happens when <code>psql</code> reaches it?</p>
+<div class="mlrk-code" data-file="scope.sql"><div class="mlrk-screen">WITH student_totals AS (
+    SELECT student_name, SUM(pages) AS total_pages
+    FROM reading_log
+    GROUP BY student_name
+)
+SELECT COUNT(*) FROM student_totals;
+
+SELECT * FROM student_totals;</div></div>
+<button type="button" class="mlrk-btn" data-run="scope.sql" data-after="q-scope">Run scope.sql</button>
+<div class="mlrk-run" data-file="scope.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f scope.sql</div><pre> count
+-------
+     4
+(1 row)
+
+psql:scope.sql:8: ERROR:  relation "student_totals" does not exist
+LINE 1: SELECT * FROM student_totals;
+                      ^</pre></div>
+<button type="button" class="mlrk-choice" data-a="error">An error: <code>student_totals</code> does not exist anymore</button>
+<button type="button" class="mlrk-choice" data-a="rows">It prints the four student totals</button>
+<button type="button" class="mlrk-choice" data-a="empty">It prints an empty result with 0 rows</button>
+<div id="scopefb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>7. True or false about CTEs</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE about CTEs.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A CTE always runs faster than the equivalent subquery.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A CTE's name can be referenced more than once in the final query.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Once the query finishes running, the CTE's named result set disappears — it isn't saved as a permanent table.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Only one CTE can ever be defined inside a single WITH clause.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<h2>6. Mixed check</h2>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE about CTEs.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A CTE always runs faster than the same query written with a subquery.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A CTE's name can be used more than once in the main query.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A CTE's name is gone once its query finishes. It is not saved as a table.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Rewriting a subquery as a CTE changes which rows the query returns.</label>
+<p><button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button></p>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>8. Put the rewrite steps in order</h2>
-<p>Click steps, in order, to build the sequence for turning a nested subquery into a CTE. Click a step again to remove it if you change your mind, then press "Check my order" — this is a self-check, not graded on correctness.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="find"><span class="mlrk-order-num"></span> Find the nested subquery — the SELECT living inside parentheses inside another query.</li>
-  <li class="mlrk-orderitem" data-step="name"><span class="mlrk-order-num"></span> Give it a name with WITH name AS ( ... ).</li>
-  <li class="mlrk-orderitem" data-step="move"><span class="mlrk-order-num"></span> Move that named definition above the main query, written on its own.</li>
-  <li class="mlrk-orderitem" data-step="reference"><span class="mlrk-order-num"></span> In the main query, reference the name instead of repeating or re-nesting the subquery.</li>
+<h2>7. Wrap-up</h2>
+<ul>
+<li>A CTE names one step with <code>WITH name AS (...)</code> at the top, so the query reads top to bottom.</li>
+<li>A CTE and a subquery can return the same rows. The CTE is easier for someone else to check.</li>
+<li>A CTE's name can be used more than once, but only inside its own query.</li>
 </ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>9. Watch: writing a CTE</h2>
-<p>As you watch, notice how the <code>WITH</code> clause gets written before the main query even starts, and how many separate times the CTE's name gets reused afterward.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=K1WeoKxLZ5o" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: what's one place in the video where naming the result made a step easier to follow than it would have been as a plain nested subquery?</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>10. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>Being handed a query with a CTE and asked to explain what it does — or read it out loud, step by step — is a common warm-up in SQL technical screens. So is the reverse: being handed a nested subquery and asked "how would you make this easier to review?"</p>
-<p>"Why would you use a CTE instead of a subquery here?" is also a direct, honest question about writing maintainable code. There often isn't a performance difference between the two — the real answer is about which one a teammate can trust and review faster, which is exactly the judgment this reading practices.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question: you're handed a nested subquery and asked to make it more readable without changing what it returns. What do you reach for first?</strong></p>
-<button type="button" class="mlrk-choice" data-a="cte">A CTE — name the inner result with WITH, then reference that name in the rest of the query.</button>
-<button type="button" class="mlrk-choice" data-a="hardcode">Delete the subquery and hardcode its result as a fixed number.</button>
-<button type="button" class="mlrk-choice" data-a="fine">Nothing — if it's already correct, readability isn't worth touching.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>11. Reflection</h2>
-<label for="strategy"><strong>Your own rule of thumb:</strong> in 1-2 sentences, how would you decide whether a subquery in your own SQL is worth rewriting as a CTE?</label>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="Try starting with: I'd rewrite it if..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>12. Summary &amp; critical thinking</h2>
-<p>Two ideas carried this whole reading: a CTE and a subquery can compute the exact same result, and the only thing that changes is whether that intermediate step gets a name and moves to the top of the query, or stays anonymous and nested. Naming it is what turns "read this inside out" into "read this top to bottom."</p>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a nonprofit's donor database has a query finding donors who gave more than the average donation total, written as a subquery nested three levels deep. A teammate reviewing your pull request asks you to make it easier to review. What's the first thing you'd do?</p>
-<button type="button" class="mlrk-choice" data-a="cte">Name the innermost subquery's result with a WITH clause, then reference that name in the rest of the query.</button>
-<button type="button" class="mlrk-choice" data-a="comments">Add more comments above the existing nested subquery, without changing its structure.</button>
-<button type="button" class="mlrk-choice" data-a="rewrite">Rewrite the whole query in a completely different SQL dialect.</button>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> the teacher's next question is which students had a best week above the average best week. A classmate wrote it with a subquery inside a subquery. What should you do first to make it easier to read?</p>
+<button type="button" class="mlrk-choice" data-a="cte">Name the innermost step (each student's best week) with <code>WITH</code>, then use that name in the main query.</button>
+<button type="button" class="mlrk-choice" data-a="comments">Add comments above the nested query and leave its structure the same.</button>
+<button type="button" class="mlrk-choice" data-a="hardcode">Replace the inner subquery with a fixed number, like 60.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<label for="owndiff"><strong>In your own words:</strong> if a subquery and a CTE can compute the exact same result, what actually is the difference between them?</label>
-<textarea id="owndiff" class="mlrk-response" data-save></textarea>
+<p><strong>In interviews:</strong> you may get a nested query and the question "how would you make this easier to review?" Naming the inner step with a CTE is a strong first answer.</p>
+<p><strong>Where this goes next:</strong> one <code>WITH</code> clause can hold several named steps in a row, each one using the step before it.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>13. Thinking ahead</h2>
-<p>Everything here involved naming exactly one intermediate step. Some business questions need more than one — a per-client total, then a rank among clients, then a filter on that rank, each step feeding the next. Chaining several named steps together, each one building on the step named just before it, uses this exact same <code>WITH</code> syntax, just repeated more than once inside one query.</p>
+<h2>8. Reflection</h2>
+<label for="strategy"><strong>Your rule of thumb:</strong> how would you decide whether a subquery in your own SQL is worth rewriting as a CTE?</label>
+<ol class="mlrk-steplist">
+  <li>Write 1 or 2 sentences, at least 8 words. The counter under the box tells you when it counts.</li>
+  <li>Try starting with: "I'd rewrite it if..."</li>
+</ol>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="I'd rewrite it if..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
 </section>
 
 <section class="mlrk-section">
-<h2>14. Your score &amp; keep a copy of your work</h2>
+<h2>9. Key terms review</h2>
+<p>Flip each card to check that you can explain the term.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>CTE</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>CTE (common table expression)</strong><br>A named, temporary result defined with a <code>WITH</code> clause at the top of a query, then used later in that same query as if it were a table.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>WITH clause</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>WITH clause</strong><br>The keyword that starts a CTE. <code>WITH name AS ( ...query... )</code> names a result before it is used.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Subquery</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Subquery</strong><br>A complete <code>SELECT</code> nested inside another query, in parentheses. A CTE and a subquery can return the same result; the CTE has a name and sits at the top.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Named intermediate result</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Named intermediate result</strong><br>One step of a bigger calculation that has its own label, instead of being an unnamed block inside another block.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Scope</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Scope</strong><br>How far a name reaches. A CTE's name exists only for the one query it is attached to.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Readability</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Readability</strong><br>How easily someone else can trust a query at a glance, without running it. A query can be correct and still hard to read.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Go further (optional)</h2>
+<p>This video is optional and isn't part of the time estimate or your score. As you watch, notice that the <code>WITH</code> clause is written before the main query starts, and count how many times the CTE's name is used after that.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/K1WeoKxLZ5o" title="Writing a CTE in SQL, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=K1WeoKxLZ5o" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -394,6 +401,7 @@ git push</pre></li>
     <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
   </div>
 </div>
+
 </section>
 
 <section class="mlrk-section">
@@ -424,137 +432,115 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-agg", buttonSelector:"#card-recall-agg .mlrk-choice", feedbackSelector:"#aggfb", correct:"group",
-    feedback:{group:"GROUP BY client_name collapses the rows to one per client, and SUM(hours) totals each client's hours.",
-              order:"This sorts individual rows by hours — it never combines rows into one total per client.",
-              avgall:"This returns one single average across every row in the whole table, not a total per client."}});
+  K.quiz({id:"q-agg", buttonSelector:"#card-recall-agg .mlrk-choice", feedbackSelector:"#aggfb", correct:"sum",
+    feedback:{sum:"Right. GROUP BY student_name makes one row per student, and SUM(pages) adds Cleo's 60 and 70.",
+              last:"70 is only Cleo's second week. SUM adds both of Cleo's rows together.",
+              count:"2 is how many rows Cleo has. SUM adds the pages in those rows, it does not count them."}});
 
   K.quiz({id:"q-having", buttonSelector:"#card-recall-having .mlrk-choice", feedbackSelector:"#havingfb", correct:"having",
-    feedback:{having:"HAVING filters on the aggregated value SUM(hours) after grouping has already happened.",
-              wheresum:"WHERE runs before grouping, before SUM(hours) has been computed — this raises an error.",
-              whereraw:"This filters individual rows by their raw hours value, before any grouping or totaling happens."}});
+    feedback:{having:"Right. HAVING filters groups after GROUP BY has worked out each SUM(pages).",
+              wheresum:"WHERE runs before the rows are grouped, so SUM(pages) does not exist yet. This gives an error.",
+              whereraw:"This checks single rows, and no single week has more than 100 pages. It never looks at the totals."}});
 
-  K.quiz({id:"q-why", buttonSelector:"#card-recall-why .mlrk-choice", feedbackSelector:"#whyfb", correct:"order",
-    feedback:{order:"WHERE runs before grouping and aggregation, so an aggregate like SUM(hours) doesn't exist yet at that point.",
-              text:"WHERE works with numeric columns constantly — that's not the actual restriction here.",
-              naming:"WHERE and HAVING run at genuinely different points in a query, not just different names for the same thing."}});
-
-  K.quiz({id:"q-subquery", buttonSelector:"#card-recall-subquery .mlrk-choice", feedbackSelector:"#subqfb", correct:"inner",
-    feedback:{inner:"The parenthesized SELECT is a complete query on its own, nested inside the outer SELECT — that's the subquery.",
-              whole:"The outer SELECT isn't part of the subquery. Only the parenthesized inner SELECT is.",
-              cond:"amount > 500 is just a condition inside the subquery, not the subquery itself."}});
-
-  K.flipCards("#vocab", "act-flip-vocab");
-
-  function revealBare(){
-    $("#bareScreen").textContent = `WITH heavy_weeks AS (
-    SELECT client_name, hours
-    FROM hours_logged
-    WHERE hours >= 15
-)
-SELECT COUNT(*) FROM heavy_weeks;
-
-[Output]
-2`;
-  }
-  K.Scoring.register("q-predict",1,"quiz");
-  let predictAttempts=0, predictDone=false;
+  K.Scoring.register("q-heavy",1,"quiz");
+  let heavyAttempts=0, heavyDone=false;
   $("#predictCheck").addEventListener("click",()=>{
-    if(predictDone) return;
-    predictAttempts++;
-    const ok = $("#predictInput").value.trim()==="2";
+    if(heavyDone) return;
+    heavyAttempts++;
+    const ok = parseInt($("#predictInput").value.replace(/[^0-9]/g,""),10)===3;
     const fb=$("#predictfb");
     if(ok){
-      K.Scoring.award("q-predict", predictAttempts===1?1:0.5);
+      K.Scoring.award("q-heavy", heavyAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> Only the two Brightline Legal rows (22 and 18 hours) are >= 15, so heavy_weeks holds 2 rows.";
-      predictDone=true; revealBare();
-    } else if(predictAttempts>=2){
-      K.Scoring.award("q-predict",0);
+      fb.innerHTML="<strong>Correct"+(heavyAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> Three rows have 50 or more pages: Cleo's 60, Ana's 55, and Cleo's 70. heavy_weeks holds those 3 rows, and COUNT(*) counts them.";
+      heavyDone=true;
+    } else if(heavyAttempts>=2){
+      K.Scoring.award("q-heavy",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The answer is 2 — only Brightline Legal's two rows (22 and 18) are >= 15.";
-      predictDone=true; revealBare();
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> It prints 3. The rows with 50 or more pages are Cleo's 60, Ana's 55, and Cleo's 70.";
+      heavyDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> Check each row's hours value against >= 15 one at a time, then try again.";
+      fb.innerHTML="<strong>Not quite yet.</strong> Go down the pages column one row at a time. Count a row only if its pages are 50 or more. 50 itself would count.";
     }
-    fb.setAttribute("tabindex","-1");fb.focus();
+    fb.setAttribute("tabindex","-1"); fb.focus();
+    if(heavyDone) K.markDone("q-heavy");
   });
 
+  K.quiz({id:"q-same", buttonSelector:"#card-same .mlrk-choice", feedbackSelector:"#samefb", correct:"same",
+    feedback:{same:"Right. The steps are the same as the nested version, so the rows are the same. Only the layout changed.",
+              cleo:"A CTE does not keep only the top row. The WHERE keeps every student above the average, and Ana's 95 is higher than the average too.",
+              error:"Inside this query, WITH makes student_totals usable just like a table. That is the whole job of a CTE."}});
+
   K.quiz({id:"q-compare", buttonSelector:"#card-compare .mlrk-choice", feedbackSelector:"#comparefb", correct:"cte",
-    feedback:{cte:"Naming client_totals up front means the final query can be read top to bottom, with no nested block to decode first.",
-              short:"Version A actually has about the same number of lines — line count isn't what makes something easier to trust at a glance.",
-              same:"Both return identical results, but only one of them lets a reader skip tracing nested parentheses. That's a real difference."}});
+    feedback:{cte:"Right. With student_totals named at the top, you can read the main query in the same order you would explain it.",
+              short:"Being one statement does not make it easy to check. You still have to read it from the inside out.",
+              same:"Returning the same rows makes them equally correct. Readability is a separate question: how fast can someone trust it?"}});
 
   K.Scoring.register("q-rewrite",1,"quiz");
   let rewriteAttempts=0, rewriteDone=false;
   $("#rewriteCheck").addEventListener("click",()=>{
     if(rewriteDone) return;
     rewriteAttempts++;
-    const b1 = $("#rewriteBlank1").value.trim().toUpperCase();
-    const b2 = $("#rewriteBlank2").value.trim().toUpperCase();
-    const ok = b1==="WITH" && b2==="WHERE";
+    const clean = v => v.trim().toUpperCase().replace(/[`'"]/g,"");
+    const ok1 = clean($("#rewriteBlank1").value)==="WITH";
+    const ok2 = clean($("#rewriteBlank2").value)==="WHERE";
     const fb=$("#rewritefb");
-    if(ok){
+    if(ok1 && ok2){
       K.Scoring.award("q-rewrite", rewriteAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> WITH starts the CTE definition. WHERE works in the final query because week_total is already a plain column from week_sums, not a fresh aggregate — there's no GROUP BY out there to make HAVING necessary.";
+      fb.innerHTML="<strong>Correct"+(rewriteAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> WITH starts the CTE. WHERE filters the main query, because week_total is already a plain column there and the main query has no GROUP BY.";
       rewriteDone=true;
     } else if(rewriteAttempts>=2){
       K.Scoring.award("q-rewrite",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the rewrite. You'll get it next time.</strong> Blank 1 is WITH. Blank 2 is WHERE, since week_total is a plain column by the time the final query filters it, not a fresh aggregate.";
+      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> Blank (1) is <code>WITH</code>. Blank (2) is <code>WHERE</code>, because week_total is a plain column of week_sums by the time the main query filters it.";
       rewriteDone=true;
     } else {
+      const which = !ok1 && !ok2 ? "Both blanks need another look." : (!ok1 ? "Blank (1) needs another look. Blank (2) is right." : "Blank (2) needs another look. Blank (1) is right.");
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      const hints=[];
-      if(b1!=="WITH") hints.push("blank 1 (the keyword that opens a CTE)");
-      if(b2!=="WHERE") hints.push("blank 2 (what kind of value is week_total once it's coming from week_sums?)");
-      fb.innerHTML="<strong>Not quite yet.</strong> Look again at "+hints.join(" and ")+".";
+      fb.innerHTML="<strong>Not quite yet.</strong> "+which+" Blank (1) opens every CTE. Blank (2) filters rows in a query that has no GROUP BY.";
     }
-    fb.setAttribute("tabindex","-1");fb.focus();
+    fb.setAttribute("tabindex","-1"); fb.focus();
+    if(rewriteDone) K.markDone("q-rewrite");
   });
 
+  K.quiz({id:"q-scope", buttonSelector:"#card-scope .mlrk-choice", feedbackSelector:"#scopefb", correct:"error",
+    feedback:{error:"Right. The CTE belonged to the first statement only. After its semicolon the name is gone, so the second SELECT has nothing to read.",
+              rows:"That would need student_totals to be saved as a table. A CTE's name ends with its own query.",
+              empty:"An empty result would mean the name still exists. psql cannot find student_totals at all, so it reports an error."}});
+
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"A CTE always runs faster than the equivalent subquery.", correct:false,
-      hint:"Think back to section 5 — did Version A and Version B differ in what they returned, or just in how easy they were to read?",
-      explain:"A CTE and its equivalent subquery typically perform about the same. The real, reliable win is readability, not speed."},
-    {value:"b", label:"A CTE's name can be referenced more than once in the final query.", correct:true,
-      hint:"Look again at Version B in section 5 — count how many times client_totals appears after it's defined.",
-      explain:"Version B in section 5 references client_totals twice: once in the FROM, once inside the AVG() subquery."},
-    {value:"c", label:"Once the query finishes running, the CTE's named result set disappears — it isn't saved as a permanent table.", correct:true,
-      hint:"This is the vocabulary term \"scope\" from section 3 — how far does that name's definition actually reach?",
-      explain:"This is exactly the \"scope\" vocabulary term from section 3: the name only exists for the query it's attached to."},
-    {value:"d", label:"Only one CTE can ever be defined inside a single WITH clause.", correct:false,
-      hint:"Section 13 mentions chaining more than one named step together in the same query — does that match this statement?",
-      explain:"A single WITH clause can define several CTEs, each one able to build on the ones defined before it — more on this later."}
+    {value:"a", label:"A CTE always runs faster than the same query written with a subquery.", correct:false,
+      hint:"Think about what changed between above_average_nested.sql and above_average_cte.sql. Was it the speed, or the layout?",
+      explain:"A CTE and the matching subquery usually run about the same. The reliable gain is readability."},
+    {value:"b", label:"A CTE's name can be used more than once in the main query.", correct:true,
+      hint:"Count how many times student_totals appears in above_average_cte.sql after the WITH clause.",
+      explain:"above_average_cte.sql uses student_totals twice: in FROM and inside AVG()."},
+    {value:"c", label:"A CTE's name is gone once its query finishes. It is not saved as a table.", correct:true,
+      hint:"Think about what happened in scope.sql on the last line.",
+      explain:"That is scope. The second statement in scope.sql could not find student_totals."},
+    {value:"d", label:"Rewriting a subquery as a CTE changes which rows the query returns.", correct:false,
+      hint:"Compare the output of the two above_average files.",
+      explain:"Both above_average files returned Ana and Cleo. A rewrite that keeps the same steps keeps the same rows."}
   ]});
 
-  K.orderSteps("#ordersteps", {id:"act-order-steps", correctOrder:["find","name","move","reference"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
-
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"K1WeoKxLZ5o"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
-  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
-  K.freeResponse({id:"resp-owndiff", selector:"#owndiff", minWords:6});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"cte",
-    feedback:{cte:"Naming the inner result with WITH is the direct, minimal fix — same result, easier to review.",
-              hardcode:"A hardcoded number breaks the moment the underlying data changes. It's not a genuine rewrite.",
-              fine:"Correct and readable are different properties. Being correct doesn't mean a reviewer can trust it at a glance."}});
-
   K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"cte",
-    feedback:{cte:"Same fix as always: name the innermost result with a WITH clause, then reference that name instead of re-nesting it.",
-              comments:"Comments can help, but they don't change the fact that the structure still has to be read inside out.",
-              rewrite:"Changing SQL dialects doesn't touch the actual readability problem: the nested, unnamed nesting."}});
+    feedback:{cte:"Right. Name the innermost step at the top, and the rest of the query can use that name and read top to bottom.",
+              comments:"Comments help a little, but the reader still has to work from the inside out.",
+              hardcode:"A fixed number is wrong as soon as students log a new week. The query has to keep working out the average."}});
+
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
 
   const AI_PROMPTS = [
-    "Think of a form or spreadsheet at a job you've had that had a multi-step calculation buried in one cell or formula. What would 'naming that step' have looked like there?",
-    "If you had to explain the difference between a subquery and a CTE to a friend using something from daily life — like a recipe with an unlabeled sub-step versus one with its own heading — what would you compare it to?",
-    "Where else in your own life do you rename a confusing, buried step just so it's easier to talk about later?"
+    "Think of a recipe that says \"make the sauce\" as its own step before the main dish. How is naming that step like a WITH clause?",
+    "When you explain a math problem to a friend, do you start from the inside or from the top? What would make a query easier to explain out loud?",
+    "Picture a teammate reading your query for the first time. How many lines would they need to read before they knew what HAVING compares against?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.style.display="block";
+    box.hidden=false;
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 

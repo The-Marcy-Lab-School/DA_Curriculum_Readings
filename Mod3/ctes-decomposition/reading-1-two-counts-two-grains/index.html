@@ -4,28 +4,25 @@
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:880px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;
-  margin-left:auto;margin-right:auto;display:block}
-.cg-wrap{overflow-x:auto;margin:1rem 0}
-.cg-table{border-collapse:collapse;min-width:280px;font-family:var(--mlrk-font-code);font-size:.95rem}
-.cg-table caption{caption-side:top;text-align:left;font-family:var(--mlrk-font-body);font-weight:700;
-  margin-bottom:.4rem;color:var(--mlrk-ink-900)}
-.cg-table th,.cg-table td{border:1px solid var(--mlrk-divider-on-light);padding:.45rem .8rem;text-align:left}
-.cg-table th{background:var(--mlrk-bg-light-alt);font-weight:700}
-.cg-three{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1.2rem;margin:1rem 0}
+.mlrk-illustration{width:100%;max-width:820px;height:auto;margin:1.1rem 0;display:block}
 .mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
-.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:9rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:12rem}
+.data-table{border-collapse:collapse;margin:.4rem 0 1rem;font-size:.95rem}
+.data-table th,.data-table td{border:1px solid var(--mlrk-divider-on-light);padding:.4rem .7rem;text-align:left}
+.data-table th{background:var(--mlrk-bg-light-alt)}
+.data-table caption{text-align:left;font-weight:700;padding-bottom:.3rem}
+.table-row{display:flex;flex-wrap:wrap;gap:1.4rem;align-items:flex-start}
 </style>
 </head><body>
 
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Two Counts, Two Grains</h1>
-<p class="mlrk-lead">A clinic asks for one simple report: for each patient, how many visits, and how many prescriptions. One query joining all three tables answers it in about six lines, and the numbers it hands back are wrong. Nothing errors out. The count is just quietly too big.</p>
+<p class="mlrk-lead">A video site shows each channel a short report: how many videos it posted, and how many comments those videos got. One query that joins three tables answers it in six lines. The comment counts are right. The video counts are too big. Nothing gives an error.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~34–37 minutes</span>
+  <span class="mlrk-pill">~21–24 minutes</span>
   <span class="mlrk-pill">Interactive</span>
-  <span class="mlrk-pill">No setup needed</span>
+  <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
 </div>
 </div></header>
@@ -56,63 +53,45 @@
 </section>
 
 <section class="mlrk-section">
-<h2>1. Introduction</h2>
-<p>Fern Hollow Community Health is a small neighborhood clinic. A <strong>community health clinic</strong> is a clinic that sees patients regardless of whether they can pay. Some patients have insurance, some do not, and nobody is turned away. Clinics like this run on grants, and grant paperwork asks for numbers.</p>
-<p>The clinic manager needs one report: <strong>for each patient, how many visits have they had, and how many prescriptions were written across all of those visits?</strong> A <strong>prescription</strong> here just means one medication a provider wrote for a patient during a visit. One visit can produce two prescriptions, one, or none at all.</p>
-<p>The clinic's database keeps that in three tables. Each one means something different by "a row."</p>
-
-<div class="cg-three">
-<div class="cg-wrap"><table class="cg-table"><caption>patients</caption>
-<tr><th>patient_id</th><th>first_name</th></tr>
-<tr><td>1</td><td>Maya</td></tr>
-<tr><td>2</td><td>Darnell</td></tr>
-<tr><td>3</td><td>Rosa</td></tr>
-</table></div>
-<div class="cg-wrap"><table class="cg-table"><caption>visits</caption>
-<tr><th>visit_id</th><th>patient_id</th><th>visit_date</th></tr>
-<tr><td>101</td><td>1</td><td>2026-02-03</td></tr>
-<tr><td>102</td><td>1</td><td>2026-04-17</td></tr>
-<tr><td>103</td><td>2</td><td>2026-03-11</td></tr>
-<tr><td>104</td><td>3</td><td>2026-05-02</td></tr>
-</table></div>
-<div class="cg-wrap"><table class="cg-table"><caption>prescriptions</caption>
-<tr><th>rx_id</th><th>visit_id</th><th>med_code</th></tr>
-<tr><td>9001</td><td>101</td><td>M-204</td></tr>
-<tr><td>9002</td><td>101</td><td>M-118</td></tr>
-<tr><td>9003</td><td>102</td><td>M-204</td></tr>
-<tr><td>9004</td><td>104</td><td>M-341</td></tr>
-<tr><td>9005</td><td>104</td><td>M-877</td></tr>
-</table></div>
+<h2>1. Three tables, three kinds of row</h2>
+<p>The site keeps three tables. A channel posts videos, and people leave comments on videos. One video can get two comments, one, or none.</p>
+<div class="table-row">
+<table class="data-table"><caption>channels</caption>
+<thead><tr><th>channel_id</th><th>channel_name</th></tr></thead>
+<tbody><tr><td>1</td><td>Plant Pals</td></tr><tr><td>2</td><td>Bike Fix</td></tr><tr><td>3</td><td>Star Maps</td></tr></tbody></table>
+<table class="data-table"><caption>videos</caption>
+<thead><tr><th>video_id</th><th>channel_id</th></tr></thead>
+<tbody><tr><td>101</td><td>1</td></tr><tr><td>102</td><td>1</td></tr><tr><td>103</td><td>2</td></tr><tr><td>104</td><td>3</td></tr></tbody></table>
+<table class="data-table"><caption>comments</caption>
+<thead><tr><th>comment_id</th><th>video_id</th></tr></thead>
+<tbody><tr><td>9001</td><td>101</td></tr><tr><td>9002</td><td>101</td></tr><tr><td>9003</td><td>102</td></tr><tr><td>9004</td><td>104</td></tr><tr><td>9005</td><td>104</td></tr></tbody></table>
 </div>
-<p class="mlrk-small">Sample data, made up for this reading. First names only, and <code>med_code</code> is a made-up internal code, not a real medication.</p>
-
-<p>Read those three tables against each other for a second. Maya is one person. She has two visits. Across those two visits, three prescriptions were written. One patient, two visits, three prescriptions. Three different counts of the same person, and all three are correct, because each table is counting a different thing.</p>
+<p>Plant Pals is 1 channel with 2 videos, and those videos have 3 comments. All three counts are true, because each table counts a different thing.</p>
 
 <svg class="mlrk-illustration" viewBox="0 0 880 400" role="img" aria-labelledby="grainTitle grainDesc" xmlns="http://www.w3.org/2000/svg">
   <title id="grainTitle">Three tables, three meanings of one row, and what happens when they are joined at once</title>
-  <desc id="grainDesc">On the left, three stacked boxes connected top to bottom. The first is patients, one row per person, and Maya is 1 row. The second is visits, one row per appointment, and Maya is 2 rows. The third is prescriptions, one row per medication, and Maya is 3 rows. The caption reads that each table counts something different, and that is what grain means. On the right, a result table titled join all three at once shows three rows, all of them Maya: visit 101 with prescription 9001, visit 101 with prescription 9002, and visit 102 with prescription 9003. Its caption reads that Maya fills 3 rows now, so counting her visits here gives 3 when she only had 2.</desc>
+  <desc id="grainDesc">On the left, three stacked boxes connected top to bottom. The first is channels, one row per channel, and Plant Pals is 1 row. The second is videos, one row per video, and Plant Pals is 2 rows. The third is comments, one row per comment, and Plant Pals is 3 rows. The caption reads that each table counts something different, and that is what grain means. On the right, a result table titled join all three at once shows three rows, all of them Plant Pals: video 101 with comment 9001, video 101 with comment 9002, and video 102 with comment 9003. Its caption reads that Plant Pals fills 3 rows now, so counting its videos here gives 3 when it only has 2.</desc>
   <g font-family="Helvetica, Arial, sans-serif">
-
     <rect x="30" y="40" width="410" height="72" rx="10" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-    <text x="45" y="72" font-size="19" font-weight="700" fill="#261F1D">patients</text>
-    <text x="45" y="98" font-size="17" fill="#261F1D">one row per person</text>
-    <text x="425" y="86" font-size="19" font-weight="700" text-anchor="end" fill="#261F1D">Maya: 1 row</text>
+    <text x="45" y="72" font-size="19" font-weight="700" fill="#261F1D">channels</text>
+    <text x="45" y="98" font-size="17" fill="#261F1D">one row per channel</text>
+    <text x="425" y="86" font-size="19" font-weight="700" text-anchor="end" fill="#261F1D">Plant Pals: 1 row</text>
 
     <line x1="235" y1="114" x2="235" y2="134" stroke="#2274B5" stroke-width="3"/>
     <polygon points="226,134 244,134 235,146" fill="#2274B5"/>
 
     <rect x="30" y="148" width="410" height="72" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="45" y="180" font-size="19" font-weight="700" fill="#261F1D">visits</text>
-    <text x="45" y="206" font-size="17" fill="#261F1D">one row per appointment</text>
-    <text x="425" y="194" font-size="19" font-weight="700" text-anchor="end" fill="#261F1D">Maya: 2 rows</text>
+    <text x="45" y="180" font-size="19" font-weight="700" fill="#261F1D">videos</text>
+    <text x="45" y="206" font-size="17" fill="#261F1D">one row per video</text>
+    <text x="425" y="194" font-size="19" font-weight="700" text-anchor="end" fill="#261F1D">Plant Pals: 2 rows</text>
 
     <line x1="235" y1="222" x2="235" y2="242" stroke="#264326" stroke-width="3"/>
     <polygon points="226,242 244,242 235,254" fill="#264326"/>
 
     <rect x="30" y="256" width="410" height="72" rx="10" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="45" y="288" font-size="19" font-weight="700" fill="#261F1D">prescriptions</text>
-    <text x="45" y="314" font-size="17" fill="#261F1D">one row per medication</text>
-    <text x="425" y="302" font-size="19" font-weight="700" text-anchor="end" fill="#261F1D">Maya: 3 rows</text>
+    <text x="45" y="288" font-size="19" font-weight="700" fill="#261F1D">comments</text>
+    <text x="45" y="314" font-size="17" fill="#261F1D">one row per comment</text>
+    <text x="425" y="302" font-size="19" font-weight="700" text-anchor="end" fill="#261F1D">Plant Pals: 3 rows</text>
 
     <text x="235" y="358" font-size="17" font-weight="700" text-anchor="middle" fill="#261F1D">Each table counts something different.</text>
     <text x="235" y="382" font-size="17" text-anchor="middle" fill="#261F1D">That is what "grain" means.</text>
@@ -121,368 +100,270 @@
     <text x="665" y="68" font-size="19" font-weight="700" text-anchor="middle" fill="#261F1D">Join all three at once</text>
     <rect x="470" y="80" width="390" height="144" fill="#FFFCF7" stroke="#C92929" stroke-width="1.5"/>
     <line x1="660" y1="80" x2="660" y2="224" stroke="#C92929" stroke-width="1"/>
-    <line x1="770" y1="80" x2="770" y2="224" stroke="#C92929" stroke-width="1"/>
+    <line x1="760" y1="80" x2="760" y2="224" stroke="#C92929" stroke-width="1"/>
     <line x1="470" y1="116" x2="860" y2="116" stroke="#C92929" stroke-width="1"/>
     <line x1="470" y1="152" x2="860" y2="152" stroke="#C92929" stroke-width="1"/>
     <line x1="470" y1="188" x2="860" y2="188" stroke="#C92929" stroke-width="1"/>
     <g font-size="17" font-weight="700" fill="#261F1D">
-      <text x="482" y="104">patient</text><text x="672" y="104">visit</text><text x="782" y="104">rx</text>
+      <text x="482" y="104">channel</text><text x="672" y="104">video</text><text x="772" y="104">comment</text>
     </g>
     <g font-size="17" fill="#261F1D" font-family="'Roboto Mono', Consolas, monospace">
-      <text x="482" y="140">Maya</text><text x="672" y="140">101</text><text x="782" y="140">9001</text>
-      <text x="482" y="176">Maya</text><text x="672" y="176">101</text><text x="782" y="176">9002</text>
-      <text x="482" y="212">Maya</text><text x="672" y="212">102</text><text x="782" y="212">9003</text>
+      <text x="482" y="140">Plant Pals</text><text x="672" y="140">101</text><text x="772" y="140">9001</text>
+      <text x="482" y="176">Plant Pals</text><text x="672" y="176">101</text><text x="772" y="176">9002</text>
+      <text x="482" y="212">Plant Pals</text><text x="672" y="212">102</text><text x="772" y="212">9003</text>
     </g>
-    <text x="665" y="262" font-size="17" font-weight="700" text-anchor="middle" fill="#261F1D">Maya fills 3 rows now.</text>
-    <text x="665" y="288" font-size="17" text-anchor="middle" fill="#261F1D">Count her visits here and you get 3.</text>
-    <text x="665" y="314" font-size="17" text-anchor="middle" fill="#261F1D">She only had 2.</text>
+    <text x="665" y="262" font-size="17" font-weight="700" text-anchor="middle" fill="#261F1D">Plant Pals fills 3 rows now.</text>
+    <text x="665" y="288" font-size="17" text-anchor="middle" fill="#261F1D">Count its videos here and you get 3.</text>
+    <text x="665" y="314" font-size="17" text-anchor="middle" fill="#261F1D">It only has 2.</text>
   </g>
 </svg>
 
-<p>The picture on the right is the whole problem in one image. Joining all three tables at once flattens them into a single wide result, and Maya's two visits get copied out to three rows, one for each prescription. Ask that flattened result how many visits Maya had and it answers honestly: it can see three visit values, so it says 3.</p>
-
+<p>You already know <code>LEFT JOIN</code>, <code>GROUP BY</code>, and how to name one step with <code>WITH</code>. A wrong number that looks right is worse than an error, because nobody knows to fix it. In this reading you add a second named step that fixes the count.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>Why this matters:</strong> a wrong number that looks reasonable is worse than an error message. A grant report saying a clinic delivered 3,400 visits when it delivered 2,100 is a real problem for real funding, and nothing in the query flags it. This exact mistake, counting two things at two different levels in one flat join, is one of the most common bugs in analyst work, and "how would you approach a question that needs three or more tables?" is a standard question in data interviews precisely because of it.</p>
-<p><strong>Where you're coming from, where this is headed:</strong> you already know how to join two tables, how to count with <code>GROUP BY</code>, and how to name one intermediate result with a <code>WITH</code> clause. This reading puts a second named result after the first one, separated by a comma, so the second can use what the first produced. Once that clicks, the same pattern keeps going: three named steps, four, each one a small query you can run and check on its own before the next one leans on it.</p>
+<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what <code>psql</code> prints when it runs that file. On your own laptop you'd type <code>psql -d video_site -f name.sql</code>. The <code>-f</code> tells <code>psql</code> to run every statement in the file, top to bottom.</p>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall check</h2>
-<p>Three skills are prerequisites for this reading: joining with <code>LEFT JOIN</code>, counting with <code>GROUP BY</code>, and naming one result with a <code>WITH</code> clause. Test each one before moving on.</p>
+<h2>2. Recall</h2>
+<p>This reading leans on counting with <code>GROUP BY</code> and naming a step with <code>WITH</code>. Check both.</p>
 
-<div class="mlrk-card" id="card-leftjoin"><p><strong>You run <code>FROM visits v LEFT JOIN prescriptions p ON p.visit_id = v.visit_id</code>. Visit 103 has no prescriptions at all. What happens to visit 103?</strong></p>
-<button type="button" class="mlrk-choice" data-a="kept">It still appears, in one row, with empty prescription columns.</button>
-<button type="button" class="mlrk-choice" data-a="dropped">It disappears from the result, because there is nothing to match it to.</button>
-<button type="button" class="mlrk-choice" data-a="error">The query raises an error until a matching prescription exists.</button>
-<div id="leftjoinfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-card" id="card-recall-group"><p><strong>Predict:</strong> the <code>videos</code> table has 4 rows across 3 channels. How many rows does <code>recall_videos.sql</code> return?</p>
+<div class="mlrk-code" data-file="recall_videos.sql"><div class="mlrk-screen">SELECT channel_id, COUNT(*) AS videos
+FROM videos
+GROUP BY channel_id
+ORDER BY channel_id;</div></div>
+<button type="button" class="mlrk-btn" data-run="recall_videos.sql" data-after="q-group">Run recall_videos.sql</button>
+<div class="mlrk-run" data-file="recall_videos.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f recall_videos.sql</div><pre> channel_id | videos
+------------+--------
+          1 |      2
+          2 |      1
+          3 |      1
+(3 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="three">3</button>
+<button type="button" class="mlrk-choice" data-a="four">4</button>
+<button type="button" class="mlrk-choice" data-a="one">1</button>
+<div id="groupfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-groupcount" style="margin-top:.8rem"><p><strong>Coding check:</strong> the <code>visits</code> table above has 4 rows across 3 patients. <strong>How many rows does <code>SELECT patient_id, COUNT(*) FROM visits GROUP BY patient_id;</code> return?</strong></p>
-<button type="button" class="mlrk-choice" data-a="3">3</button>
-<button type="button" class="mlrk-choice" data-a="4">4</button>
-<button type="button" class="mlrk-choice" data-a="1">1</button>
-<div id="groupcountfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-with" style="margin-top:.8rem"><p><strong>What does <code>WITH recent AS (SELECT ... )</code> do at the top of a query?</strong></p>
-<button type="button" class="mlrk-choice" data-a="name">It gives that inner query's result a name, <code>recent</code>, that the rest of the query can use like a table.</button>
-<button type="button" class="mlrk-choice" data-a="table">It creates a permanent table named <code>recent</code> that stays in the database afterward.</button>
-<button type="button" class="mlrk-choice" data-a="filter">It filters the final result down to the most recent rows.</button>
+<div class="mlrk-card" id="card-recall-with" style="margin-top:.8rem"><p><strong>What does <code>WITH busy AS (SELECT ...)</code> do at the top of a query?</strong></p>
+<button type="button" class="mlrk-choice" data-a="name">It names that inner query's result <code>busy</code>, so the rest of the query can use it like a table.</button>
+<button type="button" class="mlrk-choice" data-a="table">It creates a permanent table named <code>busy</code> that stays in the database.</button>
+<button type="button" class="mlrk-choice" data-a="filter">It keeps only the busiest rows in the final result.</button>
 <div id="withfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-blue">All three show up again in a few minutes, doing exactly what they do here. The only new piece is putting a comma after the first <code>WITH</code> definition and writing a second one.</div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Concept overview: the six-line query that lies</h2>
-<p>Here is the direct attempt. Join all three tables, group by patient, count both things.</p>
-<div class="mlrk-code"><div class="mlrk-screen">SELECT pt.first_name,
-       COUNT(v.visit_id) AS visit_count,
-       COUNT(p.rx_id)    AS rx_total
-FROM patients pt
-LEFT JOIN visits v        ON v.patient_id = pt.patient_id
-LEFT JOIN prescriptions p ON p.visit_id   = v.visit_id
-GROUP BY pt.patient_id, pt.first_name;</div></div>
-<p>That query runs. It returns three rows, one per patient, with two numbers each. It looks like a finished report.</p>
+<h2>3. A join copies rows</h2>
+<p>The <strong>grain</strong> of a table is what one row stands for. The grain of <code>videos</code> is one video. The grain of <code>comments</code> is one comment. Here is the direct attempt at the report: join all three tables, group by channel, and count both things.</p>
 
-<div class="cg-wrap"><table class="cg-table"><caption>What it returns, next to what is actually true</caption>
-<tr><th>first_name</th><th>visit_count</th><th>rx_total</th><th>real visits</th><th>real prescriptions</th></tr>
-<tr><td>Maya</td><td>3</td><td>3</td><td>2</td><td>3</td></tr>
-<tr><td>Darnell</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
-<tr><td>Rosa</td><td>2</td><td>2</td><td>1</td><td>2</td></tr>
-</table></div>
+<div class="mlrk-card" id="card-flat"><p><strong>Predict:</strong> what <code>video_count</code> does <code>flat_report.sql</code> show for Plant Pals?</p>
+<div class="mlrk-code" data-file="flat_report.sql"><div class="mlrk-screen">SELECT ch.channel_name,
+       COUNT(v.video_id)   AS video_count,
+       COUNT(c.comment_id) AS comment_count
+FROM channels ch
+LEFT JOIN videos v   ON v.channel_id = ch.channel_id
+LEFT JOIN comments c ON c.video_id   = v.video_id
+GROUP BY ch.channel_id, ch.channel_name
+ORDER BY ch.channel_id;</div></div>
+<button type="button" class="mlrk-btn" data-run="flat_report.sql" data-after="q-flat">Run flat_report.sql</button>
+<div class="mlrk-run" data-file="flat_report.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f flat_report.sql</div><pre> channel_name | video_count | comment_count
+--------------+-------------+---------------
+ Plant Pals   |           3 |             3
+ Bike Fix     |           1 |             0
+ Star Maps    |           2 |             2
+(3 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="three">3</button>
+<button type="button" class="mlrk-choice" data-a="two">2</button>
+<button type="button" class="mlrk-choice" data-a="five">5</button>
+<div id="flatfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<p>Maya's visit count came back as 3 when she had 2. Rosa's came back as 2 when she had 1. The prescription totals are all fine.</p>
-<p>Here is why. The two <code>LEFT JOIN</code>s build one wide, flat result before any counting happens, and a patient gets one row in that flat result for every prescription, not for every visit. Maya's visit 101 had two prescriptions, so visit 101 gets written out twice. Her visit 102 had one, so it gets written out once. Three rows, and her visit number appears three times.</p>
+<p>Plant Pals has 2 videos, not 3. To see why, look at the rows the joins build before any counting happens:</p>
+<div class="mlrk-code" data-file="flat_rows.sql"><div class="mlrk-screen">SELECT ch.channel_name, v.video_id, c.comment_id
+FROM channels ch
+LEFT JOIN videos v   ON v.channel_id = ch.channel_id
+LEFT JOIN comments c ON c.video_id   = v.video_id
+ORDER BY ch.channel_id, v.video_id, c.comment_id;</div></div>
+<div class="mlrk-run" data-file="flat_rows.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f flat_rows.sql</div><pre> channel_name | video_id | comment_id
+--------------+----------+------------
+ Plant Pals   |      101 |       9001
+ Plant Pals   |      101 |       9002
+ Plant Pals   |      102 |       9003
+ Bike Fix     |      103 |
+ Star Maps    |      104 |       9004
+ Star Maps    |      104 |       9005
+(6 rows)</pre></div>
+<p>Video 101 has two comments, so the join writes video 101 out twice. That copying is called <strong>row multiplication</strong>, or <strong>fan-out</strong>: when one row matches several rows in the next table, it gets copied once per match. The join did its job. The mistake is counting videos in a result whose grain is one comment. The rule: <strong>counting two things at two different grains in one flat join makes the bigger-grain count too big.</strong></p>
 
-<div class="cg-wrap"><table class="cg-table"><caption>The flat result the counting actually sees</caption>
-<tr><th>first_name</th><th>visit_id</th><th>rx_id</th></tr>
-<tr><td>Maya</td><td>101</td><td>9001</td></tr>
-<tr><td>Maya</td><td>101</td><td>9002</td></tr>
-<tr><td>Maya</td><td>102</td><td>9003</td></tr>
-<tr><td>Darnell</td><td>103</td><td>(empty)</td></tr>
-<tr><td>Rosa</td><td>104</td><td>9004</td></tr>
-<tr><td>Rosa</td><td>104</td><td>9005</td></tr>
-</table></div>
-
-<p>This copying is called <strong>row multiplication</strong>, or fan-out. It is not a bug in the database. The join did exactly what a join does. The mistake is asking that one flat result for two counts that live at two different levels.</p>
-<p>The prescription totals survived because prescriptions are the finest level here. Every prescription is on exactly one row, so counting them is honest. The visit count is the one that got multiplied, because visits sit one level above prescriptions.</p>
-
-<div class="mlrk-callout mlrk-callout-green">
-<p>The one-sentence version worth memorizing: <strong>a join copies rows, so counting two things at two different levels in one flat join will inflate the coarser one.</strong></p>
-</div>
-
-<div class="mlrk-card" id="card-why"><p><strong>Why did Rosa's visit count come back as 2 instead of 1?</strong></p>
-<button type="button" class="mlrk-choice" data-a="two-rx">Her one visit had two prescriptions, so the join wrote that visit out on two separate rows.</button>
-<button type="button" class="mlrk-choice" data-a="two-visits">She really has two visits, and the <code>visits</code> table is missing one of them.</button>
-<button type="button" class="mlrk-choice" data-a="leftjoin">A <code>LEFT JOIN</code> always doubles every row it touches.</button>
-<div id="whyfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-card" id="card-star"><p><strong>Star Maps has 1 video, but <code>flat_report.sql</code> showed a <code>video_count</code> of 2. Why?</strong></p>
+<button type="button" class="mlrk-choice" data-a="copied">Its one video has two comments, so the join wrote that video on two rows.</button>
+<button type="button" class="mlrk-choice" data-a="missing">It really has two videos, and the <code>videos</code> table is missing one.</button>
+<button type="button" class="mlrk-choice" data-a="double">A <code>LEFT JOIN</code> always doubles every row.</button>
+<div id="starfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Technical vocabulary</h2>
-<p>Flip each card before the practice activities below.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>grain</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Grain</strong><br>What one row of a table actually means. The grain of <code>visits</code> is one appointment. The grain of <code>prescriptions</code> is one medication. Two tables at different grains cannot be counted together in one flat join without care.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>row multiplication</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Row multiplication (fan-out)</strong><br>What a join does when one row on the left matches several rows on the right: the left row gets copied out once per match. Counting that copied column afterward gives a number that is too big.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>chained CTE</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Chained CTE</strong><br>Two or more named results defined in one <code>WITH</code> clause, separated by a comma, where a later one is allowed to use an earlier one by name.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>decomposition plan</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Decomposition plan</strong><br>A plain-language, step-by-step sketch of how you will answer a question, written before any SQL. Usually one sentence per step, and each step becomes one named result.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>COUNT(column)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>COUNT(column)</strong><br>Counts only the rows where that column holds a real value. Empty values are skipped, which is what makes it the safe choice after a <code>LEFT JOIN</code>.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>COUNT(*)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>COUNT(*)</strong><br>Counts every row in the group, no matter what is in it. After a <code>LEFT JOIN</code> with no match, there is still a row, so <code>COUNT(*)</code> returns 1 where the honest answer is 0.</span></button>
-</div>
+<h2>4. Count the column, not the row</h2>
+<p>Look at Bike Fix in the joined rows. Its video 103 has no comments, but a <code>LEFT JOIN</code> still keeps one row for it, with an empty <code>comment_id</code>. Two ways of counting disagree on that row. <strong><code>COUNT(*)</code></strong> counts every row in the group, whatever is in it. <strong><code>COUNT(column)</code></strong> counts only the rows where that column has a real value, and skips empty ones.</p>
+
+<div class="mlrk-card" id="card-count"><p><strong>Predict:</strong> in <code>count_check.sql</code>, what number goes in the <code>rows_counted</code> column for video 103?</p>
+<div class="mlrk-code" data-file="count_check.sql"><div class="mlrk-screen">SELECT v.video_id,
+       COUNT(*)            AS rows_counted,
+       COUNT(c.comment_id) AS real_comments
+FROM videos v
+LEFT JOIN comments c ON c.video_id = v.video_id
+WHERE v.video_id = 103
+GROUP BY v.video_id;</div></div>
+<button type="button" class="mlrk-btn" data-run="count_check.sql" data-after="q-count">Run count_check.sql</button>
+<div class="mlrk-run" data-file="count_check.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f count_check.sql</div><pre> video_id | rows_counted | real_comments
+----------+--------------+---------------
+      103 |            1 |             0
+(1 row)</pre></div>
+<button type="button" class="mlrk-choice" data-a="one">1</button>
+<button type="button" class="mlrk-choice" data-a="zero">0</button>
+<button type="button" class="mlrk-choice" data-a="skip">Nothing, because the row is skipped</button>
+<div id="countfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>The habit: after a <code>LEFT JOIN</code>, count the column you care about. <code>COUNT(c.comment_id)</code> answers "how many comments." <code>COUNT(*)</code> answers "how many rows came out of the join."</p>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Predict the inflated number</h2>
-<p>A fourth patient joins the clinic. Call her Tasha. She has <strong>2 visits</strong>. Her first visit produced <strong>3 prescriptions</strong> and her second produced <strong>1</strong>.</p>
-<p>The flat, one-query version from section 3 is run again, unchanged.</p>
-<div class="mlrk-fillblank">
-  <label for="predictInput"><strong>What visit_count does that query report for Tasha?</strong></label>
-  <input type="text" id="predictInput" autocomplete="off" inputmode="numeric">
-  <button type="button" id="predictCheck" class="mlrk-btn">Check</button>
-</div>
-<details class="mlrk-hint"><summary>Need a hint?</summary><p>Write out the flat rows for Tasha by hand, the way section 3 did for Maya. Her first visit gets one row per prescription. So does her second. How many rows is that in total?</p></details>
-<div id="predictfb" class="mlrk-feedback" tabindex="-1"></div>
-</section>
+<h2>5. Plan the steps, then chain them</h2>
+<p>A <strong>decomposition plan</strong> is a short, step-by-step sketch of how you will answer a question, written in plain sentences before any SQL. Each step becomes one named result. For the channel report:</p>
+<ol>
+<li>Count the comments on each video. (This is the smallest grain, so it goes first.)</li>
+<li>Roll that up to each channel: count the videos and add up their comment counts.</li>
+<li>Check one channel against a count you did by hand.</li>
+</ol>
 
-<section class="mlrk-section">
-<h2>6. Darnell's visit, and the COUNT(*) trap</h2>
-<p>Look back at Darnell. He has one visit, number 103, and no prescriptions were written at it. Under a <code>LEFT JOIN</code>, his visit still produces a row, and the prescription columns on that row are empty.</p>
-<div class="cg-wrap"><table class="cg-table"><caption>Darnell's single flat row</caption>
-<tr><th>first_name</th><th>visit_id</th><th>rx_id</th></tr>
-<tr><td>Darnell</td><td>103</td><td>(empty)</td></tr>
-</table></div>
-<p>That empty cell is where <code>COUNT(*)</code> and <code>COUNT(rx_id)</code> stop agreeing. <code>COUNT(*)</code> counts rows. There is one row, so it says 1. <code>COUNT(rx_id)</code> counts real values in the <code>rx_id</code> column. There are none, so it says 0. Zero is the true answer.</p>
-
-<div class="mlrk-card" id="card-countstar"><p><strong>For Darnell's visit 103, what does <code>COUNT(*)</code> report as the number of prescriptions?</strong></p>
-<button type="button" class="mlrk-choice" data-a="1">1</button>
-<button type="button" class="mlrk-choice" data-a="0">0</button>
-<button type="button" class="mlrk-choice" data-a="null">Nothing at all, the row is skipped.</button>
-<div id="countstarfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-callout mlrk-callout-red">
-<p><strong>The habit to build:</strong> after a <code>LEFT JOIN</code>, count the column you actually care about, not the row. <code>COUNT(rx_id)</code> answers "how many prescriptions." <code>COUNT(*)</code> answers "how many rows came out of my join," which is a different question that happens to give the same answer only when nothing is missing.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>7. Sketch the plan before the SQL</h2>
-<p>Before writing a query that spans three tables, write the plan in plain sentences. Naming the steps in English first is what keeps you from mashing everything into one join and hoping.</p>
-<p>Click the steps below in the order a working plan puts them, then self-check. Click a step again to remove it if you change your mind.</p>
-<ul class="mlrk-orderlist" id="ordersteps">
-  <li class="mlrk-orderitem" data-step="question"><span class="mlrk-order-num"></span> Write down the real question in one sentence, and notice it asks for two counts at two different levels.</li>
-  <li class="mlrk-orderitem" data-step="deepest"><span class="mlrk-order-num"></span> Handle the deepest level first: count prescriptions for each single visit.</li>
-  <li class="mlrk-orderitem" data-step="rollup"><span class="mlrk-order-num"></span> Roll that per-visit result up to each patient, counting visits and adding the prescription counts together.</li>
-  <li class="mlrk-orderitem" data-step="verify"><span class="mlrk-order-num"></span> Check the finished numbers against one patient you counted by hand.</li>
-</ul>
-<div class="mlrk-actions"><button type="button" id="orderscheck" class="mlrk-btn">Check my order</button></div>
-<div id="orderstepsfb" class="mlrk-feedback" tabindex="-1"></div>
-
-<p style="margin-top:1rem">That plan has two computing steps in it, which is the real signal. Two steps in the plan means two named results in the query.</p>
-</section>
-
-<section class="mlrk-section">
-<h2>8. Step one, on its own</h2>
-<p>The first named result answers only the first plan step: for each visit, how many prescriptions.</p>
-<div class="mlrk-code"><div class="mlrk-screen">WITH rx_per_visit AS (
-    SELECT v.visit_id,
-           v.patient_id,
-           COUNT(p.rx_id) AS rx_count
-    FROM visits v
-    LEFT JOIN prescriptions p ON p.visit_id = v.visit_id
-    GROUP BY v.visit_id, v.patient_id
+<div class="mlrk-card" id="card-grain"><p><strong>Predict:</strong> <code>comments_per_video.sql</code> is step 1 on its own. What does one row of its result stand for?</p>
+<div class="mlrk-code" data-file="comments_per_video.sql"><div class="mlrk-screen">WITH comments_per_video AS (
+    SELECT v.video_id, v.channel_id,
+           COUNT(c.comment_id) AS comment_count
+    FROM videos v
+    LEFT JOIN comments c ON c.video_id = v.video_id
+    GROUP BY v.video_id, v.channel_id
 )
-SELECT * FROM rx_per_visit ORDER BY visit_id;</div></div>
-<p>Two tables, one join, one count. Nothing here is new. And because it is a complete query on its own, you can run it and look at the output before writing anything else:</p>
-<div class="cg-wrap"><table class="cg-table"><caption>rx_per_visit</caption>
-<tr><th>visit_id</th><th>patient_id</th><th>rx_count</th></tr>
-<tr><td>101</td><td>1</td><td>2</td></tr>
-<tr><td>102</td><td>1</td><td>1</td></tr>
-<tr><td>103</td><td>2</td><td>0</td></tr>
-<tr><td>104</td><td>3</td><td>2</td></tr>
-</table></div>
-<p>Four rows, one per visit. The grain is exactly one appointment per row, which is the grain the original <code>visits</code> table had. Nothing multiplied. Visit 103 shows 0, not 1, because the count is <code>COUNT(p.rx_id)</code> and not <code>COUNT(*)</code>.</p>
-<p>That checkable middle step is the practical argument for chaining. You are not staring at one dense query wondering which half is wrong. You looked at four rows and confirmed they were right.</p>
-
-<div class="mlrk-card" id="card-grain"><p><strong>What is the grain of <code>rx_per_visit</code>, meaning what does one of its rows represent?</strong></p>
-<button type="button" class="mlrk-choice" data-a="visit">One visit.</button>
-<button type="button" class="mlrk-choice" data-a="rx">One prescription.</button>
-<button type="button" class="mlrk-choice" data-a="patient">One patient.</button>
+SELECT * FROM comments_per_video ORDER BY video_id;</div></div>
+<button type="button" class="mlrk-btn" data-run="comments_per_video.sql" data-after="q-grain">Run comments_per_video.sql</button>
+<div class="mlrk-run" data-file="comments_per_video.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f comments_per_video.sql</div><pre> video_id | channel_id | comment_count
+----------+------------+---------------
+      101 |          1 |             2
+      102 |          1 |             1
+      103 |          2 |             0
+      104 |          3 |             2
+(4 rows)</pre></div>
+<button type="button" class="mlrk-choice" data-a="video">One video</button>
+<button type="button" class="mlrk-choice" data-a="comment">One comment</button>
+<button type="button" class="mlrk-choice" data-a="channel">One channel</button>
 <div id="grainfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
 
-<section class="mlrk-section">
-<h2>9. Step two, chained onto step one</h2>
-<p>The second named result uses the first one by name, exactly as if <code>rx_per_visit</code> were a real table sitting in the database. The piece that makes this legal is small: a comma after the closing parenthesis of the first definition.</p>
-<div class="mlrk-code"><div class="mlrk-screen">WITH rx_per_visit AS (
-    SELECT v.visit_id,
-           v.patient_id,
-           COUNT(p.rx_id) AS rx_count
-    FROM visits v
-    LEFT JOIN prescriptions p ON p.visit_id = v.visit_id
-    GROUP BY v.visit_id, v.patient_id
-),
-patient_totals AS (
-    SELECT pt.patient_id,
-           pt.first_name,
-           COUNT(r.visit_id) AS visit_count,
-           SUM(r.rx_count)   AS rx_total
-    FROM patients pt
-    LEFT JOIN rx_per_visit r ON r.patient_id = pt.patient_id
-    GROUP BY pt.patient_id, pt.first_name
+<p>Four rows, one per video, and nothing was copied. You can check this middle step before building on it. Now step 2. A <strong>chained CTE</strong> is two or more named results in one <code>WITH</code> clause, separated by a comma, where a later one uses an earlier one by name. The word <code>WITH</code> appears only once.</p>
+
+<h3>Fill in the blanks: chain step 2 onto step 1</h3>
+<div class="mlrk-code" data-file="channel_report.sql"><div class="mlrk-screen">WITH comments_per_video AS (
+    SELECT v.video_id, v.channel_id,
+           COUNT(c.comment_id) AS comment_count
+    FROM videos v
+    LEFT JOIN comments c ON c.video_id = v.video_id
+    GROUP BY v.video_id, v.channel_id
+)____(1)
+channel_totals AS (
+    SELECT ch.channel_id, ch.channel_name,
+           COUNT(cv.video_id)    AS video_count,
+           SUM(cv.comment_count) AS comment_count
+    FROM channels ch
+    LEFT JOIN ____(2) cv ON cv.channel_id = ch.channel_id
+    GROUP BY ch.channel_id, ch.channel_name
 )
-SELECT first_name, visit_count, rx_total
-FROM patient_totals
-ORDER BY rx_total DESC;</div></div>
-<p>Notice what the second step is joining to. Not <code>visits</code>, and not <code>prescriptions</code>. It joins <code>patients</code> to <code>rx_per_visit</code>, which already holds exactly one row per visit with the prescription count folded into it. There is nothing left to multiply. <code>COUNT(r.visit_id)</code> counts visits, <code>SUM(r.rx_count)</code> adds up the per-visit counts, and both come out right.</p>
-
-<div class="cg-wrap"><table class="cg-table"><caption>Final result</caption>
-<tr><th>first_name</th><th>visit_count</th><th>rx_total</th></tr>
-<tr><td>Maya</td><td>2</td><td>3</td></tr>
-<tr><td>Rosa</td><td>1</td><td>2</td></tr>
-<tr><td>Darnell</td><td>1</td><td>0</td></tr>
-</table></div>
-
-<p>Two visits and three prescriptions for Maya. One visit and two prescriptions for Rosa. One visit and zero prescriptions for Darnell. Those match the hand count from the start of this reading.</p>
-<p>One small detail worth copying: both <code>GROUP BY</code> clauses include the id, not just the name. Grouping by <code>first_name</code> alone would quietly merge two different patients who happen to share a first name into one row.</p>
-
-<p style="margin-top:1rem">Now write the chaining yourself. Here is the same query with two pieces removed.</p>
-<div class="mlrk-code"><div class="mlrk-screen">WITH rx_per_visit AS (
-    SELECT v.visit_id, v.patient_id, COUNT(p.rx_id) AS rx_count
-    FROM visits v
-    LEFT JOIN prescriptions p ON p.visit_id = v.visit_id
-    GROUP BY v.visit_id, v.patient_id
-)___
-patient_totals AS (
-    SELECT pt.patient_id, pt.first_name,
-           COUNT(r.visit_id) AS visit_count,
-           SUM(r.rx_count)   AS rx_total
-    FROM patients pt
-    LEFT JOIN __________ r ON r.patient_id = pt.patient_id
-    GROUP BY pt.patient_id, pt.first_name
-)
-SELECT * FROM patient_totals;</div></div>
+SELECT channel_name, video_count, comment_count
+FROM channel_totals
+ORDER BY channel_id;</div></div>
+<button type="button" class="mlrk-btn" data-run="channel_report.sql" data-after="q-chain" data-after-note="Solve both blanks first. Then you can run it.">Run channel_report.sql</button>
+<div class="mlrk-run" data-file="channel_report.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f channel_report.sql</div><pre> channel_name | video_count | comment_count
+--------------+-------------+---------------
+ Plant Pals   |           2 |             3
+ Bike Fix     |           1 |             0
+ Star Maps    |           1 |             2
+(3 rows)</pre></div>
+<ol class="mlrk-steplist">
+  <li>In box (1), type the one punctuation mark that separates two named results inside one <code>WITH</code> clause. Just the mark, nothing else.</li>
+  <li>In box (2), type the name of step 1, spelled exactly as it is after <code>WITH</code>. Step 2 joins to step 1's result, which has one row per video, so nothing gets copied.</li>
+  <li>Press <strong>Check my chain</strong>. The page tells you which blank, if any, needs another look.</li>
+</ol>
 <div class="mlrk-fillblank">
-  <label for="blank1">Blank 1 (one character)</label>
-  <input type="text" id="blank1" autocomplete="off">
-  <label for="blank2">Blank 2 (a name)</label>
-  <input type="text" id="blank2" autocomplete="off">
-  <button type="button" id="blankCheck" class="mlrk-btn">Check my chaining</button>
+  <label for="chainBlank1">Blank (1):</label>
+  <input type="text" id="chainBlank1" autocomplete="off" style="width:5rem">
 </div>
-<details class="mlrk-hint"><summary>Need a hint?</summary><p>Blank 1 is the single punctuation mark that separates two definitions inside one <code>WITH</code> clause. The word <code>WITH</code> is never repeated. Blank 2 is the name the first definition was given a few lines above, being used as if it were a table.</p></details>
-<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-fillblank">
+  <label for="chainBlank2">Blank (2):</label>
+  <input type="text" id="chainBlank2" autocomplete="off">
+</div>
+<p><button type="button" id="chainCheck" class="mlrk-btn">Check my chain</button></p>
+<div id="chainfb" class="mlrk-feedback" tabindex="-1"></div>
+<p>The final counts match the hand count from section 1: Plant Pals has 2 videos and 3 comments.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>10. Which step does each job belong to?</h2>
-<p>Drag each job into the named result that does it, then self-check.</p>
-<div id="dragarea">
-<div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">Joins visits to prescriptions</span>
-  <span id="chip2" class="mlrk-draggable">Produces one row per appointment</span>
-  <span id="chip3" class="mlrk-draggable">Adds up counts that were already computed</span>
-  <span id="chip4" class="mlrk-draggable">Produces one row per person</span>
-</div>
-<div class="mlrk-grid">
-  <div><p class="mlrk-small"><strong>rx_per_visit (first)</strong></p><div class="mlrk-dropzone" id="zoneFirst"></div></div>
-  <div><p class="mlrk-small"><strong>patient_totals (second)</strong></p><div class="mlrk-dropzone" id="zoneSecond"></div></div>
-</div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches (self-check, not graded)</button></div>
-<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>11. Select all that apply</h2>
-<div class="mlrk-card"><p><strong>Select every statement below that is TRUE.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A second named result can use the first one by name, but the first cannot use the second.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> The word <code>WITH</code> has to be repeated before every named result in the chain.</label>
+<h2>6. Mixed check</h2>
+<div class="mlrk-card"><p><strong>Select every statement that is TRUE.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A second named result can use the first one by name.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> The word <code>WITH</code> has to be written again before every named result in the chain.</label>
 <label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Each named result is a complete query you can run and check by itself.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Joining three tables at once can inflate a count even though the query runs without any error.</label>
-<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> If a three-table query runs without an error, its counts are correct.</label>
+<p><button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button></p>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>12. Could one big named result have worked?</h2>
-<p>Honest answer: sometimes. <code>COUNT(DISTINCT v.visit_id)</code> would have fixed the visit count in the flat query from section 3. <strong>DISTINCT</strong> means "ignore repeats," so counting distinct visit ids gives 2 for Maya even though her visit id appears three times.</p>
-<p>So why not just do that every time? Two reasons.</p>
-<ol class="mlrk-steplist">
-  <li>It only rescues counts. The moment the report needs a total instead of a count, say adding up a dollar amount or a supply quantity per visit, the copied rows get added together and <code>DISTINCT</code> cannot undo that.</li>
-  <li>It gives you nothing to check. A single dense query is right or wrong as a whole. A chain lets you run the first step, look at four rows, confirm they are correct, and only then build on them.</li>
-</ol>
-<p>Chaining is not a style preference here. It is what keeps each aggregation honest before the next one runs.</p>
-
-<div class="mlrk-callout mlrk-callout-blue">
-<p><strong>This matters when an AI assistant writes the query for you.</strong> Asking an AI tool for a three-table report is a reasonable thing to do. Trusting the output without checking is not. AI tools produce the flat all-at-once join constantly, because it looks like the obvious shape of the question, and the result comes back with plausible numbers and no error. Verify it the way you just did by hand: pick one patient whose real numbers you already know, run the query, and compare.</p>
-</div>
-
-<div class="mlrk-card" id="card-distinct"><p><strong>A report needs each patient's visit count and the total dollars billed across all their visits, where billed amounts live on the visits table. The flat all-at-once join is used. Which number breaks, and can <code>DISTINCT</code> save it?</strong></p>
-<button type="button" class="mlrk-choice" data-a="both">Both break, and <code>DISTINCT</code> can fix the visit count but not the billed total.</button>
-<button type="button" class="mlrk-choice" data-a="neither">Neither breaks, since billed amounts are stored once per visit.</button>
-<button type="button" class="mlrk-choice" data-a="distinct-all">Both break, and <code>DISTINCT</code> fixes both of them.</button>
-<div id="distinctfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>13. Watch: a CTE in PostgreSQL</h2>
-<p>As you watch, notice two things. First, the named result gets defined before the main query starts, and it is a complete query on its own. Second, watch where the closing parenthesis of that definition sits, because that closing parenthesis is where a comma goes when a second name follows.</p>
-<div class="mlrk-video-wrap"><div id="ytplayer"></div></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=6QiSSsGStmY" target="_blank" rel="noopener">Watch on YouTube</a>
-<div class="mlrk-card" style="margin-top:1rem"><p><strong>After watching: in your own words, what does naming a result let you do that a plain nested query does not?</strong></p>
-<textarea id="videoreflect" class="mlrk-response" data-save placeholder="A sentence or two is plenty."></textarea>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>14. How this shows up in interviews</h2>
-<div class="mlrk-callout mlrk-callout-green">
-<p>"How would you approach a business question that needs data from three or more tables?" is a standard question in data interviews, and it is testing your process, not your syntax recall. A strong answer walks through it in order: restate the question, plan the steps in plain language, name what each step computes, write one named result per step, then validate the final numbers against a small sample counted by hand.</p>
-<p>The detail that makes an answer stand out is naming the overcounting risk before anyone asks about it. Saying "these two counts are at different levels, so I would compute the deeper one first rather than joining everything at once" shows you have written reports that were wrong once and learned from it.</p>
-</div>
-<div class="mlrk-card" id="card-interview"><p><strong>Interview-style question:</strong> an interviewer asks for each store's number of orders and the total number of items across those orders, from three tables: stores, orders, and order_items. What is the strongest opening move?</p>
-<button type="button" class="mlrk-choice" data-a="plan">Say out loud that the two counts sit at different levels, then plan to count items per order first and roll that up per store.</button>
-<button type="button" class="mlrk-choice" data-a="join">Write one query joining all three tables and group by store, since that is the fewest lines.</button>
-<button type="button" class="mlrk-choice" data-a="two">Write two completely separate queries and hand back two separate result tables.</button>
-<div id="interviewfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>15. Summary and critical thinking</h2>
-<p>Two ideas carried this reading. First, a join copies rows, so two counts taken at two different levels in one flat join will inflate the coarser one, silently and without any error. Second, a comma inside a <code>WITH</code> clause lets you name a second step that uses the first, which both fixes the inflation and gives you a checkpoint you can verify on its own before moving on.</p>
-
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> a public library wants, for each library card holder, how many times they borrowed anything and how many individual items they took home in total. The data lives in <code>members</code>, <code>checkouts</code> (one row per trip to the desk), and <code>checkout_items</code> (one row per book or DVD in that trip). What should the first named step compute?</p>
-<button type="button" class="mlrk-choice" data-a="perco">The number of items in each checkout, one row per checkout.</button>
-<button type="button" class="mlrk-choice" data-a="permember">Both totals per member, all in one step joining all three tables.</button>
-<button type="button" class="mlrk-choice" data-a="peritem">One row per item, with the member's name attached to each one.</button>
-<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<label for="ownwords" style="display:block;margin-top:1rem"><strong>In your own words:</strong> describe a count from your own life, school, or a job where two different things were being counted at two different levels, and mixing them up would have given somebody a wrong number. What would the first step of your plan be?</label>
-<textarea id="ownwords" class="mlrk-response" data-save placeholder="Try starting with: the two things being counted were..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed reflection prompt</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
-</section>
-
-<section class="mlrk-section">
-<h2>16. Thinking ahead</h2>
-<p>This reading chained exactly two named steps. Nothing stops a third. A question like "which patients had more prescriptions than the clinic average" adds one more comma and one more name: count per visit, roll up per patient, then compare each patient against the average of those totals. The rule stays the same the whole way down. Each name can use the names defined before it, and none can use a name defined after it, so the chain reads straight down the page in the order the work actually happens.</p>
-<p>The other thing that travels forward is the habit of asking what one row means before writing a join. That question comes back every time a report mixes counts, totals, and averages from tables that sit at different levels.</p>
-</section>
-
-<section class="mlrk-section">
-<h2>17. Go further</h2>
-<p>Optional, and not counted in the time estimate above.</p>
+<h2>7. Wrap-up</h2>
 <ul>
-<li><a href="https://www.postgresql.org/docs/current/queries-with.html" target="_blank" rel="noopener">PostgreSQL: WITH Queries (Common Table Expressions)</a> — the official reference, written by the people who build the database.</li>
-<li><a href="https://learnsql.com/blog/multiple-cte/" target="_blank" rel="noopener">LearnSQL: How to Use Multiple CTEs in One Query</a> — more worked examples of chaining, including three and four steps.</li>
-<li><a href="https://mystery.knightlab.com/" target="_blank" rel="noopener">SQL Murder Mystery</a> — a free browser game where you solve a fictional case by querying a small multi-table database. Good practice at working across tables without a tutorial holding your hand.</li>
-<li><a href="https://pgexercises.com/" target="_blank" rel="noopener">PostgreSQL Exercises</a> — hands-on exercises you run in the page against a real PostgreSQL database, with an aggregation section that leans heavily on multi-table counting.</li>
-<li><a href="https://datalemur.com/sql-tutorial/sql-cte-common-table-expression" target="_blank" rel="noopener">DataLemur: SQL CTEs</a> — the same syntax framed around real interview questions.</li>
+<li>A join copies rows, so counting two things at two different grains in one flat join makes one count too big.</li>
+<li>After a <code>LEFT JOIN</code>, <code>COUNT(column)</code> gives the honest count; <code>COUNT(*)</code> counts rows.</li>
+<li>A chained CTE handles the smallest grain first, then rolls it up. A comma separates the steps.</li>
 </ul>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> the site adds a fourth table, <code>replies</code>, with one row per reply to a comment. The report now needs, for each channel, the number of comments and the number of replies. What should the first named step compute?</p>
+<button type="button" class="mlrk-choice" data-a="perComment">The number of replies on each comment, one row per comment.</button>
+<button type="button" class="mlrk-choice" data-a="flat">Both totals for each channel, in one step that joins all four tables.</button>
+<button type="button" class="mlrk-choice" data-a="perReply">One row per reply, with the channel name added to each.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p><strong>In interviews:</strong> "How would you answer a question that needs three or more tables?" is common. Say your plan out loud and name the overcounting risk before you write any SQL.</p>
+<p><strong>Where this goes next:</strong> a chain can keep going, with a third or fourth named step, each one using the steps defined before it.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>18. Your score and keeping a copy of your work</h2>
+<h2>8. Reflection</h2>
+<label for="strategy"><strong>Your checking habit:</strong> a query joins three tables and the counts look reasonable. How would you check that they are right before you share them?</label>
+<ol class="mlrk-steplist">
+  <li>Write 1 or 2 sentences, at least 8 words. The counter under the box tells you when it counts.</li>
+  <li>Try starting with: "First I'd pick one..."</li>
+</ol>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="First I'd pick one..."></textarea>
+<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
+</section>
+
+<section class="mlrk-section">
+<h2>9. Key terms review</h2>
+<p>Flip each card to check that you can explain the term.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Grain</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Grain</strong><br>What one row of a table stands for. The grain of <code>videos</code> is one video; the grain of <code>comments</code> is one comment.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Row multiplication (fan-out)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Row multiplication (fan-out)</strong><br>When one row matches several rows in a join, it is copied once per match. Counting the copied column afterward gives a number that is too big.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Chained CTE</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Chained CTE</strong><br>Two or more named results in one <code>WITH</code> clause, separated by a comma, where a later one can use an earlier one by name.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Decomposition plan</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Decomposition plan</strong><br>A plain-sentence, step-by-step sketch of how you will answer a question, written before any SQL. Each step becomes one named result.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>COUNT(column)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>COUNT(column)</strong><br>Counts only the rows where that column has a real value. Empty values are skipped, so it is the safe choice after a <code>LEFT JOIN</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>COUNT(*)</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>COUNT(*)</strong><br>Counts every row in the group. After a <code>LEFT JOIN</code> with no match there is still a row, so it gives 1 where the true answer is 0.</span></button>
+</div>
+</section>
+
+<section class="mlrk-section">
+<h2>10. Go further (optional)</h2>
+<p>This video is optional and isn't part of the time estimate or your score. As you watch, notice where the closing parenthesis of a named result sits. That is where the comma goes when a second name follows.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/6QiSSsGStmY" title="A CTE in PostgreSQL, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=6QiSSsGStmY" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>11. Your score and keeping a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -549,6 +430,19 @@ git push</pre></li>
     <p id="submitfb" class="mlrk-small" aria-live="polite"></p>
   </div>
 </div>
+
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://www.postgresql.org/docs/current/queries-with.html" target="_blank" rel="noopener">PostgreSQL: WITH Queries (Common Table Expressions)</a> — the official reference, written by the people who build the database.</li>
+<li><a href="https://learnsql.com/blog/multiple-cte/" target="_blank" rel="noopener">LearnSQL: How to Use Multiple CTEs in One Query</a> — more worked examples of chaining, including three and four steps.</li>
+<li><a href="https://mystery.knightlab.com/" target="_blank" rel="noopener">SQL Murder Mystery</a> — a free browser game where you solve a made-up case by querying a small multi-table database.</li>
+<li><a href="https://pgexercises.com/" target="_blank" rel="noopener">PostgreSQL Exercises</a> — hands-on exercises you run in the page against a real PostgreSQL database.</li>
+<li><a href="https://datalemur.com/sql-tutorial/sql-cte-common-table-expression" target="_blank" rel="noopener">DataLemur: SQL CTEs</a> — the same syntax framed around interview questions.</li>
+</ul>
 </section>
 
 </div></main>
@@ -568,143 +462,96 @@ git push</pre></li>
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-leftjoin", buttonSelector:"#card-leftjoin .mlrk-choice", feedbackSelector:"#leftjoinfb", correct:"kept",
-    feedback:{kept:"A LEFT JOIN keeps every row from the left table whether or not it matched. Visit 103 stays, with empty prescription columns.",
-              dropped:"That is what an INNER JOIN would do. LEFT keeps unmatched rows from the left table on purpose.",
-              error:"A missing match is normal and never raises an error. The database fills the unmatched columns with empty values."}});
+  K.quiz({id:"q-group", buttonSelector:"#card-recall-group .mlrk-choice", feedbackSelector:"#groupfb", correct:"three",
+    feedback:{three:"Right. GROUP BY channel_id makes one row per channel, and there are 3 channels.",
+              four:"4 is the number of rows going in. GROUP BY folds them into one row per channel_id.",
+              one:"One row would mean every video is in one group. GROUP BY channel_id makes a group for each channel."}});
 
-  K.quiz({id:"q-groupcount", buttonSelector:"#card-groupcount .mlrk-choice", feedbackSelector:"#groupcountfb", correct:"3",
-    feedback:{"3":"Three distinct patient_id values, so three groups, so three rows out.",
-              "4":"That is the input row count. GROUP BY returns one row per group, not one per input row.",
-              "1":"You would get 1 row only if every visit belonged to the same patient, or if there were no GROUP BY."}});
+  K.quiz({id:"q-with", buttonSelector:"#card-recall-with .mlrk-choice", feedbackSelector:"#withfb", correct:"name",
+    feedback:{name:"Right. WITH names a result, and the rest of the same query can select from that name.",
+              table:"A CTE is not saved. Its name only lasts for the one query it belongs to.",
+              filter:"WITH does not filter anything by itself. It gives a query's result a name."}});
 
-  K.quiz({id:"q-with", buttonSelector:"#card-with .mlrk-choice", feedbackSelector:"#withfb", correct:"name",
-    feedback:{name:"WITH names a temporary result for the length of this one query, and the rest of the query can then refer to it by that name.",
-              table:"Nothing is stored. The name disappears the moment the query finishes running.",
-              filter:"The name 'recent' is just a label you chose. WITH does no filtering on its own."}});
+  K.quiz({id:"q-flat", buttonSelector:"#card-flat .mlrk-choice", feedbackSelector:"#flatfb", correct:"three",
+    feedback:{three:"Right, and that is the bug. Video 101 has two comments, so it is copied onto two rows, and COUNT(v.video_id) sees three video ids.",
+              two:"2 is the true number of videos. The joins copy video 101 onto two rows before counting, so the count comes out bigger.",
+              five:"5 is the number of comments on the whole site. Plant Pals' rows come from its own videos and their comments."}});
 
-  K.quiz({id:"q-why", buttonSelector:"#card-why .mlrk-choice", feedbackSelector:"#whyfb", correct:"two-rx",
-    feedback:{"two-rx":"Her single visit matched two prescription rows, so the join wrote that visit out twice. Counting the visit column afterward sees two values.",
-              "two-visits":"The visits table is complete. Rosa really has one visit, number 104. The extra row came from the join, not from missing data.",
-              "leftjoin":"A LEFT JOIN copies a row only when it matches several rows on the other side. Darnell's visit matched nothing and stayed a single row."}});
+  K.quiz({id:"q-star", buttonSelector:"#card-star .mlrk-choice", feedbackSelector:"#starfb", correct:"copied",
+    feedback:{copied:"Right. Video 104 matches two comments, so the join writes it on two rows, and the video count sees it twice.",
+              missing:"The videos table has one Star Maps video, 104. The extra count comes from the join, not from missing data.",
+              double:"A LEFT JOIN copies a row once per match. Bike Fix's video had no match and stayed on one row."}});
 
-  K.flipCards("#vocab", "act-flip-vocab");
+  K.quiz({id:"q-count", buttonSelector:"#card-count .mlrk-choice", feedbackSelector:"#countfb", correct:"one",
+    feedback:{one:"Right. The LEFT JOIN keeps one row for video 103, and COUNT(*) counts that row. COUNT(c.comment_id) gives the true 0.",
+              zero:"0 is the true number of comments, and real_comments shows it. COUNT(*) counts rows, and there is one row.",
+              skip:"A LEFT JOIN keeps video 103 even with no match. The row is there, with an empty comment_id."}});
 
-  K.Scoring.register("q-predict",1,"quiz");
-  let predictAttempts=0, predictDone=false;
-  $("#predictCheck").addEventListener("click",()=>{
-    if(predictDone) return;
-    predictAttempts++;
-    const ok = $("#predictInput").value.trim()==="4";
-    const fb=$("#predictfb");
-    if(ok){
-      K.Scoring.award("q-predict", predictAttempts===1?1:0.5);
+  K.quiz({id:"q-grain", buttonSelector:"#card-grain .mlrk-choice", feedbackSelector:"#grainfb", correct:"video",
+    feedback:{video:"Right. It groups by video_id, so there is one row per video, with that video's comment count on it.",
+              comment:"The comments are counted and folded in. GROUP BY v.video_id leaves one row per video.",
+              channel:"Plant Pals shows up on two rows, one for each of its videos. Rolling up to channels is step 2."}});
+
+  K.Scoring.register("q-chain",1,"quiz");
+  let chainAttempts=0, chainDone=false;
+  $("#chainCheck").addEventListener("click",()=>{
+    if(chainDone) return;
+    chainAttempts++;
+    const b1 = $("#chainBlank1").value.trim();
+    const b2 = $("#chainBlank2").value.trim().toLowerCase().replace(/[`'"]/g,"");
+    const ok1 = b1===",";
+    const ok2 = b2==="comments_per_video";
+    const fb=$("#chainfb");
+    if(ok1 && ok2){
+      K.Scoring.award("q-chain", chainAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> Tasha's first visit becomes 3 rows and her second becomes 1, so the flat result holds 4 rows with a visit id on each. The query reports 4 visits for a patient who had 2.";
-      predictDone=true;
-    } else if(predictAttempts>=2){
-      K.Scoring.award("q-predict",0);
+      fb.innerHTML="<strong>Correct"+(chainAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> The comma lets a second name follow the first, and channel_totals joins to comments_per_video like a table.";
+      chainDone=true;
+    } else if(chainAttempts>=2){
+      K.Scoring.award("q-chain",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> It reports <code>4</code>. The flat result has one row per prescription, so 3 rows plus 1 row, each carrying a visit id.";
-      predictDone=true;
+      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> Blank (1) is a comma <code>,</code>. Blank (2) is <code>comments_per_video</code>, the name of step 1.";
+      chainDone=true;
     } else {
+      const which = !ok1 && !ok2 ? "Both blanks need another look." : (!ok1 ? "Blank (1) needs another look. Blank (2) is right." : "Blank (2) needs another look. Blank (1) is right.");
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite.</strong> The number you want is the number of rows Tasha ends up with in the flat result, which is her total prescriptions, not her total visits. One more try.";
+      fb.innerHTML="<strong>Not quite yet.</strong> "+which+" Blank (1) is a single punctuation mark, and WITH is never repeated. Blank (2) is the name given right after WITH.";
     }
-    fb.setAttribute("tabindex","-1");fb.focus();
+    fb.setAttribute("tabindex","-1"); fb.focus();
+    if(chainDone) K.markDone("q-chain");
   });
-
-  K.quiz({id:"q-countstar", buttonSelector:"#card-countstar .mlrk-choice", feedbackSelector:"#countstarfb", correct:"1",
-    feedback:{"1":"COUNT(*) counts rows, and the LEFT JOIN still produced one row for visit 103. It reports 1 where the true answer is 0.",
-              "0":"0 is the honest answer, and it is what COUNT(rx_id) gives. COUNT(*) ignores the empty cell and counts the row anyway.",
-              "null":"The row is not skipped. That is exactly the point: a LEFT JOIN keeps it, so anything counting rows will find it."}});
-
-  K.orderSteps("#ordersteps", {id:"act-order-plan", correctOrder:["question","deepest","rollup","verify"], feedbackSelector:"#orderstepsfb", checkSelector:"#orderscheck"});
-
-  K.quiz({id:"q-grain", buttonSelector:"#card-grain .mlrk-choice", feedbackSelector:"#grainfb", correct:"visit",
-    feedback:{visit:"One row per visit. The GROUP BY is on visit_id, so the result has the same grain the visits table had, with a count attached.",
-              rx:"Prescriptions were counted, not listed. Four rows came out for four visits, even though five prescriptions exist.",
-              patient:"Patient rolling-up happens in the second step. This one still has a separate row for each of Maya's two visits."}});
-
-  K.Scoring.register("q-blank",1,"quiz");
-  let blankAttempts=0, blankDone=false;
-  $("#blankCheck").addEventListener("click",()=>{
-    if(blankDone) return;
-    blankAttempts++;
-    const b1=$("#blank1").value.trim();
-    const b2=$("#blank2").value.trim().toLowerCase();
-    const ok = b1==="," && b2==="rx_per_visit";
-    const fb=$("#blankfb");
-    if(ok){
-      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct.</strong> The comma is the entire chaining syntax, and the second step joins to <code>rx_per_visit</code> by name instead of going back to the raw tables.";
-      blankDone=true;
-    } else if(blankAttempts>=2){
-      K.Scoring.award("q-blank",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> Blank 1 is a comma. Blank 2 is <code>rx_per_visit</code>, the name given to the first step.";
-      blankDone=true;
-    } else {
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      const miss=[];
-      if(b1!==",") miss.push("blank 1, which is one punctuation mark, not a keyword");
-      if(b2!=="rx_per_visit") miss.push("blank 2, which is a name that already appears earlier in this same query");
-      fb.innerHTML="<strong>Not quite yet.</strong> Look again at "+miss.join(" and ")+".";
-    }
-    fb.setAttribute("tabindex","-1");fb.focus();
-  });
-
-  K.dragDrop("#dragarea", "act-drag-steps");
-  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneFirst", label:"Joins visits to prescriptions", expectedLabel:"rx_per_visit (first)"},
-    chip2:{expectedId:"zoneFirst", label:"Produces one row per appointment", expectedLabel:"rx_per_visit (first)"},
-    chip3:{expectedId:"zoneSecond", label:"Adds up counts that were already computed", expectedLabel:"patient_totals (second)"},
-    chip4:{expectedId:"zoneSecond", label:"Produces one row per person", expectedLabel:"patient_totals (second)"}
-  }});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"A second named result can use the first one by name, but the first cannot use the second.", correct:true,
-      hint:"Look at the order the two definitions appear in section 9, and ask which name already exists at each point.",
-      explain:"Names become available in the order they are written, so a later step can lean on an earlier one but never the reverse."},
-    {value:"b", label:"The word WITH has to be repeated before every named result in the chain.", correct:false,
-      hint:"Count how many times the word WITH appears in the full query in section 9.",
-      explain:"WITH is written once. A comma is all that separates one definition from the next."},
+    {value:"a", label:"A second named result can use the first one by name.", correct:true,
+      hint:"Look at the LEFT JOIN line inside channel_totals.",
+      explain:"channel_totals joins to comments_per_video by name, as if it were a table."},
+    {value:"b", label:"The word WITH has to be written again before every named result in the chain.", correct:false,
+      hint:"Count how many times WITH appears in channel_report.sql.",
+      explain:"WITH appears once. A comma separates the named results."},
     {value:"c", label:"Each named result is a complete query you can run and check by itself.", correct:true,
-      hint:"Section 8 ran one of them alone and printed four rows. What does that tell you?",
-      explain:"That is the practical payoff of chaining: a checkpoint you can verify before the next step depends on it."},
-    {value:"d", label:"Joining three tables at once can inflate a count even though the query runs without any error.", correct:true,
-      hint:"Compare the two number columns in the first result table in section 3 against the real values beside them.",
-      explain:"Maya's visit count came back as 3 instead of 2, with no error anywhere. A silent wrong number is the whole danger."}
+      hint:"Think about comments_per_video.sql.",
+      explain:"comments_per_video.sql ran step 1 alone, so you could check its four rows before step 2."},
+    {value:"d", label:"If a three-table query runs without an error, its counts are correct.", correct:false,
+      hint:"Think about flat_report.sql.",
+      explain:"flat_report.sql ran with no error and still gave Plant Pals 3 videos instead of 2."}
   ]});
 
-  K.quiz({id:"q-distinct", buttonSelector:"#card-distinct .mlrk-choice", feedbackSelector:"#distinctfb", correct:"both",
-    feedback:{both:"Both get multiplied by the copied rows. DISTINCT can ignore repeated visit ids, but a repeated dollar amount is a real number that gets added again every time it appears.",
-              neither:"Storing an amount once per visit is exactly the problem. The join copies that visit row once per prescription, so the same amount shows up more than once.",
-              "distinct-all":"DISTINCT would also drop a genuine second visit that happened to bill the same amount, so it cannot be trusted to fix a total."}});
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"perComment",
+    feedback:{perComment:"Right. Replies are the smallest grain, so count them per comment first, then roll up to channels.",
+              flat:"One step across four tables brings back the fan-out: each comment would be copied once per reply.",
+              perReply:"That keeps the smallest grain but counts nothing yet. The first step should fold replies into one count per comment."}});
 
-  K.video({id:"act-video", elementId:"ytplayer", videoId:"6QiSSsGStmY"});
-  K.freeResponse({id:"resp-videoreflect", selector:"#videoreflect", minWords:6});
-  K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:12});
-
-  K.quiz({id:"q-interview", buttonSelector:"#card-interview .mlrk-choice", feedbackSelector:"#interviewfb", correct:"plan",
-    feedback:{plan:"Naming the level mismatch out loud, then planning the deeper count first, is exactly the process an interviewer is listening for.",
-              join:"That is the shape that overcounts. Orders would get copied once per item, so the order count comes back too high with no error to warn you.",
-              two:"Two separate result tables leave the interviewer to join the answers by hand, and it skips the planning the question is actually testing."}});
-
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"perco",
-    feedback:{perco:"Same shape as the clinic. Count items per checkout first, one row per checkout, then roll that up per member.",
-              permember:"Joining all three at once copies each checkout once per item, so the borrow count comes back inflated.",
-              peritem:"One row per item is the deepest grain, which is where the multiplication comes from. The first step needs to collapse that up to one row per checkout."}});
+  K.flipCards("#vocab", "act-flip-vocab");
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
 
   const AI_PROMPTS = [
-    "Think of a report you have seen at school or a job that combined a headcount with a total of something else. How would you check whether one of those numbers had been double counted?",
-    "How would you explain the idea of 'grain' to someone who has only ever used a spreadsheet, using two tabs of a workbook as the example?",
-    "If a manager handed you a three-table question and wanted an answer in ten minutes, what would you write down before opening a query editor?"
+    "Think of counting the number of students in a school and the number of books in their backpacks. Why would you count books per student first?",
+    "When a number looks reasonable, what small sample could you count by hand to prove it is right?",
+    "If an AI tool wrote a three-table query for you, which channel from this reading would you use to test it, and why?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.style.display="block";
+    box.hidden=false;
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
 
