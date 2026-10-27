@@ -15,7 +15,7 @@
 <h1>Holes in the Dashboard</h1>
 <p class="mlrk-lead">A school runs a walking challenge. Each day, students log their steps, and a dashboard (a web page that shows numbers at a glance) shows each class team's totals. Two things go wrong. Some students have not logged yet, so blanks appear. And adding up every log each time someone opens the page is slow.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~22–25 minutes</span>
+  <span class="mlrk-pill">~23–26 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -26,6 +26,28 @@
 <div id="banner" class="mlrk-banner" role="status" hidden></div>
 
 <main class="mlrk-main"><div class="mlrk-wrap">
+<script type="text/plain" class="mlrk-sql-setup" id="db-steps">
+CREATE TABLE teams (team_id INTEGER PRIMARY KEY, team_name TEXT);
+CREATE TABLE students (
+    student_id INTEGER PRIMARY KEY,
+    name       TEXT,
+    team_id    INTEGER REFERENCES teams(team_id)
+);
+CREATE TABLE step_logs (
+    log_id     INTEGER PRIMARY KEY,
+    student_id INTEGER REFERENCES students(student_id),
+    log_date   DATE,
+    steps      INTEGER
+);
+INSERT INTO teams VALUES (1, 'Room 12'), (2, 'Room 14'), (3, 'Room 15');
+INSERT INTO students VALUES
+    (1, 'Ava', 1), (2, 'June', 1), (3, 'Luis', 1), (4, 'Priya', 1), (5, 'Tomas', 1),
+    (6, 'Kofi', 2), (7, 'Mei', 2), (8, 'Noor', 3);
+INSERT INTO step_logs VALUES
+    (1, 1, '2026-10-05', 8200), (2, 2, '2026-10-05', 6100),
+    (3, 3, '2026-10-05', 9400), (4, 4, '2026-10-05', 7300),
+    (5, 6, '2026-10-05', 5000), (6, 7, '2026-10-05', 6500);
+</script>
 
 <section class="mlrk-section" id="persona-section">
   <div id="persona"></div>
@@ -80,7 +102,7 @@
 
 <p>A teacher who reads that blank as zero might think Tomas skipped the challenge. You already know <code>LEFT JOIN</code> and <code>GROUP BY</code>. This reading covers what that blank is, how to fill it on purpose, how to save an expensive answer, and how to measure what a query costs.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what <code>psql</code> prints when it runs that file. On your own laptop you'd type <code>psql -d step_challenge -f name.sql</code>. The <code>-f</code> tells <code>psql</code> to run every statement in the file, top to bottom.</p>
+<p><strong>How the examples work:</strong> the SQL boxes run real SQL in your browser. Edit a query and click Run to try your own version. It works the same in the PostgreSQL you use in class, except for the parts marked "PostgreSQL only." The first line of each box, like <code>-- room12.sql</code>, is a comment that names the query; SQL ignores it.</p>
 </div>
 </section>
 
@@ -103,30 +125,35 @@
 <section class="mlrk-section">
 <h2>3. NULL means unknown</h2>
 <p>Here is the query behind the dashboard. The <code>LEFT JOIN</code> keeps every student, even one with no log.</p>
-<div class="mlrk-code" data-file="room12.sql"><div class="mlrk-screen">SELECT s.name, l.steps
+<div class="mlrk-sql" data-db="db-steps" data-activity="act-sql-room12">
+<textarea class="mlrk-sql-input">-- room12.sql
+SELECT s.name, l.steps
 FROM students s
 LEFT JOIN step_logs l ON l.student_id = s.student_id
 WHERE s.team_id = 1
-ORDER BY s.name;</div></div>
-<div class="mlrk-run" data-file="room12.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f room12.sql</div><pre> name  | steps
+ORDER BY s.name;</textarea>
+<pre class="mlrk-sql-fallback" hidden> name  | steps
 -------+-------
  Ava   |  8200
  June  |  6100
  Luis  |  9400
  Priya |  7300
  Tomas |
-(5 rows)</pre></div>
+(5 rows)</pre>
+</div>
 <p>Tomas's cell is <strong>NULL</strong>: the absence of a value. NULL means unknown. It is not zero, and it is not empty text. To find students with no log, the obvious try is <code>= NULL</code>.</p>
 
 <div class="mlrk-card" id="card-eq"><p><strong>Predict:</strong> how many rows does <code>missing_try.sql</code> return?</p>
-<div class="mlrk-code" data-file="missing_try.sql"><div class="mlrk-screen">SELECT s.name
+<div class="mlrk-sql" data-db="db-steps" data-after="q-eq">
+<textarea class="mlrk-sql-input">-- missing_try.sql
+SELECT s.name
 FROM students s
 LEFT JOIN step_logs l ON l.student_id = s.student_id
-WHERE s.team_id = 1 AND l.steps = NULL;</div></div>
-<button type="button" class="mlrk-btn" data-run="missing_try.sql" data-after="q-eq">Run missing_try.sql</button>
-<div class="mlrk-run" data-file="missing_try.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f missing_try.sql</div><pre> name
+WHERE s.team_id = 1 AND l.steps = NULL;</textarea>
+<pre class="mlrk-sql-fallback" hidden> name
 ------
-(0 rows)</pre></div>
+(0 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="zero">0 rows, with no error</button>
 <button type="button" class="mlrk-choice" data-a="one">1 row: Tomas</button>
 <button type="button" class="mlrk-choice" data-a="five">All 5 students</button>
@@ -135,19 +162,14 @@ WHERE s.team_id = 1 AND l.steps = NULL;</div></div>
 <p>Asking whether an unknown value equals something gives another unknown, and <code>WHERE</code> only keeps rows it knows are true. So <code>= NULL</code> never matches anything, not even another NULL. <strong>IS NULL</strong> is the keyword that tests whether a value is absent.</p>
 
 <h3>Fill in the blank: find the missing log</h3>
-<div class="mlrk-code" data-file="missing.sql"><div class="mlrk-screen">SELECT s.name
+<div class="mlrk-code"><div class="mlrk-screen">SELECT s.name
 FROM students s
 LEFT JOIN step_logs l ON l.student_id = s.student_id
 WHERE s.team_id = 1 AND l.steps ____;</div></div>
-<button type="button" class="mlrk-btn" data-run="missing.sql" data-after="q-isnull" data-after-note="Solve the blank first. Then you can run it.">Run missing.sql</button>
-<div class="mlrk-run" data-file="missing.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f missing.sql</div><pre> name
--------
- Tomas
-(1 row)</pre></div>
 <ol class="mlrk-steplist">
   <li>Type the two words that test whether <code>l.steps</code> has no value. Leave out <code>l.steps</code> itself.</li>
   <li>Put one space between the words. Capital letters or lowercase both work.</li>
-  <li>Press <strong>Check</strong>. Then the Run button unlocks.</li>
+  <li>Press <strong>Check</strong>. Then the completed query runs.</li>
 </ol>
 <div class="mlrk-fillblank">
   <label for="isInput">Missing words:</label>
@@ -155,24 +177,40 @@ WHERE s.team_id = 1 AND l.steps ____;</div></div>
   <button type="button" id="isCheck" class="mlrk-btn">Check</button>
 </div>
 <div id="isfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-solved-run" data-reveal="q-isnull" hidden>
+<p>Your answer is checked. Here is the completed query, running for real:</p>
+<div class="mlrk-sql" data-db="db-steps" data-after="q-isnull">
+<textarea class="mlrk-sql-input">-- missing.sql
+SELECT s.name
+FROM students s
+LEFT JOIN step_logs l ON l.student_id = s.student_id
+WHERE s.team_id = 1 AND l.steps IS NULL;</textarea>
+<pre class="mlrk-sql-fallback" hidden> name
+-------
+ Tomas
+(1 row)</pre>
+</div>
+</div>
 </section>
 
 <section class="mlrk-section">
 <h2>4. COALESCE fills the gap, and you choose what it claims</h2>
 <p><strong>COALESCE</strong> is a function that returns the first value in its list that is not NULL, checking left to right. <code>COALESCE(l.steps, 0)</code> shows the real steps when they exist and 0 when they don't. The 0 is a <strong>fallback</strong>: the stand-in value you choose to show in place of a NULL. Choosing one is a claim about what the missing value means. COALESCE changes only this query's output; the NULL is still stored in the table.</p>
-<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>ROUND(x)</code> rounds a number to the nearest whole number, so <code>ROUND(7750.4)</code> gives <code>7750</code>. <code>AVG</code> skips NULLs, the same way <code>COUNT(column)</code> does.</p></div>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>Good to know:</strong> <code>AVG</code> skips NULLs, the same way <code>COUNT(column)</code> does. An average can print with decimals, like <code>7750.0</code>; PostgreSQL prints even more zeros after the point. The value is the same.</p></div>
 
 <div class="mlrk-card" id="card-avg"><p><strong>Predict:</strong> the four logged students average 7750 steps. What does <code>avg_with_zero</code> show once Tomas counts as 0?</p>
-<div class="mlrk-code" data-file="room12_average.sql"><div class="mlrk-screen">SELECT ROUND(AVG(l.steps)) AS avg_logged,
-       ROUND(AVG(COALESCE(l.steps, 0))) AS avg_with_zero
+<div class="mlrk-sql" data-db="db-steps" data-after="q-avg">
+<textarea class="mlrk-sql-input">-- room12_average.sql
+SELECT AVG(l.steps) AS avg_logged,
+       AVG(COALESCE(l.steps, 0)) AS avg_with_zero
 FROM students s
 LEFT JOIN step_logs l ON l.student_id = s.student_id
-WHERE s.team_id = 1;</div></div>
-<button type="button" class="mlrk-btn" data-run="room12_average.sql" data-after="q-avg">Run room12_average.sql</button>
-<div class="mlrk-run" data-file="room12_average.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f room12_average.sql</div><pre> avg_logged | avg_with_zero
+WHERE s.team_id = 1;</textarea>
+<pre class="mlrk-sql-fallback" hidden> avg_logged | avg_with_zero
 ------------+---------------
-       7750 |          6200
-(1 row)</pre></div>
+     7750.0 |        6200.0
+(1 row)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="lower">6200, because the same total is now split across 5 students</button>
 <button type="button" class="mlrk-choice" data-a="same">7750, because COALESCE does not change averages</button>
 <button type="button" class="mlrk-choice" data-a="higher">9400, because 0 is ignored</button>
@@ -182,8 +220,11 @@ WHERE s.team_id = 1;</div></div>
 
 <section class="mlrk-section">
 <h2>5. Store the answer instead of redoing it</h2>
-<p>The team totals join three tables and add up every log. Run that on every page load, all day, and it gets slow. A <strong>view</strong> is a query saved under a name. It stores only the query text, so it re-runs every time you read from it. A <strong>materialized view</strong> is a saved query whose result rows are stored on disk, so reading it does not redo the work:</p>
-<div class="mlrk-code" data-file="create_team_steps.sql"><div class="mlrk-screen">CREATE MATERIALIZED VIEW team_steps AS
+<p>The team totals join three tables and add up every log. Run that on every page load, all day, and it gets slow. There are two ways to save a query under a name.</p>
+<p>A <strong>view</strong> is a query saved under a name. It stores only the query text, so it re-runs every time you read from it, and it always shows the live tables. This box creates a view, adds a late log of 7000 steps for Tomas, then reads the view:</p>
+<div class="mlrk-sql" data-db="db-steps" data-activity="act-sql-view">
+<textarea class="mlrk-sql-input">-- live_view.sql
+CREATE VIEW team_steps_live AS
 SELECT t.team_name,
        COUNT(l.log_id) AS logs,
        COALESCE(SUM(l.steps), 0) AS total_steps
@@ -192,27 +233,53 @@ LEFT JOIN students s ON s.team_id = t.team_id
 LEFT JOIN step_logs l ON l.student_id = s.student_id
 GROUP BY t.team_name;
 
-SELECT * FROM team_steps ORDER BY team_name;</div></div>
-<div class="mlrk-run" data-file="create_team_steps.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f create_team_steps.sql</div><pre>SELECT 3
+INSERT INTO step_logs (log_id, student_id, log_date, steps)
+VALUES (7, 5, '2026-10-05', 7000);
+
+SELECT * FROM team_steps_live ORDER BY team_name;</textarea>
+<pre class="mlrk-sql-fallback" hidden> team_name | logs | total_steps
+-----------+------+-------------
+ Room 12   |    5 |       38000
+ Room 14   |    2 |       11500
+ Room 15   |    0 |           0
+(3 rows)</pre>
+</div>
+<p>Room 12 already shows 5 logs and 38000 steps, because the view re-ran its query when it was read. You read a view the same way you read a table.</p>
+<p>A <strong>materialized view</strong> is a saved query whose result rows are stored on disk, so reading it does not redo the work. Materialized views are a PostgreSQL feature; the SQL in your browser doesn't have them, so this part is shown, not run.</p>
+<div class="mlrk-postgres-only">
+<p><strong>PostgreSQL only: shown, not run.</strong> Creating the materialized view with the 6 original logs, then reading it:</p>
+<pre class="mlrk-code">CREATE MATERIALIZED VIEW team_steps AS
+SELECT t.team_name,
+       COUNT(l.log_id) AS logs,
+       COALESCE(SUM(l.steps), 0) AS total_steps
+FROM teams t
+LEFT JOIN students s ON s.team_id = t.team_id
+LEFT JOIN step_logs l ON l.student_id = s.student_id
+GROUP BY t.team_name;
+SELECT 3
+
+SELECT * FROM team_steps ORDER BY team_name;
  team_name | logs | total_steps
 -----------+------+-------------
  Room 12   |    4 |       31000
  Room 14   |    2 |       11500
  Room 15   |    0 |           0
-(3 rows)</pre></div>
-<p>The <code>SELECT 3</code> line is <code>psql</code> saying it stored 3 rows. You read a materialized view the same way you read a table. Now Tomas logs 7000 steps.</p>
+(3 rows)</pre>
+<p>The <code>SELECT 3</code> line is PostgreSQL saying it stored 3 rows.</p>
+</div>
 
-<div class="mlrk-card" id="card-stale"><p><strong>Predict:</strong> in <code>late_log.sql</code>, what does the first <code>SELECT</code> show for Room 12's <code>total_steps</code>?</p>
-<div class="mlrk-code" data-file="late_log.sql"><div class="mlrk-screen">INSERT INTO step_logs (log_id, student_id, log_date, steps)
+<div class="mlrk-card" id="card-stale"><p><strong>Predict:</strong> now Tomas's 7000-step log is added to <code>step_logs</code>. Someone reads the materialized view <code>team_steps</code> again, before anyone refreshes it. What does it show for Room 12's <code>total_steps</code>?</p>
+<button type="button" class="mlrk-choice" data-a="old">31000, the stored number from before the new log</button>
+<button type="button" class="mlrk-choice" data-a="new">38000, because the view updates itself</button>
+<button type="button" class="mlrk-choice" data-a="error">An error, because the view is out of date</button>
+<div id="stalefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-postgres-only mlrk-solved-run" id="stale-demo" data-reveal="q-stale" hidden>
+<p><strong>PostgreSQL only: shown, not run.</strong> The late log, a read, a refresh, and a second read:</p>
+<pre class="mlrk-code">INSERT INTO step_logs (log_id, student_id, log_date, steps)
 VALUES (7, 5, '2026-10-05', 7000);
+INSERT 0 1
 
 SELECT * FROM team_steps ORDER BY team_name;
-
-REFRESH MATERIALIZED VIEW team_steps;
-
-SELECT * FROM team_steps ORDER BY team_name;</div></div>
-<button type="button" class="mlrk-btn" data-run="late_log.sql" data-after="q-stale">Run late_log.sql</button>
-<div class="mlrk-run" data-file="late_log.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d step_challenge -f late_log.sql</div><pre>INSERT 0 1
  team_name | logs | total_steps
 -----------+------+-------------
  Room 12   |    4 |       31000
@@ -220,33 +287,61 @@ SELECT * FROM team_steps ORDER BY team_name;</div></div>
  Room 15   |    0 |           0
 (3 rows)
 
+REFRESH MATERIALIZED VIEW team_steps;
 REFRESH MATERIALIZED VIEW
+
+SELECT * FROM team_steps ORDER BY team_name;
  team_name | logs | total_steps
 -----------+------+-------------
  Room 12   |    5 |       38000
  Room 14   |    2 |       11500
  Room 15   |    0 |           0
-(3 rows)</pre></div>
-<button type="button" class="mlrk-choice" data-a="old">31000, the stored number from before the new log</button>
-<button type="button" class="mlrk-choice" data-a="new">38000, because the view updates itself</button>
-<button type="button" class="mlrk-choice" data-a="error">An error, because the view is out of date</button>
-<div id="stalefb" class="mlrk-feedback" tabindex="-1"></div></div>
+(3 rows)</pre>
+</div>
 <p>Between the <code>INSERT</code> and the refresh, the stored rows were <strong>stale</strong>: correct at their last refresh, but no longer matching the live tables. <strong>REFRESH MATERIALIZED VIEW</strong> re-runs the stored query and replaces every stored row. PostgreSQL never does this on its own. The rule: if the numbers must be right to the second, use a plain view. If the query is slow and the numbers can be a little behind, use a materialized view and say how fresh it is.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Measure the cost with EXPLAIN ANALYZE</h2>
-<p>A <strong>query plan</strong> is the step-by-step method PostgreSQL picks for running your query, printed one line per step. <code>EXPLAIN</code> shows the plan without running the query. <strong>EXPLAIN ANALYZE</strong> runs the query and prints the plan with real times and real row counts next to the planner's guesses. Because it really runs the statement, only use it on a <code>SELECT</code> while you practice: on an <code>INSERT</code> it would really add the row.</p>
-<p>The whole school district runs this challenge: 12 teams, 250 students, and about 180,000 step logs. Here is the team totals query on that data, before the materialized view existed. The block scrolls sideways; each step that sits further right runs first.</p>
-<div class="mlrk-code" data-file="explain_totals.sql"><div class="mlrk-screen">EXPLAIN ANALYZE
+<h2>6. Measure the cost of a query</h2>
+<p>A <strong>query plan</strong> is the step-by-step method the database picks for running your query, printed one line per step. The SQL in your browser shows its plan with <code>EXPLAIN QUERY PLAN</code>. Run this box to see the plan for reading the view from section 5:</p>
+<div class="mlrk-sql" data-db="db-steps" data-activity="act-sql-plan">
+<textarea class="mlrk-sql-input">-- view_plan.sql
+CREATE VIEW team_steps_live AS
 SELECT t.team_name,
        COUNT(l.log_id) AS logs,
        COALESCE(SUM(l.steps), 0) AS total_steps
 FROM teams t
 LEFT JOIN students s ON s.team_id = t.team_id
 LEFT JOIN step_logs l ON l.student_id = s.student_id
-GROUP BY t.team_name;</div></div>
-<div class="mlrk-run" data-file="explain_totals.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d district_steps -f explain_totals.sql</div><pre>                                                            QUERY PLAN
+GROUP BY t.team_name;
+
+EXPLAIN QUERY PLAN SELECT * FROM team_steps_live;</textarea>
+<pre class="mlrk-sql-fallback" hidden> id  | parent | notused |                              detail
+-----+--------+---------+------------------------------------------------------------------
+   2 |      0 |       0 | CO-ROUTINE team_steps_live
+  10 |      2 |     216 | SCAN t
+  14 |      2 |       0 | BLOOM FILTER ON s (team_id=?)
+  24 |      2 |      53 | SEARCH s USING AUTOMATIC COVERING INDEX (team_id=?) LEFT-JOIN
+  35 |      2 |       0 | BLOOM FILTER ON l (student_id=?)
+  46 |      2 |      53 | SEARCH l USING AUTOMATIC COVERING INDEX (student_id=?) LEFT-JOIN
+  55 |      2 |       0 | USE TEMP B-TREE FOR GROUP BY
+ 107 |      0 |      82 | SCAN team_steps_live
+(8 rows)</pre>
+</div>
+<p>Read the <code>detail</code> column. Even though the query only says <code>SELECT * FROM team_steps_live</code>, the plan scans <code>t</code> (teams) and searches <code>s</code> and <code>l</code>: reading a plain view re-runs all of its joins. A <strong>Seq Scan</strong>, called <code>SCAN</code> here, is a step that reads every row of a table in order. That is fine on a small table and worth a look on a huge one.</p>
+<p>In PostgreSQL you write <code>EXPLAIN</code> to see the plan, and <strong>EXPLAIN ANALYZE</strong> to run the query and print the plan with real times and real row counts next to the planner's guesses. Because <code>EXPLAIN ANALYZE</code> really runs the statement, only use it on a <code>SELECT</code> while you practice: on an <code>INSERT</code> it would really add the row.</p>
+<div class="mlrk-postgres-only">
+<p><strong>PostgreSQL only: shown, not run.</strong> The whole school district runs this challenge: 12 teams, 250 students, and about 180,000 step logs. Here is the team totals query on that data, before the materialized view existed. The block scrolls sideways; each step that sits further right runs first.</p>
+<pre class="mlrk-code">EXPLAIN ANALYZE
+SELECT t.team_name,
+       COUNT(l.log_id) AS logs,
+       COALESCE(SUM(l.steps), 0) AS total_steps
+FROM teams t
+LEFT JOIN students s ON s.team_id = t.team_id
+LEFT JOIN step_logs l ON l.student_id = s.student_id
+GROUP BY t.team_name;
+
+                                                            QUERY PLAN
 ----------------------------------------------------------------------------------------------------------------------------------
  HashAggregate  (cost=6911.52..6911.64 rows=12 width=48) (actual time=97.402..97.410 rows=12 loops=1)
    Group Key: t.team_name
@@ -261,29 +356,33 @@ GROUP BY t.team_name;</div></div>
                            -&gt;  Seq Scan on teams t  (cost=0.00..1.12 rows=12 width=36) (actual time=0.006..0.009 rows=12 loops=1)
  Planning Time: 0.412 ms
  Execution Time: 97.871 ms
-(13 rows)</pre></div>
+(13 rows)</pre>
+</div>
 <p>You don't have to read every line. Look for three things:</p>
 <ol>
-<li><strong>Seq Scan</strong> lines: a step that reads every row of a table in order. That is fine on a small table and worth a look on a huge one. Here <code>step_logs</code> got a Seq Scan over 180,016 rows.</li>
+<li><code>Seq Scan</code> lines: here <code>step_logs</code> got a Seq Scan over 180,016 rows.</li>
 <li>Guess versus real: each line has a guessed <code>rows=</code> in the first parentheses and the real <code>rows=</code> in the <code>actual</code> parentheses. Here they are close, which is a good sign.</li>
 <li><strong>Execution Time</strong>, the last line: how many milliseconds the run really took. The <code>cost=</code> numbers are not times. They are units the planner uses to compare its own options.</li>
 </ol>
 
-<div class="mlrk-card" id="card-plan"><p><strong>Which part of the plan tells you how long the query really took?</strong></p>
+<div class="mlrk-card" id="card-plan"><p><strong>Which part of the PostgreSQL plan tells you how long the query really took?</strong></p>
 <button type="button" class="mlrk-choice" data-a="exec"><code>Execution Time: 97.871 ms</code></button>
 <button type="button" class="mlrk-choice" data-a="cost"><code>cost=0.00..3105.16</code> on the <code>step_logs</code> line</button>
 <button type="button" class="mlrk-choice" data-a="rows"><code>rows=180016</code> on the <code>step_logs</code> line</button>
 <div id="planfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<p>Now the same question, asked of a materialized view built on the district data:</p>
-<div class="mlrk-code" data-file="explain_view.sql"><div class="mlrk-screen">EXPLAIN ANALYZE SELECT * FROM team_steps;</div></div>
-<div class="mlrk-run" data-file="explain_view.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d district_steps -f explain_view.sql</div><pre>                                               QUERY PLAN
+<div class="mlrk-postgres-only">
+<p><strong>PostgreSQL only: shown, not run.</strong> The same question, asked of the materialized view built on the district data:</p>
+<pre class="mlrk-code">EXPLAIN ANALYZE SELECT * FROM team_steps;
+
+                                               QUERY PLAN
 -------------------------------------------------------------------------------------------------------
  Seq Scan on team_steps  (cost=0.00..1.12 rows=12 width=48) (actual time=0.008..0.010 rows=12 loops=1)
  Planning Time: 0.051 ms
  Execution Time: 0.024 ms
-(3 rows)</pre></div>
-<p>One line of plan instead of eleven, and no joins, because the joins already ran once when the view was stored. Times move a little from run to run, so compare the shape of the plan, not one run's milliseconds.</p>
+(3 rows)</pre>
+</div>
+<p>One line of plan instead of eleven, and no joins, because the joins already ran once when the materialized view was stored. Compare that with the plain view's plan in your browser, which re-ran every join. Times move a little from run to run, so compare the shape of the plan, not one run's milliseconds.</p>
 </section>
 
 <section class="mlrk-section">
@@ -431,6 +530,7 @@ git push</pre></li>
 <li><a href="https://www.postgresql.org/docs/current/sql-creatematerializedview.html" target="_blank" rel="noopener">PostgreSQL docs: CREATE MATERIALIZED VIEW</a> — every option on the command.</li>
 <li><a href="https://www.postgresql.org/docs/current/using-explain.html" target="_blank" rel="noopener">PostgreSQL docs: Using EXPLAIN</a> — worked examples behind every plan line you read here.</li>
 <li><a href="https://pgexercises.com/" target="_blank" rel="noopener">PostgreSQL Exercises</a> — a free practice site that runs your SQL in the browser against a real sample database.</li>
+<li><strong>Practice more:</strong> <a href="https://sqlbolt.com/lesson/select_queries_with_nulls" target="_blank" rel="noopener">SQLBolt: Queries with NULLs</a> — short interactive exercises on finding and handling missing values.</li>
 <li><a href="https://explain.depesz.com/" target="_blank" rel="noopener">explain.depesz.com</a> — paste a plan and it colors in which step cost the most. Use it for practice data only, since anything you paste is stored on their server.</li>
 </ul>
 </section>
@@ -447,6 +547,7 @@ git push</pre></li>
   const READING_ID = "holes-in-the-dashboard-reading1";
   const TITLE = "Holes in the Dashboard — Honest Fallbacks, Stored Answers, and What a Query Costs";
 
+  document.addEventListener("mlrk:done", e => document.querySelectorAll('.mlrk-solved-run[data-reveal="'+e.detail.id+'"]').forEach(x => { x.hidden = false; }));
   K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
   K.Persona.renderPicker("#persona");
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
@@ -511,13 +612,13 @@ git push</pre></li>
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
     {value:"a", label:"A materialized view stores its result rows, so reading it does not redo the joins.", correct:true,
-      hint:"Compare the two plans in section 6. How many join steps did explain_view.sql show?",
-      explain:"explain_view.sql showed one Seq Scan and no joins."},
+      hint:"Compare the two PostgreSQL plans in section 6. How many join steps did the materialized view's plan show?",
+      explain:"The materialized view's plan showed one Seq Scan and no joins."},
     {value:"b", label:"A plain view stores only the query text, so it re-runs every time you read from it.", correct:true,
       hint:"Think about how section 5 defined a view.",
       explain:"A view saves the query, not the rows, so each read runs it again."},
     {value:"c", label:"A materialized view updates itself whenever the tables under it change.", correct:false,
-      hint:"Think about the first SELECT in late_log.sql.",
+      hint:"Think about the read before the refresh in section 5.",
       explain:"It showed 31000 until REFRESH MATERIALIZED VIEW ran."},
     {value:"d", label:"WHERE steps = NULL finds the rows where steps is missing.", correct:false,
       hint:"Think about missing_try.sql.",

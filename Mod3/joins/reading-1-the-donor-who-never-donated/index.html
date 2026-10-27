@@ -21,7 +21,7 @@
 <h1>The Donor Who Never Donated</h1>
 <p class="mlrk-lead">Bright Path Literacy is a small charity that teaches adults to read. It keeps one table of supporters and another of donations. Jo signed up but hasn't given yet. Ask both tables one question, and Jo either disappears or stays with a blank. One word in your query decides which: <code>INNER</code> or <code>LEFT</code>.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~22–25 minutes</span>
+  <span class="mlrk-pill">~23–26 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -32,6 +32,19 @@
 <div id="banner" class="mlrk-banner" role="status" hidden></div>
 
 <main class="mlrk-main"><div class="mlrk-wrap">
+<script type="text/plain" class="mlrk-sql-setup" id="db-brightpath">
+CREATE TABLE supporters (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
+);
+CREATE TABLE donations (
+  donation_id INTEGER PRIMARY KEY,
+  supporter_id INTEGER NOT NULL REFERENCES supporters(id),
+  amount INTEGER NOT NULL
+);
+INSERT INTO supporters (id, name) VALUES (101, 'Priya'), (102, 'Marcus'), (103, 'Jo');
+INSERT INTO donations (donation_id, supporter_id, amount) VALUES (1, 101, 50), (2, 102, 75), (3, 102, 40);
+</script>
 
 <section class="mlrk-section" id="persona-section">
   <div id="persona"></div>
@@ -141,7 +154,7 @@
 </svg>
 <p>This matters because picking the wrong join causes no error. The report just quietly leaves out the people you most needed to see. You already know how to <code>SELECT</code> from one table, filter with <code>WHERE</code>, and sort with <code>ORDER BY</code>. Now you'll combine two tables in one query.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what psql prints when you type <code>psql -d brightpath -f name.sql</code> in the terminal, where <code>brightpath</code> is the database name.</p>
+<p><strong>How the examples work:</strong> the SQL boxes run real SQL in your browser, using the two tables above. Edit a query and click Run to try your own version. It works the same in the PostgreSQL you use in class.</p>
 </div>
 </section>
 
@@ -165,20 +178,21 @@
 <h2>3. INNER JOIN keeps the matches</h2>
 <p>A <strong>join</strong> combines rows from two tables into one result. The <strong>join condition</strong> is the <code>ON</code> part. It says which columns must be equal for two rows to go together. Here, <code>s.id = d.supporter_id</code> pairs each gift with the supporter who gave it. A row that finds a partner this way is a <strong>matched row</strong>.</p>
 <p><strong>INNER JOIN</strong> keeps only matched rows. A plain <code>JOIN</code> means the same thing.</p>
-<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>supporters AS s</code> gives the table a short nickname, <code>s</code>. Then <code>s.name</code> means "the <code>name</code> column from <code>supporters</code>." <code>ORDER BY d.donation_id</code> lists the gifts in the order they came in.</p></div>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>supporters AS s</code> gives the table a short nickname, <code>s</code>. Then <code>s.name</code> means "the <code>name</code> column from <code>supporters</code>." <code>ORDER BY s.id, d.donation_id</code> sorts by supporter first, then by gift number when one supporter has two rows.</p></div>
 <div class="mlrk-card" id="card-inner"><p><strong>Predict:</strong> how many rows does <code>inner_join.sql</code> print?</p>
-<pre class="mlrk-code" data-file="inner_join.sql">SELECT s.name, d.amount
+<div class="mlrk-sql" data-db="db-brightpath" data-file="inner_join.sql" data-after="q-inner" data-activity="act-sql-inner">
+<textarea class="mlrk-sql-input">SELECT s.name, d.amount
 FROM supporters AS s
 INNER JOIN donations AS d
   ON s.id = d.supporter_id
-ORDER BY d.donation_id;</pre>
-<button type="button" class="mlrk-btn" data-run="inner_join.sql" data-after="q-inner" data-cmd="psql -d brightpath -f inner_join.sql"></button>
-<div class="mlrk-run" data-file="inner_join.sql" data-cmd="psql -d brightpath -f inner_join.sql" hidden><pre>  name  | amount
+ORDER BY s.id, d.donation_id;</textarea>
+<pre class="mlrk-sql-fallback" hidden>  name  | amount
 --------+--------
  Priya  |     50
  Marcus |     75
  Marcus |     40
-(3 rows)</pre></div>
+(3 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="three">3</button>
 <button type="button" class="mlrk-choice" data-a="two">2</button>
 <button type="button" class="mlrk-choice" data-a="four">4</button>
@@ -190,37 +204,26 @@ ORDER BY d.donation_id;</pre>
 <h2>4. LEFT JOIN keeps everyone on the left</h2>
 <p>The <strong>left table</strong> is the one named right after <code>FROM</code>, before the word <code>JOIN</code>. <strong>LEFT JOIN</strong> keeps every row of the left table, matched or not. When a left row has no match, the columns from the other table get <strong>NULL</strong>, which is SQL's word for "no value here." NULL is not zero and not an empty word.</p>
 <div class="mlrk-card" id="card-left"><p><strong>Predict:</strong> <code>left_join.sql</code> changes one word. How many rows does it print?</p>
-<pre class="mlrk-code" data-file="left_join.sql">SELECT s.name, d.amount
+<div class="mlrk-sql" data-db="db-brightpath" data-file="left_join.sql" data-after="q-left" data-activity="act-sql-left">
+<textarea class="mlrk-sql-input">SELECT s.name, d.amount
 FROM supporters AS s
 LEFT JOIN donations AS d
   ON s.id = d.supporter_id
-ORDER BY d.donation_id;</pre>
-<button type="button" class="mlrk-btn" data-run="left_join.sql" data-after="q-left" data-cmd="psql -d brightpath -f left_join.sql"></button>
-<div class="mlrk-run" data-file="left_join.sql" data-cmd="psql -d brightpath -f left_join.sql" hidden><pre>  name  | amount
+ORDER BY s.id, d.donation_id;</textarea>
+<pre class="mlrk-sql-fallback" hidden>  name  | amount
 --------+--------
  Priya  |     50
  Marcus |     75
  Marcus |     40
  Jo     |
-(4 rows)</pre></div>
+(4 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="four">4</button>
 <button type="button" class="mlrk-choice" data-a="three">3</button>
 <button type="button" class="mlrk-choice" data-a="five">5</button>
 <div id="leftfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>Jo is back, at the bottom. Jo has no <code>donation_id</code>, and PostgreSQL sorts rows with no value last.</p>
+<p>Jo is back, with NULL in the <code>amount</code> column. (psql leaves a NULL spot blank instead of printing the word.)</p>
 
-<h3>What is in Jo's amount?</h3>
-<ol class="mlrk-steplist">
-  <li>Look at Jo's row in the <code>left_join.sql</code> output. The <code>amount</code> spot looks empty.</li>
-  <li>Type the SQL word for "no value here." It is one word, four letters. Capital letters or not, either is fine.</li>
-  <li>Press <strong>Check</strong>. You get 2 tries.</li>
-</ol>
-<div class="mlrk-fillblank">
-  <label for="joblank">Jo's amount is:</label>
-  <input type="text" id="joblank" autocomplete="off">
-  <button type="button" id="joblankcheck" class="mlrk-btn">Check</button>
-</div>
-<div id="joblankfb" class="mlrk-feedback" tabindex="-1"></div>
 
 <div class="mlrk-card" id="card-count" style="margin-top:1rem"><p><strong>Bright Path now has 500 supporters. The LEFT JOIN version returns 500 rows, and the INNER JOIN version returns 320. What is the most likely reason?</strong></p>
 <button type="button" class="mlrk-choice" data-a="never">180 supporters have never given. INNER JOIN drops them, and LEFT JOIN keeps them with NULL amounts.</button>
@@ -233,29 +236,49 @@ ORDER BY d.donation_id;</pre>
 <h2>5. Find the supporters who haven't given</h2>
 <p>To call the people who haven't given, keep only the LEFT JOIN rows where the amount is NULL. Here is a first try.</p>
 <div class="mlrk-card" id="card-eqnull"><p><strong>Predict:</strong> what does <code>equals_null.sql</code> print?</p>
-<pre class="mlrk-code" data-file="equals_null.sql">SELECT s.name, d.amount
+<div class="mlrk-sql" data-db="db-brightpath" data-file="equals_null.sql" data-after="q-eqnull">
+<textarea class="mlrk-sql-input">SELECT s.name, d.amount
 FROM supporters AS s
 LEFT JOIN donations AS d
   ON s.id = d.supporter_id
-WHERE d.amount = NULL;</pre>
-<button type="button" class="mlrk-btn" data-run="equals_null.sql" data-after="q-eqnull" data-cmd="psql -d brightpath -f equals_null.sql"></button>
-<div class="mlrk-run" data-file="equals_null.sql" data-cmd="psql -d brightpath -f equals_null.sql" hidden><pre> name | amount
+WHERE d.amount = NULL;</textarea>
+<pre class="mlrk-sql-fallback" hidden> name | amount
 ------+--------
-(0 rows)</pre></div>
+(0 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="zero">No rows at all</button>
 <button type="button" class="mlrk-choice" data-a="jo">One row: Jo</button>
 <button type="button" class="mlrk-choice" data-a="error">An error message</button>
 <div id="eqnullfb" class="mlrk-feedback" tabindex="-1"></div></div>
 <p>SQL never counts NULL as equal to anything, not even another NULL, so <code>= NULL</code> is never true. It gives no error, just no rows. The rule: test for a missing value with <code>IS NULL</code>.</p>
+<h3>Fill in the blank: find the supporters with no gift</h3>
 <pre class="mlrk-code" data-file="no_gift_yet.sql">SELECT s.name, d.amount
 FROM supporters AS s
 LEFT JOIN donations AS d
   ON s.id = d.supporter_id
-WHERE d.amount IS NULL;</pre>
-<div class="mlrk-run" data-file="no_gift_yet.sql" data-cmd="psql -d brightpath -f no_gift_yet.sql"><pre> name | amount
+WHERE d.amount ____;</pre>
+<ol class="mlrk-steplist">
+  <li>Type the two words that test for a missing value. Capital letters are standard, but lowercase is fine.</li>
+  <li>Leave out the semicolon; it is already there.</li>
+  <li>Press <strong>Check</strong>. You get 2 tries. Then the query runs below.</li>
+</ol>
+<div class="mlrk-fillblank">
+  <label for="isnullblank">The blank is:</label>
+  <input type="text" id="isnullblank" autocomplete="off">
+  <button type="button" id="isnullcheck" class="mlrk-btn">Check</button>
+</div>
+<div id="isnullfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-sql" data-db="db-brightpath" data-file="no_gift_yet.sql" data-after="q-isnull">
+<textarea class="mlrk-sql-input">SELECT s.name, d.amount
+FROM supporters AS s
+LEFT JOIN donations AS d
+  ON s.id = d.supporter_id
+WHERE d.amount IS NULL;</textarea>
+<pre class="mlrk-sql-fallback" hidden> name | amount
 ------+--------
  Jo   |
-(1 row)</pre></div>
+(1 row)</pre>
+</div>
 </section>
 
 <section class="mlrk-section">
@@ -396,6 +419,7 @@ git push</pre></li>
 <li><a href="https://www.postgresql.org/docs/current/tutorial-join.html" target="_blank" rel="noopener">PostgreSQL Tutorial: JOIN</a> — the official reference, straight from the source.</li>
 <li><a href="https://sqlbolt.com/lesson/select_queries_with_joins" target="_blank" rel="noopener">SQLBolt: Queries with joins</a> — free, interactive practice writing joins yourself.</li>
 <li><a href="https://www.w3schools.com/sql/sql_null_values.asp" target="_blank" rel="noopener">W3Schools: SQL NULL Values</a> — more on why <code>NULL</code> behaves the way it does in comparisons.</li>
+<li><strong>Practice more:</strong> <a href="https://sqlbolt.com/lesson/select_queries_with_outer_joins" target="_blank" rel="noopener">SQLBolt: OUTER JOINs</a> — an interactive lesson where you write LEFT JOIN queries and it checks your answer.</li>
 </ul>
 </section>
 
@@ -469,31 +493,31 @@ git push</pre></li>
   K.flipCards("#vocab", "act-flip-vocab");
   K.freeResponse({id:"resp-ownwords", selector:"#ownwords", minWords:10});
 
-  K.Scoring.register("q-joblank",1,"quiz");
-  let joAttempts=0, joDone=false;
-  $("#joblankcheck").addEventListener("click",()=>{
-    if(joDone) return;
-    joAttempts++;
-    const v=$("#joblank").value.trim().toLowerCase().replace(/[`'"]/g,"");
-    const fb=$("#joblankfb");
-    if(v==="null"){
-      K.Scoring.award("q-joblank", joAttempts===1?1:0.5);
+  K.Scoring.register("q-isnull",1,"quiz");
+  let nullAttempts=0, nullDone=false;
+  $("#isnullcheck").addEventListener("click",()=>{
+    if(nullDone) return;
+    nullAttempts++;
+    const v=$("#isnullblank").value.trim().toLowerCase().replace(/;$/,"").replace(/\s+/g," ");
+    const fb=$("#isnullfb");
+    if(v==="is null"){
+      K.Scoring.award("q-isnull", nullAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct"+(joAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> Jo's amount is NULL. psql shows a NULL as an empty spot.";
-      joDone=true;
-    } else if(joAttempts>=2){
-      K.Scoring.award("q-joblank",0);
+      fb.innerHTML="<strong>Correct"+(nullAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> IS NULL is true when the amount is missing, so only Jo's row stays.";
+      nullDone=true;
+    } else if(nullAttempts>=2){
+      K.Scoring.award("q-isnull",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> It is <code>NULL</code>, SQL's word for no value.";
-      joDone=true;
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The blank is <code>IS NULL</code>.";
+      nullDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML=(v==="0"||v==="zero")
-        ? "<strong>Not quite yet.</strong> Zero is a real amount. Jo gave nothing at all, so there is no value. Type SQL's four-letter word for that."
-        : "<strong>Not quite yet.</strong> Type the four-letter word from section 4 that means \"no value here.\"";
+      fb.innerHTML=(v==="= null"||v==="=null")
+        ? "<strong>Not quite yet.</strong> = NULL is the version that returned no rows. Use the two-word test from the paragraph above."
+        : "<strong>Not quite yet.</strong> The paragraph above names the two words that test for a missing value.";
     }
     fb.setAttribute("tabindex","-1"); fb.focus();
-    if(joDone) K.markDone("q-joblank");
+    if(nullDone) K.markDone("q-isnull");
   });
 
   const AI_PROMPTS = [

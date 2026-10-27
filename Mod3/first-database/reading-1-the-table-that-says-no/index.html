@@ -22,7 +22,7 @@
 <h1>The Table That Says No</h1>
 <p class="mlrk-lead">Neighborhood Tool Share lends drills and ladders to neighbors. For two years it kept track in a spreadsheet, and the spreadsheet accepted anything: a blank name, one member typed two ways, dates typed as words. A database can refuse bad data. In this reading you build two tables that say no.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~22–25 minutes</span>
+  <span class="mlrk-pill">~23–26 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No local Postgres install needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -33,6 +33,57 @@
 <div id="banner" class="mlrk-banner" role="status" hidden></div>
 
 <main class="mlrk-main"><div class="mlrk-wrap">
+<script type="text/plain" class="mlrk-sql-setup" id="db-members">
+CREATE TABLE members (
+  member_id INTEGER PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  joined_on DATE NOT NULL
+);
+</script>
+<script type="text/plain" class="mlrk-sql-setup" id="db-tables">
+PRAGMA foreign_keys = ON;
+CREATE TABLE members (
+  member_id INTEGER PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  joined_on DATE NOT NULL
+);
+CREATE TABLE checkouts (
+  checkout_id INTEGER PRIMARY KEY,
+  member_id INTEGER NOT NULL REFERENCES members(member_id),
+  tool_name TEXT NOT NULL,
+  checkout_date DATE NOT NULL,
+  returned_date DATE
+);
+</script>
+<script type="text/plain" class="mlrk-sql-setup" id="db-toolshare">
+PRAGMA foreign_keys = ON;
+CREATE TABLE members (
+  member_id INTEGER PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  joined_on DATE NOT NULL
+);
+CREATE TABLE checkouts (
+  checkout_id INTEGER PRIMARY KEY,
+  member_id INTEGER NOT NULL REFERENCES members(member_id),
+  tool_name TEXT NOT NULL,
+  checkout_date DATE NOT NULL,
+  returned_date DATE
+);
+INSERT INTO members (member_id, full_name, email, joined_on)
+VALUES (1, 'Deja Okafor', 'deja@example.org', '2026-01-14'),
+       (2, 'Marcus Lin', 'marcus@example.org', '2026-02-02'),
+       (3, 'Priya Shah', 'priya@example.org', '2026-02-20');
+
+INSERT INTO checkouts (checkout_id, member_id, tool_name, checkout_date, returned_date)
+VALUES (1, 1, 'Cordless Drill', '2026-03-01', '2026-03-08'),
+       (2, 2, 'Extension Ladder', '2026-03-03', NULL),
+       (3, 1, 'Tile Saw', '2026-03-10', NULL),
+       (4, 3, 'Pressure Washer', '2026-02-25', '2026-03-02'),
+       (5, 2, 'Hedge Trimmer', '2026-03-12', NULL);
+</script>
 
 <section class="mlrk-section" id="persona-section">
   <div id="persona"></div>
@@ -71,7 +122,7 @@
 <p>A <strong>database</strong> is a named container that holds related tables. PostgreSQL is the database system you'll use, and <strong>psql</strong> is its terminal program: you type SQL, and PostgreSQL answers. Unlike a spreadsheet, PostgreSQL can refuse a row that breaks a rule.</p>
 <p>Building tables like these from a blank terminal is often the first task on a new data project. You already know what primary keys and foreign keys are for. Now you type them as real SQL.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file, a plain text file of SQL commands. On a laptop, you'd run one by typing <code>psql -d toolshare -f name.sql</code> in the terminal and pressing Enter. <code>-d toolshare</code> picks the database, and <code>-f name.sql</code> runs every line of the file, top to bottom. The Run button shows what psql prints.</p>
+<p><strong>How the examples work:</strong> the SQL boxes run real SQL in your browser. Edit a query and click Run to try your own version. It works the same in the PostgreSQL you use in class. A few PostgreSQL-only steps are shown in blue boxes instead of run.</p>
 </div>
 </section>
 
@@ -93,13 +144,12 @@
 
 <section class="mlrk-section">
 <h2>3. Create the database and the first table</h2>
-<p>First, make an empty database named <code>toolshare</code>. Type this in the terminal and press Enter:</p>
-<div class="mlrk-run" data-file="createdb" data-cmd="createdb toolshare"><pre>(no output)</pre></div>
-<p>Nothing printed, and that means it worked. Many commands are silent when they succeed.</p>
+<div class="mlrk-postgres-only"><p><strong>PostgreSQL only: shown, not run.</strong> On your laptop, you first make an empty database named <code>toolshare</code> and connect to it. Type each line in the terminal and press Enter. <code>createdb</code> prints nothing when it works, because many commands are silent when they succeed.</p>
+<pre class="mlrk-code">createdb toolshare
+psql -d toolshare</pre></div>
 <p>A <strong>table</strong> is one grid inside a database, with named columns. You make one with <code>CREATE TABLE</code>. Each column gets a name, then a <strong>data type</strong>: the kind of value the column may hold. This reading uses four:</p>
 <ul>
-<li><code>SERIAL</code>: a whole number PostgreSQL fills in for you, counting 1, 2, 3, and so on.</li>
-<li><code>INTEGER</code>: a whole number you type in.</li>
+<li><code>INTEGER</code>: a whole number.</li>
 <li><code>TEXT</code>: any text.</li>
 <li><code>DATE</code>: a calendar date, typed like <code>'2026-03-01'</code> (year, month, day).</li>
 </ul>
@@ -147,13 +197,11 @@
 
 <h3>Fill in the blanks: finish <code>create_members.sql</code></h3>
 <pre class="mlrk-code" data-file="create_members.sql">CREATE TABLE members (
-  member_id SERIAL ____(1),
+  member_id INTEGER ____(1),
   full_name TEXT ____(2),
   email TEXT NOT NULL,
   joined_on DATE NOT NULL
 );</pre>
-<button type="button" class="mlrk-btn" data-run="create_members.sql" data-after="q-blanks" data-after-note="Solve both blanks first. Then you can run it." data-cmd="psql -d toolshare -f create_members.sql"></button>
-<div class="mlrk-run" data-file="create_members.sql" data-cmd="psql -d toolshare -f create_members.sql" hidden><pre>CREATE TABLE</pre></div>
 <ol class="mlrk-steplist">
   <li>In box (1), type the two-word constraint that makes <code>member_id</code> different in every row. Capital letters are standard, but lowercase is fine.</li>
   <li>In box (2), type the two-word constraint that stops <code>full_name</code> from being left empty.</li>
@@ -169,76 +217,103 @@
 </div>
 <p><button type="button" id="blankcheck" class="mlrk-btn">Check my answers</button></p>
 <div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
-<p>When a <code>CREATE TABLE</code> works, psql prints the command's name back as a short confirmation. The set of tables in a database, with their columns and the way they point at each other, is called its <strong>schema</strong>.</p>
+<div class="mlrk-sql" data-file="create_members.sql" data-after="q-blanks">
+<textarea class="mlrk-sql-input">CREATE TABLE members (
+  member_id INTEGER PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  joined_on DATE NOT NULL
+);</textarea>
+<pre class="mlrk-sql-fallback" hidden>Done. This statement returns no rows.</pre>
+</div>
+<p>A statement that only creates a table returns no rows, so the box just says it is done. (psql prints <code>CREATE TABLE</code> instead.)</p>
+<div class="mlrk-postgres-only"><p><strong>PostgreSQL only: shown, not run.</strong> In class you'll often see <code>SERIAL</code>, a PostgreSQL type that numbers new rows 1, 2, 3 for you, so you can leave the ID out of each <code>INSERT</code>. The browser's SQL doesn't have <code>SERIAL</code>, so the boxes here type each ID in.</p>
+<pre class="mlrk-code">member_id SERIAL PRIMARY KEY,</pre></div>
+<p>The set of tables in a database, with their columns and the way they point at each other, is called its <strong>schema</strong>.</p>
 </section>
 
 <section class="mlrk-section">
 <h2>4. A foreign key, and rows that get refused</h2>
 <p>A <strong>FOREIGN KEY</strong> is a constraint that only accepts a value already in another table's column. In SQL, you write it with <code>REFERENCES</code>. In <code>create_checkouts.sql</code>, every <code>member_id</code> must already exist in <code>members</code>. That is also why <code>members</code> had to be created first: a reference can't point at a table that isn't there yet.</p>
-<pre class="mlrk-code" data-file="create_checkouts.sql">CREATE TABLE checkouts (
-  checkout_id SERIAL PRIMARY KEY,
+<div class="mlrk-sql" data-db="db-members" data-file="create_checkouts.sql" data-activity="act-sql-checkouts">
+<textarea class="mlrk-sql-input">CREATE TABLE checkouts (
+  checkout_id INTEGER PRIMARY KEY,
   member_id INTEGER NOT NULL REFERENCES members(member_id),
   tool_name TEXT NOT NULL,
   checkout_date DATE NOT NULL,
   returned_date DATE
-);</pre>
-<div class="mlrk-run" data-file="create_checkouts.sql" data-cmd="psql -d toolshare -f create_checkouts.sql"><pre>CREATE TABLE</pre></div>
+);</textarea>
+<pre class="mlrk-sql-fallback" hidden>Done. This statement returns no rows.</pre>
+</div>
 <p><code>returned_date</code> has no <code>NOT NULL</code>, because a tool that is still out has no return date yet.</p>
 
-<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>INSERT INTO table (columns) VALUES (...), (...);</code> adds rows, one set of parentheses per row. Text and dates go in single quotes. <code>NULL</code> means "no value." <code>member_id</code> and <code>checkout_id</code> are left out because <code>SERIAL</code> fills them in.</p></div>
-<pre class="mlrk-code" data-file="insert_rows.sql">INSERT INTO members (full_name, email, joined_on)
-VALUES ('Deja Okafor', 'deja@example.org', '2026-01-14'),
-       ('Marcus Lin', 'marcus@example.org', '2026-02-02'),
-       ('Priya Shah', 'priya@example.org', '2026-02-20');
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>INSERT INTO table (columns) VALUES (...), (...);</code> adds rows, one set of parentheses per row. Text and dates go in single quotes. <code>NULL</code> means "no value." The file ends with a <code>SELECT</code> so you can see the members you just added.</p></div>
+<div class="mlrk-sql" data-db="db-tables" data-file="insert_rows.sql" data-activity="act-sql-insert">
+<textarea class="mlrk-sql-input">INSERT INTO members (member_id, full_name, email, joined_on)
+VALUES (1, 'Deja Okafor', 'deja@example.org', '2026-01-14'),
+       (2, 'Marcus Lin', 'marcus@example.org', '2026-02-02'),
+       (3, 'Priya Shah', 'priya@example.org', '2026-02-20');
 
-INSERT INTO checkouts (member_id, tool_name, checkout_date, returned_date)
-VALUES (1, 'Cordless Drill', '2026-03-01', '2026-03-08'),
-       (2, 'Extension Ladder', '2026-03-03', NULL),
-       (1, 'Tile Saw', '2026-03-10', NULL),
-       (3, 'Pressure Washer', '2026-02-25', '2026-03-02'),
-       (2, 'Hedge Trimmer', '2026-03-12', NULL);</pre>
-<div class="mlrk-run" data-file="insert_rows.sql" data-cmd="psql -d toolshare -f insert_rows.sql"><pre>INSERT 0 3
-INSERT 0 5</pre></div>
-<p>The last number on each line is how many rows were added: 3 members, then 5 checkouts. Deja got <code>member_id</code> 1, Marcus 2, and Priya 3.</p>
+INSERT INTO checkouts (checkout_id, member_id, tool_name, checkout_date, returned_date)
+VALUES (1, 1, 'Cordless Drill', '2026-03-01', '2026-03-08'),
+       (2, 2, 'Extension Ladder', '2026-03-03', NULL),
+       (3, 1, 'Tile Saw', '2026-03-10', NULL),
+       (4, 3, 'Pressure Washer', '2026-02-25', '2026-03-02'),
+       (5, 2, 'Hedge Trimmer', '2026-03-12', NULL);
+
+SELECT * FROM members ORDER BY member_id;</textarea>
+<pre class="mlrk-sql-fallback" hidden> member_id |  full_name  |       email        | joined_on
+-----------+-------------+--------------------+------------
+         1 | Deja Okafor | deja@example.org   | 2026-01-14
+         2 | Marcus Lin  | marcus@example.org | 2026-02-02
+         3 | Priya Shah  | priya@example.org  | 2026-02-20
+(3 rows)</pre>
+</div>
+<p>That added 3 members and 5 checkouts. Deja is <code>member_id</code> 1, Marcus 2, and Priya 3.</p>
 
 <div class="mlrk-card" id="card-predict-null"><p><strong>Predict:</strong> <code>bad_null.sql</code> leaves out <code>tool_name</code>. What happens when it runs?</p>
-<pre class="mlrk-code" data-file="bad_null.sql">INSERT INTO checkouts (member_id, checkout_date)
-VALUES (1, '2026-03-05');</pre>
-<button type="button" class="mlrk-btn" data-run="bad_null.sql" data-after="q-predict-null" data-cmd="psql -d toolshare -f bad_null.sql"></button>
-<div class="mlrk-run" data-file="bad_null.sql" data-cmd="psql -d toolshare -f bad_null.sql" hidden><pre>psql:bad_null.sql:2: ERROR:  null value in column "tool_name" of relation "checkouts" violates not-null constraint
-DETAIL:  Failing row contains (6, 1, null, 2026-03-05, null).</pre></div>
+<div class="mlrk-sql" data-db="db-toolshare" data-file="bad_null.sql" data-after="q-predict-null" data-expect-error>
+<textarea class="mlrk-sql-input">INSERT INTO checkouts (checkout_id, member_id, checkout_date)
+VALUES (6, 1, '2026-03-05');</textarea>
+<pre class="mlrk-sql-fallback" hidden>Error: NOT NULL constraint failed: checkouts.tool_name</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="reject">PostgreSQL refuses the row with an error that names <code>tool_name</code>.</button>
 <button type="button" class="mlrk-choice" data-a="blank">The row is added, with <code>tool_name</code> left empty.</button>
 <button type="button" class="mlrk-choice" data-a="guess">The row is added, and PostgreSQL makes up a tool name.</button>
 <div id="predictnullfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-predict-fk" style="margin-top:.8rem"><p><strong>Predict:</strong> no member has <code>member_id</code> 12. What happens when <code>bad_fk.sql</code> runs?</p>
-<pre class="mlrk-code" data-file="bad_fk.sql">INSERT INTO checkouts (member_id, tool_name, checkout_date)
-VALUES (12, 'Leaf Blower', '2026-03-06');</pre>
-<button type="button" class="mlrk-btn" data-run="bad_fk.sql" data-after="q-predict-fk" data-cmd="psql -d toolshare -f bad_fk.sql"></button>
-<div class="mlrk-run" data-file="bad_fk.sql" data-cmd="psql -d toolshare -f bad_fk.sql" hidden><pre>psql:bad_fk.sql:2: ERROR:  insert or update on table "checkouts" violates foreign key constraint "checkouts_member_id_fkey"
-DETAIL:  Key (member_id)=(12) is not present in table "members".</pre></div>
+<div class="mlrk-sql" data-db="db-toolshare" data-file="bad_fk.sql" data-after="q-predict-fk" data-expect-error>
+<textarea class="mlrk-sql-input">INSERT INTO checkouts (checkout_id, member_id, tool_name, checkout_date)
+VALUES (6, 12, 'Leaf Blower', '2026-03-06');</textarea>
+<pre class="mlrk-sql-fallback" hidden>Error: FOREIGN KEY constraint failed</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="reject">PostgreSQL refuses the row, because member 12 is not in <code>members</code>.</button>
 <button type="button" class="mlrk-choice" data-a="autocreate">The row is added, and PostgreSQL creates member 12.</button>
 <button type="button" class="mlrk-choice" data-a="null2">The row is added, with <code>member_id</code> changed to NULL.</button>
 <div id="predictfkfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>In these messages, <em>relation</em> is PostgreSQL's word for a table. Each error names the column and the rule that refused the row. The fix is to supply a real value, not to remove the rule.</p>
+<p>Each error names the rule that refused the row. The fix is to supply a real value, not to remove the rule. PostgreSQL words these errors a little differently:</p>
+<div class="mlrk-postgres-only"><p><strong>PostgreSQL only: shown, not run.</strong> The same two inserts in psql print these errors. <em>Relation</em> is PostgreSQL's word for a table.</p>
+<pre class="mlrk-code">ERROR:  null value in column "tool_name" of relation "checkouts" violates not-null constraint
+ERROR:  insert or update on table "checkouts" violates foreign key constraint "checkouts_member_id_fkey"
+DETAIL:  Key (member_id)=(12) is not present in table "members".</pre></div>
 </section>
 
 <section class="mlrk-section">
 <h2>5. Ask a question with SELECT, WHERE, and ORDER BY</h2>
 <p>A query asks a table a question. <code>SELECT</code> lists the columns to show, and <code>SELECT *</code> means every column. <code>FROM</code> names the table. <code>WHERE</code> keeps only the rows where a condition is true. <code>ORDER BY</code> sorts the rows. For dates, that means oldest first, and adding <code>DESC</code> after the column sorts newest first.</p>
 <div class="mlrk-card" id="card-predict-select"><p><strong>Predict:</strong> <code>deja_tools.sql</code> prints two tools. Which one is on the first line?</p>
-<pre class="mlrk-code" data-file="deja_tools.sql">SELECT tool_name, checkout_date
+<div class="mlrk-sql" data-db="db-toolshare" data-file="deja_tools.sql" data-after="q-predict-select">
+<textarea class="mlrk-sql-input">SELECT tool_name, checkout_date
 FROM checkouts
 WHERE member_id = 1
-ORDER BY checkout_date;</pre>
-<button type="button" class="mlrk-btn" data-run="deja_tools.sql" data-after="q-predict-select" data-cmd="psql -d toolshare -f deja_tools.sql"></button>
-<div class="mlrk-run" data-file="deja_tools.sql" data-cmd="psql -d toolshare -f deja_tools.sql" hidden><pre>   tool_name    | checkout_date
+ORDER BY checkout_date;</textarea>
+<pre class="mlrk-sql-fallback" hidden>   tool_name    | checkout_date
 ----------------+---------------
  Cordless Drill | 2026-03-01
  Tile Saw       | 2026-03-10
-(2 rows)</pre></div>
+(2 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="drill">Cordless Drill</button>
 <button type="button" class="mlrk-choice" data-a="saw">Tile Saw</button>
 <button type="button" class="mlrk-choice" data-a="ladder">Extension Ladder</button>
@@ -258,13 +333,15 @@ ORDER BY checkout_date;</pre>
 </div>
 <p><button type="button" id="selectcheck" class="mlrk-btn">Check my query</button></p>
 <div id="selectfb" class="mlrk-feedback" tabindex="-1"></div>
-<button type="button" class="mlrk-btn" data-run="marcus_checkouts.sql" data-after="q-writeselect" data-after-note="Check your query first. Then you can run it." data-cmd="psql -d toolshare -f marcus_checkouts.sql"></button>
-<div class="mlrk-run" data-file="marcus_checkouts.sql" data-cmd="psql -d toolshare -f marcus_checkouts.sql" hidden><pre> checkout_id | member_id |    tool_name     | checkout_date | returned_date
+<div class="mlrk-sql" data-db="db-toolshare" data-file="marcus_checkouts.sql" data-after="q-writeselect">
+<textarea class="mlrk-sql-input">SELECT * FROM checkouts WHERE member_id = 2 ORDER BY checkout_date;</textarea>
+<pre class="mlrk-sql-fallback" hidden> checkout_id | member_id |    tool_name     | checkout_date | returned_date
 -------------+-----------+------------------+---------------+---------------
            2 |         2 | Extension Ladder | 2026-03-03    |
            5 |         2 | Hedge Trimmer    | 2026-03-12    |
-(2 rows)</pre></div>
-<p>The <code>returned_date</code> spots are blank because both tools are still out. psql shows a NULL as an empty spot.</p>
+(2 rows)</pre>
+</div>
+<p>Both <code>returned_date</code> spots show NULL because both tools are still out. (psql leaves a NULL spot blank.)</p>
 </section>
 
 <section class="mlrk-section">
@@ -405,9 +482,9 @@ git push</pre></li>
 <p class="mlrk-small">Not counted in the time estimate above.</p>
 <ul>
 <li><a href="https://www.postgresql.org/docs/current/sql-createtable.html" target="_blank" rel="noopener">PostgreSQL docs: CREATE TABLE</a> — the official reference for every constraint and data type covered here.</li>
-<li><a href="https://www.postgresql.org/docs/current/app-psql.html" target="_blank" rel="noopener">PostgreSQL docs: psql</a> — the full reference for the terminal program, including the <code>-d</code> and <code>-f</code> options.</li>
+<li><a href="https://www.postgresql.org/docs/current/app-psql.html" target="_blank" rel="noopener">PostgreSQL docs: psql</a> — the full reference for the terminal program you use in class.</li>
 <li><a href="https://www.postgresql.org/docs/current/tutorial-select.html" target="_blank" rel="noopener">PostgreSQL docs: The SQL Language, Queries</a> — the official walkthrough of SELECT, WHERE, and ORDER BY.</li>
-<li><a href="https://sqlbolt.com/" target="_blank" rel="noopener">SQLBolt</a> — free, short interactive SQL lessons to practice these same commands.</li>
+<li><strong>Practice more:</strong> <a href="https://sqlbolt.com/lesson/creating_tables" target="_blank" rel="noopener">SQLBolt: Creating tables</a> — an interactive lesson where you write CREATE TABLE yourself and it checks your answer.</li>
 </ul>
 </section>
 

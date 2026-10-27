@@ -234,6 +234,34 @@ Big-O (1.3) teaches growth only; Lookups (1.9) teaches building and using a
 dict. One name per idea across both: **linear search** ("also called a linear
 scan" once), **dictionary lookup**, worst case = the item is last or missing.
 
+## SQL examples run in the page (added 2026-10-27)
+
+Angelica didn't want hand-written PostgreSQL output a Fellow can't run. SQL
+readings use the kit's in-page runner (`sqlRunners` in `reading-kit.js`): real
+SQLite in the browser (sql.js from cdnjs), with the reading's tables loaded.
+The learner edits the query, clicks Run, and sees real results.
+
+- Put the tables in one `<script type="text/plain" class="mlrk-sql-setup" id="db-name">`
+  block, and each query in `<div class="mlrk-sql" data-db="db-name">` holding a
+  `<textarea class="mlrk-sql-input">`. Optional: `data-after="<question id>"`
+  (predict first; it runs itself once answered), `data-activity="<id>"` (a
+  point for the first successful run), `data-expect-error` (meant to fail),
+  and a hidden `<pre class="mlrk-sql-fallback">` with the expected result in
+  case the engine can't load.
+- Write **standard SQL that runs the same in SQLite and PostgreSQL**: SELECT,
+  WHERE, JOIN, GROUP BY/HAVING, CTEs, window functions, COALESCE, views. Call it
+  "SQL" on the page, with one line saying it runs the same in the PostgreSQL
+  used in class. Add `ORDER BY` wherever row order would otherwise vary.
+- **PostgreSQL-only features** (`EXPLAIN ANALYZE`, materialized views,
+  `createdb`/`psql`, exact PostgreSQL error text) are shown in a
+  `<div class="mlrk-postgres-only">` labeled "PostgreSQL only: shown, not run".
+  Prefer an SQLite equivalent when one teaches the same idea (`EXPLAIN QUERY PLAN`).
+- End each SQL reading's resources with a "Practice more" link to the matching
+  interactive lesson (SQLBolt, sql-practice.com, or the W3Schools try-it
+  editor). That's extra practice; the in-page runner is the main exercise.
+- `check_sql_runners` in `qa/reading_qa.py` runs every runner's query against
+  its setup with Python's sqlite3 and fails on an error.
+
 ## Source of truth: the decks, the labs repo, the projects repo (added 2026-10-15)
 
 A reading is built around what is **actually taught now**. The decks are

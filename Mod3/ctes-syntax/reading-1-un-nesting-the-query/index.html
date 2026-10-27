@@ -18,7 +18,7 @@
 <h1>Un-Nesting the Query</h1>
 <p class="mlrk-lead">A teacher runs a summer reading challenge. Each week, every student logs how many pages they read. The teacher asks: which students read more pages than the average student? One SQL query answers it. Written with nested subqueries, you read it from the inside out. Written as a <strong>CTE</strong>, you read it from top to bottom.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~20–23 minutes</span>
+  <span class="mlrk-pill">~21–24 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -29,6 +29,18 @@
 <div id="banner" class="mlrk-banner" role="status" hidden></div>
 
 <main class="mlrk-main"><div class="mlrk-wrap">
+<script type="text/plain" class="mlrk-sql-setup" id="db-reading">
+CREATE TABLE reading_log (
+    student_name TEXT,
+    pages        INTEGER,
+    week_ending  DATE
+);
+INSERT INTO reading_log VALUES
+    ('Ana', 40, '2026-07-03'), ('Ben', 20, '2026-07-03'),
+    ('Cleo', 60, '2026-07-03'), ('Dev', 30, '2026-07-03'),
+    ('Ana', 55, '2026-07-10'), ('Ben', 25, '2026-07-10'),
+    ('Cleo', 70, '2026-07-10'), ('Dev', 40, '2026-07-10');
+</script>
 
 <section class="mlrk-section" id="persona-section">
   <div id="persona"></div>
@@ -97,7 +109,7 @@
 
 <p>You already know <code>GROUP BY</code>, <code>HAVING</code>, and subqueries. This matters because a teammate has to check your query before anyone trusts its numbers, and a query that reads top to bottom is faster to check.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what <code>psql</code> prints when it runs that file. On your own laptop you'd type <code>psql -d reading_club -f name.sql</code>. The <code>-f</code> tells <code>psql</code> to run every statement in the file, top to bottom.</p>
+<p><strong>How the examples work:</strong> the SQL boxes run real SQL in your browser. Edit a query and click Run to try your own version. It works the same in the PostgreSQL you use in class. The first line of each box, like <code>-- heavy_weeks.sql</code>, is a comment that names the query; SQL ignores it.</p>
 </div>
 </section>
 
@@ -106,18 +118,20 @@
 <p>Every query in this reading groups rows and filters groups. Check both skills.</p>
 
 <div class="mlrk-card" id="card-recall-agg"><p><strong>Predict:</strong> in the result of <code>recall_totals.sql</code>, what is Cleo's <code>total_pages</code>?</p>
-<div class="mlrk-code" data-file="recall_totals.sql"><div class="mlrk-screen">SELECT student_name, SUM(pages) AS total_pages
+<div class="mlrk-sql" data-db="db-reading" data-after="q-agg">
+<textarea class="mlrk-sql-input">-- recall_totals.sql
+SELECT student_name, SUM(pages) AS total_pages
 FROM reading_log
 GROUP BY student_name
-ORDER BY student_name;</div></div>
-<button type="button" class="mlrk-btn" data-run="recall_totals.sql" data-after="q-agg">Run recall_totals.sql</button>
-<div class="mlrk-run" data-file="recall_totals.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f recall_totals.sql</div><pre> student_name | total_pages
+ORDER BY student_name;</textarea>
+<pre class="mlrk-sql-fallback" hidden> student_name | total_pages
 --------------+-------------
  Ana          |          95
  Ben          |          45
  Cleo         |         130
  Dev          |          70
-(4 rows)</pre></div>
+(4 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="sum">130</button>
 <button type="button" class="mlrk-choice" data-a="last">70</button>
 <button type="button" class="mlrk-choice" data-a="count">2</button>
@@ -139,22 +153,24 @@ ORDER BY student_name;</div></div>
 the main query, which can use name like a table</div></div>
 <p>The named step is a <strong>named intermediate result</strong>: one step of a bigger calculation, with its own label instead of being an unnamed block inside another block.</p>
 
-<div class="mlrk-card" id="card-heavy"><p><strong>Predict:</strong> <code>heavy_weeks.sql</code> names the rows where a student read 50 pages or more, then counts them. What number does it print?</p>
-<div class="mlrk-code" data-file="heavy_weeks.sql"><div class="mlrk-screen">WITH heavy_weeks AS (
+<div class="mlrk-card" id="card-heavy"><p><strong>Predict:</strong> <code>heavy_weeks.sql</code> names the rows where a student read 50 pages or more, then counts them. What number does it return?</p>
+<div class="mlrk-sql" data-db="db-reading" data-after="q-heavy">
+<textarea class="mlrk-sql-input">-- heavy_weeks.sql
+WITH heavy_weeks AS (
     SELECT student_name, pages
     FROM reading_log
     WHERE pages &gt;= 50
 )
-SELECT COUNT(*) FROM heavy_weeks;</div></div>
-<button type="button" class="mlrk-btn" data-run="heavy_weeks.sql" data-after="q-heavy" data-after-note="Check your prediction first. Then you can run it.">Run heavy_weeks.sql</button>
-<div class="mlrk-run" data-file="heavy_weeks.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f heavy_weeks.sql</div><pre> count
--------
-     3
-(1 row)</pre></div>
+SELECT COUNT(*) FROM heavy_weeks;</textarea>
+<pre class="mlrk-sql-fallback" hidden> COUNT(*)
+----------
+        3
+(1 row)</pre>
+</div>
 <ol class="mlrk-steplist">
   <li>Look at the <code>pages</code> column in the table in section 1. Count the rows with 50 or more. Those are the rows <code>heavy_weeks</code> keeps.</li>
   <li>Type only the number, like <code>5</code>.</li>
-  <li>Press <strong>Check</strong>. Then the Run button unlocks so you can compare.</li>
+  <li>Press <strong>Check</strong>. Then the query runs so you can compare.</li>
 </ol>
 <div class="mlrk-fillblank">
   <label for="predictInput">Number printed:</label>
@@ -168,7 +184,9 @@ SELECT COUNT(*) FROM heavy_weeks;</div></div>
 <section class="mlrk-section">
 <h2>4. Rewrite a subquery as a CTE</h2>
 <p>A <strong>subquery</strong> is a complete <code>SELECT</code> written inside parentheses inside another query. Here is the teacher's question, "who read more than the average student?", written with two nested subqueries:</p>
-<div class="mlrk-code" data-file="above_average_nested.sql"><div class="mlrk-screen">SELECT student_name, SUM(pages) AS total_pages
+<div class="mlrk-sql" data-db="db-reading" data-activity="act-sql-nested">
+<textarea class="mlrk-sql-input">-- above_average_nested.sql
+SELECT student_name, SUM(pages) AS total_pages
 FROM reading_log
 GROUP BY student_name
 HAVING SUM(pages) &gt; (
@@ -178,38 +196,42 @@ HAVING SUM(pages) &gt; (
         FROM reading_log
         GROUP BY student_name
     ) AS totals
-);</div></div>
-<div class="mlrk-run" data-file="above_average_nested.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f above_average_nested.sql</div><pre> student_name | total_pages
+);</textarea>
+<pre class="mlrk-sql-fallback" hidden> student_name | total_pages
 --------------+-------------
  Ana          |          95
  Cleo         |         130
-(2 rows)</pre></div>
+(2 rows)</pre>
+</div>
 <p>The answer is right. But to know what <code>HAVING</code> compares against, you first find the innermost parentheses (each student's total), then the average of those totals, then carry that back up to <code>HAVING</code>. You read it from the inside out.</p>
 
 <div class="mlrk-card" id="card-same"><p><strong>Predict:</strong> <code>above_average_cte.sql</code> names each student's total first. What does it return?</p>
-<div class="mlrk-code" data-file="above_average_cte.sql"><div class="mlrk-screen">WITH student_totals AS (
+<div class="mlrk-sql" data-db="db-reading" data-after="q-same">
+<textarea class="mlrk-sql-input">-- above_average_cte.sql
+WITH student_totals AS (
     SELECT student_name, SUM(pages) AS total_pages
     FROM reading_log
     GROUP BY student_name
 )
 SELECT student_name, total_pages
 FROM student_totals
-WHERE total_pages &gt; (SELECT AVG(total_pages) FROM student_totals);</div></div>
-<button type="button" class="mlrk-btn" data-run="above_average_cte.sql" data-after="q-same">Run above_average_cte.sql</button>
-<div class="mlrk-run" data-file="above_average_cte.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f above_average_cte.sql</div><pre> student_name | total_pages
+WHERE total_pages &gt; (SELECT AVG(total_pages) FROM student_totals)
+ORDER BY student_name;</textarea>
+<pre class="mlrk-sql-fallback" hidden> student_name | total_pages
 --------------+-------------
  Ana          |          95
  Cleo         |         130
-(2 rows)</pre></div>
+(2 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="same">The same two rows: Ana with 95 and Cleo with 130</button>
 <button type="button" class="mlrk-choice" data-a="cleo">Only Cleo, because a CTE keeps just the top row</button>
 <button type="button" class="mlrk-choice" data-a="error">An error, because <code>student_totals</code> is not a real table</button>
 <div id="samefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <p>Notice that <code>student_totals</code> is used twice: once in <code>FROM</code>, and once inside <code>AVG()</code>. The step is written once and used twice.</p>
-<p><strong>Readability</strong> is how easily someone else can trust a query at a glance, without running it. Being correct and being readable are separate: both files above are correct.</p>
+<p><strong>Readability</strong> is how easily someone else can trust a query at a glance, without running it. Being correct and being readable are separate: both queries above are correct.</p>
 
-<div class="mlrk-card" id="card-compare"><p><strong>Which file is easier to read, and why?</strong></p>
+<div class="mlrk-card" id="card-compare"><p><strong>Which query is easier to read, and why?</strong></p>
 <button type="button" class="mlrk-choice" data-a="cte"><code>above_average_cte.sql</code>, because each student's total is named at the top, so the main query reads top to bottom.</button>
 <button type="button" class="mlrk-choice" data-a="short"><code>above_average_nested.sql</code>, because it is one single statement.</button>
 <button type="button" class="mlrk-choice" data-a="same">Neither. They return the same rows, so they are equally readable.</button>
@@ -219,7 +241,7 @@ WHERE total_pages &gt; (SELECT AVG(total_pages) FROM student_totals);</div></div
 <section class="mlrk-section">
 <h2>5. Your turn, and how long a name lasts</h2>
 <p>A new question: which weeks had more total pages than the average week? Here is the CTE version with two keywords missing:</p>
-<div class="mlrk-code" data-file="busy_weeks.sql"><div class="mlrk-screen">____(1) week_sums AS (
+<div class="mlrk-code"><div class="mlrk-screen">____(1) week_sums AS (
     SELECT week_ending, SUM(pages) AS week_total
     FROM reading_log
     GROUP BY week_ending
@@ -227,11 +249,6 @@ WHERE total_pages &gt; (SELECT AVG(total_pages) FROM student_totals);</div></div
 SELECT week_ending, week_total
 FROM week_sums
 ____(2) week_total &gt; (SELECT AVG(week_total) FROM week_sums);</div></div>
-<button type="button" class="mlrk-btn" data-run="busy_weeks.sql" data-after="q-rewrite" data-after-note="Solve both blanks first. Then you can run it.">Run busy_weeks.sql</button>
-<div class="mlrk-run" data-file="busy_weeks.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f busy_weeks.sql</div><pre> week_ending | week_total
--------------+------------
- 2026-07-10  |        190
-(1 row)</pre></div>
 <ol class="mlrk-steplist">
   <li>In box (1), type the one keyword that starts every CTE. Capital letters or lowercase both work.</li>
   <li>In box (2), type the one keyword that filters rows in the main query. The main query has no <code>GROUP BY</code> of its own, and <code>week_total</code> is already a plain column of <code>week_sums</code>.</li>
@@ -247,26 +264,40 @@ ____(2) week_total &gt; (SELECT AVG(week_total) FROM week_sums);</div></div>
 </div>
 <p><button type="button" id="rewriteCheck" class="mlrk-btn">Check my rewrite</button></p>
 <div id="rewritefb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-solved-run" data-reveal="q-rewrite" hidden>
+<p>Your answer is checked. Here is the completed query, running for real:</p>
+<div class="mlrk-sql" data-db="db-reading" data-after="q-rewrite" data-activity="act-sql-weeks">
+<textarea class="mlrk-sql-input">-- busy_weeks.sql
+WITH week_sums AS (
+    SELECT week_ending, SUM(pages) AS week_total
+    FROM reading_log
+    GROUP BY week_ending
+)
+SELECT week_ending, week_total
+FROM week_sums
+WHERE week_total &gt; (SELECT AVG(week_total) FROM week_sums);</textarea>
+<pre class="mlrk-sql-fallback" hidden> week_ending | week_total
+-------------+------------
+ 2026-07-10  |        190
+(1 row)</pre>
+</div>
+</div>
 
 <p><strong>Scope</strong> is how far a name reaches. A CTE's name belongs to the one query it is attached to. When that query ends at its semicolon, the name is gone. It is never saved as a table.</p>
-<div class="mlrk-card" id="card-scope"><p><strong>Predict:</strong> <code>scope.sql</code> has two statements. The second one is the last line. What happens when <code>psql</code> reaches it?</p>
-<div class="mlrk-code" data-file="scope.sql"><div class="mlrk-screen">WITH student_totals AS (
+<div class="mlrk-card" id="card-scope"><p><strong>Predict:</strong> <code>scope.sql</code> has two statements. The second one is the last line. What happens when the database reaches it?</p>
+<div class="mlrk-sql" data-db="db-reading" data-after="q-scope" data-expect-error>
+<textarea class="mlrk-sql-input">-- scope.sql
+WITH student_totals AS (
     SELECT student_name, SUM(pages) AS total_pages
     FROM reading_log
     GROUP BY student_name
 )
 SELECT COUNT(*) FROM student_totals;
 
-SELECT * FROM student_totals;</div></div>
-<button type="button" class="mlrk-btn" data-run="scope.sql" data-after="q-scope">Run scope.sql</button>
-<div class="mlrk-run" data-file="scope.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d reading_club -f scope.sql</div><pre> count
--------
-     4
-(1 row)
-
-psql:scope.sql:8: ERROR:  relation "student_totals" does not exist
-LINE 1: SELECT * FROM student_totals;
-                      ^</pre></div>
+SELECT * FROM student_totals;</textarea>
+<pre class="mlrk-sql-fallback" hidden>Error: no such table: student_totals</pre>
+</div>
+<p class="mlrk-small">SQL stops at the error, so only the error shows. PostgreSQL words it a little differently: <code>relation "student_totals" does not exist</code>.</p>
 <button type="button" class="mlrk-choice" data-a="error">An error: <code>student_totals</code> does not exist anymore</button>
 <button type="button" class="mlrk-choice" data-a="rows">It prints the four student totals</button>
 <button type="button" class="mlrk-choice" data-a="empty">It prints an empty result with 0 rows</button>
@@ -412,6 +443,7 @@ git push</pre></li>
 <li><a href="https://mode.com/blog/use-common-table-expressions-to-keep-your-sql-clean/" target="_blank" rel="noopener">Mode: Use Common Table Expressions to Keep Your SQL Clean</a> — the readability argument, with more worked examples.</li>
 <li><a href="https://www.geeksforgeeks.org/sql/sql-with-clause/" target="_blank" rel="noopener">GeeksforGeeks: SQL WITH Clause</a> — more syntax examples and edge cases.</li>
 <li><a href="https://sqlbolt.com/" target="_blank" rel="noopener">SQLBolt</a> — free interactive SQL practice.</li>
+<li><strong>Practice more:</strong> <a href="https://www.w3schools.com/sql/trysql.asp?filename=trysql_select_all" target="_blank" rel="noopener">W3Schools SQL Try-It editor</a> — write your own <code>WITH</code> query against their sample tables and run it in the browser.</li>
 </ul>
 </section>
 
@@ -427,6 +459,7 @@ git push</pre></li>
   const READING_ID = "cte-syntax-reading";
   const TITLE = "Un-Nesting the Query — CTE Syntax & Readability";
 
+  document.addEventListener("mlrk:done", e => document.querySelectorAll('.mlrk-solved-run[data-reveal="'+e.detail.id+'"]').forEach(x => { x.hidden = false; }));
   K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
   K.Persona.renderPicker("#persona");
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
@@ -508,7 +541,7 @@ git push</pre></li>
   K.quiz({id:"q-scope", buttonSelector:"#card-scope .mlrk-choice", feedbackSelector:"#scopefb", correct:"error",
     feedback:{error:"Right. The CTE belonged to the first statement only. After its semicolon the name is gone, so the second SELECT has nothing to read.",
               rows:"That would need student_totals to be saved as a table. A CTE's name ends with its own query.",
-              empty:"An empty result would mean the name still exists. psql cannot find student_totals at all, so it reports an error."}});
+              empty:"An empty result would mean the name still exists. The database cannot find student_totals at all, so it reports an error."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
     {value:"a", label:"A CTE always runs faster than the same query written with a subquery.", correct:false,
@@ -521,8 +554,8 @@ git push</pre></li>
       hint:"Think about what happened in scope.sql on the last line.",
       explain:"That is scope. The second statement in scope.sql could not find student_totals."},
     {value:"d", label:"Rewriting a subquery as a CTE changes which rows the query returns.", correct:false,
-      hint:"Compare the output of the two above_average files.",
-      explain:"Both above_average files returned Ana and Cleo. A rewrite that keeps the same steps keeps the same rows."}
+      hint:"Compare the output of the two above_average queries.",
+      explain:"Both above_average queries returned Ana and Cleo. A rewrite that keeps the same steps keeps the same rows."}
   ]});
 
   K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"cte",

@@ -18,7 +18,7 @@
 <h1>A Number One in Every Depot</h1>
 <p class="mlrk-lead">A delivery company ranks all its drivers by how many packages they delivered last month. One name lands on top. Then the manager asks a different question: who is the best driver at each depot? The company wants to give one award per depot. That takes a ranking that starts over inside each group.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~20–23 minutes</span>
+  <span class="mlrk-pill">~21–24 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -29,6 +29,18 @@
 <div id="banner" class="mlrk-banner" role="status" hidden></div>
 
 <main class="mlrk-main"><div class="mlrk-wrap">
+<script type="text/plain" class="mlrk-sql-setup" id="db-drivers">
+CREATE TABLE driver_month (
+    name     TEXT,
+    depot    TEXT,
+    packages INTEGER
+);
+INSERT INTO driver_month VALUES
+    ('Tasha Boone', 'Riverside', 412), ('Priya Nadar', 'Eastgate', 401),
+    ('Omar Reyes', 'Riverside', 388), ('Luis Ferrer', 'Eastgate', 372),
+    ('Grace Okafor', 'Hillcrest', 366), ('Dee Whitfield', 'Riverside', 355),
+    ('Sam Beckett', 'Hillcrest', 344);
+</script>
 
 <section class="mlrk-section" id="persona-section">
   <div id="persona"></div>
@@ -132,7 +144,7 @@
 
 <p>Look at Grace in the picture. Grace delivered the same number of packages on both sides. On the left, Grace is fifth. On the right, Grace is first, because Grace is only compared with Sam, the other Hillcrest driver. You already know <code>RANK() OVER (ORDER BY ...)</code> and <code>WITH</code>. "Best in each group" is one of the most common requests an analyst gets, and this reading joins those two tools to answer it.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what <code>psql</code> prints when it runs that file. On your own laptop you'd type <code>psql -d deliveries -f name.sql</code>. The <code>-f</code> tells <code>psql</code> to run every statement in the file, top to bottom.</p>
+<p><strong>How the examples work:</strong> the SQL boxes run real SQL in your browser. Edit a query and click Run to try your own version. It works the same in the PostgreSQL you use in class. The first line of each box, like <code>-- depot_rank.sql</code>, is a comment that names the query; SQL ignores it.</p>
 </div>
 </section>
 
@@ -147,19 +159,22 @@
 <div id="rankfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <div class="mlrk-card" id="card-recall-with" style="margin-top:.8rem"><p><strong>Predict:</strong> how many rows does <code>busy_drivers.sql</code> return?</p>
-<div class="mlrk-code" data-file="busy_drivers.sql"><div class="mlrk-screen">WITH busy AS (
+<div class="mlrk-sql" data-db="db-drivers" data-after="q-with">
+<textarea class="mlrk-sql-input">-- busy_drivers.sql
+WITH busy AS (
     SELECT name, packages
     FROM driver_month
     WHERE packages &gt; 380
 )
-SELECT * FROM busy;</div></div>
-<button type="button" class="mlrk-btn" data-run="busy_drivers.sql" data-after="q-with">Run busy_drivers.sql</button>
-<div class="mlrk-run" data-file="busy_drivers.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f busy_drivers.sql</div><pre>    name     | packages
+SELECT * FROM busy
+ORDER BY packages DESC;</textarea>
+<pre class="mlrk-sql-fallback" hidden>    name     | packages
 -------------+----------
  Tasha Boone |      412
  Priya Nadar |      401
  Omar Reyes  |      388
-(3 rows)</pre></div>
+(3 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="three">3</button>
 <button type="button" class="mlrk-choice" data-a="seven">7</button>
 <button type="button" class="mlrk-choice" data-a="zero">0, because <code>busy</code> is not a real table</button>
@@ -169,11 +184,13 @@ SELECT * FROM busy;</div></div>
 <section class="mlrk-section">
 <h2>3. PARTITION BY starts the count over</h2>
 <p>Here is the manager's first query. It ranks everyone against everyone:</p>
-<div class="mlrk-code" data-file="company_rank.sql"><div class="mlrk-screen">SELECT name, depot, packages,
+<div class="mlrk-sql" data-db="db-drivers" data-activity="act-sql-company">
+<textarea class="mlrk-sql-input">-- company_rank.sql
+SELECT name, depot, packages,
        RANK() OVER (ORDER BY packages DESC) AS rnk
 FROM driver_month
-ORDER BY rnk;</div></div>
-<div class="mlrk-run" data-file="company_rank.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f company_rank.sql</div><pre>     name      |   depot   | packages | rnk
+ORDER BY rnk;</textarea>
+<pre class="mlrk-sql-fallback" hidden>     name      |   depot   | packages | rnk
 ---------------+-----------+----------+-----
  Tasha Boone   | Riverside |      412 |   1
  Priya Nadar   | Eastgate  |      401 |   2
@@ -182,18 +199,38 @@ ORDER BY rnk;</div></div>
  Grace Okafor  | Hillcrest |      366 |   5
  Dee Whitfield | Riverside |      355 |   6
  Sam Beckett   | Hillcrest |      344 |   7
-(7 rows)</pre></div>
+(7 rows)</pre>
+</div>
 <p><code>RANK()</code> is a <strong>window function</strong>: it looks at a set of other rows while it works out a value for the current row, and it keeps every row. The <strong>OVER clause</strong>, the <code>OVER (...)</code> part, says which rows it may look at and in what order. Right now it looks at the whole table.</p>
 <p><strong>PARTITION BY</strong> goes inside the <code>OVER (...)</code> parentheses, before <code>ORDER BY</code>. It splits the rows into groups first, and the ranking starts over at 1 inside each group. Each group is called a <strong>partition</strong>. Here, one partition is one depot's drivers.</p>
 
 <h3>Fill in the blank: rank inside each depot</h3>
-<div class="mlrk-code" data-file="depot_rank.sql"><div class="mlrk-screen">SELECT name, depot, packages,
+<div class="mlrk-code"><div class="mlrk-screen">SELECT name, depot, packages,
        RANK() OVER (____ depot
                     ORDER BY packages DESC) AS rnk
 FROM driver_month
 ORDER BY depot, rnk;</div></div>
-<button type="button" class="mlrk-btn" data-run="depot_rank.sql" data-after="q-partition" data-after-note="Solve the blank first. Then you can run it.">Run depot_rank.sql</button>
-<div class="mlrk-run" data-file="depot_rank.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f depot_rank.sql</div><pre>     name      |   depot   | packages | rnk
+<ol class="mlrk-steplist">
+  <li>Type the two-word keyword that splits rows into groups inside <code>OVER (...)</code>. It was named in bold just above.</li>
+  <li>Type both words with one space between them. Capital letters or lowercase both work.</li>
+  <li>Press <strong>Check</strong>. Then the completed query runs.</li>
+</ol>
+<div class="mlrk-fillblank">
+  <label for="kwInput">Missing keyword:</label>
+  <input type="text" id="kwInput" autocomplete="off">
+  <button type="button" id="kwCheck" class="mlrk-btn">Check</button>
+</div>
+<div id="kwfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-solved-run" data-reveal="q-partition" hidden>
+<p>Your answer is checked. Here is the completed query, running for real:</p>
+<div class="mlrk-sql" data-db="db-drivers" data-after="q-partition">
+<textarea class="mlrk-sql-input">-- depot_rank.sql
+SELECT name, depot, packages,
+       RANK() OVER (PARTITION BY depot
+                    ORDER BY packages DESC) AS rnk
+FROM driver_month
+ORDER BY depot, rnk;</textarea>
+<pre class="mlrk-sql-fallback" hidden>     name      |   depot   | packages | rnk
 ---------------+-----------+----------+-----
  Priya Nadar   | Eastgate  |      401 |   1
  Luis Ferrer   | Eastgate  |      372 |   2
@@ -202,18 +239,9 @@ ORDER BY depot, rnk;</div></div>
  Tasha Boone   | Riverside |      412 |   1
  Omar Reyes    | Riverside |      388 |   2
  Dee Whitfield | Riverside |      355 |   3
-(7 rows)</pre></div>
-<ol class="mlrk-steplist">
-  <li>Type the two-word keyword that splits rows into groups inside <code>OVER (...)</code>. It was named in bold just above.</li>
-  <li>Type both words with one space between them. Capital letters or lowercase both work.</li>
-  <li>Press <strong>Check</strong>. Then the Run button unlocks.</li>
-</ol>
-<div class="mlrk-fillblank">
-  <label for="kwInput">Missing keyword:</label>
-  <input type="text" id="kwInput" autocomplete="off">
-  <button type="button" id="kwCheck" class="mlrk-btn">Check</button>
+(7 rows)</pre>
 </div>
-<div id="kwfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
 
 <div class="mlrk-card" id="card-dee" style="margin-top:1rem"><p><strong>Dee Whitfield is 6th in <code>company_rank.sql</code> but 3rd in <code>depot_rank.sql</code>. Why?</strong></p>
 <button type="button" class="mlrk-choice" data-a="partition">Dee is only compared with the other Riverside drivers, and two of them delivered more.</button>
@@ -226,17 +254,19 @@ ORDER BY depot, rnk;</div></div>
 <h2>4. PARTITION BY is not GROUP BY</h2>
 <p>Both words sound like "make groups," but they do opposite things to your row count.</p>
 <div class="mlrk-card" id="card-group"><p><strong>Predict:</strong> <code>depot_max.sql</code> uses <code>GROUP BY depot</code>. What does it return?</p>
-<div class="mlrk-code" data-file="depot_max.sql"><div class="mlrk-screen">SELECT depot, MAX(packages) AS most_packages
+<div class="mlrk-sql" data-db="db-drivers" data-after="q-group">
+<textarea class="mlrk-sql-input">-- depot_max.sql
+SELECT depot, MAX(packages) AS most_packages
 FROM driver_month
 GROUP BY depot
-ORDER BY depot;</div></div>
-<button type="button" class="mlrk-btn" data-run="depot_max.sql" data-after="q-group">Run depot_max.sql</button>
-<div class="mlrk-run" data-file="depot_max.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f depot_max.sql</div><pre>   depot   | most_packages
+ORDER BY depot;</textarea>
+<pre class="mlrk-sql-fallback" hidden>   depot   | most_packages
 -----------+---------------
  Eastgate  |           401
  Hillcrest |           366
  Riverside |           412
-(3 rows)</pre></div>
+(3 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="three">3 rows, one per depot, with no driver names</button>
 <button type="button" class="mlrk-choice" data-a="seven">7 rows, one per driver, with names</button>
 <button type="button" class="mlrk-choice" data-a="names">3 rows, each with the winning driver's name</button>
@@ -248,23 +278,25 @@ ORDER BY depot;</div></div>
 <h2>5. Keep only the winners</h2>
 <p>The manager wants the three winners and nothing else. The first try adds a filter to the end of the query.</p>
 <div class="mlrk-card" id="card-where"><p><strong>Predict:</strong> what happens when <code>winners_try.sql</code> runs?</p>
-<div class="mlrk-code" data-file="winners_try.sql"><div class="mlrk-screen">SELECT name, depot, packages,
+<div class="mlrk-sql" data-db="db-drivers" data-after="q-where" data-expect-error>
+<textarea class="mlrk-sql-input">-- winners_try.sql
+SELECT name, depot, packages,
        RANK() OVER (PARTITION BY depot
                     ORDER BY packages DESC) AS rnk
 FROM driver_month
-WHERE rnk = 1;</div></div>
-<button type="button" class="mlrk-btn" data-run="winners_try.sql" data-after="q-where">Run winners_try.sql</button>
-<div class="mlrk-run" data-file="winners_try.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f winners_try.sql</div><pre>psql:winners_try.sql:5: ERROR:  column "rnk" does not exist
-LINE 5: WHERE rnk = 1;
-              ^</pre></div>
-<button type="button" class="mlrk-choice" data-a="error">An error: the column <code>rnk</code> does not exist</button>
+WHERE rnk = 1;</textarea>
+<pre class="mlrk-sql-fallback" hidden>Error: misuse of aliased window function rnk</pre>
+</div>
+<button type="button" class="mlrk-choice" data-a="error">An error, because <code>rnk</code> can't be used in <code>WHERE</code></button>
 <button type="button" class="mlrk-choice" data-a="three">It returns the three winners</button>
 <button type="button" class="mlrk-choice" data-a="seven">It returns all seven drivers</button>
 <div id="wherefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<p>The database does not run a query in the order it is written. It gathers rows from <code>FROM</code>, then throws out rows that fail <code>WHERE</code>, then works out the <code>SELECT</code> list, where <code>RANK()</code> runs. So when <code>WHERE</code> runs, <code>rnk</code> does not exist yet. (<code>HAVING</code> also runs before the <code>SELECT</code> list, so it fails the same way.)</p>
+<p>The database does not run a query in the order it is written. It gathers rows from <code>FROM</code>, then throws out rows that fail <code>WHERE</code>, then works out the <code>SELECT</code> list, where <code>RANK()</code> runs. So when <code>WHERE</code> runs, <code>rnk</code> does not exist yet. The browser's SQL says "misuse of aliased window function rnk"; PostgreSQL says <code>column "rnk" does not exist</code>. Same mistake, slightly different wording. (<code>HAVING</code> also runs before the <code>SELECT</code> list, so it fails the same way.)</p>
 <p>The fix is to finish the ranking first. A <strong>CTE</strong> (common table expression) is a <code>WITH name AS (...)</code> block that runs a query, names its finished result, and lets the rest of the statement select from that name. Outside the CTE, <code>rnk</code> is an ordinary column:</p>
-<div class="mlrk-code" data-file="winners.sql"><div class="mlrk-screen">WITH ranked AS (
+<div class="mlrk-sql" data-db="db-drivers" data-activity="act-sql-winners">
+<textarea class="mlrk-sql-input">-- winners.sql
+WITH ranked AS (
     SELECT name, depot, packages,
            RANK() OVER (PARTITION BY depot
                         ORDER BY packages DESC) AS rnk
@@ -273,13 +305,14 @@ LINE 5: WHERE rnk = 1;
 SELECT name, depot, packages
 FROM ranked
 WHERE rnk = 1
-ORDER BY depot;</div></div>
-<div class="mlrk-run" data-file="winners.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d deliveries -f winners.sql</div><pre>     name     |   depot   | packages
+ORDER BY depot;</textarea>
+<pre class="mlrk-sql-fallback" hidden>     name     |   depot   | packages
 --------------+-----------+----------
  Priya Nadar  | Eastgate  |      401
  Grace Okafor | Hillcrest |      366
  Tasha Boone  | Riverside |      412
-(3 rows)</pre></div>
+(3 rows)</pre>
+</div>
 <p>Three rows, one award per depot. This shape has a name: <strong>top-N per group</strong>, a query that returns the highest-ranked rows inside each group instead of only the highest overall. "Best driver per depot" is a top-1 per group question.</p>
 </section>
 
@@ -426,9 +459,9 @@ git push</pre></li>
 <p class="mlrk-small">Not counted in the time estimate above.</p>
 <ul>
 <li><a href="https://mode.com/sql-tutorial/sql-window-functions/" target="_blank" rel="noopener">Mode: SQL Window Functions</a> — a tutorial with a query editor built into the page, so you can change a partition column and rerun it without installing anything.</li>
-<li><a href="https://www.practicewindowfunctions.com/learn/how_window_functions_work" target="_blank" rel="noopener">Practice Window Functions</a> — free browser practice problems, several of them the top-per-group shape from this reading.</li>
 <li><a href="https://www.postgresql.org/docs/current/tutorial-window.html" target="_blank" rel="noopener">PostgreSQL Tutorial: Window Functions</a> — the official walkthrough, including why a window function cannot appear in <code>WHERE</code>.</li>
 <li><a href="https://www.sqltutorial.org/sql-window-functions/sql-partition-by/" target="_blank" rel="noopener">SQL Tutorial: the PARTITION BY clause</a> — a short written reference with a few more worked examples.</li>
+<li><strong>Practice more:</strong> <a href="https://www.practicewindowfunctions.com/" target="_blank" rel="noopener">Practice Window Functions</a> — free problems with a query box in the page, including top-N per group questions.</li>
 </ul>
 </section>
 
@@ -444,6 +477,7 @@ git push</pre></li>
   const READING_ID = "partition-by-reading";
   const TITLE = "A Number One in Every Depot — PARTITION BY and Top-Per-Group Queries";
 
+  document.addEventListener("mlrk:done", e => document.querySelectorAll('.mlrk-solved-run[data-reveal="'+e.detail.id+'"]').forEach(x => { x.hidden = false; }));
   K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
   K.Persona.renderPicker("#persona");
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));

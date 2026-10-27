@@ -15,7 +15,7 @@
 <h1>Every Row Keeps Its Seat</h1>
 <p class="mlrk-lead">A school sells tickets to its spring play. The teacher wants every seller listed by name, in order, with a place beside each name. Two students sold the same number, and the teacher wants them shown as tied. <code>GROUP BY</code> would fold the names away. A <strong>window function</strong> keeps every name and adds a place to each one.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~19–22 minutes</span>
+  <span class="mlrk-pill">~20–23 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -26,6 +26,16 @@
 <div id="banner" class="mlrk-banner" role="status" hidden></div>
 
 <main class="mlrk-main"><div class="mlrk-wrap">
+<script type="text/plain" class="mlrk-sql-setup" id="db-tickets">
+CREATE TABLE ticket_sales (
+    student_name TEXT,
+    homeroom     TEXT,
+    tickets      INTEGER
+);
+INSERT INTO ticket_sales VALUES
+    ('Mia', 'Room 4', 31), ('Theo', 'Room 4', 26),
+    ('Zara', 'Room 7', 26), ('Leo', 'Room 7', 19);
+</script>
 
 <section class="mlrk-section" id="persona-section">
   <div id="persona"></div>
@@ -123,7 +133,7 @@
 
 <p>You already know how to sort rows with <code>ORDER BY</code> and summarize them with <code>GROUP BY</code>. This matters because requests like "show where every seller ranks" need the individual rows back, and <code>GROUP BY</code> hands back a summary with no error to warn you.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what <code>psql</code> prints when it runs that file. On your own laptop you'd type <code>psql -d school_play -f name.sql</code>. The <code>-f</code> tells <code>psql</code> to run every statement in the file, top to bottom.</p>
+<p><strong>How the examples work:</strong> the SQL boxes run real SQL in your browser. Edit a query and click Run to try your own version. It works the same in the PostgreSQL you use in class. The first line of each box, like <code>-- rank_sellers.sql</code>, is a comment that names the query; SQL ignores it.</p>
 </div>
 </section>
 
@@ -132,17 +142,19 @@
 <p>A window function sorts rows and names its result column. Check both skills.</p>
 
 <div class="mlrk-card" id="card-recall-order"><p><strong>Predict:</strong> <code>ticket_sales</code> has 4 rows. How many rows does <code>by_tickets.sql</code> return?</p>
-<div class="mlrk-code" data-file="by_tickets.sql"><div class="mlrk-screen">SELECT student_name, tickets
+<div class="mlrk-sql" data-db="db-tickets" data-after="q-order">
+<textarea class="mlrk-sql-input">-- by_tickets.sql
+SELECT student_name, tickets
 FROM ticket_sales
-ORDER BY tickets;</div></div>
-<button type="button" class="mlrk-btn" data-run="by_tickets.sql" data-after="q-order">Run by_tickets.sql</button>
-<div class="mlrk-run" data-file="by_tickets.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d school_play -f by_tickets.sql</div><pre> student_name | tickets
+ORDER BY tickets, student_name;</textarea>
+<pre class="mlrk-sql-fallback" hidden> student_name | tickets
 --------------+---------
  Leo          |      19
  Theo         |      26
  Zara         |      26
  Mia          |      31
-(4 rows)</pre></div>
+(4 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="four">4</button>
 <button type="button" class="mlrk-choice" data-a="three">3, because the two 26s join into one row</button>
 <button type="button" class="mlrk-choice" data-a="one">1, the top seller</button>
@@ -158,35 +170,41 @@ ORDER BY tickets;</div></div>
 <section class="mlrk-section">
 <h2>3. A window function keeps every row</h2>
 <p>First, the summary the teacher did not ask for:</p>
-<div class="mlrk-code" data-file="homeroom_totals.sql"><div class="mlrk-screen">SELECT homeroom, SUM(tickets) AS total_tickets
+<div class="mlrk-sql" data-db="db-tickets" data-activity="act-sql-homeroom">
+<textarea class="mlrk-sql-input">-- homeroom_totals.sql
+SELECT homeroom, SUM(tickets) AS total_tickets
 FROM ticket_sales
 GROUP BY homeroom
-ORDER BY homeroom;</div></div>
-<div class="mlrk-run" data-file="homeroom_totals.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d school_play -f homeroom_totals.sql</div><pre> homeroom | total_tickets
+ORDER BY homeroom;</textarea>
+<pre class="mlrk-sql-fallback" hidden> homeroom | total_tickets
 ----------+---------------
  Room 4   |            57
  Room 7   |            45
-(2 rows)</pre></div>
+(2 rows)</pre>
+</div>
 <p>The totals are right, but Mia, Theo, Zara and Leo are gone. A <strong>window function</strong> works differently. It looks across a set of rows and writes one value onto each row, without folding any rows together.</p>
 
 <div class="mlrk-card" id="card-rows"><p><strong>Predict:</strong> <code>rank_sellers.sql</code> is the query from the blue side of the picture. Theo and Zara both sold 26. What does <code>rnk</code> show for the two of them?</p>
-<div class="mlrk-code" data-file="rank_sellers.sql"><div class="mlrk-screen">SELECT student_name, tickets,
+<div class="mlrk-sql" data-db="db-tickets" data-after="q-rows">
+<textarea class="mlrk-sql-input">-- rank_sellers.sql
+SELECT student_name, tickets,
   RANK() OVER (ORDER BY tickets DESC) AS rnk
-FROM ticket_sales;</div></div>
-<button type="button" class="mlrk-btn" data-run="rank_sellers.sql" data-after="q-rows">Run rank_sellers.sql</button>
-<div class="mlrk-run" data-file="rank_sellers.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d school_play -f rank_sellers.sql</div><pre> student_name | tickets | rnk
+FROM ticket_sales
+ORDER BY rnk, student_name;</textarea>
+<pre class="mlrk-sql-fallback" hidden> student_name | tickets | rnk
 --------------+---------+-----
  Mia          |      31 |   1
  Theo         |      26 |   2
  Zara         |      26 |   2
  Leo          |      19 |   4
-(4 rows)</pre></div>
+(4 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="same">2 for Theo and 2 for Zara</button>
 <button type="button" class="mlrk-choice" data-a="diff">2 for Theo and 3 for Zara</button>
 <button type="button" class="mlrk-choice" data-a="three">3 for both of them</button>
 <div id="rowsfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<p>The new piece is <code>OVER (ORDER BY tickets DESC)</code>. That is the <strong>OVER clause</strong>: it tells <code>RANK()</code> which rows to look across and in what order. Without it, <code>RANK()</code> would not know what first place means. The parentheses right after <code>RANK</code> stay empty.</p>
+<p>The new piece is <code>OVER (ORDER BY tickets DESC)</code>. That is the <strong>OVER clause</strong>: it tells <code>RANK()</code> which rows to look across and in what order. Without it, <code>RANK()</code> would not know what first place means. The parentheses right after <code>RANK</code> stay empty. The last line, <code>ORDER BY rnk, student_name</code>, only sets the order the rows print in; the <code>ORDER BY</code> inside <code>OVER</code> decides the numbers.</p>
 <p><code>AS rnk</code> is an <strong>alias</strong>: a name you give a result column inside a query. It shows up only in this query's output and changes nothing in the stored table. The rule to remember: <code>GROUP BY</code> replaces rows with a summary, and a window function keeps the rows and adds a value to each.</p>
 </section>
 
@@ -205,21 +223,13 @@ FROM ticket_sales;</div></div>
 <section class="mlrk-section">
 <h2>5. ROW_NUMBER() never repeats</h2>
 <p><strong><code>ROW_NUMBER()</code></strong> gives every row its own number: 1, 2, 3, 4, with no repeats and no skips, even when values are the same. Finish the file to try it.</p>
-<div class="mlrk-code" data-file="number_sellers.sql"><div class="mlrk-screen">SELECT student_name, tickets,
+<div class="mlrk-code"><div class="mlrk-screen">SELECT student_name, tickets,
   ROW_NUMBER() ____ (ORDER BY tickets DESC) AS rn
 FROM ticket_sales;</div></div>
-<button type="button" class="mlrk-btn" data-run="number_sellers.sql" data-after="q-over" data-after-note="Solve the blank first. Then you can run it.">Run number_sellers.sql</button>
-<div class="mlrk-run" data-file="number_sellers.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d school_play -f number_sellers.sql</div><pre> student_name | tickets | rn
---------------+---------+----
- Mia          |      31 |  1
- Theo         |      26 |  2
- Zara         |      26 |  3
- Leo          |      19 |  4
-(4 rows)</pre></div>
 <ol class="mlrk-steplist">
   <li>Type the one keyword that goes between the function's empty parentheses and <code>(ORDER BY ...)</code>. It is the same keyword <code>rank_sellers.sql</code> used.</li>
   <li>Type only the keyword: no parentheses. Capital letters or lowercase both work.</li>
-  <li>Press <strong>Check</strong>. Then the Run button unlocks.</li>
+  <li>Press <strong>Check</strong>. Then the completed query runs.</li>
 </ol>
 <div class="mlrk-fillblank">
   <label for="overInput">Missing keyword:</label>
@@ -227,6 +237,23 @@ FROM ticket_sales;</div></div>
   <button type="button" id="overCheck" class="mlrk-btn">Check</button>
 </div>
 <div id="overfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-solved-run" data-reveal="q-over" hidden>
+<p>Your answer is checked. Here is the completed query, running for real:</p>
+<div class="mlrk-sql" data-db="db-tickets" data-after="q-over" data-activity="act-sql-rownum">
+<textarea class="mlrk-sql-input">-- number_sellers.sql
+SELECT student_name, tickets,
+  ROW_NUMBER() OVER (ORDER BY tickets DESC) AS rn
+FROM ticket_sales
+ORDER BY rn;</textarea>
+<pre class="mlrk-sql-fallback" hidden> student_name | tickets | rn
+--------------+---------+----
+ Mia          |      31 |  1
+ Theo         |      26 |  2
+ Zara         |      26 |  3
+ Leo          |      19 |  4
+(4 rows)</pre>
+</div>
+</div>
 
 <div class="mlrk-card" id="card-zara" style="margin-top:1rem"><p><strong>Nothing in the data says Theo beat Zara. Why does Zara get 3 in <code>number_sellers.sql</code>?</strong></p>
 <button type="button" class="mlrk-choice" data-a="order"><code>ROW_NUMBER()</code> never repeats a number, so it had to put the two tied rows in some order.</button>
@@ -382,6 +409,7 @@ git push</pre></li>
 <li><a href="https://mode.com/sql-tutorial/sql-window-functions/" target="_blank" rel="noopener">Mode: SQL Window Functions</a> — a live in-browser editor where you write and run ranking queries against a sample dataset.</li>
 <li><a href="https://www.postgresql.org/docs/current/functions-window.html" target="_blank" rel="noopener">PostgreSQL: Window function reference</a> — the full list of ranking functions, including ones this reading did not cover.</li>
 <li><a href="https://datalemur.com/sql-tutorial/sql-rank-dense_rank-row_number-window-function" target="_blank" rel="noopener">DataLemur: Ranking window functions</a> — the same functions framed around interview questions.</li>
+<li><strong>Practice more:</strong> <a href="https://www.practicewindowfunctions.com/learn/how_window_functions_work" target="_blank" rel="noopener">Practice Window Functions</a> — free practice problems with a query box in the page, starting with <code>RANK()</code> and <code>ROW_NUMBER()</code>.</li>
 </ul>
 </section>
 
@@ -397,6 +425,7 @@ git push</pre></li>
   const READING_ID = "window-functions-rank-reading";
   const TITLE = "Every Row Keeps Its Seat — Ranking Without Collapsing";
 
+  document.addEventListener("mlrk:done", e => document.querySelectorAll('.mlrk-solved-run[data-reveal="'+e.detail.id+'"]').forEach(x => { x.hidden = false; }));
   K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
   K.Persona.renderPicker("#persona");
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));

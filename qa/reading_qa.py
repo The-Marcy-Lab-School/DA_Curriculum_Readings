@@ -640,6 +640,46 @@ def check_py_files(path, html):
     return findings
 
 
+def check_sql_runners(html):
+    """Every in-page SQL runner (.mlrk-sql, 2026-10-27) runs its starting
+    query against its setup tables with Python's sqlite3 — the same engine
+    the page runs in the browser — so a broken query or a missing table is
+    caught before a Fellow clicks Run. data-expect-error marks a query that
+    is meant to fail."""
+    import sqlite3
+    import html as htmlmod
+    findings = []
+    setups = {}
+    for m in re.finditer(r'<script([^>]*class="mlrk-sql-setup"[^>]*)>(.*?)</script>', html, re.S):
+        sid = re.search(r'id="([^"]+)"', m.group(1))
+        if sid:
+            setups[sid.group(1)] = htmlmod.unescape(m.group(2))
+    for m in re.finditer(r'<div[^>]*class="mlrk-sql"([^>]*)>(.*?)</div>', html, re.S):
+        attrs, body = m.group(1), m.group(2)
+        line = html.count("\n", 0, m.start()) + 1
+        q = re.search(r'<textarea[^>]*class="mlrk-sql-input"[^>]*>(.*?)</textarea>', body, re.S)
+        if not q:
+            findings.append(("ERROR", f"line {line}: SQL runner has no <textarea class=\"mlrk-sql-input\">"))
+            continue
+        db_id = re.search(r'data-db="([^"]+)"', attrs)
+        con = sqlite3.connect(":memory:")
+        try:
+            if db_id:
+                if db_id.group(1) not in setups:
+                    findings.append(("ERROR", f"line {line}: SQL runner points at data-db=\"{db_id.group(1)}\", but no setup block has that id"))
+                    continue
+                con.executescript(setups[db_id.group(1)])
+            con.executescript(htmlmod.unescape(q.group(1)))
+            if "data-expect-error" in attrs:
+                findings.append(("ERROR", f"line {line}: SQL runner is marked data-expect-error but its query runs fine"))
+        except sqlite3.Error as e:
+            if "data-expect-error" not in attrs:
+                findings.append(("ERROR", f"line {line}: SQL runner's query fails in SQLite: {e}"))
+        finally:
+            con.close()
+    return findings
+
+
 def check_video_embeddable(html, skip_network=False):
     ids = _video_ids(html)
     if not ids or skip_network:
@@ -813,6 +853,7 @@ def run(path, skip_links=False):
     findings += check_british_spellings(prose)
     findings += check_quest_vocabulary(path, html)
     findings += check_py_files(path, html)
+    findings += check_sql_runners(html)
     findings += check_video_language(html, skip_network=skip_links)
     findings += check_video_embeddable(html, skip_network=skip_links)
     findings += check_video_duration(html, skip_network=skip_links)

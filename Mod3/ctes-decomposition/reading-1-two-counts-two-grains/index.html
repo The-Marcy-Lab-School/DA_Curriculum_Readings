@@ -20,7 +20,7 @@
 <h1>Two Counts, Two Grains</h1>
 <p class="mlrk-lead">A video site shows each channel a short report: how many videos it posted, and how many comments those videos got. One query that joins three tables answers it in six lines. The comment counts are right. The video counts are too big. Nothing gives an error.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~21–24 minutes</span>
+  <span class="mlrk-pill">~22–25 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -31,6 +31,14 @@
 <div id="banner" class="mlrk-banner" role="status" hidden></div>
 
 <main class="mlrk-main"><div class="mlrk-wrap">
+<script type="text/plain" class="mlrk-sql-setup" id="db-videos">
+CREATE TABLE channels (channel_id INTEGER PRIMARY KEY, channel_name TEXT);
+CREATE TABLE videos (video_id INTEGER PRIMARY KEY, channel_id INTEGER REFERENCES channels(channel_id));
+CREATE TABLE comments (comment_id INTEGER PRIMARY KEY, video_id INTEGER REFERENCES videos(video_id));
+INSERT INTO channels VALUES (1, 'Plant Pals'), (2, 'Bike Fix'), (3, 'Star Maps');
+INSERT INTO videos VALUES (101, 1), (102, 1), (103, 2), (104, 3);
+INSERT INTO comments VALUES (9001, 101), (9002, 101), (9003, 102), (9004, 104), (9005, 104);
+</script>
 
 <section class="mlrk-section" id="persona-section">
   <div id="persona"></div>
@@ -120,7 +128,7 @@
 
 <p>You already know <code>LEFT JOIN</code>, <code>GROUP BY</code>, and how to name one step with <code>WITH</code>. A wrong number that looks right is worse than an error, because nobody knows to fix it. In this reading you add a second named step that fixes the count.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what <code>psql</code> prints when it runs that file. On your own laptop you'd type <code>psql -d video_site -f name.sql</code>. The <code>-f</code> tells <code>psql</code> to run every statement in the file, top to bottom.</p>
+<p><strong>How the examples work:</strong> the SQL boxes run real SQL in your browser. Edit a query and click Run to try your own version. It works the same in the PostgreSQL you use in class. The first line of each box, like <code>-- flat_report.sql</code>, is a comment that names the query; SQL ignores it.</p>
 </div>
 </section>
 
@@ -129,17 +137,19 @@
 <p>This reading leans on counting with <code>GROUP BY</code> and naming a step with <code>WITH</code>. Check both.</p>
 
 <div class="mlrk-card" id="card-recall-group"><p><strong>Predict:</strong> the <code>videos</code> table has 4 rows across 3 channels. How many rows does <code>recall_videos.sql</code> return?</p>
-<div class="mlrk-code" data-file="recall_videos.sql"><div class="mlrk-screen">SELECT channel_id, COUNT(*) AS videos
+<div class="mlrk-sql" data-db="db-videos" data-after="q-group">
+<textarea class="mlrk-sql-input">-- recall_videos.sql
+SELECT channel_id, COUNT(*) AS videos
 FROM videos
 GROUP BY channel_id
-ORDER BY channel_id;</div></div>
-<button type="button" class="mlrk-btn" data-run="recall_videos.sql" data-after="q-group">Run recall_videos.sql</button>
-<div class="mlrk-run" data-file="recall_videos.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f recall_videos.sql</div><pre> channel_id | videos
+ORDER BY channel_id;</textarea>
+<pre class="mlrk-sql-fallback" hidden> channel_id | videos
 ------------+--------
           1 |      2
           2 |      1
           3 |      1
-(3 rows)</pre></div>
+(3 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="three">3</button>
 <button type="button" class="mlrk-choice" data-a="four">4</button>
 <button type="button" class="mlrk-choice" data-a="one">1</button>
@@ -157,33 +167,37 @@ ORDER BY channel_id;</div></div>
 <p>The <strong>grain</strong> of a table is what one row stands for. The grain of <code>videos</code> is one video. The grain of <code>comments</code> is one comment. Here is the direct attempt at the report: join all three tables, group by channel, and count both things.</p>
 
 <div class="mlrk-card" id="card-flat"><p><strong>Predict:</strong> what <code>video_count</code> does <code>flat_report.sql</code> show for Plant Pals?</p>
-<div class="mlrk-code" data-file="flat_report.sql"><div class="mlrk-screen">SELECT ch.channel_name,
+<div class="mlrk-sql" data-db="db-videos" data-after="q-flat">
+<textarea class="mlrk-sql-input">-- flat_report.sql
+SELECT ch.channel_name,
        COUNT(v.video_id)   AS video_count,
        COUNT(c.comment_id) AS comment_count
 FROM channels ch
 LEFT JOIN videos v   ON v.channel_id = ch.channel_id
 LEFT JOIN comments c ON c.video_id   = v.video_id
 GROUP BY ch.channel_id, ch.channel_name
-ORDER BY ch.channel_id;</div></div>
-<button type="button" class="mlrk-btn" data-run="flat_report.sql" data-after="q-flat">Run flat_report.sql</button>
-<div class="mlrk-run" data-file="flat_report.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f flat_report.sql</div><pre> channel_name | video_count | comment_count
+ORDER BY ch.channel_id;</textarea>
+<pre class="mlrk-sql-fallback" hidden> channel_name | video_count | comment_count
 --------------+-------------+---------------
  Plant Pals   |           3 |             3
  Bike Fix     |           1 |             0
  Star Maps    |           2 |             2
-(3 rows)</pre></div>
+(3 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="three">3</button>
 <button type="button" class="mlrk-choice" data-a="two">2</button>
 <button type="button" class="mlrk-choice" data-a="five">5</button>
 <div id="flatfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
 <p>Plant Pals has 2 videos, not 3. To see why, look at the rows the joins build before any counting happens:</p>
-<div class="mlrk-code" data-file="flat_rows.sql"><div class="mlrk-screen">SELECT ch.channel_name, v.video_id, c.comment_id
+<div class="mlrk-sql" data-db="db-videos" data-activity="act-sql-flatrows">
+<textarea class="mlrk-sql-input">-- flat_rows.sql
+SELECT ch.channel_name, v.video_id, c.comment_id
 FROM channels ch
 LEFT JOIN videos v   ON v.channel_id = ch.channel_id
 LEFT JOIN comments c ON c.video_id   = v.video_id
-ORDER BY ch.channel_id, v.video_id, c.comment_id;</div></div>
-<div class="mlrk-run" data-file="flat_rows.sql"><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f flat_rows.sql</div><pre> channel_name | video_id | comment_id
+ORDER BY ch.channel_id, v.video_id, c.comment_id;</textarea>
+<pre class="mlrk-sql-fallback" hidden> channel_name | video_id | comment_id
 --------------+----------+------------
  Plant Pals   |      101 |       9001
  Plant Pals   |      101 |       9002
@@ -191,7 +205,8 @@ ORDER BY ch.channel_id, v.video_id, c.comment_id;</div></div>
  Bike Fix     |      103 |
  Star Maps    |      104 |       9004
  Star Maps    |      104 |       9005
-(6 rows)</pre></div>
+(6 rows)</pre>
+</div>
 <p>Video 101 has two comments, so the join writes video 101 out twice. That copying is called <strong>row multiplication</strong>, or <strong>fan-out</strong>: when one row matches several rows in the next table, it gets copied once per match. The join did its job. The mistake is counting videos in a result whose grain is one comment. The rule: <strong>counting two things at two different grains in one flat join makes the bigger-grain count too big.</strong></p>
 
 <div class="mlrk-card" id="card-star"><p><strong>Star Maps has 1 video, but <code>flat_report.sql</code> showed a <code>video_count</code> of 2. Why?</strong></p>
@@ -203,21 +218,23 @@ ORDER BY ch.channel_id, v.video_id, c.comment_id;</div></div>
 
 <section class="mlrk-section">
 <h2>4. Count the column, not the row</h2>
-<p>Look at Bike Fix in the joined rows. Its video 103 has no comments, but a <code>LEFT JOIN</code> still keeps one row for it, with an empty <code>comment_id</code>. Two ways of counting disagree on that row. <strong><code>COUNT(*)</code></strong> counts every row in the group, whatever is in it. <strong><code>COUNT(column)</code></strong> counts only the rows where that column has a real value, and skips empty ones.</p>
+<p>Look at Bike Fix in the joined rows. Its video 103 has no comments, but a <code>LEFT JOIN</code> still keeps one row for it, with <code>NULL</code> (no value) in <code>comment_id</code>. Two ways of counting disagree on that row. <strong><code>COUNT(*)</code></strong> counts every row in the group, whatever is in it. <strong><code>COUNT(column)</code></strong> counts only the rows where that column has a real value, and skips the NULLs.</p>
 
 <div class="mlrk-card" id="card-count"><p><strong>Predict:</strong> in <code>count_check.sql</code>, what number goes in the <code>rows_counted</code> column for video 103?</p>
-<div class="mlrk-code" data-file="count_check.sql"><div class="mlrk-screen">SELECT v.video_id,
+<div class="mlrk-sql" data-db="db-videos" data-after="q-count">
+<textarea class="mlrk-sql-input">-- count_check.sql
+SELECT v.video_id,
        COUNT(*)            AS rows_counted,
        COUNT(c.comment_id) AS real_comments
 FROM videos v
 LEFT JOIN comments c ON c.video_id = v.video_id
 WHERE v.video_id = 103
-GROUP BY v.video_id;</div></div>
-<button type="button" class="mlrk-btn" data-run="count_check.sql" data-after="q-count">Run count_check.sql</button>
-<div class="mlrk-run" data-file="count_check.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f count_check.sql</div><pre> video_id | rows_counted | real_comments
+GROUP BY v.video_id;</textarea>
+<pre class="mlrk-sql-fallback" hidden> video_id | rows_counted | real_comments
 ----------+--------------+---------------
       103 |            1 |             0
-(1 row)</pre></div>
+(1 row)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="one">1</button>
 <button type="button" class="mlrk-choice" data-a="zero">0</button>
 <button type="button" class="mlrk-choice" data-a="skip">Nothing, because the row is skipped</button>
@@ -235,22 +252,24 @@ GROUP BY v.video_id;</div></div>
 </ol>
 
 <div class="mlrk-card" id="card-grain"><p><strong>Predict:</strong> <code>comments_per_video.sql</code> is step 1 on its own. What does one row of its result stand for?</p>
-<div class="mlrk-code" data-file="comments_per_video.sql"><div class="mlrk-screen">WITH comments_per_video AS (
+<div class="mlrk-sql" data-db="db-videos" data-after="q-grain">
+<textarea class="mlrk-sql-input">-- comments_per_video.sql
+WITH comments_per_video AS (
     SELECT v.video_id, v.channel_id,
            COUNT(c.comment_id) AS comment_count
     FROM videos v
     LEFT JOIN comments c ON c.video_id = v.video_id
     GROUP BY v.video_id, v.channel_id
 )
-SELECT * FROM comments_per_video ORDER BY video_id;</div></div>
-<button type="button" class="mlrk-btn" data-run="comments_per_video.sql" data-after="q-grain">Run comments_per_video.sql</button>
-<div class="mlrk-run" data-file="comments_per_video.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f comments_per_video.sql</div><pre> video_id | channel_id | comment_count
+SELECT * FROM comments_per_video ORDER BY video_id;</textarea>
+<pre class="mlrk-sql-fallback" hidden> video_id | channel_id | comment_count
 ----------+------------+---------------
       101 |          1 |             2
       102 |          1 |             1
       103 |          2 |             0
       104 |          3 |             2
-(4 rows)</pre></div>
+(4 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="video">One video</button>
 <button type="button" class="mlrk-choice" data-a="comment">One comment</button>
 <button type="button" class="mlrk-choice" data-a="channel">One channel</button>
@@ -259,7 +278,7 @@ SELECT * FROM comments_per_video ORDER BY video_id;</div></div>
 <p>Four rows, one per video, and nothing was copied. You can check this middle step before building on it. Now step 2. A <strong>chained CTE</strong> is two or more named results in one <code>WITH</code> clause, separated by a comma, where a later one uses an earlier one by name. The word <code>WITH</code> appears only once.</p>
 
 <h3>Fill in the blanks: chain step 2 onto step 1</h3>
-<div class="mlrk-code" data-file="channel_report.sql"><div class="mlrk-screen">WITH comments_per_video AS (
+<div class="mlrk-code"><div class="mlrk-screen">WITH comments_per_video AS (
     SELECT v.video_id, v.channel_id,
            COUNT(c.comment_id) AS comment_count
     FROM videos v
@@ -277,13 +296,6 @@ channel_totals AS (
 SELECT channel_name, video_count, comment_count
 FROM channel_totals
 ORDER BY channel_id;</div></div>
-<button type="button" class="mlrk-btn" data-run="channel_report.sql" data-after="q-chain" data-after-note="Solve both blanks first. Then you can run it.">Run channel_report.sql</button>
-<div class="mlrk-run" data-file="channel_report.sql" hidden><div class="mlrk-run-cmd"><span class="mlrk-terminal-prompt">$</span> psql -d video_site -f channel_report.sql</div><pre> channel_name | video_count | comment_count
---------------+-------------+---------------
- Plant Pals   |           2 |             3
- Bike Fix     |           1 |             0
- Star Maps    |           1 |             2
-(3 rows)</pre></div>
 <ol class="mlrk-steplist">
   <li>In box (1), type the one punctuation mark that separates two named results inside one <code>WITH</code> clause. Just the mark, nothing else.</li>
   <li>In box (2), type the name of step 1, spelled exactly as it is after <code>WITH</code>. Step 2 joins to step 1's result, which has one row per video, so nothing gets copied.</li>
@@ -299,6 +311,36 @@ ORDER BY channel_id;</div></div>
 </div>
 <p><button type="button" id="chainCheck" class="mlrk-btn">Check my chain</button></p>
 <div id="chainfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-solved-run" data-reveal="q-chain" hidden>
+<p>Your answer is checked. Here is the completed query, running for real:</p>
+<div class="mlrk-sql" data-db="db-videos" data-after="q-chain" data-activity="act-sql-report">
+<textarea class="mlrk-sql-input">-- channel_report.sql
+WITH comments_per_video AS (
+    SELECT v.video_id, v.channel_id,
+           COUNT(c.comment_id) AS comment_count
+    FROM videos v
+    LEFT JOIN comments c ON c.video_id = v.video_id
+    GROUP BY v.video_id, v.channel_id
+),
+channel_totals AS (
+    SELECT ch.channel_id, ch.channel_name,
+           COUNT(cv.video_id)    AS video_count,
+           SUM(cv.comment_count) AS comment_count
+    FROM channels ch
+    LEFT JOIN comments_per_video cv ON cv.channel_id = ch.channel_id
+    GROUP BY ch.channel_id, ch.channel_name
+)
+SELECT channel_name, video_count, comment_count
+FROM channel_totals
+ORDER BY channel_id;</textarea>
+<pre class="mlrk-sql-fallback" hidden> channel_name | video_count | comment_count
+--------------+-------------+---------------
+ Plant Pals   |           2 |             3
+ Bike Fix     |           1 |             0
+ Star Maps    |           1 |             2
+(3 rows)</pre>
+</div>
+</div>
 <p>The final counts match the hand count from section 1: Plant Pals has 2 videos and 3 comments.</p>
 </section>
 
@@ -442,6 +484,7 @@ git push</pre></li>
 <li><a href="https://mystery.knightlab.com/" target="_blank" rel="noopener">SQL Murder Mystery</a> — a free browser game where you solve a made-up case by querying a small multi-table database.</li>
 <li><a href="https://pgexercises.com/" target="_blank" rel="noopener">PostgreSQL Exercises</a> — hands-on exercises you run in the page against a real PostgreSQL database.</li>
 <li><a href="https://datalemur.com/sql-tutorial/sql-cte-common-table-expression" target="_blank" rel="noopener">DataLemur: SQL CTEs</a> — the same syntax framed around interview questions.</li>
+<li><strong>Practice more:</strong> <a href="https://www.sql-practice.com/" target="_blank" rel="noopener">SQL Practice</a> — free question sets with a query box in the page. Its multi-table questions are good practice for planning a CTE before you write it.</li>
 </ul>
 </section>
 
@@ -457,6 +500,7 @@ git push</pre></li>
   const READING_ID = "cte-chaining-grains-reading";
   const TITLE = "Two Counts, Two Grains — Chaining CTEs Across Three Tables";
 
+  document.addEventListener("mlrk:done", e => document.querySelectorAll('.mlrk-solved-run[data-reveal="'+e.detail.id+'"]').forEach(x => { x.hidden = false; }));
   K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
   K.Persona.renderPicker("#persona");
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));

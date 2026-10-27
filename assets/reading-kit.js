@@ -823,10 +823,95 @@
     });
   }
 
+  /* ---------- in-page SQL runner (2026-10-27) ----------
+     Real SQL in the browser: SQLite compiled to WebAssembly (sql.js, from
+     cdnjs). Everything Mod 3 teaches (SELECT, JOIN, GROUP BY, CTEs, window
+     functions, COALESCE, views) runs the same as in PostgreSQL, so a Fellow
+     can edit a query and see real results instead of a hand-written table.
+     Markup:
+       <script type="text/plain" class="mlrk-sql-setup" id="db-club">
+         CREATE TABLE ...; INSERT INTO ... ;
+       </script>
+       <div class="mlrk-sql" data-db="db-club" data-file="top_readers.sql"
+            data-after="q-id" data-activity="act-sql-1">
+         <textarea class="mlrk-sql-input">SELECT ...</textarea>
+         <pre class="mlrk-sql-fallback" hidden>expected result</pre>
+       </div>
+     data-after locks Run until that question is answered; data-activity
+     awards a participation point on the first successful run; the fallback
+     shows only if the engine can't load. Each Run starts from fresh tables,
+     so one experiment can't break another box. */
+  const SQLJS_BASE="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/";
+  let sqlEngine=null;
+  function loadSqlEngine(){
+    if(sqlEngine) return sqlEngine;
+    sqlEngine=new Promise((resolve,reject)=>{
+      const go=()=>global.initSqlJs({locateFile:f=>SQLJS_BASE+f}).then(resolve,reject);
+      if(global.initSqlJs) return go();
+      const tag=document.createElement("script");
+      tag.src=SQLJS_BASE+"sql-wasm.js";
+      tag.onload=go;tag.onerror=()=>reject(new Error("could not load the SQL engine"));
+      document.head.appendChild(tag);
+    });
+    return sqlEngine;
+  }
+  function esc(t){return String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+  function renderResult(res){
+    if(!res.length) return '<p class="mlrk-sql-note">Done. This statement returns no rows.</p>';
+    const last=res[res.length-1];
+    const head="<tr>"+last.columns.map(c=>"<th>"+esc(c)+"</th>").join("")+"</tr>";
+    const rows=last.values.map(r=>"<tr>"+r.map(v=>v===null?'<td class="mlrk-sql-null">NULL</td>':"<td>"+esc(v)+"</td>").join("")+"</tr>").join("");
+    const n=last.values.length;
+    return '<div class="mlrk-sql-table"><table>'+head+rows+"</table></div>"+
+      '<p class="mlrk-sql-note">('+n+(n===1?" row)":" rows)")+"</p>";
+  }
+  function sqlRunners(root){
+    $$(".mlrk-sql",root).forEach(box=>{
+      if(box.dataset.wired) return;
+      box.dataset.wired="1";
+      const input=$(".mlrk-sql-input",box);
+      const fallback=$(".mlrk-sql-fallback",box);
+      const original=input.value;
+      input.setAttribute("spellcheck","false");input.setAttribute("autocapitalize","off");
+      if(!input.getAttribute("aria-label")) input.setAttribute("aria-label","SQL query you can edit");
+      input.rows=Math.max(3,original.split("\n").length);
+      const bar=document.createElement("div");bar.className="mlrk-actions";
+      const run=document.createElement("button");run.type="button";run.className="mlrk-btn";run.textContent="Run query";
+      const reset=document.createElement("button");reset.type="button";reset.className="mlrk-btn mlrk-btn-quiet";reset.textContent="Reset query";
+      bar.append(run,reset);
+      const out=document.createElement("div");out.className="mlrk-sql-out";out.setAttribute("aria-live","polite");
+      input.insertAdjacentElement("afterend",bar);bar.insertAdjacentElement("afterend",out);
+      if(fallback) out.insertAdjacentElement("afterend",fallback);
+      if(box.dataset.after){run.dataset.after=box.dataset.after;run.dataset.afterNote=box.dataset.afterNote||"Answer the question first. Then you can run the query.";}
+      const mark=box.dataset.activity?activity(box.dataset.activity,()=>box.dataset.ranOk==="1"):null;
+      run.addEventListener("click",()=>{
+        out.innerHTML='<p class="mlrk-sql-note">Running…</p>';
+        loadSqlEngine().then(SQL=>{
+          const db=new SQL.Database();
+          try{
+            const setup=box.dataset.db&&document.getElementById(box.dataset.db);
+            if(setup) db.run(setup.textContent);
+            out.innerHTML=renderResult(db.exec(input.value));
+            box.dataset.ranOk="1";if(mark) mark();
+          }catch(e){
+            out.innerHTML='<p class="mlrk-sql-error"><strong>Error:</strong> '+esc(e.message)+"</p>";
+          }finally{db.close()}
+        }).catch(()=>{
+          out.innerHTML='<p class="mlrk-sql-note">The SQL engine could not load (check your internet connection). Here is what this query returns:</p>';
+          if(fallback) fallback.hidden=false;
+        });
+      });
+      reset.addEventListener("click",()=>{input.value=original;out.innerHTML="";});
+      if(box.dataset.after) document.addEventListener("mlrk:done",e=>{if(e.detail.id===box.dataset.after) run.click()});
+    });
+    wireGates(root);
+  }
+
   function init(opts){
     // opts:{readingId, title, progressBarSelector, bannerSelector}
     currentReadingId=opts.readingId;currentTitle=opts.title;
     fileTabs(document);
+    sqlRunners(document);
     wireGates(document);
     wireRunButtons(document);
     const saved=Storage.load(opts.readingId);
@@ -847,7 +932,7 @@
 
   global.ReadingKit={
     init, quiz, selectAll, flipCards, orderSteps, dragDrop, video, freeResponse,
-    activity, terminal, runFile, fileTabs, markDone, wireGates, wireRunButtons, shuffleSlots,
+    activity, terminal, runFile, fileTabs, markDone, wireGates, wireRunButtons, sqlRunners, shuffleSlots,
     selfCheck, traceStepper, Scoring, Persona, Storage,
     snapshot, toMarkdown, toText, download, restore, wireImport, submitForCredit, buildSubmitURL
   };

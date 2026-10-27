@@ -1,4 +1,4 @@
-# Content brief: What Goes In, What Comes Out — Designing Your First Validation Function
+# Content brief: Trust, But Verify — Designing Your First Validation Function
 
 - **Quest / LiveLab(s):** Quest 1.6 Validate, Catch, Keep Going (Days 9–10). Decks: "Writing Your First Validation Function, From Scratch" and "Error Handling". Never printed in the reading.
 - **Skill tags (from taxonomy.json):** debugging-testing, python-fundamentals

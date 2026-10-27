@@ -21,7 +21,7 @@
 <h1>Three Right Answers, One Good Choice</h1>
 <p class="mlrk-lead">A gym company gets two questions on the same morning. Both can be answered in SQL, and each can be answered correctly in more than one way. No query here breaks. The skill is picking between tools that all work, and saying in one sentence why you picked the one you did.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~23–26 minutes</span>
+  <span class="mlrk-pill">~24–27 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -32,6 +32,27 @@
 <div id="banner" class="mlrk-banner" role="status" hidden></div>
 
 <main class="mlrk-main"><div class="mlrk-wrap">
+<script type="text/plain" class="mlrk-sql-setup" id="db-northline">
+CREATE TABLE locations (
+  location_id INTEGER PRIMARY KEY,
+  location_name TEXT NOT NULL,
+  region TEXT NOT NULL
+);
+INSERT INTO locations (location_id, location_name, region) VALUES
+  (1, 'Bayview', 'North'), (2, 'Ridgeway', 'North'),
+  (3, 'Eastport', 'East'), (4, 'Lakeshore', 'East'),
+  (5, 'Southgate', 'South'), (6, 'Clay Hill', 'South');
+CREATE TABLE signups (
+  signup_id INTEGER PRIMARY KEY,
+  location_id INTEGER NOT NULL REFERENCES locations(location_id),
+  signup_date DATE NOT NULL
+);
+-- 760 sign-ups: 148, 92, 131, 74, 205, 110 per location
+WITH RECURSIVE seq(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM seq WHERE i < 205),
+counts(location_id, n) AS (VALUES (1, 148), (2, 92), (3, 131), (4, 74), (5, 205), (6, 110))
+INSERT INTO signups (location_id, signup_date)
+SELECT c.location_id, '2026-03-01' FROM counts AS c JOIN seq ON seq.i <= c.n;
+</script>
 
 <section class="mlrk-section" id="persona-section">
   <div id="persona"></div>
@@ -132,7 +153,7 @@
 </svg>
 <p><code>102.50</code> appears twice on the right, and that is correct: the average belongs to the region, so both East locations carry it. This matters because a request never names the tool, and people will ask why you wrote a query the way you did. You already know subqueries, CTEs, and window functions. Now you'll choose between them.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what psql prints when you type <code>psql -d northline -f name.sql</code> in the terminal. The data is two tables: <code>locations</code> (one row per gym, with <code>location_id</code>, <code>location_name</code>, and <code>region</code>) and <code>signups</code> (one row per person who joined, with a <code>location_id</code>).</p>
+<p><strong>How the examples work:</strong> the SQL boxes run real SQL in your browser. Edit a query and click Run to try your own version. It works the same in the PostgreSQL you use in class. The data is two tables: <code>locations</code> (one row per gym, with <code>location_id</code>, <code>location_name</code>, and <code>region</code>) and <code>signups</code> (one row per person who joined, with a <code>location_id</code>).</p>
 </div>
 </section>
 
@@ -159,7 +180,8 @@
 <li>A <strong>derived table</strong> is a subquery inside <code>FROM</code>, given a name with <code>AS</code>, so the query around it can read it like a table. Here that is <code>per_loc</code>. It lasts only while this one query runs.</li>
 </ul>
 <div class="mlrk-card" id="card-nested"><p><strong>Predict:</strong> the chain-wide average is 126.67 sign-ups. Using the counts in the picture, how many locations does <code>nested.sql</code> print?</p>
-<pre class="mlrk-code" data-file="nested.sql">SELECT l.location_name, COUNT(s.signup_id) AS sign_ups
+<div class="mlrk-sql" data-db="db-northline" data-file="nested.sql" data-after="q-nested">
+<textarea class="mlrk-sql-input">SELECT l.location_name, COUNT(s.signup_id) AS sign_ups
 FROM locations AS l
 LEFT JOIN signups AS s ON s.location_id = l.location_id
 GROUP BY l.location_name
@@ -172,14 +194,14 @@ HAVING COUNT(s.signup_id) &gt; (
     GROUP BY l2.location_name
   ) AS per_loc
 )
-ORDER BY sign_ups DESC;</pre>
-<button type="button" class="mlrk-btn" data-run="nested.sql" data-after="q-nested" data-cmd="psql -d northline -f nested.sql"></button>
-<div class="mlrk-run" data-file="nested.sql" data-cmd="psql -d northline -f nested.sql" hidden><pre> location_name | sign_ups
+ORDER BY sign_ups DESC;</textarea>
+<pre class="mlrk-sql-fallback" hidden> location_name | sign_ups
 ---------------+----------
  Southgate     |      205
  Bayview       |      148
  Eastport      |      131
-(3 rows)</pre></div>
+(3 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="three">3</button>
 <button type="button" class="mlrk-choice" data-a="six">6</button>
 <button type="button" class="mlrk-choice" data-a="two">2</button>
@@ -197,16 +219,9 @@ SELECT location_name, sign_ups
 FROM per_location
 WHERE sign_ups &gt; (SELECT AVG(sign_ups) FROM per_location)
 ORDER BY sign_ups DESC;</pre>
-<button type="button" class="mlrk-btn" data-run="cte_version.sql" data-after="q-withblank" data-after-note="Fill in the blank first. Then you can run it." data-cmd="psql -d northline -f cte_version.sql"></button>
-<div class="mlrk-run" data-file="cte_version.sql" data-cmd="psql -d northline -f cte_version.sql" hidden><pre> location_name | sign_ups
----------------+----------
- Southgate     |      205
- Bayview       |      148
- Eastport      |      131
-(3 rows)</pre></div>
 <ol class="mlrk-steplist">
   <li>Type the one keyword that opens a CTE. It is four letters. Capital letters or not, either is fine.</li>
-  <li>Press <strong>Check</strong>. Then run the file and compare its rows with <code>nested.sql</code>.</li>
+  <li>Press <strong>Check</strong>. Then the query runs below. Compare its rows with <code>nested.sql</code>.</li>
 </ol>
 <div class="mlrk-fillblank">
   <label for="withblank">The blank is:</label>
@@ -214,16 +229,35 @@ ORDER BY sign_ups DESC;</pre>
   <button type="button" id="withblankcheck" class="mlrk-btn">Check</button>
 </div>
 <div id="withblankfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-sql" data-db="db-northline" data-file="cte_version.sql" data-after="q-withblank">
+<textarea class="mlrk-sql-input">WITH per_location AS (
+  SELECT l.location_name, l.region, COUNT(s.signup_id) AS sign_ups
+  FROM locations AS l
+  LEFT JOIN signups AS s ON s.location_id = l.location_id
+  GROUP BY l.location_name, l.region
+)
+SELECT location_name, sign_ups
+FROM per_location
+WHERE sign_ups &gt; (SELECT AVG(sign_ups) FROM per_location)
+ORDER BY sign_ups DESC;</textarea>
+<pre class="mlrk-sql-fallback" hidden> location_name | sign_ups
+---------------+----------
+ Southgate     |      205
+ Bayview       |      148
+ Eastport      |      131
+(3 rows)</pre>
+</div>
 <p>Same rows. The CTE is not more correct, and on six gyms it isn't measurably faster. What it gives you is a middle step you can check on its own. Swap the last part for <code>SELECT * FROM per_location</code>:</p>
-<pre class="mlrk-code" data-file="check_step.sql">WITH per_location AS (
+<div class="mlrk-sql" data-db="db-northline" data-file="check_step.sql" data-activity="act-sql-check">
+<textarea class="mlrk-sql-input">WITH per_location AS (
   SELECT l.location_name, l.region, COUNT(s.signup_id) AS sign_ups
   FROM locations AS l
   LEFT JOIN signups AS s ON s.location_id = l.location_id
   GROUP BY l.location_name, l.region
 )
 SELECT * FROM per_location
-ORDER BY location_name;</pre>
-<div class="mlrk-run" data-file="check_step.sql" data-cmd="psql -d northline -f check_step.sql"><pre> location_name | region | sign_ups
+ORDER BY location_name;</textarea>
+<pre class="mlrk-sql-fallback" hidden> location_name | region | sign_ups
 ---------------+--------+----------
  Bayview       | North  |      148
  Clay Hill     | South  |      110
@@ -231,7 +265,8 @@ ORDER BY location_name;</pre>
  Lakeshore     | East   |       74
  Ridgeway      | North  |       92
  Southgate     | South  |      205
-(6 rows)</pre></div>
+(6 rows)</pre>
+</div>
 <div class="mlrk-card" id="card-cost"><p><strong>What does the nested version really cost you, compared with the CTE?</strong></p>
 <button type="button" class="mlrk-choice" data-a="maintain">The counting step is written twice, and its middle step can't be run on its own to check it.</button>
 <button type="button" class="mlrk-choice" data-a="wrong">It returns different rows than the CTE version.</button>
@@ -242,7 +277,8 @@ ORDER BY location_name;</pre>
 <section class="mlrk-section">
 <h2>4. Question 2: every row has to stay</h2>
 <p>Question 2 wants all six locations, each with its region's average. One way uses a <strong>correlated subquery</strong>: a subquery that uses a column from the outer query, so it runs again for every outer row. Here, <code>per_location.region</code> comes from the outer query.</p>
-<pre class="mlrk-code" data-file="correlated.sql">WITH per_location AS (
+<div class="mlrk-sql" data-db="db-northline" data-file="correlated.sql">
+<textarea class="mlrk-sql-input">WITH per_location AS (
   SELECT l.location_name, l.region, COUNT(s.signup_id) AS sign_ups
   FROM locations AS l
   LEFT JOIN signups AS s ON s.location_id = l.location_id
@@ -253,20 +289,22 @@ SELECT location_name, region, sign_ups,
    FROM per_location AS p2
    WHERE p2.region = per_location.region) AS region_avg
 FROM per_location
-ORDER BY region, sign_ups DESC;</pre>
-<div class="mlrk-run" data-file="correlated.sql" data-cmd="psql -d northline -f correlated.sql"><pre> location_name | region | sign_ups | region_avg
+ORDER BY region, sign_ups DESC;</textarea>
+<pre class="mlrk-sql-fallback" hidden> location_name | region | sign_ups | region_avg
 ---------------+--------+----------+------------
- Eastport      | East   |      131 |     102.50
- Lakeshore     | East   |       74 |     102.50
- Bayview       | North  |      148 |     120.00
- Ridgeway      | North  |       92 |     120.00
- Southgate     | South  |      205 |     157.50
- Clay Hill     | South  |      110 |     157.50
-(6 rows)</pre></div>
+ Eastport      | East   |      131 |      102.5
+ Lakeshore     | East   |       74 |      102.5
+ Bayview       | North  |      148 |      120.0
+ Ridgeway      | North  |       92 |      120.0
+ Southgate     | South  |      205 |      157.5
+ Clay Hill     | South  |      110 |      157.5
+(6 rows)</pre>
+</div>
 <p>Six locations means the inner question gets asked six times. On six rows nobody notices. On millions of rows, that repeating is why correlated subqueries can get slow.</p>
 <p>A <strong>window function</strong> does the same job in one line. It looks across a set of related rows and writes one value onto each row, without folding rows together. <strong>PARTITION BY</strong> region restarts the calculation for each region.</p>
 <div class="mlrk-card" id="card-window"><p><strong>Predict:</strong> <code>window.sql</code> starts from the 6 rows of <code>per_location</code>. How many rows does it print?</p>
-<pre class="mlrk-code" data-file="window.sql">WITH per_location AS (
+<div class="mlrk-sql" data-db="db-northline" data-file="window.sql" data-after="q-window">
+<textarea class="mlrk-sql-input">WITH per_location AS (
   SELECT l.location_name, l.region, COUNT(s.signup_id) AS sign_ups
   FROM locations AS l
   LEFT JOIN signups AS s ON s.location_id = l.location_id
@@ -275,21 +313,22 @@ ORDER BY region, sign_ups DESC;</pre>
 SELECT location_name, region, sign_ups,
   ROUND(AVG(sign_ups) OVER (PARTITION BY region), 2) AS region_avg
 FROM per_location
-ORDER BY region, sign_ups DESC;</pre>
-<button type="button" class="mlrk-btn" data-run="window.sql" data-after="q-window" data-cmd="psql -d northline -f window.sql"></button>
-<div class="mlrk-run" data-file="window.sql" data-cmd="psql -d northline -f window.sql" hidden><pre> location_name | region | sign_ups | region_avg
+ORDER BY region, sign_ups DESC;</textarea>
+<pre class="mlrk-sql-fallback" hidden> location_name | region | sign_ups | region_avg
 ---------------+--------+----------+------------
- Eastport      | East   |      131 |     102.50
- Lakeshore     | East   |       74 |     102.50
- Bayview       | North  |      148 |     120.00
- Ridgeway      | North  |       92 |     120.00
- Southgate     | South  |      205 |     157.50
- Clay Hill     | South  |      110 |     157.50
-(6 rows)</pre></div>
+ Eastport      | East   |      131 |      102.5
+ Lakeshore     | East   |       74 |      102.5
+ Bayview       | North  |      148 |      120.0
+ Ridgeway      | North  |       92 |      120.0
+ Southgate     | South  |      205 |      157.5
+ Clay Hill     | South  |      110 |      157.5
+(6 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="six">6</button>
 <button type="button" class="mlrk-choice" data-a="three">3</button>
 <button type="button" class="mlrk-choice" data-a="one">1</button>
 <div id="windowfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>The browser prints <code>102.5</code> and <code>120</code> where PostgreSQL prints <code>102.50</code> and <code>120.00</code>. They are the same numbers, shown with fewer zeros.</p>
 <div class="mlrk-callout mlrk-callout-green"><p><strong>Worth remembering:</strong> <code>GROUP BY region</code> would return 3 rows. <code>PARTITION BY region</code> returns all 6.</p></div>
 </section>
 
@@ -461,6 +500,7 @@ git push</pre></li>
 <li><a href="https://sqlzoo.net/wiki/SELECT_within_SELECT_Tutorial" target="_blank" rel="noopener">SQLZoo: SELECT within SELECT</a> — free in-browser subquery exercises.</li>
 <li><a href="https://mystery.knightlab.com/" target="_blank" rel="noopener">SQL Murder Mystery</a> — a detective game you solve by writing queries.</li>
 <li><a href="https://www.postgresql.org/docs/current/queries-with.html" target="_blank" rel="noopener">PostgreSQL: WITH Queries</a> — the official reference for CTEs.</li>
+<li><strong>Practice more:</strong> <a href="https://sqlzoo.net/wiki/Window_functions" target="_blank" rel="noopener">SQLZoo: Window functions</a> — interactive exercises where you write window functions with PARTITION BY in the browser and it checks your result.</li>
 </ul>
 </section>
 

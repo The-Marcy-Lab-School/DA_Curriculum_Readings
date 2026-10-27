@@ -21,7 +21,7 @@
 <h1>Clearing the Bar</h1>
 <p class="mlrk-lead">Pine Street Design is a three-person studio that makes logos and websites for local shops. It keeps one table with a row for every project. The owners want two answers: how much each client has paid in total, and which clients came back more than once. Both answers mean turning many rows into one row per client.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~21–24 minutes</span>
+  <span class="mlrk-pill">~22–25 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No SQL setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -32,6 +32,23 @@
 <div id="banner" class="mlrk-banner" role="status" hidden></div>
 
 <main class="mlrk-main"><div class="mlrk-wrap">
+<script type="text/plain" class="mlrk-sql-setup" id="db-pinestreet">
+CREATE TABLE projects (
+  project_id INTEGER PRIMARY KEY,
+  client_name TEXT NOT NULL,
+  project_type TEXT NOT NULL,
+  hours INTEGER NOT NULL,
+  bill_amount INTEGER NOT NULL,
+  year INTEGER NOT NULL
+);
+INSERT INTO projects (project_id, client_name, project_type, hours, bill_amount, year) VALUES
+  (1, 'Harbor Florist', 'logo design', 10, 1200, 2025),
+  (2, 'Pinewood Dental', 'website', 26, 3100, 2025),
+  (3, 'Union Grain Bakery', 'new look', 22, 2600, 2025),
+  (4, 'Harbor Florist', 'packaging', 14, 1700, 2026),
+  (5, 'Union Grain Bakery', 'packaging', 18, 2200, 2026),
+  (6, 'Union Grain Bakery', 'logo design', 9, 1100, 2025);
+</script>
 
 <section class="mlrk-section" id="persona-section">
   <div id="persona"></div>
@@ -67,7 +84,7 @@
 <p>No single row says how much Union Grain Bakery paid in total. That answer is spread across rows 3, 5, and 6. You need to gather each client's rows together and add them up.</p>
 <p>This matters because "which customers cross some line" is one of the most common questions in a data job: more than 3 orders, over $10,000 spent. You already know how to filter rows with <code>WHERE</code> and how a join can repeat a row. Now you'll summarize many rows into one per group.</p>
 <div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> each example is a <code>.sql</code> file. The Run button shows what psql prints when you type <code>psql -d pinestreet -f name.sql</code> in the terminal, where <code>pinestreet</code> is the database name.</p>
+<p><strong>How the examples work:</strong> the SQL boxes run real SQL in your browser, using the <code>projects</code> table above. Edit a query and click Run to try your own version. It works the same in the PostgreSQL you use in class.</p>
 </div>
 </section>
 
@@ -75,13 +92,14 @@
 <h2>2. Recall</h2>
 <p>Two skills you already have come back in every query below.</p>
 <div class="mlrk-card" id="card-where"><p><strong>Predict:</strong> using the <code>projects</code> table above, how many rows does <code>year_2026.sql</code> print?</p>
-<pre class="mlrk-code" data-file="year_2026.sql">SELECT * FROM projects WHERE year = 2026;</pre>
-<button type="button" class="mlrk-btn" data-run="year_2026.sql" data-after="q-where" data-cmd="psql -d pinestreet -f year_2026.sql"></button>
-<div class="mlrk-run" data-file="year_2026.sql" data-cmd="psql -d pinestreet -f year_2026.sql" hidden><pre> project_id |    client_name     | project_type | hours | bill_amount | year
+<div class="mlrk-sql" data-db="db-pinestreet" data-file="year_2026.sql" data-after="q-where">
+<textarea class="mlrk-sql-input">SELECT * FROM projects WHERE year = 2026 ORDER BY project_id;</textarea>
+<pre class="mlrk-sql-fallback" hidden> project_id |    client_name     | project_type | hours | bill_amount | year
 ------------+--------------------+--------------+-------+-------------+------
           4 | Harbor Florist     | packaging    |    14 |        1700 | 2026
           5 | Union Grain Bakery | packaging    |    18 |        2200 | 2026
-(2 rows)</pre></div>
+(2 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="two">2</button>
 <button type="button" class="mlrk-choice" data-a="six">6</button>
 <button type="button" class="mlrk-choice" data-a="four">4</button>
@@ -161,19 +179,20 @@
 </svg>
 <div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>AS total_billed</code> gives an output column a name. Without it, psql would label the column <code>sum</code>.</p></div>
 <div class="mlrk-card" id="card-totals"><p><strong>Predict:</strong> what two numbers does <code>client_totals.sql</code> show for Union Grain Bakery?</p>
-<pre class="mlrk-code" data-file="client_totals.sql">SELECT client_name,
+<div class="mlrk-sql" data-db="db-pinestreet" data-file="client_totals.sql" data-after="q-totals" data-activity="act-sql-totals">
+<textarea class="mlrk-sql-input">SELECT client_name,
        COUNT(*) AS projects,
        SUM(bill_amount) AS total_billed
 FROM projects
 GROUP BY client_name
-ORDER BY client_name;</pre>
-<button type="button" class="mlrk-btn" data-run="client_totals.sql" data-after="q-totals" data-cmd="psql -d pinestreet -f client_totals.sql"></button>
-<div class="mlrk-run" data-file="client_totals.sql" data-cmd="psql -d pinestreet -f client_totals.sql" hidden><pre>    client_name     | projects | total_billed
+ORDER BY client_name;</textarea>
+<pre class="mlrk-sql-fallback" hidden>    client_name     | projects | total_billed
 --------------------+----------+--------------
  Harbor Florist     |        2 |         2900
  Pinewood Dental    |        1 |         3100
  Union Grain Bakery |        3 |         5900
-(3 rows)</pre></div>
+(3 rows)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="right">3 projects and 5900</button>
 <button type="button" class="mlrk-choice" data-a="onerow">1 project and 2600</button>
 <button type="button" class="mlrk-choice" data-a="whole">6 projects and 11900</button>
@@ -191,12 +210,6 @@ FROM projects
 ____(1) client_name
 ____(2) COUNT(*) &gt; 1
 ORDER BY client_name;</pre>
-<button type="button" class="mlrk-btn" data-run="repeat_clients.sql" data-after="q-fillclauses" data-after-note="Solve both blanks first. Then you can run it." data-cmd="psql -d pinestreet -f repeat_clients.sql"></button>
-<div class="mlrk-run" data-file="repeat_clients.sql" data-cmd="psql -d pinestreet -f repeat_clients.sql" hidden><pre>    client_name     | project_count
---------------------+---------------
- Harbor Florist     |             2
- Union Grain Bakery |             3
-(2 rows)</pre></div>
 <ol class="mlrk-steplist">
   <li>In box (1), type the two-word clause that gathers rows into one group per client. It runs before any count exists.</li>
   <li>In box (2), type the one-word clause that keeps only the groups whose count is more than 1.</li>
@@ -212,22 +225,37 @@ ORDER BY client_name;</pre>
 </div>
 <p><button type="button" id="fillcheck" class="mlrk-btn">Check my answers</button></p>
 <div id="fillfb" class="mlrk-feedback" tabindex="-1"></div>
+<div class="mlrk-sql" data-db="db-pinestreet" data-file="repeat_clients.sql" data-after="q-fillclauses">
+<textarea class="mlrk-sql-input">SELECT client_name, COUNT(*) AS project_count
+FROM projects
+GROUP BY client_name
+HAVING COUNT(*) &gt; 1
+ORDER BY client_name;</textarea>
+<pre class="mlrk-sql-fallback" hidden>    client_name     | project_count
+--------------------+---------------
+ Harbor Florist     |             2
+ Union Grain Bakery |             3
+(2 rows)</pre>
+</div>
 
 <h3>Why WHERE can't do HAVING's job</h3>
 <div class="mlrk-card" id="card-wherecount"><p><strong>Predict:</strong> <code>where_count.sql</code> puts the count test in <code>WHERE</code>. What happens?</p>
-<pre class="mlrk-code" data-file="where_count.sql">SELECT client_name, COUNT(*) AS project_count
+<div class="mlrk-sql" data-db="db-pinestreet" data-file="where_count.sql" data-after="q-wherecount" data-expect-error>
+<textarea class="mlrk-sql-input">SELECT client_name, COUNT(*) AS project_count
 FROM projects
 WHERE COUNT(*) &gt; 1
-GROUP BY client_name;</pre>
-<button type="button" class="mlrk-btn" data-run="where_count.sql" data-after="q-wherecount" data-cmd="psql -d pinestreet -f where_count.sql"></button>
-<div class="mlrk-run" data-file="where_count.sql" data-cmd="psql -d pinestreet -f where_count.sql" hidden><pre>psql:where_count.sql:4: ERROR:  aggregate functions are not allowed in WHERE
-LINE 3: WHERE COUNT(*) &gt; 1
-              ^</pre></div>
+GROUP BY client_name;</textarea>
+<pre class="mlrk-sql-fallback" hidden>Error: misuse of aggregate: COUNT()</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="error">An error, because WHERE runs before any group or count exists</button>
 <button type="button" class="mlrk-choice" data-a="same">The same 2 rows as <code>repeat_clients.sql</code></button>
 <button type="button" class="mlrk-choice" data-a="all">All 3 clients, because WHERE is skipped</button>
 <div id="wherecountfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>The error points at the problem with <code>^</code>. WHERE looks at one row at a time, before grouping, so there is no count for it to test yet.</p>
+<p>WHERE looks at one row at a time, before grouping, so there is no count for it to test yet. PostgreSQL refuses the same query, with slightly different words:</p>
+<div class="mlrk-postgres-only"><p><strong>PostgreSQL only: shown, not run.</strong> The same query in psql prints this. The <code>^</code> points at the part it refused.</p>
+<pre class="mlrk-code">ERROR:  aggregate functions are not allowed in WHERE
+LINE 3: WHERE COUNT(*) &gt; 1
+              ^</pre></div>
 </section>
 
 <section class="mlrk-section">
@@ -276,17 +304,18 @@ LINE 3: WHERE COUNT(*) &gt; 1
   </g>
 </svg>
 <div class="mlrk-card" id="card-busy"><p><strong>Predict:</strong> <code>busy_2025.sql</code> keeps only 2025 projects, then keeps clients with more than 1 of them. Which clients come back?</p>
-<pre class="mlrk-code" data-file="busy_2025.sql">SELECT client_name, COUNT(*) AS project_count
+<div class="mlrk-sql" data-db="db-pinestreet" data-file="busy_2025.sql" data-after="q-busy" data-activity="act-sql-busy">
+<textarea class="mlrk-sql-input">SELECT client_name, COUNT(*) AS project_count
 FROM projects
 WHERE year = 2025
 GROUP BY client_name
 HAVING COUNT(*) &gt; 1
-ORDER BY project_count DESC;</pre>
-<button type="button" class="mlrk-btn" data-run="busy_2025.sql" data-after="q-busy" data-cmd="psql -d pinestreet -f busy_2025.sql"></button>
-<div class="mlrk-run" data-file="busy_2025.sql" data-cmd="psql -d pinestreet -f busy_2025.sql" hidden><pre>    client_name     | project_count
+ORDER BY project_count DESC;</textarea>
+<pre class="mlrk-sql-fallback" hidden>    client_name     | project_count
 --------------------+---------------
  Union Grain Bakery |             2
-(1 row)</pre></div>
+(1 row)</pre>
+</div>
 <button type="button" class="mlrk-choice" data-a="union">Only Union Grain Bakery</button>
 <button type="button" class="mlrk-choice" data-a="both">Union Grain Bakery and Harbor Florist</button>
 <button type="button" class="mlrk-choice" data-a="none">No clients</button>
@@ -440,6 +469,7 @@ git push</pre></li>
 <li><a href="https://www.postgresql.org/docs/current/tutorial-agg.html" target="_blank" rel="noopener">PostgreSQL Tutorial: Aggregate Functions</a> — the official reference on GROUP BY and aggregation.</li>
 <li><a href="https://sqlbolt.com/lesson/select_queries_with_aggregates" target="_blank" rel="noopener">SQLBolt: Queries with Aggregates</a> — free interactive practice writing GROUP BY/HAVING queries.</li>
 <li><a href="https://mode.com/sql-tutorial/sql-having/" target="_blank" rel="noopener">Mode: SQL HAVING</a> — more worked examples on filtering grouped results.</li>
+<li><strong>Practice more:</strong> <a href="https://sqlbolt.com/lesson/select_queries_with_aggregates_pt_2" target="_blank" rel="noopener">SQLBolt: Queries with aggregates (Pt. 2)</a> — an interactive lesson where you write GROUP BY and HAVING queries and it checks your answer.</li>
 </ul>
 </section>
 
