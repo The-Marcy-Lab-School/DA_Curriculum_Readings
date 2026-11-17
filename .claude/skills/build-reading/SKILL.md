@@ -151,20 +151,25 @@ conflict.
 ### The template (target 20–25 minutes, about 1,100–1,300 words of content)
 1. **Hook + goal**: one familiar scenario, 60 words or fewer. One sentence of
    why it matters and one of what the reader already knows fold in here.
-2. **Recall**: 2 questions, only on things an earlier reading actually taught
+2. **Key terms for this reading** (unnumbered, right after the hook, before
+   section 1): flip cards for the quest's Mission terms (plus at most 2
+   others), so the reader sees the words before meeting them. Angelica
+   (2026-11-17) wants these at the top, not the end. The cards preview terms;
+   each term is still bolded and defined with an example where it first comes
+   up in an idea block. Intro line: "These are the words this reading uses.
+   Flip a card to see what a word means. Each one comes up again below with an
+   example."
+3. **Recall**: 2 questions, only on things an earlier reading actually taught
    (check the syntax ledger). A module's first reading teaches a short primer
    instead.
-3. **Three idea blocks** (four for a big topic): plain explanation with
+4. **Three idea blocks** (four for a big topic): plain explanation with
    Vocabulary Mission terms bolded and defined at first use → the `.py` file →
    a predict question → Run → output under the code.
-4. **One mixed check**: a select-all or a drag sort.
-5. **Wrap-up**: 3 bullets, one "new situation" question in the same scenario,
+5. **One mixed check**: a select-all or a drag sort.
+6. **Wrap-up**: 3 bullets, one "new situation" question in the same scenario,
    one sentence on interviews, one sentence on where the idea goes next.
-6. **One reflection box** with a sentence starter; the AI prompt is optional
+7. **One reflection box** with a sentence starter; the AI prompt is optional
    inside it.
-7. **Key-term review cards** at the end, for the quest's Mission terms (plus at
-   most 2 others). Cards review terms; they are not the first time a reader
-   meets a word.
 8. Optional "Go further" video (not timed), Additional resources, then the
    score / download / submit block.
 

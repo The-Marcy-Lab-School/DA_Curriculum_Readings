@@ -777,6 +777,18 @@ def _quest_for(path):
     return None, data
 
 
+def check_key_terms_first(html):
+    """Key-term flip cards come before section 1, not at the end (Angelica,
+    2026-11-17): students want the words up front."""
+    vocab = html.find('id="vocab"')
+    first = re.search(r"<h2>1\. ", html)
+    if vocab < 0 or not first:
+        return []
+    if vocab > first.start():
+        return [("ERROR", "Key-term cards (#vocab) come after section 1 — move them right after the hook, before section 1")]
+    return []
+
+
 def check_quest_vocabulary(path, html):
     """A reading must define the Vocabulary Mission terms of the quest that
     sends students to it.
@@ -852,6 +864,7 @@ def run(path, skip_links=False):
     findings += check_gendered_pronouns(prose)
     findings += check_british_spellings(prose)
     findings += check_quest_vocabulary(path, html)
+    findings += check_key_terms_first(html)
     findings += check_py_files(path, html)
     findings += check_sql_runners(html)
     findings += check_video_language(html, skip_network=skip_links)
