@@ -8,6 +8,7 @@ Usage:
 Exits non-zero if any ERROR-level finding exists (WARN-level findings are
 judgment calls a human/QA agent should still read, not hard fails).
 """
+import os
 import re
 import sys
 import glob
@@ -217,6 +218,21 @@ def check_time_estimate(text, word_count):
     if reading_minutes > lo * 2.5:
         findings.append(("WARN", f"stated time ~{lo} min looks low next to ~{word_count} words (~{reading_minutes:.0f} min reading alone, before activities/video)"))
     return findings
+
+
+# Modules held to Angelica's 20-minute maximum (2026-11-18). Add a module
+# here once its readings are rebuilt to it.
+MAX20_MODULES = {"Mod2"}
+
+
+def check_time_cap(path, text):
+    parts = Path(path).resolve().relative_to(Path(__file__).resolve().parent.parent).parts
+    if not parts or parts[0] not in MAX20_MODULES:
+        return []
+    m = re.search(r"~?(\d+)(?:[–-](\d+))?\s*min", text, re.I)
+    if m and int(m.group(2) or m.group(1)) > 20:
+        return [("ERROR", f"stated time {m.group(0)} is over the 20-minute maximum — trim the reading, don't shrink the number")]
+    return []
 
 
 def visible_text(html):
@@ -514,7 +530,7 @@ def _default_caption_language(body):
 # Modules whose Python examples must be real .py files (SKILL.md, "Python
 # examples are .py files"). Angelica, 2026-10-18: Mod 1 examples must be
 # things a Fellow could type into a .py file, or simulations of running one.
-PY_FILE_MODULES = {"Mod1"}
+PY_FILE_MODULES = {"Mod1", "Mod2"}  # Mod2: only Day 1 (NumPy, before notebooks) uses .py files
 _PY_HINT = re.compile(r'^\s*(def |class |import |from \w+ import|print\(|for |while |if |return |\w+\s*=[^=])', re.M)
 _BLANK = re.compile(r'_{3,}')
 
@@ -527,7 +543,18 @@ class _FileBlocks(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.blocks, self._stack = [], []
 
+    _VOID = {"img", "br", "hr", "input", "meta", "link", "source", "wbr", "area", "col", "embed", "track"}
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        if tag not in self._VOID:
+            self.handle_endtag(tag)
+
     def handle_starttag(self, tag, attrs):
+        if tag in self._VOID:  # never closed, so it must not open a level
+            for s in self._stack:
+                s.setdefault("raw", []).append("<" + tag)
+            return
         a = dict(attrs)
         cls = (a.get("class") or "").split()
         for s in self._stack:
@@ -602,8 +629,8 @@ def check_py_files(path, html):
                 src = Path(d, name)
                 src.write_text(_norm(text) + "\n")
                 try:
-                    r = subprocess.run([sys.executable, "-I", name], capture_output=True, text=True,
-                                       timeout=5, cwd=d, input="")
+                    r = subprocess.run([os.environ.get("READING_QA_PANDAS_PY", sys.executable), "-I", name], capture_output=True, text=True,
+                                       timeout=15, cwd=d, input="")
                 except subprocess.TimeoutExpired:
                     findings.append(("ERROR", f"{where} ({name}): still running after 5 seconds"))
                     continue
@@ -620,7 +647,7 @@ def check_py_files(path, html):
                     findings.append(("WARN", f"{where} ({name}): runs but prints nothing — call the function and print() what the reading talks about"))
                 files[name] = (r.returncode, r.stdout, err)
             else:
-                if "data-live" in b["attrs"] or not name:
+                if "data-live" in b["attrs"] or not name or name.endswith(".ipynb"):
                     continue
                 if name not in files:
                     findings.append(("WARN", f"{where}: output for {name}, but no code block for {name} comes before it"))
@@ -638,6 +665,117 @@ def check_py_files(path, html):
                 elif shown != (actual or "(no output)"):
                     findings.append(("ERROR", f"{where} ({name}): shown output differs from a real run.\n      shown:  {shown!r}\n      actual: {actual!r}"))
     return findings
+
+
+# Modules whose examples are Jupyter notebook cells running pandas 3
+# (Mod 2 on, 2026-11-18). Set READING_QA_PANDAS_PY to a Python that has
+# pandas 3 if the default interpreter doesn't.
+NB_MODULES = {"Mod2"}
+_NB_RUNNER = r"""
+import ast, io, json, sys, contextlib, traceback, os
+os.environ.setdefault("MPLBACKEND", "Agg")
+cells = json.load(sys.stdin)
+ns = {"__name__": "__main__"}
+out = []
+for src in cells:
+    buf = io.StringIO(); err = ""
+    try:
+        tree = ast.parse(src)
+        last = tree.body[-1] if tree.body and isinstance(tree.body[-1], ast.Expr) else None
+        body = tree.body[:-1] if last else tree.body
+        with contextlib.redirect_stdout(buf):
+            exec(compile(ast.Module(body=body, type_ignores=[]), "<cell>", "exec"), ns)
+            if last is not None:
+                val = eval(compile(ast.Expression(last.value), "<cell>", "eval"), ns)
+                if val is not None and not type(val).__module__.startswith("matplotlib"):
+                    print(repr(val))
+    except Exception as e:
+        err = traceback.format_exception_only(type(e), e)[-1].strip()
+    out.append({"stdout": buf.getvalue(), "err": err})
+import pandas
+print(json.dumps({"pandas": pandas.__version__, "cells": out}))
+"""
+
+
+def check_notebook_cells(path, html):
+    """Every pandas example in an NB_MODULES reading is a notebook cell:
+    data-file="name.ipynb" data-cell="N". This runs each notebook's cells in
+    page order in one namespace, the way Jupyter does (the last line's value
+    is shown), with pandas 3, in a folder holding the page's data files, and
+    checks that each `.mlrk-run` Out block matches the real result."""
+    parts = Path(path).resolve().relative_to(Path(__file__).resolve().parent.parent).parts
+    if not parts or parts[0] not in NB_MODULES:
+        return []
+    findings = []
+    body = re.sub(r"<script.*?</script>", "", html, flags=re.S)
+    if re.search(r"(^|\n)\s*(&gt;&gt;&gt;|>>>) ", body):
+        findings.append(("ERROR", "a `>>>` REPL prompt appears — show a notebook cell and its Out block instead"))
+    parser = _FileBlocks()
+    parser.feed(html)
+    cells = {}   # notebook -> [(cell no., source, block)]
+    for b in parser.blocks:
+        a = b["attrs"]
+        name, where = a.get("data-file", ""), f"line {b['line']}"
+        if b["kind"] != "code":
+            continue
+        if not name:
+            if re.search(r"\b(pd|df)\.|import pandas", "".join(b["text"])):
+                findings.append(("ERROR", f"{where}: pandas code names no notebook — add data-file=\"<name>.ipynb\" data-cell=\"N\""))
+            continue
+        if name.endswith(".ipynb"):
+            if not a.get("data-cell"):
+                findings.append(("ERROR", f"{where} ({name}): a notebook block needs data-cell=\"N\""))
+                continue
+            cells.setdefault(name, []).append((a["data-cell"], _norm("".join(b["text"])), b))
+    if not cells:
+        return findings
+    py = os.environ.get("READING_QA_PANDAS_PY", sys.executable)
+    results = {}
+    with tempfile.TemporaryDirectory() as d:
+        for b in parser.blocks:
+            n = b["attrs"].get("data-file", "")
+            if b["kind"] == "code" and n and not n.endswith((".py", ".ipynb")):
+                Path(d, n).write_text(_norm("".join(b["text"])) + "\n")
+        for nb, cs in cells.items():
+            runnable = [c for c in cs if not _BLANK.search(c[1])]
+            nums = [c[0] for c in cs]
+            if len(set(nums)) != len(nums):
+                findings.append(("ERROR", f"{nb}: two blocks share a cell number — number each cell once"))
+            try:
+                r = subprocess.run([py, "-I", "-c", _NB_RUNNER], input=json.dumps([c[1] for c in runnable]),
+                                   capture_output=True, text=True, timeout=60, cwd=d)
+                data = json.loads(r.stdout.strip().splitlines()[-1])
+            except Exception as e:
+                findings.append(("WARN", f"{nb}: could not run its cells ({e}); set READING_QA_PANDAS_PY to a Python with pandas 3"))
+                continue
+            if not data["pandas"].startswith("3."):
+                findings.append(("WARN", f"{nb}: checked with pandas {data['pandas']}, not pandas 3 — set READING_QA_PANDAS_PY"))
+            for (num, _src, blk), res in zip(runnable, data["cells"]):
+                results[(nb, num)] = res
+                expect = blk["attrs"].get("data-expect")
+                if expect and not res["err"].startswith(expect):
+                    findings.append(("ERROR", f"line {blk['line']} ({nb} cell {num}): expected {expect}, got `{res['err'] or 'no error'}`"))
+                elif res["err"] and not expect:
+                    findings.append(("ERROR", f"line {blk['line']} ({nb} cell {num}): fails with `{res['err']}` — fix it, or add data-expect if that is the lesson"))
+    for b in parser.blocks:
+        a = b["attrs"]
+        if b["kind"] != "run" or not a.get("data-file", "").endswith(".ipynb") or "data-live" in a:
+            continue
+        key = (a["data-file"], a.get("data-cell", ""))
+        if key not in results:
+            if not any(key == (nb, c[0]) for nb, cs in cells.items() for c in cs):
+                findings.append(("WARN", f"line {b['line']}: Out block for {key[0]} cell {key[1]} has no matching code cell"))
+            continue
+        res, shown = results[key], _norm("".join(b["text"]))
+        if res["err"]:
+            if res["err"] not in shown:
+                findings.append(("ERROR", f"line {b['line']} ({key[0]} cell {key[1]}): the shown output should end with the real error `{res['err']}`"))
+        elif not _norm(res["stdout"]) and shown in ("", "(no output)") and ("<img" in "".join(b.get("raw", [])) or shown == "(no output)"):
+            pass  # a chart-only cell: nothing printed, the picture is its output
+        elif shown != (_norm(res["stdout"]) or "(no output)"):
+            findings.append(("ERROR", f"line {b['line']} ({key[0]} cell {key[1]}): shown output differs from a real run.\n      shown:  {shown!r}\n      actual: {_norm(res['stdout'])!r}"))
+    return findings
+
 
 
 def check_sql_runners(html):
@@ -852,6 +990,7 @@ def run(path, skip_links=False):
     findings += check_alt_text(html)
     findings += check_export_wiring(html)
     findings += check_time_estimate(html, word_count)
+    findings += check_time_cap(path, visible_text(html))
     findings += check_copyright(text)
     findings += check_skills_callout(path, text)
     findings += check_submission_setup_directions(text.lower())
@@ -866,6 +1005,7 @@ def run(path, skip_links=False):
     findings += check_quest_vocabulary(path, html)
     findings += check_key_terms_first(html)
     findings += check_py_files(path, html)
+    findings += check_notebook_cells(path, html)
     findings += check_sql_runners(html)
     findings += check_video_language(html, skip_network=skip_links)
     findings += check_video_embeddable(html, skip_network=skip_links)

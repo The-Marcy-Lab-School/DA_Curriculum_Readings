@@ -1,25 +1,22 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>One Chart, One Point — Chart Design Rules</title>
+<title>Real Numbers, Wrong Story</title>
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:680px;height:auto;margin:1.1rem 0;display:block}
-.mlrk-illustration-sm{width:100%;max-width:560px;height:auto;margin:1rem auto;display:block}
-.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-run img{display:block;width:100%;max-width:560px;height:auto;background:var(--mlrk-white);border-radius:8px;padding:.4rem;margin-top:.6rem}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
-@media(max-width:650px){.mlrk-illustration,.mlrk-illustration-sm{max-width:100%}}
 </style>
 </head><body>
 
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
-<h1>One Chart, One Point</h1>
-<p class="mlrk-lead">Neighbor Table is a food pantry, a place that gives free groceries to families. Twice a year it sends a one-page report to the people who donate money. They never see the spreadsheet, only the page. Whether a chart on that page works depends on a few rules: the right chart type, no clutter, clear labels, and a clear point.</p>
+<h1>Real Numbers, Wrong Story</h1>
+<p class="mlrk-lead">A city runs three public pools. The pool manager is making a report for the city council, which decides where to send more lifeguards. A draft chart makes one pool look far busier than the others. Every number in the chart is real. The chart still tells the wrong story.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~20–23 minutes</span>
+  <span class="mlrk-pill">~18–19 minutes</span>
   <span class="mlrk-pill">Interactive</span>
-  <span class="mlrk-pill">No setup needed</span>
+  <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
 </div>
 </div></header>
@@ -36,7 +33,8 @@
 <section class="mlrk-section">
   <div class="mlrk-callout mlrk-callout-green">
     <p><strong>Skills you'll practice in this reading:</strong></p>
-    <p><strong>Stakeholder Communication</strong> — Writing up findings for a real audience who wasn't in the room for the analysis, with a clear structure and an actual supporting visual.</p>
+    <p><strong>Data Distributions &amp; Shape</strong> — Reading the shape of a real distribution (skew, outliers, spread) across multiple variables and matching it to the right chart or summary.</p>
+    <p><strong>Critical Thinking</strong> — Questioning an assumption, a data source, or an AI-generated answer, and backing that judgment up with specific reasoning rather than a gut feeling.</p>
   </div>
 </section>
 
@@ -49,325 +47,237 @@
 </section>
 
 <section class="mlrk-section">
+<p><strong>Your goal:</strong> spot the two ways a chart of real numbers can still mislead, a cut-off y-axis and hidden outliers, and fix both. A reader judges a chart by what it looks like, often without seeing your code. You already know how to group rows and draw a chart with pandas.</p>
+</section>
+
+<section class="mlrk-section">
 <h2>Key terms for this reading</h2>
 <p>These are the words this reading uses. Flip a card to see what a word means. Each one comes up again below with an example.</p>
 <div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Chart type</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Chart type</strong><br>The shape a chart takes (bar, line, scatter, pie), chosen to fit the question being asked.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Chart junk</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Chart junk</strong><br>Any part of a chart that carries no information: fake 3D, colors with no meaning, extra gridlines, shadows.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Data-ink ratio</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Data-ink ratio</strong><br>The share of a chart's ink that shows real data. Raise it by removing junk, not by adding more data.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Sorted by value</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Sorted by value</strong><br>Bars ordered by size, largest to smallest, instead of alphabetically or in spreadsheet order.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Direct labeling</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Direct labeling</strong><br>Printing each value right next to its mark, so the reader doesn't have to trace it to a legend or gridline.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Takeaway title</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Takeaway title</strong><br>A title that states the finding ("Produce is nearly half of all requests") instead of naming the data ("Requests by Category").</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Truncated Axis</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Truncated axis</strong><br>A y-axis that doesn't start at zero. On a bar chart, it makes small real differences look big.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Upper Fence</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Upper fence</strong><br>Q3 + 1.5 &times; (Q3 &minus; Q1). A boxplot's whisker stops here. Points past it are outliers.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>showfliers</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>showfliers</strong><br>A boxplot setting. <code>showfliers=False</code> drops every outlier point from the drawing. <code>True</code> is the default.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Chart Junk</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Chart junk</strong><br>Decoration that doesn't help a reader understand the chart, like 3D effects or extra gridlines.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>1. A chart can be right and still fail</h2>
-<p>You already know the difference between a chart you make to explore data and a chart you make to explain a finding to someone else. This reading is about the second kind. Here is a first try at a chart for the donor report. It shows which kinds of food visitors ask for.</p>
-<svg class="mlrk-illustration-sm" viewBox="0 0 300 230" role="img" aria-labelledby="badPieTitle badPieDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="badPieTitle">A cluttered pie chart titled Chart 1</title>
-  <desc id="badPieDesc">A nine-slice pie chart in nine unrelated rainbow colors, drawn with a fake three-dimensional base, no slice labels, and a tiny cramped legend. The title just says Chart 1.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="90" y="18" text-anchor="middle" font-weight="700" font-size="13" fill="#261F1D">Chart 1</text>
-    <ellipse cx="90" cy="112" rx="78" ry="20" fill="#83671C"/>
-    <path d="M90,100 L90.0,22.0 A78,78 0 0 1 109.4,175.5 Z" fill="#264326"/>
-    <path d="M90,100 L109.4,175.5 A78,78 0 0 1 44.2,163.1 Z" fill="#2274B5"/>
-    <path d="M90,100 L44.2,163.1 A78,78 0 0 1 15.8,124.1 Z" fill="#EF541E"/>
-    <path d="M90,100 L15.8,124.1 A78,78 0 0 1 13.4,85.4 Z" fill="#83671C"/>
-    <path d="M90,100 L13.4,85.4 A78,78 0 0 1 24.1,58.2 Z" fill="#C92929"/>
-    <path d="M90,100 L24.1,58.2 A78,78 0 0 1 40.3,39.9 Z" fill="#327A5F"/>
-    <path d="M90,100 L40.3,39.9 A78,78 0 0 1 56.8,29.4 Z" fill="#2F5A8B"/>
-    <path d="M90,100 L56.8,29.4 A78,78 0 0 1 75.4,23.4 Z" fill="#F8BAC9"/>
-    <path d="M90,100 L75.4,23.4 A78,78 0 0 1 90.0,22.0 Z" fill="#FECC5B"/>
-    <g font-size="8" fill="#261F1D">
-      <rect x="200" y="24" width="8" height="8" fill="#264326"/><text x="212" y="31">Produce</text>
-      <rect x="200" y="36" width="8" height="8" fill="#2274B5"/><text x="212" y="43">Canned</text>
-      <rect x="200" y="48" width="8" height="8" fill="#EF541E"/><text x="212" y="55">Dairy</text>
-      <rect x="200" y="60" width="8" height="8" fill="#83671C"/><text x="212" y="67">Bread</text>
-      <rect x="200" y="72" width="8" height="8" fill="#C92929"/><text x="212" y="79">Hygiene</text>
-      <rect x="200" y="84" width="8" height="8" fill="#327A5F"/><text x="212" y="91">Frozen</text>
-      <rect x="200" y="96" width="8" height="8" fill="#2F5A8B"/><text x="212" y="103">Bev.</text>
-      <rect x="200" y="108" width="8" height="8" fill="#F8BAC9"/><text x="212" y="115">Snacks</text>
-      <rect x="200" y="120" width="8" height="8" fill="#FECC5B"/><text x="212" y="127">Other</text>
-    </g>
-    <text x="150" y="216" text-anchor="middle" font-size="12" font-weight="600" fill="#C92929">nine slices, one fake 3D base, no direct labels</text>
-  </g>
-</svg>
-<p>Every number in it is correct. It still fails: to find the biggest slice, a reader has to match nine colors to a tiny legend, the fake 3D edge makes some slices look bigger than they are, and the title, "Chart 1," says nothing. The rest of this reading fixes it, one rule at a time.</p>
+<h2>1. Quick recall</h2>
+<p>Two skills you already have come up in this reading.</p>
+
+<div class="mlrk-card" id="card-recall-type"><p><strong>Recall:</strong> you want to compare the average number of swimmers per day at three pools. Which chart type fits?</p>
+<button type="button" class="mlrk-choice" data-a="bar">A bar chart, one bar per pool</button>
+<button type="button" class="mlrk-choice" data-a="hist">A histogram</button>
+<button type="button" class="mlrk-choice" data-a="scatter">A scatterplot</button>
+<div id="recalltypefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<div class="mlrk-card" id="card-recall-q1" style="margin-top:1rem"><p><strong>Recall:</strong> what is Q1, the first quartile, of a column?</p>
+<button type="button" class="mlrk-choice" data-a="25">The value that 25% of the data falls below</button>
+<button type="button" class="mlrk-choice" data-a="min">The smallest value</button>
+<button type="button" class="mlrk-choice" data-a="first">The value in the first row</button>
+<div id="recallq1fb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall</h2>
-<p>Two skills from earlier come back in this reading. Check each one.</p>
+<h2>2. A y-axis that doesn't start at zero</h2>
+<p>Each row of <code>visits.csv</code> is one day at one pool, with how many people swam.</p>
+<div class="mlrk-code" data-file="visits.csv">pool,day,swimmers
+Eastside,Mon,178
+Eastside,Tue,184
+Eastside,Wed,184
+Lincoln,Mon,186
+Lincoln,Tue,188
+Lincoln,Wed,190
+Riverside,Mon,189
+Riverside,Tue,191
+Riverside,Wed,193</div>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this cell:</strong> <code>.plot.bar(rot=0)</code> draws one bar per group and keeps the labels flat. <code>plt.ylim(180, 195)</code> sets the y-axis to run from 180 to 195.</p></div>
+<p><strong>Predict:</strong> Riverside's average turns out to be only about 5% higher than Eastside's. With <code>plt.ylim(180, 195)</code>, how will the two bars look?</p>
+<pre class="mlrk-code" data-file="pools.ipynb" data-cell="1">import pandas as pd
+import matplotlib.pyplot as plt
 
-<div class="mlrk-card" id="card-recall-cat"><p><strong>Which of these is categorical data, not numeric?</strong></p>
-<button type="button" class="mlrk-choice" data-a="cat">Food category (Produce, Dairy, Bread, ...)</button>
-<button type="button" class="mlrk-choice" data-a="num1">Number of pantry visits per week</button>
-<button type="button" class="mlrk-choice" data-a="num2">Average wait time in minutes</button>
-<div id="recallcatfb" class="mlrk-feedback" tabindex="-1"></div></div>
+visits = pd.read_csv("visits.csv")
+means = visits.groupby("pool")["swimmers"].mean().round(1)
+print(means)
+means.plot.bar(rot=0)
+plt.ylim(180, 195)
+plt.title("Riverside is the busiest pool")
+plt.ylabel("Swimmers per day (average)")
+plt.show()</pre>
+<button type="button" class="mlrk-btn" data-run="pools.ipynb" data-cell="1" data-after="q-bars"></button>
+<div class="mlrk-run" data-file="pools.ipynb" data-cell="1" hidden><pre>pool
+Eastside     182.0
+Lincoln      188.0
+Riverside    191.0
+Name: swimmers, dtype: float64</pre><img src="chart-bar-truncated.svg" alt="A bar chart titled Riverside is the busiest pool. The y-axis starts at 180 and ends at 195. Eastside's bar is very short, Lincoln's is medium, and Riverside's is about five times taller than Eastside's." /></div>
+<div class="mlrk-card" id="card-bars">
+<button type="button" class="mlrk-choice" data-a="huge">Riverside's bar will look several times taller than Eastside's.</button>
+<button type="button" class="mlrk-choice" data-a="same">The bars will look about the same height.</button>
+<button type="button" class="mlrk-choice" data-a="flip">Eastside's bar will look taller.</button>
+<div id="barsfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-recall-axis" style="margin-top:.8rem"><p><strong>A bar ends at the mark labeled "60" on an axis titled "Requests (thousands)." What does that bar show?</strong></p>
-<button type="button" class="mlrk-choice" data-a="60k">60,000 requests</button>
-<button type="button" class="mlrk-choice" data-a="60">60 requests</button>
-<button type="button" class="mlrk-choice" data-a="unknown">There's no way to tell</button>
-<div id="recallaxisfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
+<p style="margin-top:1rem">That chart has a <strong>truncated axis</strong>: a y-axis that doesn't start at zero. The bars only show the part above 180. Above 180, Riverside's bar is 11 units tall and Eastside's is 2. A real gap of 9 swimmers, about 5%, looks like five times as many. The rule for bar charts: a bar's height is the claim, so the y-axis always starts at zero.</p>
+<p>pandas starts bars at zero on its own. One line in cell [1] did all the damage. Before you share a chart, look for any line that sets axis limits.</p>
 
-<section class="mlrk-section">
-<h2>3. Pick the chart type that fits the question</h2>
-<p>A <strong>chart type</strong> is the shape a chart takes: bar, line, scatter, pie, and so on. Pick it by asking what job the question needs done:</p>
-<ul>
-<li><strong>Compare</strong> amounts across groups: a bar chart.</li>
-<li><strong>Show change over time</strong>: a line chart.</li>
-<li><strong>See whether two numbers move together</strong>, one dot per person or thing: a scatter plot.</li>
-<li><strong>Show parts of a whole</strong>: a pie chart, but only for a few parts, about five or fewer. With more slices, the wedges get too close in size to tell apart, so use a bar chart.</li>
-</ul>
-<p>Every question here comes from the pantry's spreadsheet.</p>
-
-<div class="mlrk-card" id="card-match-a"><p><strong>A. Show how many families visited each week for the last year, to see whether visits are going up or down.</strong></p>
-<button type="button" class="mlrk-choice" data-a="line">Line chart</button>
-<button type="button" class="mlrk-choice" data-a="bar">Bar chart</button>
-<button type="button" class="mlrk-choice" data-a="scatter">Scatter plot</button>
-<button type="button" class="mlrk-choice" data-a="pie">Pie chart</button>
-<div id="matchafb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-match-c" style="margin-top:.8rem"><p><strong>B. Show what share of last year's requests came from each of 8 food categories.</strong></p>
-<button type="button" class="mlrk-choice" data-a="line">Line chart</button>
-<button type="button" class="mlrk-choice" data-a="bar">Bar chart</button>
-<button type="button" class="mlrk-choice" data-a="scatter">Scatter plot</button>
-<button type="button" class="mlrk-choice" data-a="pie">Pie chart</button>
-<div id="matchcfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-match-d" style="margin-top:.8rem"><p><strong>C. See whether volunteers who work more hours each month also pack more grocery boxes, using each volunteer's own numbers.</strong></p>
-<button type="button" class="mlrk-choice" data-a="line">Line chart</button>
-<button type="button" class="mlrk-choice" data-a="bar">Bar chart</button>
-<button type="button" class="mlrk-choice" data-a="scatter">Scatter plot</button>
-<button type="button" class="mlrk-choice" data-a="pie">Pie chart</button>
-<div id="matchdfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>4. Cut what isn't data</h2>
-<p><strong>Chart junk</strong> is any part of a chart that doesn't carry information: fake 3D, colors that mean nothing, heavy gridlines, shadows. The <strong>data-ink ratio</strong> is the share of a chart's ink that shows real data. You raise it by removing junk, not by adding more data. The first-try pie chart spent ink on a 3D edge and nine colors that carried no meaning.</p>
-
-<h3>Chart mockup 1</h3>
-<svg class="mlrk-illustration" viewBox="0 0 480 240" role="img" aria-labelledby="bugJunkTitle bugJunkDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="bugJunkTitle">A bar chart titled Chart 1 with fake 3D bars, mismatched colors, and heavy gridlines</title>
-  <desc id="bugJunkDesc">Four bars labeled A through D, each drawn with a fake three-dimensional top and side face, each a different unrelated color, over a dense grid of horizontal gridlines. No axis titles or units appear anywhere.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="20" y="18" font-size="12" font-weight="700" fill="#261F1D">Chart 1</text>
-    <g stroke="#B3BBB0" stroke-width="1">
-      <line x1="40" y1="30" x2="460" y2="30"/><line x1="40" y1="50" x2="460" y2="50"/>
-      <line x1="40" y1="70" x2="460" y2="70"/><line x1="40" y1="90" x2="460" y2="90"/>
-      <line x1="40" y1="110" x2="460" y2="110"/><line x1="40" y1="130" x2="460" y2="130"/>
-      <line x1="40" y1="150" x2="460" y2="150"/><line x1="40" y1="170" x2="460" y2="170"/>
-      <line x1="40" y1="190" x2="460" y2="190"/><line x1="40" y1="210" x2="460" y2="210"/>
-    </g>
-    <g>
-      <polygon points="70,90.0 130,90.0 144,76.0 84,76.0" fill="#F8BAC9"/>
-      <polygon points="130,90.0 144,76.0 144,196 130,210" fill="#C92929"/>
-      <rect x="70" y="90.0" width="60" height="120.0" fill="#EF541E"/>
-
-      <polygon points="170,120.0 230,120.0 244,106.0 184,106.0" fill="#DEEAF4"/>
-      <polygon points="230,120.0 244,106.0 244,196 230,210" fill="#2F5A8B"/>
-      <rect x="170" y="120.0" width="60" height="90.0" fill="#2274B5"/>
-
-      <polygon points="270,60.0 330,60.0 344,46.0 284,46.0" fill="#FECC5B"/>
-      <polygon points="330,60.0 344,46.0 344,196 330,210" fill="#83671C"/>
-      <rect x="270" y="60.0" width="60" height="150.0" fill="#EEBC32"/>
-
-      <polygon points="370,150.0 430,150.0 444,136.0 384,136.0" fill="#A6C2B4"/>
-      <polygon points="430,150.0 444,136.0 444,196 430,210" fill="#264326"/>
-      <rect x="370" y="150.0" width="60" height="60.0" fill="#327A5F"/>
-    </g>
-    <g font-size="12" fill="#261F1D" text-anchor="middle">
-      <text x="100" y="226">A</text><text x="200" y="226">B</text><text x="300" y="226">C</text><text x="400" y="226">D</text>
-    </g>
-  </g>
-</svg>
-<div class="mlrk-card" id="card-bug-junk" style="margin-top:1rem"><p><strong>What is the most important fix for chart mockup 1?</strong></p>
-<button type="button" class="mlrk-choice" data-a="declutter">Remove the fake 3D, the different color on every bar, and most of the gridlines.</button>
-<button type="button" class="mlrk-choice" data-a="axis">Start the axis above zero so the bars look taller.</button>
-<button type="button" class="mlrk-choice" data-a="legend">Add a legend that explains each color.</button>
-<div id="bugjunkfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<h3>Fill in the blank</h3>
-<p><strong>Complete the sentence:</strong> the share of a chart's ink that shows real data, not decoration, is its ______-ink ratio.</p>
+<p><strong>Fix it:</strong> cell [2] is cell [1] with one line deleted and an honest title.</p>
 <ol class="mlrk-steplist">
-  <li>Type the one missing word, in lowercase.</li>
-  <li>Leave out the hyphen and the word "ink."</li>
-  <li>Press <strong>Check</strong>. You get 2 tries.</li>
+  <li>Find the line in cell [1] that cut off the bottom of the y-axis.</li>
+  <li>Type the name of that <code>plt</code> function. Type only the name: no <code>plt.</code>, no parentheses.</li>
+  <li>Press <strong>Check</strong>. When it's right, cell [2] can run.</li>
 </ol>
+<p>Why: finding the one line that sets limits is how you fix this in any notebook.</p>
 <div class="mlrk-fillblank">
-  <label for="blankinput">Missing word:</label>
+  <label for="blankinput">Function to delete:</label>
   <input type="text" id="blankinput" autocomplete="off">
   <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
 </div>
 <div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
+<pre class="mlrk-code" data-file="pools.ipynb" data-cell="2">means.plot.bar(rot=0)
+plt.title("All three pools were about equally busy")
+plt.ylabel("Swimmers per day (average)")
+plt.show()</pre>
+<button type="button" class="mlrk-btn" data-run="pools.ipynb" data-cell="2" data-after="q-ylim" data-after-note="Type the function name first. Then you can run it."></button>
+<div class="mlrk-run" data-file="pools.ipynb" data-cell="2" hidden><img src="chart-bar-zero.svg" alt="The same three bars with the y-axis starting at 0 and running to 200, titled All three pools were about equally busy. Eastside, Lincoln, and Riverside are all close to 185 and look nearly the same height." /></div>
+<p style="margin-top:1rem">An honest axis doesn't hide a real difference. It just doesn't blow it up. If the manager wants the gap to stand out, say it in words: "Riverside averaged 9 more swimmers a day."</p>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Make the point easy to find</h2>
-<p>Three habits help a reader find the point in a few seconds:</p>
-<ul>
-<li><strong>Sorted by value</strong>: put the bars in order from largest to smallest, not in alphabetical order or spreadsheet order.</li>
-<li><strong>Direct labeling</strong>: print each number right next to its bar or line, so nobody has to trace it to a legend or a gridline.</li>
-<li>A <strong>takeaway title</strong>: a title that states the finding, like "Produce is nearly half of all requests," instead of only naming the data, like "Requests by Category."</li>
-</ul>
-<p>Color can point too. Give every bar one quiet color, and give the one bar that matters a bright color.</p>
+<h2>3. Outliers a chart can hide</h2>
+<p>The manager also wants a picture of how many laps people swim. Each row of <code>laps.csv</code> is one swim.</p>
+<div class="mlrk-code" data-file="laps.csv">swimmer,laps
+Ari,12
+Bo,18
+Cam,20
+Dev,22
+Em,24
+Finn,25
+Gia,28
+Hal,30
+Iko,34
+Jae,110</div>
+<p>An <strong>outlier</strong> is a value far from the rest. A boxplot marks it with a dot past the <strong>upper fence</strong>, the outlier cutoff: Q3 + 1.5 &times; (Q3 &minus; Q1). The whisker stops at the fence.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this cell:</strong> <code>.quantile([0.25, 0.75])</code> gives Q1 and Q3. <code>q1, q3 = ...</code> unpacks the two values like a tuple. <code>.max()</code> gives the largest value in a column.</p></div>
+<p>Before drawing anything, work out where the fence is and how far the longest swim reaches.</p>
+<pre class="mlrk-code" data-file="pools.ipynb" data-cell="3">laps = pd.read_csv("laps.csv")
+q1, q3 = laps["laps"].quantile([0.25, 0.75])
+box_height = q3 - q1
+fence = q3 + 1.5 * box_height
+print("Q1:", q1, "  Q3:", q3)
+print("Outlier cutoff:", fence, "laps")
+print("Longest swim:", laps["laps"].max(), "laps")</pre>
+<button type="button" class="mlrk-btn" data-run="pools.ipynb" data-cell="3"></button>
+<div class="mlrk-run" data-file="pools.ipynb" data-cell="3" hidden><pre>Q1: 20.5   Q3: 29.5
+Outlier cutoff: 43.0 laps
+Longest swim: 110 laps</pre></div>
+<div class="mlrk-callout mlrk-callout-blue" style="margin-top:1rem"><p><strong>New in this cell:</strong> <code>.plot.box()</code> draws a boxplot. Its <strong>showfliers</strong> setting decides whether outliers appear as dots. <code>showfliers=False</code> leaves every outlier dot out of the drawing.</p></div>
+<p><strong>Predict:</strong> will the boxplot in cell [4] show Jae's 110-lap swim?</p>
+<pre class="mlrk-code" data-file="pools.ipynb" data-cell="4">laps["laps"].plot.box(showfliers=False)
+plt.title("How many laps people swim")
+plt.ylabel("Laps in one swim")
+plt.show()</pre>
+<button type="button" class="mlrk-btn" data-run="pools.ipynb" data-cell="4" data-after="q-fliers"></button>
+<div class="mlrk-run" data-file="pools.ipynb" data-cell="4" hidden><img src="chart-box-hidden.svg" alt="A boxplot titled How many laps people swim. The y-axis, Laps in one swim, runs from about 11 to 35. The box spans about 20 to 30 laps and the top whisker stops at 34. No point appears near 110, and nothing on the chart says a swim was left out." /></div>
+<div class="mlrk-card" id="card-fliers">
+<button type="button" class="mlrk-choice" data-a="no">No. 110 is past the cutoff, and <code>showfliers=False</code> drops it from the drawing.</button>
+<button type="button" class="mlrk-choice" data-a="whisker">Yes. The whisker will stretch up to 110.</button>
+<button type="button" class="mlrk-choice" data-a="dot">Yes, as a dot, because every value gets drawn.</button>
+<div id="fliersfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<h3>Chart mockup 2</h3>
-<svg class="mlrk-illustration" viewBox="0 0 520 230" role="img" aria-labelledby="bugTakeTitle bugTakeDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="bugTakeTitle">A bar chart titled Requests by Category, sorted alphabetically, with no bar highlighted</title>
-  <desc id="bugTakeDesc">Six bars in a single flat color, sorted alphabetically from Bread through Produce rather than by value. Produce is the tallest bar but sits last, unhighlighted, so the actual finding is not visible at a glance.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="260" y="18" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">Requests by Category</text>
-    <line x1="40" y1="200" x2="490" y2="200" stroke="#B3BBB0" stroke-width="1.5"/>
-    <g fill="#327A5F">
-      <rect x="50" y="174.4" width="55" height="25.6"/>
-      <rect x="125" y="155.2" width="55" height="44.8"/>
-      <rect x="200" y="168.0" width="55" height="32.0"/>
-      <rect x="275" y="180.8" width="55" height="19.2"/>
-      <rect x="350" y="148.8" width="55" height="51.2"/>
-      <rect x="425" y="52.8" width="55" height="147.2"/>
-    </g>
-    <g font-size="11" fill="#261F1D" text-anchor="middle">
-      <text x="77.5" y="215">Bread</text>
-      <text x="152.5" y="215">Canned</text>
-      <text x="227.5" y="215">Dairy</text>
-      <text x="302.5" y="215">Hygiene</text>
-      <text x="377.5" y="215">Other</text>
-      <text x="452.5" y="215">Produce</text>
-    </g>
-  </g>
-</svg>
-<div class="mlrk-card" id="card-bug-take" style="margin-top:1rem"><p><strong>What is the most important fix for chart mockup 2?</strong></p>
-<button type="button" class="mlrk-choice" data-a="sort">Sort the bars by value, color the Produce bar brightly, and rewrite the title to state the finding.</button>
-<button type="button" class="mlrk-choice" data-a="pie">Turn it into a pie chart.</button>
-<button type="button" class="mlrk-choice" data-a="grid">Add a gridline behind every bar.</button>
-<div id="bugtakefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">The chart looks tidy, and it is incomplete in a way no reader could guess. Its title doesn't say anything is missing. The top whisker says 34. The longest swim is 110. To catch a chart that looks too tidy, compare its top with the real <code>.max()</code>, and look for <code>showfliers</code> first.</p>
 
-<h3>Chart mockup 3</h3>
-<svg class="mlrk-illustration" viewBox="0 0 460 240" role="img" aria-labelledby="bugLabelTitle bugLabelDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="bugLabelTitle">A line chart titled Data with two unlabeled lines and no axis units</title>
-  <desc id="bugLabelDesc">Two lines rise and fall across five unlabeled points on the x-axis, numbered 1 through 5 with no units. The y-axis has no numbers or title at all. A small legend names the lines Series A and Series B with no further explanation.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="20" y="18" font-size="12" font-weight="700" fill="#261F1D">Data</text>
-    <line x1="55" y1="20" x2="55" y2="195" stroke="#261F1D" stroke-width="1.5"/>
-    <line x1="55" y1="195" x2="420" y2="195" stroke="#261F1D" stroke-width="1.5"/>
-    <polyline points="70,126.0 150,102.0 230,110.0 310,78.0 390,46.0" fill="none" stroke="#2274B5" stroke-width="2.5"/>
-    <polyline points="70,142.0 150,134.0 230,94.0 310,118.0 390,86.0" fill="none" stroke="#EF541E" stroke-width="2.5"/>
-    <g font-size="11" fill="#261F1D" text-anchor="middle">
-      <text x="70" y="210">1</text><text x="150" y="210">2</text><text x="230" y="210">3</text>
-      <text x="310" y="210">4</text><text x="390" y="210">5</text>
-    </g>
-    <g font-size="11" fill="#261F1D">
-      <rect x="330" y="18" width="10" height="10" fill="#2274B5"/><text x="344" y="27">Series A</text>
-      <rect x="330" y="32" width="10" height="10" fill="#EF541E"/><text x="344" y="41">Series B</text>
-    </g>
-  </g>
-</svg>
-<div class="mlrk-card" id="card-bug-label" style="margin-top:1rem"><p><strong>What is the most important fix for chart mockup 3?</strong></p>
-<button type="button" class="mlrk-choice" data-a="labels">Write a title that says what is measured, label both axes with units, and rename "Series A" and "Series B" to what they are.</button>
-<button type="button" class="mlrk-choice" data-a="color">Change the colors of the two lines.</button>
-<button type="button" class="mlrk-choice" data-a="delete">Delete one line so there's only one to follow.</button>
-<div id="buglabelfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<p>Here is the first-try pie chart again, redrawn with every rule in this reading. The numbers are the same.</p>
-<svg class="mlrk-illustration" viewBox="0 0 620 310" role="img" aria-labelledby="goodBarTitle goodBarDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="goodBarTitle">A sorted horizontal bar chart titled Produce Makes Up Nearly Half of All Pantry Requests</title>
-  <desc id="goodBarDesc">Six horizontal bars sorted from largest to smallest, all in one muted color except the top Produce bar, which is highlighted in gold. Each bar has a direct percentage label at its end, and the x-axis is labeled with real units.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="310" y="20" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Produce Makes Up Nearly Half of All Pantry Requests</text>
-
-    <rect x="190" y="30" width="349.6" height="24" rx="4" fill="#EEBC32"/>
-    <text x="180" y="47" text-anchor="end" font-size="13" fill="#261F1D">Produce</text>
-    <text x="547" y="47" font-size="13" font-weight="700" fill="#261F1D">46%</text>
-
-    <rect x="190" y="74" width="106.4" height="24" rx="4" fill="#327A5F"/>
-    <text x="180" y="91" text-anchor="end" font-size="13" fill="#261F1D">Canned goods</text>
-    <text x="304" y="91" font-size="13" fill="#261F1D">14%</text>
-
-    <rect x="190" y="118" width="76" height="24" rx="4" fill="#327A5F"/>
-    <text x="180" y="135" text-anchor="end" font-size="13" fill="#261F1D">Dairy</text>
-    <text x="274" y="135" font-size="13" fill="#261F1D">10%</text>
-
-    <rect x="190" y="162" width="60.8" height="24" rx="4" fill="#327A5F"/>
-    <text x="180" y="179" text-anchor="end" font-size="13" fill="#261F1D">Bread</text>
-    <text x="259" y="179" font-size="13" fill="#261F1D">8%</text>
-
-    <rect x="190" y="206" width="45.6" height="24" rx="4" fill="#327A5F"/>
-    <text x="180" y="223" text-anchor="end" font-size="13" fill="#261F1D">Hygiene</text>
-    <text x="244" y="223" font-size="13" fill="#261F1D">6%</text>
-
-    <rect x="190" y="250" width="121.6" height="24" rx="4" fill="#327A5F"/>
-    <text x="180" y="267" text-anchor="end" font-size="13" fill="#261F1D">All other categories</text>
-    <text x="319" y="267" font-size="13" fill="#261F1D">16%</text>
-
-    <line x1="190" y1="284" x2="190" y2="288" stroke="#B3BBB0" stroke-width="1.5"/>
-    <text x="310" y="300" text-anchor="middle" font-size="12" fill="#264326">Share of requests logged, last quarter</text>
-  </g>
-</svg>
+<div class="mlrk-card" id="card-disclose"><p><strong>The manager likes the tidy version for the council report. What is the honest choice?</strong></p>
+<button type="button" class="mlrk-choice" data-a="caption">Show the outlier, or keep it hidden only with a caption: "1 swim of 110 laps is not shown."</button>
+<button type="button" class="mlrk-choice" data-a="fine">Keep it hidden with no note. <code>showfliers=False</code> is a real setting, so it's fine.</button>
+<button type="button" class="mlrk-choice" data-a="delete">Delete Jae's row so the data matches the chart.</button>
+<div id="disclosefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">Cell [5] leaves out the setting, so pandas uses the default, <code>showfliers=True</code>.</p>
+<pre class="mlrk-code" data-file="pools.ipynb" data-cell="5">laps["laps"].plot.box()
+plt.title("How many laps people swim, every swim shown")
+plt.ylabel("Laps in one swim")
+plt.show()</pre>
+<button type="button" class="mlrk-btn" data-run="pools.ipynb" data-cell="5" data-after="q-disclose"></button>
+<div class="mlrk-run" data-file="pools.ipynb" data-cell="5" hidden><img src="chart-box-shown.svg" alt="The same boxplot titled How many laps people swim, every swim shown. The y-axis now runs from about 10 to 110. The box sits low, between about 20 and 30, and one dot appears alone at 110." /></div>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Mixed check</h2>
-<p>Sort each chart part into the right box.</p>
-<div id="dragarea">
-<div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">A number printed on the one bar that matters</span>
-  <span id="chip2" class="mlrk-draggable">A shadow under every bar</span>
-  <span id="chip3" class="mlrk-draggable">An axis title with units</span>
-  <span id="chip4" class="mlrk-draggable">A gridline behind every value</span>
-  <span id="chip5" class="mlrk-draggable">A different color on every bar, with no meaning</span>
-  <span id="chip6" class="mlrk-draggable">A title that states the finding</span>
-</div>
-<div class="mlrk-grid">
-  <div><p><strong>Keep</strong></p><div class="mlrk-dropzone" id="zoneKeep"></div></div>
-  <div><p><strong>Cut</strong></p><div class="mlrk-dropzone" id="zoneCut"></div></div>
-</div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches</button></div>
-<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>7. Wrap-up</h2>
-<ul>
-<li>Pick the chart type by the question's job: compare, change over time, two numbers together, or parts of a whole.</li>
-<li>Cut chart junk so the ink that remains shows data.</li>
-<li>Sort, label directly, and write a takeaway title so the point is visible in seconds.</li>
-</ul>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> the pantry's newsletter has a chart that is meant to show volunteer hours going up. Readers keep emailing to ask what it shows. The numbers are correct. What is most likely wrong?</p>
-<button type="button" class="mlrk-choice" data-a="labels">It is probably missing clear labels, a takeaway title, or both.</button>
-<button type="button" class="mlrk-choice" data-a="data">The numbers must be wrong, since a correct chart always explains itself.</button>
-<button type="button" class="mlrk-choice" data-a="color">It needs brighter colors to grab attention.</button>
-<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p><strong>In interviews:</strong> you may be asked to walk through a chart from your own project. Explain your choices: why that chart type, what you cut, and what the title says.</p>
-<p><strong>Where this goes next:</strong> a page with several charts, like a dashboard, uses the same rules, one chart at a time.</p>
-</section>
-
-<section class="mlrk-section">
-<h2>8. Reflection</h2>
-<label for="strategy"><strong>Your checklist:</strong> which checks would you run on any chart before it goes in front of someone who wasn't there when you made it?</label>
-<ol class="mlrk-steplist">
-  <li>Write 1 or 2 sentences, at least 8 words. The counter under the box tells you when it counts.</li>
-  <li>Try starting with: "First I ask whether the chart type fits..."</li>
+<h2>4. Label it for every reader</h2>
+<p>A chart often gets copied into slides or an email without your notebook. Labels are the only explanation that travels with it.</p>
+<ol>
+<li>A real title that states the finding, never "Chart 1."</li>
+<li>Both axes labeled, with units. Without "laps," a reader can't tell what 110 means.</li>
+<li>A legend when the chart has more than one series.</li>
+<li>No <strong>chart junk</strong>: decoration that doesn't help a reader understand the chart, like 3D effects or extra gridlines.</li>
+<li>A <strong>colorblind-safe palette</strong>. About 1 in 12 men can't easily tell red from green. Choose colors that differ in lightness, and add labels or patterns.</li>
 </ol>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="First I ask whether the chart type fits..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
+
+<div class="mlrk-card" id="card-color"><p><strong>A draft colors Eastside's bar red and Riverside's bar green, with no labels under the bars. What is the problem?</strong></p>
+<button type="button" class="mlrk-choice" data-a="color">Some readers can't tell red from green, so they can't tell which bar is which.</button>
+<button type="button" class="mlrk-choice" data-a="height">Red makes Eastside's bar look shorter than it is.</button>
+<button type="button" class="mlrk-choice" data-a="none">Nothing. Two bright colors are easy for everyone to read.</button>
+<div id="colorfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>10. Go further (optional)</h2>
-<p>This video is optional and isn't part of the time estimate or your score. As you watch, notice how many of its fixes match the three chart mockups you fixed here.</p>
-<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/XoquDp1OaLk" title="Making a chart clear, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=XoquDp1OaLk" target="_blank" rel="noopener">Watch on YouTube</a>
+<h2>5. Check your understanding</h2>
+<div class="mlrk-card"><p><strong>Select every TRUE statement.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> A chart can use only real numbers and still mislead.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> A boxplot drawn with <code>showfliers=False</code> shows every value in the column.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Deleting <code>plt.ylim(180, 195)</code> lets pandas start the bars at zero again.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Changing a truncated bar chart's colors fixes the problem.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> To review a chart, ask: where does the axis start, and was anything left out of view?</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
 </section>
 
 <section class="mlrk-section">
-<h2>11. Your score &amp; keep a copy of your work</h2>
+<h2>6. Wrap-up</h2>
+<ul>
+<li>A bar's height is the claim. Start a bar chart's y-axis at zero, and look for any <code>plt.ylim</code> line.</li>
+<li><code>showfliers=False</code> hides outliers. Compare the chart with the real <code>.max()</code>, and say in a caption what you hid.</li>
+<li>Label everything: a finding title, axes with units, a legend for more than one series, and colors that don't rely on red vs. green.</li>
+</ul>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> the manager draws a <em>line</em> chart of weekly swimmers over the summer. Every week is between 900 and 1,000, so the y-axis runs from 900 to 1,000. Is that honest?</p>
+<button type="button" class="mlrk-choice" data-a="ok">Yes, if the axis is labeled. A line's claim is its slope, the change from week to week, so it can zoom in.</button>
+<button type="button" class="mlrk-choice" data-a="no">No. Every chart's y-axis has to start at zero.</button>
+<button type="button" class="mlrk-choice" data-a="bar">Only if it is redrawn as a bar chart with the same axis.</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">In interviews, "What makes a chart misleading, even if the data is real?" is a common question. A good answer names the cut-off axis or hidden points and how you would check for them.</p>
+<p>The same checks apply when an AI writes or describes a chart for you: its chart still has to match your own numbers.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>7. Reflection</h2>
+<ol class="mlrk-steplist">
+  <li>Finish the sentence "Before I share a chart, I check…". Name both checks from this reading.</li>
+  <li>Add one sentence on what you would write if you chose to hide outliers.</li>
+</ol>
+<p>Why: a short checklist you trust is what catches these mistakes on a busy day.</p>
+<label for="strategy"><strong>Your checklist:</strong></label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Before I share a chart, I check..."></textarea>
+<p>Stuck? <button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
+</section>
+
+<section class="mlrk-section">
+<h2>Go further (optional): spotting a misleading graph</h2>
+<p>This video is optional and is not counted in the time estimate. As you watch, notice where each chart's y-axis starts, and what the chart leaves out.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/E91bGT9BjYk" title="How to spot a misleading graph (optional video)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=E91bGT9BjYk" target="_blank" rel="noopener">Watch on YouTube</a>
+</section>
+
+<section class="mlrk-section">
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://www.storytellingwithdata.com/blog/2012/09/bar-charts-must-have-zero-baseline" target="_blank" rel="noopener">Storytelling with Data: bar charts must have a zero baseline</a>: why a bar chart starts at zero, with before-and-after examples.</li>
+<li><a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.plot.box.html" target="_blank" rel="noopener">pandas docs: Series.plot.box</a>: the boxplot method and its settings.</li>
+<li><a href="https://colorbrewer2.org/" target="_blank" rel="noopener">ColorBrewer</a>: pick color sets marked as colorblind-safe.</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -405,7 +315,7 @@
         <pre class="mlrk-code">mv ~/Downloads/chart-best-practices-reading1.json .</pre></li>
       <li>Save it to git and push it up to GitHub:
         <pre class="mlrk-code">git add chart-best-practices-reading1.json
-git commit -m "Complete one chart, one point reading"
+git commit -m "Complete real numbers wrong story reading"
 git push</pre></li>
     </ol>
   </div>
@@ -436,17 +346,6 @@ git push</pre></li>
 </div>
 </section>
 
-<section class="mlrk-section">
-<h2>Additional resources</h2>
-<p class="mlrk-small">Not counted in the time estimate above.</p>
-<ul>
-<li><a href="https://www.data-to-viz.com/" target="_blank" rel="noopener">Data to Viz</a> — an interactive guide to picking the right chart type for your data, with the pitfalls of each type named directly.</li>
-<li><a href="https://www.storytellingwithdata.com/chart-guide" target="_blank" rel="noopener">Storytelling with Data: Chart Guide</a> — a practical reference for when to use which chart type and how to clean it up.</li>
-<li><a href="https://ft-interactive.github.io/visual-vocabulary/" target="_blank" rel="noopener">Financial Times Visual Vocabulary</a> — a poster-style reference organizing chart types by the job they do (comparison, trend, part-to-whole, and more).</li>
-<li><a href="https://colorbrewer2.org/" target="_blank" rel="noopener">ColorBrewer</a> — a tool for picking chart color schemes that stay readable, including for colorblind viewers.</li>
-</ul>
-</section>
-
 </div></main>
 
 <footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
@@ -457,108 +356,109 @@ git push</pre></li>
   const K = ReadingKit;
   const $ = s => document.querySelector(s);
   const READING_ID = "chart-best-practices-reading1";
-  const TITLE = "One Chart, One Point — Chart Design Rules";
+  const TITLE = "Real Numbers, Wrong Story";
 
   K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
   K.Persona.renderPicker("#persona");
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-recall-cat", buttonSelector:"#card-recall-cat .mlrk-choice", feedbackSelector:"#recallcatfb", correct:"cat",
-    feedback:{cat:"Right. A food category is a label, not a number, so it's categorical.",
-              num1:"A visit count is a number you can add and average, so it's numeric.",
-              num2:"A wait time is a number you can add and average, so it's numeric."}});
+  K.quiz({id:"q-recall-type", buttonSelector:"#card-recall-type .mlrk-choice", feedbackSelector:"#recalltypefb", correct:"bar",
+    feedback:{bar:"Right. One number across a few groups is a bar chart, with one bar per pool.",
+              hist:"A histogram shows the shape of one variable. Here you are comparing one number across three groups.",
+              scatter:"A scatterplot puts two number columns against each other. Here there is one number and three groups."}});
 
-  K.quiz({id:"q-recall-axis", buttonSelector:"#card-recall-axis .mlrk-choice", feedbackSelector:"#recallaxisfb", correct:"60k",
-    feedback:{"60k":"Right. The axis title says the units are thousands, so 60 means 60,000.",
-              "60":"The axis title says thousands, so 60 on that axis means 60,000.",
-              unknown:"The axis title tells you the units: thousands. So the bar shows 60,000."}});
+  K.quiz({id:"q-recall-q1", buttonSelector:"#card-recall-q1 .mlrk-choice", feedbackSelector:"#recallq1fb", correct:"25",
+    feedback:{"25":"Right. Q1 is the 25th percentile. Q3 is the 75th, and the box of a boxplot runs from Q1 to Q3.",
+              min:"The smallest value is the minimum, the 0th percentile. Q1 sits a quarter of the way up the sorted values.",
+              first:"Row order doesn't matter for quartiles. Q1 comes from the sorted values: 25% of them are smaller than Q1."}});
 
-  K.quiz({id:"q-match-a", buttonSelector:"#card-match-a .mlrk-choice", feedbackSelector:"#matchafb", correct:"line",
-    feedback:{line:"Right. One number tracked week after week is change over time, the line chart's job.",
-              bar:"Bars compare separate groups. Fifty-two weeks in a row is change over time, which a line shows best.",
-              scatter:"A scatter plot compares two numbers for each dot. Here there's one number changing over time.",
-              pie:"A pie shows parts of a whole at one moment. It can't show a year of change."}});
+  K.quiz({id:"q-bars", buttonSelector:"#card-bars .mlrk-choice", feedbackSelector:"#barsfb", correct:"huge",
+    feedback:{huge:"Right. The bars only show the part above 180: 2 for Eastside and 11 for Riverside. A 5% gap looks like five times.",
+              same:"They would look about the same if the axis started at 0. Starting at 180 cuts off most of each bar.",
+              flip:"Riverside's average, 191, is higher than Eastside's, 182, so Riverside's bar is still taller."}});
 
-  K.quiz({id:"q-match-c", buttonSelector:"#card-match-c .mlrk-choice", feedbackSelector:"#matchcfb", correct:"bar",
-    feedback:{bar:"Right. It's parts of a whole, but 8 parts is too many slices to compare by eye. A sorted bar chart stays readable.",
-              pie:"It is parts of a whole, but 8 slices is past the five-or-fewer rule. The wedges get too close to tell apart.",
-              line:"There's no time order here, just 8 categories. A line doesn't fit.",
-              scatter:"A scatter plot needs two numbers per dot. Here there's one share per category."}});
-
-  K.quiz({id:"q-match-d", buttonSelector:"#card-match-d .mlrk-choice", feedbackSelector:"#matchdfb", correct:"scatter",
-    feedback:{scatter:"Right. Two numbers per volunteer (hours and boxes), one dot each, to see if they move together.",
-              line:"A line shows one number over time. This compares two numbers with each other.",
-              bar:"Bars compare totals across groups. This question is about whether two numbers move together.",
-              pie:"A pie shows parts of a whole. It can't show two numbers moving together."}});
-
-  K.quiz({id:"q-bug-junk", buttonSelector:"#card-bug-junk .mlrk-choice", feedbackSelector:"#bugjunkfb", correct:"declutter",
-    feedback:{declutter:"Right. The 3D edges, the colors and most gridlines carry no information. Removing them raises the data-ink ratio.",
-              axis:"Starting above zero removes no junk, and it makes the differences between bars look bigger than they are.",
-              legend:"The colors mean nothing, so a legend would explain nothing. Use one color instead."}});
-
-  K.quiz({id:"q-bug-take", buttonSelector:"#card-bug-take .mlrk-choice", feedbackSelector:"#bugtakefb", correct:"sort",
-    feedback:{sort:"Right. Sorted bars, one bright bar, and a takeaway title make the point visible at once.",
-              pie:"Changing the chart type doesn't fix the real problems: no sort, no highlight, and a title that only names the data.",
-              grid:"More gridlines add clutter and still don't show which bar is the point."}});
-
-  K.quiz({id:"q-bug-label", buttonSelector:"#card-bug-label .mlrk-choice", feedbackSelector:"#buglabelfb", correct:"labels",
-    feedback:{labels:"Right. A reader can't tell what is measured, in what units, or what each line is. Labels fix all three.",
-              color:"The lines are already easy to tell apart. The missing title, units and names are the problem.",
-              delete:"Deleting a line loses real data and still leaves no title, units or names."}});
-
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"labels",
-    feedback:{labels:"Right. Correct numbers don't make the point visible. Missing labels or a title that doesn't state the finding are the usual cause.",
-              data:"A chart can be fully correct and still confuse people, like the first-try pie chart.",
-              color:"Brighter colors grab attention but don't say what the chart claims."}});
-
-  K.dragDrop("#dragarea", "act-drag-keepcut");
-  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneKeep", label:"A number printed on the one bar that matters", expectedLabel:"Keep"},
-    chip2:{expectedId:"zoneCut", label:"A shadow under every bar", expectedLabel:"Cut"},
-    chip3:{expectedId:"zoneKeep", label:"An axis title with units", expectedLabel:"Keep"},
-    chip4:{expectedId:"zoneCut", label:"A gridline behind every value", expectedLabel:"Cut"},
-    chip5:{expectedId:"zoneCut", label:"A different color on every bar, with no meaning", expectedLabel:"Cut"},
-    chip6:{expectedId:"zoneKeep", label:"A title that states the finding", expectedLabel:"Keep"}
-  }});
-  K.flipCards("#vocab", "act-flip-vocab");
-  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
-
-  K.Scoring.register("q-blank",1,"quiz");
+  K.Scoring.register("q-ylim",1,"quiz");
   let blankAttempts=0, blankDone=false;
   $("#blankcheck").addEventListener("click",()=>{
     if(blankDone) return;
+    const raw=$("#blankinput").value.trim();
+    if(!raw) return;
     blankAttempts++;
-    const v = $("#blankinput").value.trim().toLowerCase().replace(/[`'"]/g,"").replace(/-?\s*ink.*$/,"").replace(/-$/,"");
-    const ok = v==="data";
+    const val = raw.toLowerCase().replace(/^plt\./,"").replace(/^\./,"").replace(/\(.*\)$/,"");
+    const ok = val==="ylim";
     const fb=$("#blankfb");
     if(ok){
-      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
+      K.Scoring.award("q-ylim", blankAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct"+(blankAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> The data-ink ratio is the share of a chart's ink that shows real data.";
+      fb.innerHTML="<strong>Correct.</strong> Without <code>plt.ylim(180, 195)</code>, pandas starts the bars at zero. Press Run on cell [2] to see it.";
       blankDone=true;
     } else if(blankAttempts>=2){
-      K.Scoring.award("q-blank",0);
+      K.Scoring.award("q-ylim",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The missing word is <code>data</code>: the data-ink ratio.";
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The line to delete is <code>plt.ylim(180, 195)</code>, so the name is <code>ylim</code>.";
       blankDone=true;
     } else {
+      const hint = val==="ylabel" ? "<code>ylabel</code> only writes the axis name. Look for the line with the numbers 180 and 195." : val==="title" ? "The title changes the words, not the axis. Look for the line with the numbers 180 and 195." : "Look in cell [1] for the line with the numbers 180 and 195.";
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite yet.</strong> The ratio compares the ink that shows real information with all the ink. What do we call that real information?";
+      fb.innerHTML="<strong>Not quite.</strong> "+hint+"<div class=\"mlrk-attempt-note\">One more try before the answer is revealed.</div>";
     }
-    fb.setAttribute("tabindex","-1"); fb.focus();
+    if(blankDone) K.markDone("q-ylim");
+    fb.setAttribute("tabindex","-1");fb.focus();
   });
 
+  K.quiz({id:"q-fliers", buttonSelector:"#card-fliers .mlrk-choice", feedbackSelector:"#fliersfb", correct:"no",
+    feedback:{no:"Right. Cell [3] put the cutoff at 43.0, and Jae swam 110, so 110 is an outlier. showfliers=False leaves every outlier out of the drawing.",
+              whisker:"A whisker never goes past the cutoff, which is 43.0 here. It stops at the highest value inside the fence, 34.",
+              dot:"Outliers are drawn as dots only when showfliers is True. This cell sets it to False."}});
+
+  K.quiz({id:"q-disclose", buttonSelector:"#card-disclose .mlrk-choice", feedbackSelector:"#disclosefb", correct:"caption",
+    feedback:{caption:"Right. A note telling the reader what was hidden, and how much, is what makes a hidden outlier honest.",
+              fine:"Code that runs says nothing about whether a chart is honest. A reader of the tidy chart would believe nobody swam more than 34 laps.",
+              delete:"Jae's swim really happened. Deleting a real row to make a chart look tidy changes the data, not just the picture."}});
+
+  K.quiz({id:"q-color", buttonSelector:"#card-color .mlrk-choice", feedbackSelector:"#colorfb", correct:"color",
+    feedback:{color:"Right. If color is the only difference, a reader who can't tell red from green can't tell the pools apart. Add labels, and pick colors that differ in lightness.",
+              height:"Color doesn't change a bar's height. The problem is that some readers can't tell red from green at all.",
+              none:"About 1 in 12 men can't easily tell red from green. Those readers would see two bars that look the same."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"A chart can use only real numbers and still mislead.", correct:true,
+      hint:"Think about cell [1]. Were any of its numbers wrong?",
+      explain:"Cell [1]'s numbers were all real. The cut-off axis made the gap look five times bigger."},
+    {value:"b", label:"A boxplot drawn with showfliers=False shows every value in the column.", correct:false,
+      hint:"Look at what cell [4] drew for Jae's 110-lap swim.",
+      explain:"showfliers=False leaves out every point past the cutoff. Jae's 110 laps vanished."},
+    {value:"c", label:"Deleting plt.ylim(180, 195) lets pandas start the bars at zero again.", correct:true,
+      hint:"Compare cell [1] with cell [2]. What changed, and where did the bars start?",
+      explain:"pandas starts bars at zero on its own. The ylim line was the only cause."},
+    {value:"d", label:"Changing a truncated bar chart's colors fixes the problem.", correct:false,
+      hint:"Which part of a bar chart is the claim: its color or its height?",
+      explain:"Color changes how a chart feels, not the size of the claim. The bar's height is the claim."},
+    {value:"e", label:"To review a chart, ask: where does the axis start, and was anything left out of view?", correct:true,
+      hint:"Those two questions match the two problems in this reading. Do they cover both?",
+      explain:"The first catches a truncated axis. The second catches hidden outliers."}
+  ]});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"ok",
+    feedback:{ok:"Right. The zero rule is a bar-chart rule. A line's claim is its slope, so a zoomed, clearly labeled y-axis can be honest.",
+              no:"The zero rule is for bar charts, where height is the claim. A line chart's claim is the change between points.",
+              bar:"A bar chart with a 900 start would be the truncated-axis problem from cell [1]. A bar chart needs to start at zero."}});
+
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+
   const AI_PROMPTS = [
-    "Think about a flyer or a sign that tried to show too much at once. What would you cut so its one real point is easier to find?",
-    "How would you explain a takeaway title to a friend, using a news headline instead of a chart?",
-    "Where have you seen a chart that was correct but still confusing? What would you change about it now?"
+    "Think of an ad or news chart that made a difference look huge. Where did its y-axis start?",
+    "Ask an AI: \"Here is my chart's code. Is anything in it making the chart look different from the data?\" Then check its answer against your own .max() and axis limits.",
+    "If your manager asked you to make a gap \"pop\" on a chart, what would you say, and what would you write in the caption instead?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.hidden=false;
+    box.style.display="block";
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
+
+  K.flipCards("#vocab", "act-flip-vocab");
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
   $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
@@ -584,7 +484,7 @@ git push</pre></li>
     if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
     const fb=$("#submitfb");
     K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["data-visualization"],
-      skills:["stakeholder-communication"], onDone(status,message){
+      skills:["data-distributions-shape","critical-thinking"], onDone(status,message){
       fb.textContent=message;
     }});
   });

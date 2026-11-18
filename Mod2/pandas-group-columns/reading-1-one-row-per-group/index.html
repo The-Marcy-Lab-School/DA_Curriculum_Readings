@@ -1,12 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>One Row Per Group — Pandas Grouping &amp; Derived Columns</title>
+<title>One Row Per Group — pandas Grouping, New Columns &amp; Merges</title>
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:900px;height:auto;margin:1.1rem 0;display:block}
-.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+.mlrk-illustration{width:100%;max-width:740px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;display:block}
 .mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+.mlrk-csv{white-space:pre;overflow-x:auto}
+.mlrk-warnbox{white-space:pre-wrap;margin:.4rem 0 0;font-family:ui-monospace,Menlo,Consolas,monospace}
 @media(max-width:650px){.mlrk-illustration{max-width:100%}}
 </style>
 </head><body>
@@ -14,9 +15,9 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>One Row Per Group</h1>
-<p class="mlrk-lead">A blood drive is an event where people come to give blood. A nonprofit runs drives at a library, a community center, and a fire station. It writes one row per drive. After a while, it has a pile of rows and one question: which place is worth going back to?</p>
+<p class="mlrk-lead">A nonprofit runs blood drives at a library, a community center and a fire station. A volunteer writes one row per drive. A unit is one bag of donated blood. The team asks, "Which place collects the most blood?" Eight rows are easy to read by eye. Eight hundred are not.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~20–23 minutes</span>
+  <span class="mlrk-pill">~18–20 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -35,7 +36,8 @@
 <section class="mlrk-section">
   <div class="mlrk-callout mlrk-callout-green">
     <p><strong>Skills you'll practice in this reading:</strong></p>
-    <p><strong>Data Mining</strong> — digging into a real dataset to surface a genuinely non-obvious relationship or finding, not just restating what's already visible on the surface. Grouping rows and deriving new columns are the two mechanical moves that make that kind of digging possible in the first place.</p>
+    <p><strong>Data Mining</strong> — Digging into a real dataset to surface a genuinely non-obvious relationship or finding, not just restating what's already visible on the surface.</p>
+    <p><strong>pandas DataFrames</strong> — Working with data in a pandas DataFrame: reading its rows, columns, and data types correctly, and recognizing when the same job could be done in SQL instead.</p>
   </div>
 </section>
 
@@ -48,234 +50,227 @@
 </section>
 
 <section class="mlrk-section">
-<h2>Key terms for this reading</h2>
-<p>These are the words this reading uses. Flip a card to see what a word means. Each one comes up again below with an example.</p>
-<div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>groupby</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>groupby</strong><br>Splits rows into groups by a category, then applies a summary to each group separately.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Aggregation</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Aggregation</strong><br>A summary worked out per group, like count, mean, or sum. Several at once with <code>.agg()</code>.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Split-apply-combine</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Split-apply-combine</strong><br>The three steps groupby runs: split rows into groups, apply a summary to each, combine the results into one row per group.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Group key</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Group key</strong><br>The column passed to groupby. Rows with the same value land in the same group.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>.agg()</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>.agg()</strong><br>Takes a list of summary names and works out every one, per group, in one call.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Derived column</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Derived column</strong><br>A new column worked out from existing columns, instead of typed in by hand.</span></button>
-</div>
-</section>
+<p><strong>Your goal:</strong> turn many rows into one row per site, add new columns, change rows safely, and bring in columns from a second table. Comparing groups is how most findings start. You already know how to load a CSV, filter with a True/False mask, and choose between the mean and the median.</p>
 
-<section class="mlrk-section">
-<h2>1. Six drives, three places</h2>
-<p>Here is the nonprofit's file. Each row is one drive: the place, how many donors signed up, how many <em>units</em> of blood it collected (a unit is one bag, from one donor), and how many hours volunteers worked.</p>
-<div class="mlrk-code" data-file="drives.csv"><div class="mlrk-screen">site,donors,units,volunteer_hours
-Library,34,30,6
-Community Center,22,20,5
-Fire Station,55,50,10
-Library,44,40,8
-Community Center,28,25,5
-Community Center,33,30,6</div></div>
-<p>The rows for each place are mixed together. Adding them up by hand works for six rows, but it falls apart at six hundred, and one missed row gives the wrong place the credit. You already know how to load a file with pandas and filter its rows. In this reading, you turn many rows into one summary row per place, and you build a new column instead of working out the same math by hand.</p>
-
-<svg class="mlrk-illustration" viewBox="0 0 920 260" role="img" aria-labelledby="groupbyTitle groupbyDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="groupbyTitle">Six drive rows split into three groups, then combined into one row per place</title>
-  <desc id="groupbyDesc">On the left, six rows in mixed order: Library, Community Center, Fire Station, Library, Community Center, Community Center. An arrow labeled split leads to three boxes in the middle: Library with units 30 and 40, Community Center with units 20, 25 and 30, and Fire Station with units 50. An arrow labeled apply and combine leads to three result rows on the right, one total for each place.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="95" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">One row per drive</text>
-    <g stroke-width="2.5" font-size="14" font-weight="600" fill="#261F1D">
-      <rect x="10" y="30" width="170" height="24" rx="6" fill="#A6C2B4" stroke="#264326"/><text x="95" y="47" text-anchor="middle">Library</text>
-      <rect x="10" y="58" width="170" height="24" rx="6" fill="#DEEAF4" stroke="#2274B5"/><text x="95" y="75" text-anchor="middle">Community Center</text>
-      <rect x="10" y="86" width="170" height="24" rx="6" fill="#FECC5B" stroke="#83671C"/><text x="95" y="103" text-anchor="middle">Fire Station</text>
-      <rect x="10" y="114" width="170" height="24" rx="6" fill="#A6C2B4" stroke="#264326"/><text x="95" y="131" text-anchor="middle">Library</text>
-      <rect x="10" y="142" width="170" height="24" rx="6" fill="#DEEAF4" stroke="#2274B5"/><text x="95" y="159" text-anchor="middle">Community Center</text>
-      <rect x="10" y="170" width="170" height="24" rx="6" fill="#DEEAF4" stroke="#2274B5"/><text x="95" y="187" text-anchor="middle">Community Center</text>
+<svg class="mlrk-illustration" viewBox="0 0 760 250" role="img" aria-labelledby="splitTitle splitDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="splitTitle">Split, apply, combine</title>
+  <desc id="splitDesc">On the left, six drive rows in mixed order, each labeled Library, Center or Fire. An arrow leads to three piles, one per site, under the word split. A second arrow leads to a three-row table with one mean per site, under the words apply and combine.</desc>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="15">
+    <text x="90" y="24" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">Every drive</text>
+    <g stroke="#264326" stroke-width="2">
+      <rect x="30" y="40" width="120" height="26" fill="#A6C2B4"/>
+      <rect x="30" y="72" width="120" height="26" fill="#DEEAF4"/>
+      <rect x="30" y="104" width="120" height="26" fill="#FFF6E4"/>
+      <rect x="30" y="136" width="120" height="26" fill="#A6C2B4"/>
+      <rect x="30" y="168" width="120" height="26" fill="#DEEAF4"/>
+      <rect x="30" y="200" width="120" height="26" fill="#FFF6E4"/>
     </g>
-    <text x="225" y="112" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">SPLIT</text>
-    <line x1="188" y1="130" x2="258" y2="130" stroke="#264326" stroke-width="3"/>
-    <polygon points="258,122 258,138 272,130" fill="#264326"/>
-    <text x="420" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Grouped by site</text>
-    <rect x="275" y="30" width="290" height="64" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="420" y="56" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Library</text>
-    <text x="420" y="78" text-anchor="middle" font-size="14" fill="#261F1D">units: 30, 40</text>
-    <rect x="275" y="104" width="290" height="64" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-    <text x="420" y="130" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Community Center</text>
-    <text x="420" y="152" text-anchor="middle" font-size="14" fill="#261F1D">units: 20, 25, 30</text>
-    <rect x="275" y="178" width="290" height="64" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="420" y="204" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Fire Station</text>
-    <text x="420" y="226" text-anchor="middle" font-size="14" fill="#261F1D">units: 50</text>
-    <text x="612" y="104" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">APPLY +</text>
-    <text x="612" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#261F1D">COMBINE</text>
-    <line x1="572" y1="136" x2="648" y2="136" stroke="#264326" stroke-width="3"/>
-    <polygon points="648,128 648,144 662,136" fill="#264326"/>
-    <text x="785" y="18" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">One row per group</text>
-    <rect x="665" y="30" width="240" height="64" rx="12" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="785" y="56" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Library</text>
-    <text x="785" y="78" text-anchor="middle" font-size="14" fill="#261F1D">one total</text>
-    <rect x="665" y="104" width="240" height="64" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-    <text x="785" y="130" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Community Center</text>
-    <text x="785" y="152" text-anchor="middle" font-size="14" fill="#261F1D">one total</text>
-    <rect x="665" y="178" width="240" height="64" rx="12" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-    <text x="785" y="204" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Fire Station</text>
-    <text x="785" y="226" text-anchor="middle" font-size="14" fill="#261F1D">one total</text>
+    <g fill="#261F1D">
+      <text x="42" y="58">Library</text><text x="42" y="90">Center</text><text x="42" y="122">Fire</text>
+      <text x="42" y="154">Library</text><text x="42" y="186">Center</text><text x="42" y="218">Fire</text>
+    </g>
+    <line x1="162" y1="133" x2="212" y2="133" stroke="#264326" stroke-width="3"/>
+    <polygon points="212,125 212,141 226,133" fill="#264326"/>
+    <text x="194" y="118" text-anchor="middle" font-weight="700" fill="#264326">split</text>
+
+    <g stroke="#264326" stroke-width="2">
+      <rect x="240" y="40" width="120" height="26" fill="#A6C2B4"/><rect x="240" y="66" width="120" height="26" fill="#A6C2B4"/>
+      <rect x="240" y="112" width="120" height="26" fill="#DEEAF4"/><rect x="240" y="138" width="120" height="26" fill="#DEEAF4"/>
+      <rect x="240" y="184" width="120" height="26" fill="#FFF6E4"/><rect x="240" y="210" width="120" height="26" fill="#FFF6E4"/>
+    </g>
+    <g fill="#261F1D">
+      <text x="252" y="58">Library</text><text x="252" y="84">Library</text>
+      <text x="252" y="130">Center</text><text x="252" y="156">Center</text>
+      <text x="252" y="202">Fire</text><text x="252" y="228">Fire</text>
+    </g>
+    <line x1="372" y1="133" x2="452" y2="133" stroke="#264326" stroke-width="3"/>
+    <polygon points="452,125 452,141 466,133" fill="#264326"/>
+    <text x="418" y="104" text-anchor="middle" font-weight="700" fill="#264326">apply and</text>
+    <text x="418" y="122" text-anchor="middle" font-weight="700" fill="#264326">combine</text>
+
+    <text x="590" y="78" text-anchor="middle" font-weight="700" font-size="16" fill="#261F1D">One row per site</text>
+    <g stroke="#264326" stroke-width="2" fill="#FFFCF7">
+      <rect x="480" y="92" width="220" height="30"/><rect x="480" y="122" width="220" height="30"/><rect x="480" y="152" width="220" height="30"/>
+    </g>
+    <g fill="#261F1D">
+      <text x="494" y="112">Library</text><text x="640" y="112">mean</text>
+      <text x="494" y="142">Center</text><text x="640" y="142">mean</text>
+      <text x="494" y="172">Fire</text><text x="640" y="172">mean</text>
+    </g>
   </g>
 </svg>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall</h2>
-<p>Grouping builds on two pandas skills you already have: picking one column and filtering rows. Check each one.</p>
-
-<div class="mlrk-card" id="card-select"><p><strong>Recall:</strong> what does <code>drives["units"]</code> give you?</p>
-<button type="button" class="mlrk-choice" data-a="series">A Series: the <code>units</code> column on its own</button>
-<button type="button" class="mlrk-choice" data-a="sum">One number: the total of the column</button>
-<button type="button" class="mlrk-choice" data-a="newdf">A DataFrame with every column except <code>units</code></button>
-<div id="selectfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-filter" style="margin-top:.8rem"><p><strong>Predict:</strong> what does <code>recall_big.py</code> print?</p>
-<div class="mlrk-code" data-file="recall_big.py"><div class="mlrk-screen">import pandas as pd
-
-drives = pd.read_csv("drives.csv")
-big = drives[drives["units"] &gt;= 30]
-print(big.shape)</div></div>
-<button type="button" class="mlrk-btn" data-run="recall_big.py" data-after="q-filter"></button>
-<div class="mlrk-run" data-file="recall_big.py" hidden><pre>(4, 4)</pre></div>
-<button type="button" class="mlrk-choice" data-a="four">(4, 4)</button>
-<button type="button" class="mlrk-choice" data-a="six">(6, 4)</button>
-<button type="button" class="mlrk-choice" data-a="three">(3, 4)</button>
-<div id="filterfb" class="mlrk-feedback" tabindex="-1"></div></div>
-</section>
-
-<section class="mlrk-section">
-<h2>3. One row per group with <code>groupby</code></h2>
-<p><code>groupby</code> is a DataFrame method that splits rows into groups by a category, then applies a summary to each group separately. The column you group by is the <strong>group key</strong>. Here it is <code>"site"</code>, so every row with the same place lands in the same group. The summary, like a total or a mean, is an <strong>aggregation</strong>: many values reduced to one number per group.</p>
-<p>pandas calls this <strong>split-apply-combine</strong>: split the rows into groups, apply the summary inside each group, then combine the results into one row per group. The line reads left to right: group by <code>"site"</code>, pick the <code>"units"</code> column, then take the <code>.sum()</code>.</p>
-
-<div class="mlrk-card" id="card-total"><p><strong>Predict:</strong> what total does <code>site_totals.py</code> show for Community Center?</p>
-<div class="mlrk-code" data-file="site_totals.py"><div class="mlrk-screen">import pandas as pd
-
-drives = pd.read_csv("drives.csv")
-totals = drives.groupby("site")["units"].sum()
-print(totals)</div></div>
-<button type="button" class="mlrk-btn" data-run="site_totals.py" data-after="q-total"></button>
-<div class="mlrk-run" data-file="site_totals.py" hidden><pre>site
-Community Center    75
-Fire Station        50
-Library             70
-Name: units, dtype: int64</pre></div>
-<button type="button" class="mlrk-choice" data-a="seventyfive">75</button>
-<button type="button" class="mlrk-choice" data-a="thirty">30</button>
-<button type="button" class="mlrk-choice" data-a="twentyfive">25</button>
-<div id="totalfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>Six rows became three: one per place, sorted by name. The original <code>drives</code> DataFrame did not change.</p>
-
-<h3>Fill in the blank: the mean per place</h3>
-<div class="mlrk-code" data-file="site_means.py"><div class="mlrk-screen">import pandas as pd
-
-drives = pd.read_csv("drives.csv")
-print(drives.groupby("site")["units"].____())</div></div>
-<button type="button" class="mlrk-btn" data-run="site_means.py" data-after="q-fill" data-after-note="Solve the blank first. Then you can run it."></button>
-<div class="mlrk-run" data-file="site_means.py" hidden><pre>site
-Community Center    25.0
-Fire Station        50.0
-Library             35.0
-Name: units, dtype: float64</pre></div>
-<ol class="mlrk-steplist">
-  <li>Think of the method that works out the average of each group. It is the statistic you add up and divide by the count.</li>
-  <li>Type only its name: no dot and no parentheses.</li>
-  <li>Press <strong>Check</strong>. You get 2 tries. Why: only the last step changes; the split by <code>"site"</code> stays the same.</li>
-</ol>
-<div class="mlrk-fillblank">
-  <label for="blankinput">Blank:</label>
-  <input type="text" id="blankinput" autocomplete="off">
-  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+<h2>Key terms for this reading</h2>
+<p>These are the words this reading uses. Flip a card to see what a word means. Each one comes up again below with an example.</p>
+<div class="mlrk-grid" id="vocab">
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>groupby</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>groupby</strong><br>Splits rows into groups by a category, then applies a summary to each group.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Aggregation</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Aggregation</strong><br>A summary worked out for each group, such as a count, mean or median. <code>.agg()</code> does several at once.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Derived Column</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Derived column</strong><br>A new column worked out from columns you already have, for every row at once.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Chained Assignment</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Chained assignment</strong><br>Setting a value in two steps, like <code>df[mask]["col"] = value</code>. In pandas 3 it never changes <code>df</code> and shows a ChainedAssignmentError warning.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Merge</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Merge</strong><br>Combines two tables by matching rows on a shared key column, like a lookup.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Lookup Table</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Lookup table</strong><br>A small second table with one row per key. A merge copies its columns onto the matching rows of your main table.</span></button>
 </div>
-<div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Several summaries at once with <code>.agg()</code></h2>
-<p><code>.agg()</code> takes a list of summary names and works out every one of them, per group, in one line. You don't need to repeat <code>groupby</code> three times.</p>
-<div class="mlrk-card" id="card-agg"><p><strong>Predict:</strong> in <code>site_summary.py</code>, what is the <code>count</code> for Fire Station?</p>
-<div class="mlrk-code" data-file="site_summary.py"><div class="mlrk-screen">import pandas as pd
+<h2>1. Quick recall</h2>
+<p>Two skills you already have come up in this reading: filtering on two conditions, and counting blanks.</p>
+<div class="mlrk-card" id="card-recall-filter"><p><strong>Recall:</strong> which line keeps only Library drives that collected at least 30 units?</p>
+<button type="button" class="mlrk-choice" data-a="parens"><code>drives[(drives["site"] == "Library") &amp; (drives["units"] &gt;= 30)]</code></button>
+<button type="button" class="mlrk-choice" data-a="noparens"><code>drives[drives["site"] == "Library" &amp; drives["units"] &gt;= 30]</code></button>
+<button type="button" class="mlrk-choice" data-a="and"><code>drives[(drives["site"] == "Library") and (drives["units"] &gt;= 30)]</code></button>
+<div id="recallfilterfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
+<div class="mlrk-card" id="card-recall-isna" style="margin-top:1.2rem"><p><strong>Recall:</strong> <code>drives["units"].isna().sum()</code> shows <code>np.int64(1)</code>. What does that tell you?</p>
+<button type="button" class="mlrk-choice" data-a="one">One drive has a blank <code>units</code> value.</button>
+<button type="button" class="mlrk-choice" data-a="units">Every drive collected 1 unit.</button>
+<button type="button" class="mlrk-choice" data-a="dup">One drive was logged twice.</button>
+<div id="recallisnafb" class="mlrk-feedback" tabindex="-1"></div></div>
+</section>
+
+<section class="mlrk-section">
+<h2>2. One row per group with <code>groupby</code></h2>
+<p>Here is the nonprofit's file, <code>drives.csv</code>. One Community Center drive has a blank <code>units</code> value.</p>
+<div class="mlrk-code mlrk-csv" data-file="drives.csv">site,donors,units,volunteer_hours
+Library,30,26,10
+Community Center,45,40,12
+Fire Station,22,20,8
+Library,34,31,10
+Community Center,50,,12
+Fire Station,25,24,8
+Library,28,25,9
+Community Center,41,36,11</div>
+<pre class="mlrk-code" data-file="drives.ipynb" data-cell="1">import pandas as pd
 drives = pd.read_csv("drives.csv")
-summary = drives.groupby("site")["units"].agg(["count", "mean", "sum"])
-print(summary)</div></div>
-<button type="button" class="mlrk-btn" data-run="site_summary.py" data-after="q-agg"></button>
-<div class="mlrk-run" data-file="site_summary.py" hidden><pre>                  count  mean  sum
+drives.shape</pre>
+<button type="button" class="mlrk-btn" data-run="drives.ipynb" data-cell="1"></button>
+<div class="mlrk-run" data-file="drives.ipynb" data-cell="1" hidden><pre>(8, 4)</pre></div>
+
+<p style="margin-top:1rem">To compare sites, you could write one filter per site. <strong>groupby</strong> does it in one line. It <em>splits</em> the rows into one pile per site, <em>applies</em> a summary to each pile, and <em>combines</em> the answers into one row per site.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this cell:</strong> <code>drives.groupby("site")</code> makes the piles. On its own it shows no table, only a GroupBy object. <code>["units"]</code> picks the column to summarize. <code>.agg(["count", "mean", "median"])</code> works out all three summaries for each pile at once. <code>.round(1)</code> rounds to one decimal place.</p></div>
+<p><strong>Predict:</strong> Community Center held 3 drives. What will its <code>count</code> be in cell [2]?</p>
+<pre class="mlrk-code" data-file="drives.ipynb" data-cell="2">drives.groupby("site")["units"].agg(["count", "mean", "median"]).round(1)</pre>
+<button type="button" class="mlrk-btn" data-run="drives.ipynb" data-cell="2" data-after="q-count"></button>
+<div class="mlrk-run" data-file="drives.ipynb" data-cell="2" hidden><pre>                  count  mean  median
 site
-Community Center      3  25.0   75
-Fire Station          1  50.0   50
-Library               2  35.0   70</pre></div>
-<button type="button" class="mlrk-choice" data-a="one">1</button>
-<button type="button" class="mlrk-choice" data-a="fifty">50</button>
-<button type="button" class="mlrk-choice" data-a="three">3</button>
-<div id="aggfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>Look at Fire Station: it has the biggest mean, 50 units, but it is based on a single drive. The <code>count</code> column tells you how much to trust each mean.</p>
+Community Center      2  38.0    38.0
+Fire Station          2  22.0    22.0
+Library               3  27.3    26.0</pre></div>
+<div class="mlrk-card" id="card-count">
+<button type="button" class="mlrk-choice" data-a="2"><code>2</code></button>
+<button type="button" class="mlrk-choice" data-a="3"><code>3</code></button>
+<button type="button" class="mlrk-choice" data-a="8"><code>8</code></button>
+<div id="countfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">Read the line left to right: group by <code>site</code>, pick <code>units</code>, take the summaries. Each summary is an <strong>aggregation</strong>. Keep <code>count</code> next to the mean: it shows how many rows each number rests on, so you can spot a group too small to trust. Mean and median side by side are a quick skew check. They are close at every site, so no single drive is pulling a mean.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Build a new column</h2>
-<p>Totals show how much each place collected. They don't show how much volunteer time it took. For that, the nonprofit needs units per volunteer hour, a column the file doesn't have. A <strong>derived column</strong> is a new column worked out from columns you already have. pandas runs the math on every row at once, with no loop.</p>
-<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong> <code>drives["units_per_hour"] = ...</code> creates a column with that name. <code>drives[["site", "units_per_hour"]]</code> uses a list of names inside the brackets to pick two columns.</p></div>
-
-<div class="mlrk-card" id="card-rate"><p><strong>Predict:</strong> row 1 had 20 units and 5 volunteer hours. What does <code>add_rate.py</code> show for row 1?</p>
-<div class="mlrk-code" data-file="add_rate.py"><div class="mlrk-screen">import pandas as pd
-
-drives = pd.read_csv("drives.csv")
-drives["units_per_hour"] = drives["units"] / drives["volunteer_hours"]
-print(drives[["site", "units_per_hour"]])</div></div>
-<button type="button" class="mlrk-btn" data-run="add_rate.py" data-after="q-rate"></button>
-<div class="mlrk-run" data-file="add_rate.py" hidden><pre>               site  units_per_hour
-0           Library             5.0
-1  Community Center             4.0
-2      Fire Station             5.0
-3           Library             5.0
-4  Community Center             5.0
-5  Community Center             5.0</pre></div>
-<button type="button" class="mlrk-choice" data-a="four">4.0</button>
-<button type="button" class="mlrk-choice" data-a="quarter">0.25</button>
-<button type="button" class="mlrk-choice" data-a="hundred">100</button>
-<div id="ratefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-derive" style="margin-top:.8rem"><p><strong>You want a new column, <code>units_per_donor</code>: units divided by donors. Which line creates it?</strong></p>
-<button type="button" class="mlrk-choice" data-a="right"><code>drives["units_per_donor"] = drives["units"] / drives["donors"]</code></button>
-<button type="button" class="mlrk-choice" data-a="inverted"><code>drives["units_per_donor"] = drives["donors"] / drives["units"]</code></button>
-<button type="button" class="mlrk-choice" data-a="noassign"><code>units_per_donor = drives["units"] / drives["donors"]</code></button>
-<div id="derivefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<h3>Group the new column</h3>
-<p>Now combine both moves: build the column, then group by place and take the mean of it.</p>
-<div class="mlrk-card" id="card-mining"><p><strong>Predict:</strong> which place will <code>site_rates.py</code> show with the lowest units per hour?</p>
-<div class="mlrk-code" data-file="site_rates.py"><div class="mlrk-screen">import pandas as pd
-
-drives = pd.read_csv("drives.csv")
-drives["units_per_hour"] = drives["units"] / drives["volunteer_hours"]
-rates = drives.groupby("site")["units_per_hour"].mean()
-print(rates)</div></div>
-<button type="button" class="mlrk-btn" data-run="site_rates.py" data-after="q-mining"></button>
-<div class="mlrk-run" data-file="site_rates.py" hidden><pre>site
-Community Center    4.666667
-Fire Station        5.000000
-Library             5.000000
-Name: units_per_hour, dtype: float64</pre></div>
-<button type="button" class="mlrk-choice" data-a="cc">Community Center</button>
-<button type="button" class="mlrk-choice" data-a="lib">Library</button>
-<button type="button" class="mlrk-choice" data-a="fire">Fire Station</button>
-<div id="miningfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>Community Center collected the most blood in total, 75 units. Per volunteer hour, it ranks last, because one drive took 5 hours for only 20 units. The total alone hid that.</p>
-
-<div class="mlrk-card" id="card-debug" style="margin-top:.8rem"><p><strong>A volunteer runs <code>drives.groupby("site")["Units"].sum()</code> and gets <code>KeyError: 'Units'</code>. What should they check first?</strong></p>
-<button type="button" class="mlrk-choice" data-a="colname">The exact column name in the file. It is <code>units</code>, all lowercase.</button>
-<button type="button" class="mlrk-choice" data-a="import">Whether <code>.sum()</code> needs its own import.</button>
-<button type="button" class="mlrk-choice" data-a="twocol">Whether <code>groupby</code> needs two columns to work.</button>
-<div id="debugfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<h2>3. Build new columns</h2>
+<p>A <strong>derived column</strong> is worked out from columns you already have. You write the formula once, and pandas applies it to every row at once, with no loop. A column can also start with the same value in every row.</p>
+<p><strong>Predict:</strong> what will <code>units_per_hour</code> be in row 4, the drive with no units?</p>
+<pre class="mlrk-code" data-file="drives.ipynb" data-cell="3">drives["units_per_hour"] = drives["units"] / drives["volunteer_hours"]
+drives["goal_met"] = "no"
+drives[["site", "units", "units_per_hour", "goal_met"]].round(1)</pre>
+<button type="button" class="mlrk-btn" data-run="drives.ipynb" data-cell="3" data-after="q-nan"></button>
+<div class="mlrk-run" data-file="drives.ipynb" data-cell="3" hidden><pre>               site  units  units_per_hour goal_met
+0           Library   26.0             2.6       no
+1  Community Center   40.0             3.3       no
+2      Fire Station   20.0             2.5       no
+3           Library   31.0             3.1       no
+4  Community Center    NaN             NaN       no
+5      Fire Station   24.0             3.0       no
+6           Library   25.0             2.8       no
+7  Community Center   36.0             3.3       no</pre></div>
+<div class="mlrk-card" id="card-nan">
+<button type="button" class="mlrk-choice" data-a="nan"><code>NaN</code></button>
+<button type="button" class="mlrk-choice" data-a="zero"><code>0.0</code></button>
+<button type="button" class="mlrk-choice" data-a="error">The cell stops with an error</button>
+<div id="nanfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">Fire Station collects the fewest units. But per volunteer hour, its drives (2.5 and 3.0) are close to the Library's (2.6 to 3.1). A new column can show what the raw counts hide.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Mixed check</h2>
-<div class="mlrk-card">
-<p><strong>Select every statement that is TRUE.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> <code>groupby</code> changes the original DataFrame, reordering its rows for good.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> <code>.agg()</code> can work out more than one summary in one call.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A groupby result has one row for each different value in the group key.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A derived column needs a loop to fill in each row.</label>
-<p><button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button></p>
+<h2>4. Change rows the safe way</h2>
+<p>The team counts a drive as meeting its goal at 30 units or more. A saved True/False mask marks those drives. Here is a rule to remember: <strong>a filter gives you a copy</strong>. In pandas 3, <code>drives[big]</code> is a separate table. Changing it never touches <code>drives</code>.</p>
+<p><strong>Predict:</strong> cell [4] tries to set <code>goal_met</code> to <code>"yes"</code> in two steps. How many <code>"yes"</code> values will <code>drives</code> have?</p>
+<pre class="mlrk-code" data-file="drives.ipynb" data-cell="4">big = drives["units"] &gt;= 30
+drives[big]["goal_met"] = "yes"
+(drives["goal_met"] == "yes").sum()</pre>
+<button type="button" class="mlrk-btn" data-run="drives.ipynb" data-cell="4" data-after="q-chained"></button>
+<div class="mlrk-run" data-file="drives.ipynb" data-cell="4" hidden><pre>np.int64(0)</pre></div>
+<div class="mlrk-card" id="card-chained">
+<button type="button" class="mlrk-choice" data-a="zero"><code>0</code></button>
+<button type="button" class="mlrk-choice" data-a="three"><code>3</code></button>
+<button type="button" class="mlrk-choice" data-a="eight"><code>8</code></button>
+<div id="chainedfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-callout mlrk-callout-red" id="warnbox" style="margin-top:1rem" hidden><p><strong>pandas also shows this warning when cell [4] runs</strong> (shortened):</p>
+<p class="mlrk-warnbox">ChainedAssignmentError: A value is being set on a copy of a DataFrame or Series through chained assignment.
+Try using '.loc[row_indexer, col_indexer] = value' instead, to perform the assignment in a single step.</p></div>
+<p style="margin-top:1rem">This is <strong>chained assignment</strong>: <code>drives[big]</code> makes a copy, and <code>["goal_met"] = "yes"</code> changes the copy. Despite its name, ChainedAssignmentError is a warning. The cell keeps running, so it is easy to miss, and every count after it is quietly wrong. Older tutorials suggest adding <code>.copy()</code>. That still changes a copy.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this cell:</strong> <code>drives.loc[rows, column] = value</code> names the rows and the column inside one pair of brackets. pandas then changes <code>drives</code> itself, in one step. Cell [5] uses it with the same <code>big</code> mask.</p></div>
+<ol class="mlrk-steplist">
+  <li>Look at the <code>units</code> column in <code>drives.csv</code>. Count the drives where <code>big</code> is True: 30 units or more.</li>
+  <li>Type how many <code>"yes"</code> values cell [5] will show. Type only a number.</li>
+  <li>Press <strong>Check</strong>, then run cell [5].</li>
+</ol>
+<p>Why: a cleaning step that silently does nothing is worse than a crash, so check the count after every change.</p>
+<pre class="mlrk-code" data-file="drives.ipynb" data-cell="5">drives.loc[big, "goal_met"] = "yes"
+(drives["goal_met"] == "yes").sum()</pre>
+<div class="mlrk-fillblank">
+  <label for="locinput">Number of "yes" values:</label>
+  <input type="text" id="locinput" autocomplete="off" inputmode="numeric">
+  <button type="button" id="loccheck" class="mlrk-btn">Check</button>
+</div>
+<div id="locfb" class="mlrk-feedback" tabindex="-1"></div>
+<button type="button" class="mlrk-btn" data-run="drives.ipynb" data-cell="5" data-after="q-loc" data-after-note="Type your count first. Then you can run it."></button>
+<div class="mlrk-run" data-file="drives.ipynb" data-cell="5" hidden><pre>np.int64(3)</pre></div>
+<p style="margin-top:1rem">Three drives reached 30 units. The drive with a blank <code>units</code> value stays <code>"no"</code>, because a blank is never <code>&gt;= 30</code>.</p>
+</section>
+
+<section class="mlrk-section">
+<h2>5. Add columns from a lookup table</h2>
+<p>The team wants each site's neighborhood next to its drives. A <strong>lookup table</strong> holds one row per site. A <strong>merge</strong> matches rows on a shared key column, here <code>site</code>, and copies the lookup's columns over.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this cell:</strong> <code>pd.DataFrame({...})</code> builds a small table from a dict of lists. <code>drives.merge(lookup, on="site", how="left")</code> matches on <code>site</code>. <code>how="left"</code> keeps every row of <code>drives</code>, and a row with no match gets <code>NaN</code>.</p></div>
+<p><strong>Predict:</strong> the lookup in cell [6] spells one site "Firehouse". What will the checks show?</p>
+<pre class="mlrk-code" data-file="drives.ipynb" data-cell="6">lookup = pd.DataFrame({
+    "site": ["Library", "Community Center", "Firehouse"],
+    "neighborhood": ["Northside", "Riverside", "Hillcrest"],
+})
+merged = drives.merge(lookup, on="site", how="left")
+print("rows before:", len(drives))
+print("rows after: ", len(merged))
+merged["neighborhood"].isna().sum()</pre>
+<button type="button" class="mlrk-btn" data-run="drives.ipynb" data-cell="6" data-after="q-merge"></button>
+<div class="mlrk-run" data-file="drives.ipynb" data-cell="6" hidden><pre>rows before: 8
+rows after:  8
+np.int64(2)</pre></div>
+<div class="mlrk-card" id="card-merge">
+<button type="button" class="mlrk-choice" data-a="8and2">8 rows after, and 2 blank neighborhoods</button>
+<button type="button" class="mlrk-choice" data-a="6and0">6 rows after, and 0 blank neighborhoods</button>
+<button type="button" class="mlrk-choice" data-a="8and0">8 rows after, and 0 blank neighborhoods</button>
+<div id="mergefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">Keys must match exactly, letter for letter. The merge ran with no error, and only the checks showed the problem. Run two checks after every merge: rows before and after, and blanks in the new column. With the key spelled the same way in both tables, the blanks go away:</p>
+<pre class="mlrk-code" data-file="drives.ipynb" data-cell="7">lookup = pd.DataFrame({
+    "site": ["Library", "Community Center", "Fire Station"],
+    "neighborhood": ["Northside", "Riverside", "Hillcrest"],
+})
+merged = drives.merge(lookup, on="site", how="left")
+merged["neighborhood"].isna().sum()</pre>
+<button type="button" class="mlrk-btn" data-run="drives.ipynb" data-cell="7"></button>
+<div class="mlrk-run" data-file="drives.ipynb" data-cell="7" hidden><pre>np.int64(0)</pre></div>
+</section>
+
+<section class="mlrk-section">
+<h2>6. Check your understanding</h2>
+<div class="mlrk-card"><p><strong>Select every TRUE statement.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> <code>count</code> in <code>.agg()</code> counts only the values that are not blank.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> <code>drives.groupby("site")</code> on its own shows a table with one row per site.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> Adding <code>.copy()</code> makes <code>drives[big]["goal_met"] = "yes"</code> change <code>drives</code>.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> A merge can run with no error and still leave blanks in the new column.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> <code>drives.loc[big, "goal_met"] = "yes"</code> changes <code>drives</code> itself.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
 <div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
@@ -283,40 +278,52 @@ Name: units_per_hour, dtype: float64</pre></div>
 <section class="mlrk-section">
 <h2>7. Wrap-up</h2>
 <ul>
-<li><code>df.groupby("key")["column"].sum()</code> splits rows by the key, sums each group, and gives one row per group.</li>
-<li><code>.agg(["count", "mean", "sum"])</code> gives several summaries per group at once. Check the count before you trust a mean.</li>
-<li><code>df["new"] = df["a"] / df["b"]</code> builds a derived column for every row at once, and you can group by it like any other column.</li>
+<li><code>groupby</code> splits rows by a category, applies summaries, and combines them into one row per group. Keep <code>count</code> next to the mean and median.</li>
+<li>A filter gives you a copy. To change rows in the original, use <code>.loc[rows, column] = value</code> in one step.</li>
+<li>After a merge, check the row count and the blanks in the new column. Keys must match exactly.</li>
 </ul>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> the nonprofit wants to know which place turns the most sign-ups into actual units of blood, not just which place collects the most. Which plan answers that?</p>
-<button type="button" class="mlrk-choice" data-a="right">Build <code>units_per_donor = units / donors</code>, then group by site and take the mean of it.</button>
-<button type="button" class="mlrk-choice" data-a="sumonly">Group by site and take the sum of <code>units</code>.</button>
-<button type="button" class="mlrk-choice" data-a="sortonly">Sort the rows by <code>donors</code>, biggest first.</button>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> next season, the nonprofit adds drives at a Rec Center. The lookup table has no Rec Center row. After <code>drives.merge(lookup, on="site", how="left")</code>, what happens to the Rec Center drives?</p>
+<button type="button" class="mlrk-choice" data-a="nan">They stay in the table, with <code>NaN</code> for <code>neighborhood</code>.</button>
+<button type="button" class="mlrk-choice" data-a="dropped">They are dropped, because they have no match.</button>
+<button type="button" class="mlrk-choice" data-a="error">The merge stops with an error.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p><strong>In interviews:</strong> "How would you find total sales per region from a table of orders?" is a common question, and a strong answer says "group by region, then sum."</p>
-<p><strong>Where this goes next:</strong> grouping and new columns are how you dig for a pattern that a quick look at the raw rows would miss.</p>
+<p style="margin-top:1rem">In interviews, "What does <code>.groupby()</code> do, step by step?" is a common question. A clear answer covers four parts: what the code is for, how it works, what it returns, and one edge case, such as blanks it skips.</p>
+<p>Next, you will turn group summaries like these into charts.</p>
 </section>
 
 <section class="mlrk-section">
 <h2>8. Reflection</h2>
-<label for="strategy"><strong>Your habit:</strong> a groupby total looks too small. How would you track down the problem?</label>
 <ol class="mlrk-steplist">
-  <li>Write 1 or 2 sentences, at least 8 words. The counter under the box tells you when it counts.</li>
-  <li>Try starting with: "First I'd check..."</li>
+  <li>Explain the line in cell [2] to a teammate. Use this frame: "It's for ___. It works by ___. It returns ___."</li>
+  <li>Finish with: "One edge case is ___."</li>
 </ol>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="First I'd check..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
+<p>Why: walking through your own code out loud is how teammates and interviewers check that you understand it.</p>
+<label for="walkthrough"><strong>Your walkthrough:</strong></label>
+<textarea id="walkthrough" class="mlrk-response" data-save placeholder="It's for..."></textarea>
+<p>Stuck? <button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
 </section>
 
 <section class="mlrk-section">
-<h2>10. Go further (optional)</h2>
-<p>This video is optional and isn't part of the time estimate or your score. As you watch, notice how little code a summary per group takes once the rows are grouped.</p>
-<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/VRmXto2YA2I" title="pandas groupby, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+<h2>Go further (optional): groupby and aggregate functions</h2>
+<p>This video is optional and is not counted in the time estimate. As you watch, notice how one <code>groupby</code> line replaces a filter for every group.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/VRmXto2YA2I" title="Group by and aggregate functions in pandas (optional video)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
 <a class="mlrk-video-link" href="https://www.youtube.com/watch?v=VRmXto2YA2I" target="_blank" rel="noopener">Watch on YouTube</a>
 </section>
 
 <section class="mlrk-section">
-<h2>11. Your score &amp; keep a copy of your work</h2>
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://pandas.pydata.org/docs/getting_started/intro_tutorials/06_calculate_statistics.html" target="_blank" rel="noopener">pandas docs: How to calculate summary statistics</a>: <code>groupby</code> and <code>agg</code> with pictures.</li>
+<li><a href="https://pandas.pydata.org/docs/getting_started/intro_tutorials/05_add_columns.html" target="_blank" rel="noopener">pandas docs: How to create new columns</a>: derived columns from existing ones.</li>
+<li><a href="https://pandas.pydata.org/docs/user_guide/copy_on_write.html" target="_blank" rel="noopener">pandas docs: Copy-on-Write</a>: why a filter gives you a copy in pandas 3.</li>
+<li><a href="https://pandas.pydata.org/docs/getting_started/intro_tutorials/08_combine_dataframes.html" target="_blank" rel="noopener">pandas docs: How to combine data from multiple tables</a>: merges on a shared key.</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -385,17 +392,6 @@ git push</pre></li>
 </div>
 </section>
 
-<section class="mlrk-section">
-<h2>Additional resources</h2>
-<p class="mlrk-small">Not counted in the time estimate above.</p>
-<ul>
-<li><a href="https://pandas.pydata.org/docs/getting_started/intro_tutorials/06_calculate_statistics.html" target="_blank" rel="noopener">pandas docs: How to calculate summary statistics</a> — the official tutorial covering groupby.</li>
-<li><a href="https://pandas.pydata.org/docs/getting_started/intro_tutorials/05_add_columns.html" target="_blank" rel="noopener">pandas docs: How to create new columns derived from existing columns</a> — the official reference for derived columns.</li>
-<li><a href="https://www.w3schools.com/python/pandas/ref_df_groupby.asp" target="_blank" rel="noopener">W3Schools: Pandas DataFrame groupby() Method</a> — more worked examples.</li>
-<li><a href="https://datagy.io/pandas-groupby/" target="_blank" rel="noopener">datagy: Pandas GroupBy — Group, Summarize, and Aggregate Data</a> — a deeper dive with more aggregation examples.</li>
-</ul>
-</section>
-
 </div></main>
 
 <footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
@@ -406,112 +402,114 @@ git push</pre></li>
   const K = ReadingKit;
   const $ = s => document.querySelector(s);
   const READING_ID = "pandas-group-columns-reading1";
-  const TITLE = "One Row Per Group — Pandas Grouping & Derived Columns";
+  const TITLE = "One Row Per Group — pandas Grouping, New Columns & Merges";
 
+  // The warning text gives away the answer to q-chained, so it appears once that question is done.
+  document.addEventListener("mlrk:done", e => { if(e.detail.id==="q-chained") $("#warnbox").hidden=false; });
   K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
   K.Persona.renderPicker("#persona");
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-select", buttonSelector:"#card-select .mlrk-choice", feedbackSelector:"#selectfb", correct:"series",
-    feedback:{series:"Right. One column name in square brackets gives that column as a Series.",
-              sum:"Picking a column doesn't add anything up. You'd need .sum() for a total.",
-              newdf:"Square brackets with a column name keep that column, not everything else."}});
+  K.quiz({id:"q-recall-filter", buttonSelector:"#card-recall-filter .mlrk-choice", feedbackSelector:"#recallfilterfb", correct:"parens",
+    feedback:{parens:"Right. Each condition sits in its own parentheses, and & joins them row by row.",
+              noparens:"Without parentheses, Python runs & before == and >=, so this line raises a TypeError.",
+              and:"Python's and works on one True or False, not a whole column. pandas filters join conditions with &."}});
 
-  K.quiz({id:"q-filter", buttonSelector:"#card-filter .mlrk-choice", feedbackSelector:"#filterfb", correct:"four",
-    feedback:{four:"Right. Four drives have 30 or more units (30, 50, 40, 30), and the filter keeps all 4 columns.",
-              six:"The filter drops rows where units is under 30: the 20 and the 25.",
-              three:">= keeps values equal to 30 too, and two drives have exactly 30."}});
+  K.quiz({id:"q-recall-isna", buttonSelector:"#card-recall-isna .mlrk-choice", feedbackSelector:"#recallisnafb", correct:"one",
+    feedback:{one:"Right. isna() marks each blank True, and sum() counts the Trues. One blank in units.",
+              units:"The 1 counts blanks, not units. isna() marks missing cells, and sum() adds up those marks.",
+              dup:"Repeated rows are what duplicated() finds. isna() looks for blank cells."}});
 
-  K.quiz({id:"q-total", buttonSelector:"#card-total .mlrk-choice", feedbackSelector:"#totalfb", correct:"seventyfive",
-    feedback:{seventyfive:"Right. Community Center has three drives: 20 + 25 + 30 = 75.",
-              thirty:"30 is one Community Center drive. .sum() adds all three of them.",
-              twentyfive:"25 is the mean of the three drives. This line uses .sum()."}});
+  K.quiz({id:"q-count", buttonSelector:"#card-count .mlrk-choice", feedbackSelector:"#countfb", correct:"2",
+    feedback:{"2":"Right. count counts values that are not blank. One Community Center drive has no units value, so its count is 2, and its mean rests on 2 drives.",
+              "3":"Community Center held 3 drives, but one has a blank units value. count skips blanks, so it shows 2.",
+              "8":"8 is every row in the file. groupby gives each site its own count."}});
 
-  // Fill-in: mean.
-  K.Scoring.register("q-fill",1,"quiz");
-  let fillAttempts=0, fillDone=false;
-  $("#blankcheck").addEventListener("click",()=>{
-    if(fillDone) return;
-    fillAttempts++;
-    const v = $("#blankinput").value.trim().toLowerCase().replace(/^\./,"").replace(/\(\)$/,"");
-    const fb=$("#blankfb");
-    if(v==="mean"){
-      K.Scoring.award("q-fill", fillAttempts===1?1:0.5);
+  K.quiz({id:"q-nan", buttonSelector:"#card-nan .mlrk-choice", feedbackSelector:"#nanfb", correct:"nan",
+    feedback:{nan:"Right. Math with a blank gives a blank. NaN divided by 12 is NaN, and pandas keeps going.",
+              zero:"pandas doesn't treat a blank as 0. A blank divided by 12 stays blank: NaN.",
+              error:"A blank doesn't stop the cell. pandas works out every row, and the blank row gets NaN."}});
+
+  K.quiz({id:"q-chained", buttonSelector:"#card-chained .mlrk-choice", feedbackSelector:"#chainedfb", correct:"zero",
+    feedback:{zero:"Right. drives[big] is a copy. The new values land on the copy, so drives still has 0 \"yes\" values.",
+              three:"Three drives reached 30 units, but drives[big] is a separate copy. The \"yes\" values land there, not in drives.",
+              eight:"The mask picks only drives with 30 or more units. And the change lands on a copy, so drives has 0."}});
+
+  K.Scoring.register("q-loc",1,"quiz");
+  let locAttempts=0, locDone=false;
+  $("#loccheck").addEventListener("click",()=>{
+    if(locDone) return;
+    const raw=$("#locinput").value.trim();
+    if(!raw) return;
+    locAttempts++;
+    const val=raw.replace(/\s/g,"");
+    const fb=$("#locfb");
+    if(val==="3"){
+      K.Scoring.award("q-loc", locAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct"+(fillAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> .mean() gives the average units per drive for each place.";
-      fillDone=true;
-    } else if(fillAttempts>=2){
-      K.Scoring.award("q-fill",0);
+      fb.innerHTML="<strong>Correct.</strong> 40, 31 and 36 are the only units values of 30 or more. One-step <code>.loc</code> changes <code>drives</code> itself, so all three become \"yes\". Run cell [5].";
+      locDone=true;
+    } else if(locAttempts>=2){
+      K.Scoring.award("q-loc",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The blank is <code>mean</code>.";
-      fillDone=true;
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The count is 3: the drives with 40, 31 and 36 units. This time the change lands in <code>drives</code>.";
+      locDone=true;
     } else {
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite yet.</strong> The statistic you want is the average, which statistics calls the m___. Type just the name.";
+      let why="Count the <code>units</code> values that are 30 or more. Those are the rows where <code>big</code> is True.";
+      if(val==="0") why="0 is what the two-step version gave, because it changed a copy. <code>.loc</code> names rows and column in one step, so it changes <code>drives</code>.";
+      else if(val==="4") why="Check the Community Center drive with 50 donors. Its <code>units</code> value is blank, and a blank is never 30 or more.";
+      else if(val==="8") why="<code>.loc[big, ...]</code> changes only the rows where <code>big</code> is True, not every row.";
+      else if(!/^\d+$/.test(val)) why="Type only a number, such as 5.";
+      fb.innerHTML="<strong>Not quite.</strong> "+why+" <div class=\"mlrk-attempt-note\">One more try before the answer is revealed.</div>";
     }
-    fb.setAttribute("tabindex","-1"); fb.focus();
-    if(fillDone) K.markDone("q-fill");
+    if(locDone) K.markDone("q-loc");
+    fb.setAttribute("tabindex","-1");fb.focus();
   });
 
-  K.quiz({id:"q-agg", buttonSelector:"#card-agg .mlrk-choice", feedbackSelector:"#aggfb", correct:"one",
-    feedback:{one:"Right. The file has only one Fire Station drive, so its count is 1.",
-              fifty:"50 is Fire Station's mean and its sum. count is the number of rows in the group.",
-              three:"3 is Community Center's count. Count the Fire Station rows in drives.csv."}});
-
-  K.quiz({id:"q-rate", buttonSelector:"#card-rate .mlrk-choice", feedbackSelector:"#ratefb", correct:"four",
-    feedback:{four:"Right. 20 units divided by 5 hours is 4.0.",
-              quarter:"0.25 is 5 divided by 20. The line divides units by volunteer_hours.",
-              hundred:"100 is 20 times 5. The line divides with /."}});
-
-  K.quiz({id:"q-derive", buttonSelector:"#card-derive .mlrk-choice", feedbackSelector:"#derivefb", correct:"right",
-    feedback:{right:"Right. drives[\"units_per_donor\"] = ... stores the result as a new column in drives.",
-              inverted:"This divides donors by units, which is donors per unit. The order of the columns matters.",
-              noassign:"This works out the numbers but stores them in a separate variable, not as a column in drives."}});
-
-  K.quiz({id:"q-mining", buttonSelector:"#card-mining .mlrk-choice", feedbackSelector:"#miningfb", correct:"cc",
-    feedback:{cc:"Right. Its three rates are 4.0, 5.0, and 5.0, so its mean is about 4.67. The other two places average 5.0.",
-              lib:"Both Library drives have a rate of 5.0. Check the Community Center rows in add_rate.py.",
-              fire:"Fire Station's one drive has a rate of 5.0. Check the Community Center rows in add_rate.py."}});
-
-  K.quiz({id:"q-debug", buttonSelector:"#card-debug .mlrk-choice", feedbackSelector:"#debugfb", correct:"colname",
-    feedback:{colname:"Right. Column names must match exactly, capital letters included. A KeyError names the key pandas couldn't find.",
-              import:".sum() comes with pandas. A KeyError means a name wasn't found.",
-              twocol:"groupby works with one column. A KeyError means a name wasn't found."}});
+  K.quiz({id:"q-merge", buttonSelector:"#card-merge .mlrk-choice", feedbackSelector:"#mergefb", correct:"8and2",
+    feedback:{"8and2":"Right. how=\"left\" keeps all 8 drives. \"Fire Station\" never matches \"Firehouse\", so the 2 Fire Station drives get NaN.",
+              "6and0":"A left merge never drops rows from drives. The 2 Fire Station drives stay, with NaN for neighborhood.",
+              "8and0":"The row count is right. But \"Fire Station\" and \"Firehouse\" are different keys, so those 2 drives find no match and get NaN."}});
 
   K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"groupby changes the original DataFrame, reordering its rows for good.", correct:false,
-      hint:"After site_totals.py ran, what happened to drives itself?",
-      explain:"groupby returns a new result. The original DataFrame stays as it was."},
-    {value:"b", label:".agg() can work out more than one summary in one call.", correct:true,
-      hint:"Look at the columns in the output of site_summary.py.",
-      explain:"site_summary.py got count, mean, and sum from one .agg() call."},
-    {value:"c", label:"A groupby result has one row for each different value in the group key.", correct:true,
-      hint:"How many places are in drives.csv, and how many rows did site_totals.py print?",
-      explain:"Three places, three rows."},
-    {value:"d", label:"A derived column needs a loop to fill in each row.", correct:false,
-      hint:"Look at add_rate.py. Do you see a for loop?",
-      explain:"pandas runs the math on every row at once. No loop needed."}
+    {value:"a", label:"count in .agg() counts only the values that are not blank.", correct:true,
+      hint:"Look at Community Center's count in cell [2]. How many drives did it hold?",
+      explain:"Community Center held 3 drives, but count shows 2, because one units value is blank."},
+    {value:"b", label:"drives.groupby(\"site\") on its own shows a table with one row per site.", correct:false,
+      hint:"Reread the \"New in this cell\" box in section 2.",
+      explain:"On its own it shows only a GroupBy object. A table appears once you ask for a summary."},
+    {value:"c", label:"Adding .copy() makes drives[big][\"goal_met\"] = \"yes\" change drives.", correct:false,
+      hint:"Think about where a change to a copy lands.",
+      explain:".copy() still gives you a separate table. Only one-step .loc changes drives."},
+    {value:"d", label:"A merge can run with no error and still leave blanks in the new column.", correct:true,
+      hint:"Look at what cell [6] showed with the \"Firehouse\" lookup.",
+      explain:"The merge ran fine, and only the blank count showed that 2 drives found no match."},
+    {value:"e", label:"drives.loc[big, \"goal_met\"] = \"yes\" changes drives itself.", correct:true,
+      hint:"Compare the counts after cell [4] and cell [5].",
+      explain:"One-step .loc changed 3 rows in drives, so the count went from 0 to 3."}
   ]});
 
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"right",
-    feedback:{right:"Right. The new column measures units per sign-up for each drive, and the mean per site compares the places fairly.",
-              sumonly:"That finds which place collects the most, which is a different question from how well sign-ups turn into units.",
-              sortonly:"Sorting puts rows in order but doesn't compare places or divide anything."}});
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"nan",
+    feedback:{nan:"Right. how=\"left\" keeps every drive. Rec Center finds no match, so its neighborhood is NaN, and the blank count after the merge would show it.",
+              dropped:"A left merge never drops rows from the left table. Unmatched rows stay, with NaN in the new column.",
+              error:"A missing key doesn't stop a merge. It runs, and the unmatched rows get NaN. That is why you count blanks after every merge."}});
 
-  K.flipCards("#vocab", "act-flip-vocab");
-  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+  K.freeResponse({id:"resp-walkthrough", selector:"#walkthrough", minWords:15});
 
   const AI_PROMPTS = [
-    "Think of something you'd add up by group in daily life, like spending by store or minutes by app. What would the group key be?",
-    "Why might the place with the biggest total not be the place that does the best job? Try an example from sports or school.",
-    "If a total looks wrong, what are three things that could have gone wrong before the groupby line?"
+    "Ask an AI tool: \"Explain pandas groupby to a beginner using a stack of library books sorted by genre.\" Does its answer match split, apply, combine?",
+    "Which edge case worries you most in cell [2]: a blank units value, or a site with only one drive? Why?",
+    "Ask an AI tool for code that sets a value on filtered rows. Does its answer use one-step .loc, or chained assignment?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.hidden=false;
+    box.style.display="block";
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
+
+  K.flipCards("#vocab", "act-flip-vocab");
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
   $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
@@ -536,8 +534,8 @@ git push</pre></li>
   $("#submitcredit").addEventListener("click", () => {
     if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
     const fb=$("#submitfb");
-    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["eda-statistics"],
-      skills:["data-mining"], onDone(status,message){
+    K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["eda-statistics","python-data-tools"],
+      skills:["data-mining","pandas-dataframes"], onDone(status,message){
       fb.textContent=message;
     }});
   });

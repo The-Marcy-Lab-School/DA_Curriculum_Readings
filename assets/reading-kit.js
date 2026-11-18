@@ -97,9 +97,13 @@
     items:{}, // id -> {earned, possible, kind}
     listeners:[],
     onChange(fn){this.listeners.push(fn)},
+    // Saved scores wait here until the page registers that id, so an item a
+    // rebuilt reading no longer has can't add stale points (2026-11-18).
+    pending:{},
     register(id,possible,kind){
       if(!this.items[id]){
-        this.items[id]={earned:0,possible,kind};
+        const p=this.pending[id];
+        this.items[id]={earned:p?Math.min(+p.earned||0,possible):0,possible,kind};
         this.listeners.forEach(fn=>{try{fn()}catch(e){}});
       }
     },
@@ -657,7 +661,10 @@
   function restore(data){
     if(!data||!data.responses) return;
     // restore the score first: the input events below can trigger a save
-    if(data.scoreDetail) Object.assign(Scoring.items,data.scoreDetail);
+    if(data.scoreDetail) for(const [id,v] of Object.entries(data.scoreDetail)){
+      if(Scoring.items[id]) Scoring.award(id,Math.min(+v.earned||0,Scoring.items[id].possible));
+      else Scoring.pending[id]=v;
+    }
     // questions answered before a reload keep their Run buttons unlocked
     (data.done||[]).forEach(markDone);
     for(const [k,v] of Object.entries(data.responses)){
@@ -764,19 +771,27 @@
     if(/\.sql$/i.test(f)) return "psql -f "+f;
     return "python3 "+f;
   }
+  /* Notebook cells (Mod 2 on, 2026-11-18): a code block with
+     data-file="name.ipynb" data-cell="3" is cell 3 of that notebook. Its tab
+     reads "name.ipynb · In [3]", its run block (same data-file + data-cell)
+     is headed "Out [3]" instead of a $ command, and its button reads
+     "Run cell [3]". qa/reading_qa.py runs a notebook's cells in order with
+     pandas 3 and checks each Out against the real result. */
+  const isCell=el=>!!el.dataset.cell;
   function fileTabs(root){
     $$(".mlrk-code[data-file]",root).forEach(el=>{
       if($(".mlrk-filename",el)) return;
       const tab=document.createElement("div");
       tab.className="mlrk-filename";
-      tab.textContent=el.dataset.file;
+      tab.textContent=el.dataset.file+(isCell(el)?" \u00b7 In ["+el.dataset.cell+"]":"");
       el.insertBefore(tab,el.firstChild);
     });
     $$(".mlrk-run[data-file]",root).forEach(el=>{
       if($(".mlrk-run-cmd",el)) return;
       const cmd=document.createElement("div");
       cmd.className="mlrk-run-cmd";
-      cmd.innerHTML='<span class="mlrk-terminal-prompt">$</span> '+runCommand(el).replace(/</g,"&lt;");
+      if(isCell(el)) cmd.textContent="Out ["+el.dataset.cell+"]";
+      else cmd.innerHTML='<span class="mlrk-terminal-prompt">$</span> '+runCommand(el).replace(/</g,"&lt;");
       el.insertBefore(cmd,el.firstChild);
     });
   }
@@ -791,9 +806,9 @@
     $$("button[data-run]",root).forEach(btn=>{
       if(btn.dataset.runWired) return;
       btn.dataset.runWired="1";
-      if(!btn.textContent.trim()) btn.textContent="Run "+runCommand(btn);
+      if(!btn.textContent.trim()) btn.textContent=isCell(btn)?"Run cell ["+btn.dataset.cell+"]":"Run "+runCommand(btn);
       let out=btn.nextElementSibling;
-      while(out&&!(out.classList.contains("mlrk-run")&&out.dataset.file===btn.dataset.run)){
+      while(out&&!(out.classList.contains("mlrk-run")&&out.dataset.file===btn.dataset.run&&(out.dataset.cell||"")===(btn.dataset.cell||""))){
         if(out.tagName==="BUTTON"||out.classList.contains("mlrk-lock-note")){out=out.nextElementSibling;continue}
         out=null;
       }

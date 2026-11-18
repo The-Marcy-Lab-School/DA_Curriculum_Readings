@@ -1,12 +1,11 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Write It Once — Turning a Cleaning Fix Into a Real Function</title>
+<title>Write It Once — A Cleaning Function in pandas</title>
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:900px;height:auto;margin:1.1rem 0;display:block}
-.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
-.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:9rem}
+.mlrk-illustration{width:100%;max-width:740px;height:auto;margin-top:1.1rem;margin-bottom:1.1rem;display:block}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
 @media(max-width:650px){.mlrk-illustration{max-width:100%}}
 </style>
 </head><body>
@@ -14,9 +13,9 @@
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Write It Once</h1>
-<p class="mlrk-lead">Terra Bean is a small coffee shop. Every month it gets a list of bean deliveries from its suppliers, the farms that sell it beans. Each list spells the same farm names differently: extra spaces, ALL CAPS, or nothing typed at all. Fixing the names by hand every month is slow, and each retyped fix comes out a little different.</p>
+<p class="mlrk-lead">Terra Bean is a small coffee shop. Each month, it gets a list of the bean deliveries it received from farms. The June list repeats two May deliveries, spells Kenya three ways, and says "TBD" where one bag count should be. You could fix June by hand. July's list will have the same problems.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~21–24 minutes</span>
+  <span class="mlrk-pill">~18–20 minutes</span>
   <span class="mlrk-pill">Interactive</span>
   <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
@@ -48,343 +47,274 @@
 </section>
 
 <section class="mlrk-section">
+<p><strong>Your goal:</strong> fix three common problems in two lists, then put the fixes in one function you can run on every new list. Real files often come with repeats, numbers stored as text, and labels spelled more than one way. You already know drop, fill or flag, how to write a function with <code>def</code>, and <code>.strip()</code> and <code>.lower()</code> on one string.</p>
+
+<svg class="mlrk-illustration" viewBox="0 0 760 230" role="img" aria-labelledby="wioTitle wioDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="wioTitle">Two delivery lists go through one cleaning function</title>
+  <desc id="wioDesc">On the left, the May list has 5 deliveries and the June list has 5. Deliveries D104 and D105 appear in both. An arrow leads to a box labeled clean_deliveries(df). Another arrow leads to the result: 8 deliveries, each one once, with bags as numbers and countries in lowercase.</desc>
+  <g font-family="Helvetica, Arial, sans-serif" fill="#261F1D">
+    <rect x="20" y="20" width="200" height="88" rx="10" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="36" y="46" font-size="16" font-weight="700">may.csv: 5 rows</text>
+    <text x="36" y="72" font-size="15">D101  D102  D103</text>
+    <rect x="32" y="80" width="112" height="24" rx="5" fill="#FFF6E4" stroke="#83671C" stroke-width="2"/>
+    <text x="40" y="98" font-size="15" font-weight="700">D104  D105</text>
+
+    <rect x="20" y="122" width="200" height="88" rx="10" fill="#FFFCF7" stroke="#264326" stroke-width="2.5"/>
+    <text x="36" y="148" font-size="16" font-weight="700">june.csv: 5 rows</text>
+    <rect x="32" y="156" width="112" height="24" rx="5" fill="#FFF6E4" stroke="#83671C" stroke-width="2"/>
+    <text x="40" y="174" font-size="15" font-weight="700">D104  D105</text>
+    <text x="36" y="200" font-size="15">D106  D107  D108</text>
+
+    <line x1="222" y1="115" x2="282" y2="115" stroke="#264326" stroke-width="3"/>
+    <polygon points="282,107 282,123 296,115" fill="#264326"/>
+    <rect x="300" y="78" width="200" height="74" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
+    <text x="400" y="110" text-anchor="middle" font-size="16" font-weight="700">clean_deliveries(df)</text>
+    <text x="400" y="134" text-anchor="middle" font-size="15">one function, every list</text>
+    <line x1="502" y1="115" x2="542" y2="115" stroke="#264326" stroke-width="3"/>
+    <polygon points="542,107 542,123 556,115" fill="#264326"/>
+    <rect x="560" y="54" width="180" height="124" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
+    <text x="650" y="86" text-anchor="middle" font-size="16" font-weight="700">8 deliveries</text>
+    <text x="650" y="114" text-anchor="middle" font-size="15">each one once</text>
+    <text x="650" y="142" text-anchor="middle" font-size="15">bags as numbers</text>
+    <text x="650" y="166" text-anchor="middle" font-size="15">one spelling each</text>
+  </g>
+</svg>
+</section>
+
+<section class="mlrk-section">
 <h2>Key terms for this reading</h2>
 <p>These are the words this reading uses. Flip a card to see what a word means. Each one comes up again below with an example.</p>
 <div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Function contract</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Function contract</strong><br>What a function takes in as parameters and what it hands back as a return value, without depending on one column name or file.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Hardcoded</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Hardcoded</strong><br>A value, like a column name or file name, typed straight into a function's body instead of passed in as a parameter.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Side effect</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Side effect</strong><br>Anything a function does besides returning a value, like printing, changing an outside variable, or saving a file.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Docstring</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Docstring</strong><br>A note in triple quotes right under the <code>def</code> line that explains the function's contract.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>In-place vs. returning a copy</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>In-place vs. returning a copy</strong><br>In-place edits the original. Returning a copy leaves the original alone and hands back a new value, which is what <code>.str</code> methods and <code>.fillna()</code> do.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Idempotent</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Idempotent</strong><br>Running it a second time changes nothing more. Cleaning clean data gives the same clean data.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Duplicate row</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Duplicate row</strong><br>The same real-world record appearing more than once, often after stacking two lists that overlap.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Key column</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Key column</strong><br>A column whose value names one record, like a delivery's <code>delivery_id</code>.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Coerce</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Coerce</strong><br>Force a conversion. With <code>errors="coerce"</code>, a value that can't become a number becomes NaN instead of stopping with an error.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Reusable function</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Reusable function</strong><br>A function called two or more times on different inputs. A one-time script wrapped in <code>def</code> and called once is not reusable yet.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>1. The same fix, typed three times</h2>
-<p>In May, someone fixes the farm names by hand. In June, they copy the fix but forget to handle the empty cells. In July, they copy it again and change one method by mistake. Now there are three slightly different fixes for one job, and a report that groups deliveries by farm shows more farms than really exist.</p>
-<svg class="mlrk-illustration" viewBox="0 0 900 460" role="img" aria-labelledby="wioTitle wioDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="wioTitle">Fixing a column by hand three times, versus writing one function and calling it three times</title>
-  <desc id="wioDesc">Left side: three separate rows, each showing a raw column going through its own hand-typed, independently-editable fix into a cleaned column. Right side: three raw columns all flow into a single function box, which produces three cleaned columns, showing the same logic reused instead of retyped.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="230" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#261F1D">Fixing it by hand, three times</text>
-    <text x="670" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#261F1D">One function, called three times</text>
-    <line x1="450" y1="15" x2="450" y2="445" stroke="#B3BBB0" stroke-width="2" stroke-dasharray="5 6"/>
+<h2>1. Quick recall</h2>
+<p>Two skills you already have come up in this reading.</p>
 
-    <!-- LEFT: three ad hoc rows -->
-    <g>
-      <rect x="20" y="55" width="95" height="60" rx="10" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-      <text x="67" y="80" text-anchor="middle" font-size="12.5" font-weight="700" fill="#261F1D">May raw</text>
-      <text x="67" y="97" text-anchor="middle" font-size="11" fill="#261F1D">supplier_name</text>
-      <line x1="115" y1="85" x2="153" y2="85" stroke="#264326" stroke-width="2.5"/>
-      <polygon points="153,79 153,91 163,85" fill="#264326"/>
-      <rect x="165" y="55" width="130" height="60" rx="10" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-      <text x="230" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">hand-typed fix</text>
-      <text x="230" y="97" text-anchor="middle" font-size="11" fill="#261F1D">(fix #1, strip + title)</text>
-      <line x1="295" y1="85" x2="325" y2="85" stroke="#264326" stroke-width="2.5"/>
-      <polygon points="325,79 325,91 335,85" fill="#264326"/>
-      <rect x="337" y="55" width="88" height="60" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-      <text x="381" y="90" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">cleaned</text>
-    </g>
-    <g>
-      <rect x="20" y="175" width="95" height="60" rx="10" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-      <text x="67" y="200" text-anchor="middle" font-size="12.5" font-weight="700" fill="#261F1D">June raw</text>
-      <text x="67" y="217" text-anchor="middle" font-size="11" fill="#261F1D">supplier_name</text>
-      <line x1="115" y1="205" x2="153" y2="205" stroke="#264326" stroke-width="2.5"/>
-      <polygon points="153,199 153,211 163,205" fill="#264326"/>
-      <rect x="165" y="175" width="130" height="60" rx="10" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-      <text x="230" y="200" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">hand-typed fix</text>
-      <text x="230" y="217" text-anchor="middle" font-size="11" fill="#261F1D">(fix #2, missing fillna)</text>
-      <line x1="295" y1="205" x2="325" y2="205" stroke="#264326" stroke-width="2.5"/>
-      <polygon points="325,199 325,211 335,205" fill="#264326"/>
-      <rect x="337" y="175" width="88" height="60" rx="10" fill="#F7DFDF" stroke="#C92929" stroke-width="2.5"/>
-      <text x="381" y="200" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">cleaned,</text>
-      <text x="381" y="217" text-anchor="middle" font-size="11" fill="#261F1D">gaps left in</text>
-    </g>
-    <g>
-      <rect x="20" y="295" width="95" height="60" rx="10" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-      <text x="67" y="320" text-anchor="middle" font-size="12.5" font-weight="700" fill="#261F1D">July raw</text>
-      <text x="67" y="337" text-anchor="middle" font-size="11" fill="#261F1D">supplier_name</text>
-      <line x1="115" y1="325" x2="153" y2="325" stroke="#264326" stroke-width="2.5"/>
-      <polygon points="153,319 153,331 163,325" fill="#264326"/>
-      <rect x="165" y="295" width="130" height="60" rx="10" fill="#FECC5B" stroke="#83671C" stroke-width="2.5"/>
-      <text x="230" y="320" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">hand-typed fix</text>
-      <text x="230" y="337" text-anchor="middle" font-size="11" fill="#261F1D">(fix #3, wrong method)</text>
-      <line x1="295" y1="325" x2="325" y2="325" stroke="#264326" stroke-width="2.5"/>
-      <polygon points="325,319 325,331 335,325" fill="#264326"/>
-      <rect x="337" y="295" width="88" height="60" rx="10" fill="#F7DFDF" stroke="#C92929" stroke-width="2.5"/>
-      <text x="381" y="320" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">cleaned,</text>
-      <text x="381" y="337" text-anchor="middle" font-size="11" fill="#261F1D">wrong case</text>
-    </g>
-    <text x="230" y="410" text-anchor="middle" font-size="12" fill="#261F1D">Three separate implementations of the same idea. Each one can drift on its own.</text>
+<div class="mlrk-card" id="card-recall-strip"><p><strong>Recall:</strong> what is the value of <code>" Peru ".strip().lower()</code>?</p>
+<button type="button" class="mlrk-choice" data-a="peru"><code>"peru"</code></button>
+<button type="button" class="mlrk-choice" data-a="spaces"><code>" peru "</code></button>
+<button type="button" class="mlrk-choice" data-a="Peru"><code>"Peru"</code></button>
+<div id="recallstripfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-    <!-- RIGHT: converge into one function, diverge back out -->
-    <rect x="470" y="60" width="100" height="50" rx="10" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-    <text x="520" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">May raw</text>
-    <text x="520" y="96" text-anchor="middle" font-size="10.5" fill="#261F1D">supplier_name</text>
-
-    <rect x="470" y="180" width="100" height="50" rx="10" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-    <text x="520" y="200" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">June raw</text>
-    <text x="520" y="216" text-anchor="middle" font-size="10.5" fill="#261F1D">supplier_name</text>
-
-    <rect x="470" y="300" width="100" height="50" rx="10" fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5"/>
-    <text x="520" y="320" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">July raw</text>
-    <text x="520" y="336" text-anchor="middle" font-size="10.5" fill="#261F1D">supplier_name</text>
-
-    <rect x="640" y="130" width="150" height="150" rx="14" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="715" y="195" text-anchor="middle" font-size="13" font-weight="700" fill="#261F1D">clean_text_column()</text>
-    <text x="715" y="213" text-anchor="middle" font-size="10.5" fill="#261F1D">one implementation,</text>
-    <text x="715" y="228" text-anchor="middle" font-size="10.5" fill="#261F1D">called three times</text>
-
-    <line x1="570" y1="85" x2="638" y2="160" stroke="#264326" stroke-width="2.5"/>
-    <polygon points="632,150 638,160 626,164" fill="#264326"/>
-    <line x1="570" y1="205" x2="638" y2="205" stroke="#264326" stroke-width="2.5"/>
-    <polygon points="628,199 638,205 628,211" fill="#264326"/>
-    <line x1="570" y1="325" x2="638" y2="250" stroke="#264326" stroke-width="2.5"/>
-    <polygon points="626,246 638,250 632,260" fill="#264326"/>
-
-    <line x1="790" y1="160" x2="858" y2="85" stroke="#264326" stroke-width="2.5"/>
-    <polygon points="846,86 858,85 850,95" fill="#264326"/>
-    <line x1="790" y1="205" x2="858" y2="205" stroke="#264326" stroke-width="2.5"/>
-    <polygon points="848,199 858,205 848,211" fill="#264326"/>
-    <line x1="790" y1="250" x2="858" y2="325" stroke="#264326" stroke-width="2.5"/>
-    <polygon points="850,315 858,325 846,326" fill="#264326"/>
-
-    <rect x="820" y="60" width="76" height="50" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="858" y="90" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">cleaned</text>
-    <rect x="820" y="180" width="76" height="50" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="858" y="210" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">cleaned</text>
-    <rect x="820" y="300" width="76" height="50" rx="10" fill="#A6C2B4" stroke="#264326" stroke-width="2.5"/>
-    <text x="858" y="330" text-anchor="middle" font-size="12" font-weight="700" fill="#261F1D">cleaned</text>
-
-    <text x="670" y="410" text-anchor="middle" font-size="12" fill="#261F1D">One logic, one place. Fix a bug once and every call gets the fix.</text>
-  </g>
-</svg>
-<p>You already know how to decide whether to drop, fill, or flag a gap, and how to write a function with <code>def</code>, parameters, and <code>return</code>. This reading puts the two together: one function that takes a messy column in and hands a clean column back.</p>
-<div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> each example is a <code>.py</code> file. Most of them read <code>deliveries.csv</code>. The Run button shows what the file prints. On your own laptop, you'd save the files in one folder and type <code>python3 name.py</code> in the terminal.</p>
-</div>
+<div class="mlrk-card" id="card-recall-flag"><p><strong>Recall:</strong> a bag count is blank because the farm has not counted the bags yet. The other counts range from 6 to 12. Which choice is the most honest?</p>
+<button type="button" class="mlrk-choice" data-a="flag">Flag it: keep the row and mark the count as unknown.</button>
+<button type="button" class="mlrk-choice" data-a="drop">Drop the row, because one value is missing.</button>
+<button type="button" class="mlrk-choice" data-a="mode">Fill it with the most common bag count.</button>
+<div id="recallflagfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>2. Recall</h2>
-<p>Two earlier skills come back in this reading. Check each one.</p>
+<h2>2. Stack two lists and find the repeats</h2>
+<p>Here are the two lists. In <code>june.csv</code>, D104 and D105 were sent again. The farm also corrected D105's count from 9 to 10.</p>
+<div class="mlrk-code" data-file="may.csv">delivery_id,supplier,country,bags
+D101,Hilltop Farm,Kenya,12
+D102,Sunrise Beans,Colombia,8
+D103,Blue Ridge Co-op,Peru,10
+D104,Hilltop Farm,Kenya,6
+D105,Sunrise Beans,Colombia,9</div>
+<div class="mlrk-code" data-file="june.csv">delivery_id,supplier,country,bags
+D104,Hilltop Farm,kenya ,6
+D105,Sunrise Beans,Colombia,10
+D106,Blue Ridge Co-op,PERU,TBD
+D107,Hilltop Farm, Kenya,11
+D108,Sunrise Beans,colombia,7</div>
+<p>Load both, and check the type of <code>bags</code> in each:</p>
+<pre class="mlrk-code" data-file="deliveries.ipynb" data-cell="1">import pandas as pd
+may = pd.read_csv("may.csv")
+june = pd.read_csv("june.csv")
+print(may["bags"].dtype)
+print(june["bags"].dtype)</pre>
+<button type="button" class="mlrk-btn" data-run="deliveries.ipynb" data-cell="1"></button>
+<div class="mlrk-run" data-file="deliveries.ipynb" data-cell="1" hidden><pre>int64
+str</pre></div>
+<p>One "TBD" makes pandas load the whole June <code>bags</code> column as text (<code>str</code>). Section 3 fixes that.</p>
 
-<div class="mlrk-card" id="card-recall-return"><p><strong>Predict:</strong> <code>bag_label.py</code> prints two lines. What is the second line?</p>
-<div class="mlrk-code" data-file="bag_label.py"><div class="mlrk-screen">def bag_label(count):
-    print(str(count) + " bags")
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this cell:</strong> <code>pd.concat([may, june], ignore_index=True)</code> stacks the two tables, top to bottom. <code>ignore_index=True</code> numbers the rows 0 to 9 again, so no row label shows up twice.</p></div>
+<pre class="mlrk-code" data-file="deliveries.ipynb" data-cell="2">both = pd.concat([may, june], ignore_index=True)
+print(len(may), len(june), len(both))</pre>
+<button type="button" class="mlrk-btn" data-run="deliveries.ipynb" data-cell="2"></button>
+<div class="mlrk-run" data-file="deliveries.ipynb" data-cell="2" hidden><pre>5 5 10</pre></div>
 
-
-result = bag_label(12)
-print(result)</div></div>
-<button type="button" class="mlrk-btn" data-run="bag_label.py" data-after="q-recall-return"></button>
-<div class="mlrk-run" data-file="bag_label.py" hidden><pre>12 bags
-None</pre></div>
-<button type="button" class="mlrk-choice" data-a="none"><code>None</code></button>
-<button type="button" class="mlrk-choice" data-a="bags"><code>12 bags</code></button>
-<button type="button" class="mlrk-choice" data-a="twelve"><code>12</code></button>
-<div id="recallreturnfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-recall-dff" style="margin-top:.8rem"><p><strong>A bag-weight column is empty in 3 of 400 rows because the shop's scale broke for one afternoon. The rest of each of those rows is real. What fits best?</strong></p>
-<button type="button" class="mlrk-choice" data-a="fill">Fill the 3 gaps with the column's median weight.</button>
-<button type="button" class="mlrk-choice" data-a="drop">Drop the 3 rows, since their weight is unknown.</button>
-<button type="button" class="mlrk-choice" data-a="flag">Leave the 3 cells empty in every report from now on.</button>
-<div id="recalldfffb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p>D104 and D105 are now <strong>duplicate rows</strong>: the same deliveries, twice. If we leave them in, every total counts them twice. <code>delivery_id</code> is the <strong>key column</strong>, because each ID names one delivery.</p>
+<p><strong>Predict:</strong> <code>.duplicated()</code> with no <code>subset=</code> only counts rows that match in every column. What does cell [3] print?</p>
+<pre class="mlrk-code" data-file="deliveries.ipynb" data-cell="3">print(both.duplicated().sum())
+print(both.duplicated(subset="delivery_id").sum())</pre>
+<button type="button" class="mlrk-btn" data-run="deliveries.ipynb" data-cell="3" data-after="q-dupes"></button>
+<div class="mlrk-run" data-file="deliveries.ipynb" data-cell="3" hidden><pre>0
+2</pre></div>
+<div class="mlrk-card" id="card-dupes">
+<button type="button" class="mlrk-choice" data-a="02"><code>0</code>, then <code>2</code></button>
+<button type="button" class="mlrk-choice" data-a="22"><code>2</code>, then <code>2</code></button>
+<button type="button" class="mlrk-choice" data-a="20"><code>2</code>, then <code>0</code></button>
+<div id="dupesfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">Match repeats on the key, not the whole row. A record that is sent again can come back with a changed field, like a new spelling or a corrected count. <code>both.drop_duplicates(subset="delivery_id")</code> removes the repeats and keeps the first copy of each ID.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>3. What makes a function reusable</h2>
-<p>A value typed straight into a function's body, like one file name or one column name, is <strong>hardcoded</strong>. A function with a hardcoded column name only works on that one column, so next month someone copies it and edits it, and the drift starts again.</p>
-<p>A reusable function has a clear <strong>function contract</strong>: what it takes in as parameters, and what it hands back with <code>return</code>. It should also avoid surprise <strong>side effects</strong>. A side effect is anything a function does besides returning a value, such as printing, changing a variable outside the function, or saving a file.</p>
-
-<div class="mlrk-card" id="card-contract"><p><strong>Terra Bean needs a function to clean name columns. Which design has the strongest contract for reuse?</strong></p>
-<button type="button" class="mlrk-choice" data-a="generic"><code>clean_text_column(raw_column, missing_label)</code>: takes any text column in, returns a new cleaned column, and never names a file or a column.</button>
-<button type="button" class="mlrk-choice" data-a="hardcoded"><code>clean_it()</code>: opens <code>may_deliveries.csv</code>, cleans <code>supplier_name</code>, and prints the result. No parameters, no <code>return</code>.</button>
-<button type="button" class="mlrk-choice" data-a="renamed"><code>clean_supplier(df)</code>: only works if the table has a column named exactly <code>supplier_name</code>, changes it, and returns nothing.</button>
-<div id="contractfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<h2>3. Turn text into numbers</h2>
+<p><code>pd.to_numeric</code> turns a column of text into numbers. On June's <code>bags</code>, it stops at "TBD":</p>
+<pre class="mlrk-code" data-file="deliveries.ipynb" data-cell="4" data-expect="ValueError">pd.to_numeric(june["bags"])</pre>
+<button type="button" class="mlrk-btn" data-run="deliveries.ipynb" data-cell="4"></button>
+<div class="mlrk-run" data-file="deliveries.ipynb" data-cell="4" hidden><pre>ValueError: Unable to parse string 'TBD' at position 2</pre></div>
+<p>Adding <code>errors="coerce"</code> tells pandas to <strong>coerce</strong>: every value that can't become a number becomes NaN.</p>
+<p><strong>Predict:</strong> how many NaN values does cell [5] count?</p>
+<pre class="mlrk-code" data-file="deliveries.ipynb" data-cell="5">bags = pd.to_numeric(june["bags"], errors="coerce")
+bags.isna().sum()</pre>
+<button type="button" class="mlrk-btn" data-run="deliveries.ipynb" data-cell="5" data-after="q-coerce"></button>
+<div class="mlrk-run" data-file="deliveries.ipynb" data-cell="5" hidden><pre>np.int64(1)</pre></div>
+<div class="mlrk-card" id="card-coerce">
+<button type="button" class="mlrk-choice" data-a="one">1</button>
+<button type="button" class="mlrk-choice" data-a="zero">0, because coerce fixes the bad value</button>
+<button type="button" class="mlrk-choice" data-a="five">5, because the whole column was text</button>
+<div id="coercefb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">Coerce does not fix "TBD". It turns it into a new missing value, so count the NaN values right after you coerce. That count feeds your drop, fill or flag decision. Watch out: <code>.mean()</code> skips NaN without any warning, so an average can quietly leave out a delivery.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Write the function</h2>
-<p>Here is a small delivery list. The same farm is typed three different ways, and one name is empty.</p>
-<div class="mlrk-code" data-file="deliveries.csv"><div class="mlrk-screen">supplier_name,country,bags
-  HILLTOP FARM  ,colombia,12
-hilltop farm,COLOMBIA ,8
-Hilltop Farm,Colombia,10
- sunrise beans,  kenya,6
-,peru,4</div></div>
-<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this file:</strong></p>
-<ul>
-<li><code>.str.strip()</code> removes spaces from the start and end of every value in a text column. <code>.str.title()</code> capitalizes the first letter of each word, so <code>"hilltop farm"</code> becomes <code>"Hilltop Farm"</code>.</li>
-<li><code>missing_label="Unknown"</code> gives the parameter a <em>default value</em>. If a call leaves that argument out, Python uses <code>"Unknown"</code>.</li>
-<li>The text in triple quotes, right under the <code>def</code> line, is a <strong>docstring</strong>: a short note that explains the function's contract to anyone who uses it.</li>
-</ul></div>
-
-<h3>Fill in the blanks</h3>
-<div class="mlrk-code" data-file="clean_suppliers.py"><div class="mlrk-screen">import pandas as pd
-
-
-def clean_text_column(raw_column, missing_label="Unknown"):
-    """Take a column of text. Return a new column with extra spaces
-    removed, each word capitalized, and empty cells set to missing_label."""
-    cleaned = raw_column.str.____()       # box (1)
-    cleaned = cleaned.str.____()          # box (2)
-    cleaned = cleaned.____(missing_label)  # box (3)
-    return cleaned
-
-
-deliveries = pd.read_csv("deliveries.csv")
-deliveries["supplier_name"] = clean_text_column(deliveries["supplier_name"])
-print(deliveries)</div></div>
-<button type="button" class="mlrk-btn" data-run="clean_suppliers.py" data-after="q-fillcode" data-after-note="Solve all three blanks first. Then you can run it."></button>
-<div class="mlrk-run" data-file="clean_suppliers.py" hidden><pre>   supplier_name    country  bags
-0   Hilltop Farm   colombia    12
-1   Hilltop Farm  COLOMBIA      8
-2   Hilltop Farm   Colombia    10
-3  Sunrise Beans      kenya     6
-4        Unknown       peru     4</pre></div>
+<h2>4. One label, three spellings</h2>
+<p><code>.value_counts()</code> counts each different value in a column. Before the fix, Kenya shows up three ways:</p>
+<pre class="mlrk-code" data-file="deliveries.ipynb" data-cell="6">both["country"].value_counts()</pre>
+<button type="button" class="mlrk-btn" data-run="deliveries.ipynb" data-cell="6"></button>
+<div class="mlrk-run" data-file="deliveries.ipynb" data-cell="6" hidden><pre>country
+Colombia    3
+Kenya       2
+Peru        1
+kenya       1
+PERU        1
+ Kenya      1
+colombia    1
+Name: count, dtype: int64</pre></div>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this cell:</strong> <code>.str</code> runs a string method on every value in a column. <code>.str.lower()</code> lowercases them all. <code>.lower()</code> alone still leaves <code>"kenya "</code> and <code>" kenya"</code> as two different labels, because of the spaces.</p></div>
+<p><strong>Fill in the blank</strong> so cell [7] removes the spaces before it lowercases.</p>
+<pre class="mlrk-code" data-file="deliveries.ipynb" data-cell="7">both["country"].str.____().str.lower().value_counts()</pre>
+<button type="button" class="mlrk-btn" data-run="deliveries.ipynb" data-cell="7" data-after="q-blank" data-after-note="Fill in the blank first. Then you can run it."></button>
+<div class="mlrk-run" data-file="deliveries.ipynb" data-cell="7" hidden><pre>country
+kenya       4
+colombia    4
+peru        2
+Name: count, dtype: int64</pre></div>
 <ol class="mlrk-steplist">
-  <li>In box (1), type the method that removes spaces from the start and end of each value.</li>
-  <li>In box (2), type the method that capitalizes the first letter of each word.</li>
-  <li>In box (3), type the pandas method that puts a value into every empty cell.</li>
-  <li>Type only each method's name: no dot, no parentheses. Then press <strong>Check my answers</strong>. The page tells you which box, if any, needs another look.</li>
+  <li>Find the blank in <code>.str.____().str.lower()</code>.</li>
+  <li>Type the name of the string method that removes spaces from the start and end. Type only the name: no dot, no parentheses.</li>
+  <li>Press <strong>Check</strong>. When it's right, the Run button shows the new counts.</li>
 </ol>
-<div class="mlrk-fillblank"><label for="blank1">Box (1):</label><input type="text" id="blank1" autocomplete="off"></div>
-<div class="mlrk-fillblank"><label for="blank2">Box (2):</label><input type="text" id="blank2" autocomplete="off"></div>
-<div class="mlrk-fillblank"><label for="blank3">Box (3):</label><input type="text" id="blank3" autocomplete="off"></div>
-<p><button type="button" id="blankcheck" class="mlrk-btn">Check my answers</button></p>
+<p>Why: the counts before the fix show the problem, and the counts after prove the fix worked.</p>
+<div class="mlrk-fillblank">
+  <label for="blankinput">Method name:</label>
+  <input type="text" id="blankinput" autocomplete="off">
+  <button type="button" id="blankcheck" class="mlrk-btn">Check</button>
+</div>
 <div id="blankfb" class="mlrk-feedback" tabindex="-1"></div>
-
-<p>All three spellings of Hilltop Farm now match, so a report that groups by <code>supplier_name</code> will count one farm, not three. The <code>country</code> column is still messy. The next file, <code>clean_two_columns.py</code>, fixes it with the same function.</p>
-
-<div class="mlrk-card" id="card-missing"><p><strong>The last row's farm name was empty because nobody typed it. Why does the function fill it with a label like <code>"Unknown"</code> instead of guessing a name or dropping the row?</strong></p>
-<button type="button" class="mlrk-choice" data-a="label">The delivery really happened, so the row stays, and the label says honestly that the name wasn't recorded.</button>
-<button type="button" class="mlrk-choice" data-a="mode">Guessing the most common farm, Hilltop Farm, would be more accurate than a label.</button>
-<button type="button" class="mlrk-choice" data-a="drop">The row should really be dropped, since a delivery with no farm name can't be trusted.</button>
-<div id="missingfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Call it again, and again</h2>
-<p>The pandas methods inside the function never change a column <strong>in place</strong>, which would mean editing the original. Each one is <strong>returning a copy</strong>: it leaves the original alone and hands back a new column. That's why <code>clean_text_column</code> needs its <code>return</code> line, and why the original column survives until you replace it.</p>
+<h2>5. Put every fix in one function</h2>
+<p>You could paste these fixes into a new cell each month. But if you later change a fix, you have to change it in every copy, and it is easy to miss one. A function keeps each fix in one place. Small one-job functions are easy to test, and one function can call another.</p>
+<pre class="mlrk-code" data-file="deliveries.ipynb" data-cell="8">def to_number(series):
+    return pd.to_numeric(series, errors="coerce")
 
-<div class="mlrk-card" id="card-copy"><p><strong>Predict:</strong> <code>clean_two_columns.py</code> saves the raw <code>country</code> column as <code>before</code>, then cleans both columns. What does the last line, <code>print(before[1])</code>, show?</p>
-<div class="mlrk-code" data-file="clean_two_columns.py"><div class="mlrk-screen">import pandas as pd
+def tidy_text(series):
+    return series.str.strip().str.lower()
 
+def clean_deliveries(df):
+    df = df.drop_duplicates(subset="delivery_id")
+    df["bags"] = to_number(df["bags"])
+    df["country"] = tidy_text(df["country"])
+    return df</pre>
+<p>The first line of <code>clean_deliveries</code> matters. <code>df.drop_duplicates(...)</code> makes a new table, and <code>df = </code> points the name at it. Every line after that works on the new table, so the table you handed in stays as it was. If the function skipped that step and set a column on <code>df</code> right away, your original table would change too. pandas 3 does not stop that.</p>
+<p>A <strong>reusable function</strong> is one you call on two or more different inputs. Cell [9] calls <code>clean_deliveries</code> on the stacked table and on June alone.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this cell:</strong> <code>assert</code> stops the notebook with an error if its condition is False. Here it checks that no delivery ID repeats.</p></div>
+<p><strong>Predict:</strong> what does cell [9] print?</p>
+<pre class="mlrk-code" data-file="deliveries.ipynb" data-cell="9">clean_both = clean_deliveries(both)
+clean_june = clean_deliveries(june)
+assert clean_both["delivery_id"].duplicated().sum() == 0
+print(len(clean_both), len(clean_june))
+print(clean_both["bags"].isna().sum())</pre>
+<button type="button" class="mlrk-btn" data-run="deliveries.ipynb" data-cell="9" data-after="q-reuse"></button>
+<div class="mlrk-run" data-file="deliveries.ipynb" data-cell="9" hidden><pre>8 5
+1</pre></div>
+<div class="mlrk-card" id="card-reuse">
+<button type="button" class="mlrk-choice" data-a="85"><code>8 5</code>, then <code>1</code></button>
+<button type="button" class="mlrk-choice" data-a="105"><code>10 5</code>, then <code>1</code></button>
+<button type="button" class="mlrk-choice" data-a="83"><code>8 3</code>, then <code>0</code></button>
+<div id="reusefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-def clean_text_column(raw_column, missing_label="Unknown"):
-    """Take a column of text. Return a new column with extra spaces
-    removed, each word capitalized, and empty cells set to missing_label."""
-    cleaned = raw_column.str.strip()
-    cleaned = cleaned.str.title()
-    cleaned = cleaned.fillna(missing_label)
-    return cleaned
-
-
-deliveries = pd.read_csv("deliveries.csv")
-before = deliveries["country"]
-deliveries["supplier_name"] = clean_text_column(deliveries["supplier_name"], "Unknown Supplier")
-deliveries["country"] = clean_text_column(deliveries["country"], "Unknown Country")
-print(deliveries)
-print(before[1])</div></div>
-<button type="button" class="mlrk-btn" data-run="clean_two_columns.py" data-after="q-copy"></button>
-<div class="mlrk-run" data-file="clean_two_columns.py" hidden><pre>      supplier_name   country  bags
-0      Hilltop Farm  Colombia    12
-1      Hilltop Farm  Colombia     8
-2      Hilltop Farm  Colombia    10
-3     Sunrise Beans     Kenya     6
-4  Unknown Supplier      Peru     4
-COLOMBIA </pre></div>
-<button type="button" class="mlrk-choice" data-a="raw">The raw value, <code>COLOMBIA</code> in capital letters</button>
-<button type="button" class="mlrk-choice" data-a="clean">The cleaned value, <code>Colombia</code></button>
-<button type="button" class="mlrk-choice" data-a="error">An error, because that column was replaced</button>
-<div id="copyfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>Notice the two calls: the same function cleaned two columns, and each call passed its own label. Nothing inside the function changed.</p>
-
-<div class="mlrk-card" id="card-twice" style="margin-top:.8rem"><p><strong>Predict:</strong> next month, someone runs the function on names that are already clean. <code>clean_twice.py</code> cleans the column once, then cleans the result again. What do its two lines show?</p>
-<div class="mlrk-code" data-file="clean_twice.py"><div class="mlrk-screen">import pandas as pd
-
-
-def clean_text_column(raw_column, missing_label="Unknown"):
-    """Take a column of text. Return a new column with extra spaces
-    removed, each word capitalized, and empty cells set to missing_label."""
-    cleaned = raw_column.str.strip()
-    cleaned = cleaned.str.title()
-    cleaned = cleaned.fillna(missing_label)
-    return cleaned
-
-
-deliveries = pd.read_csv("deliveries.csv")
-once = clean_text_column(deliveries["supplier_name"])
-twice = clean_text_column(once)
-print(once[0])
-print(twice[0])</div></div>
-<button type="button" class="mlrk-btn" data-run="clean_twice.py" data-after="q-twice"></button>
-<div class="mlrk-run" data-file="clean_twice.py" hidden><pre>Hilltop Farm
-Hilltop Farm</pre></div>
-<button type="button" class="mlrk-choice" data-a="same">The same name twice: <code>Hilltop Farm</code></button>
-<button type="button" class="mlrk-choice" data-a="change"><code>Hilltop Farm</code>, then <code>Hilltop farm</code></button>
-<button type="button" class="mlrk-choice" data-a="error">An error, because the names are already clean</button>
-<div id="twicefb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>A function that changes nothing when you run it a second time is <strong>idempotent</strong>. That makes a cleaning function safe: running it on an already-clean file does no harm.</p>
+<p style="margin-top:1rem">Now check that <code>june</code> itself did not change:</p>
+<pre class="mlrk-code" data-file="deliveries.ipynb" data-cell="10">print(june["bags"].dtype)
+print(clean_june["bags"].dtype)</pre>
+<button type="button" class="mlrk-btn" data-run="deliveries.ipynb" data-cell="10"></button>
+<div class="mlrk-run" data-file="deliveries.ipynb" data-cell="10" hidden><pre>str
+float64</pre></div>
+<p><code>june</code> still holds text, and <code>clean_june</code> holds numbers. The first line did its job.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Mixed check</h2>
-<p>Sort each description into the right box.</p>
-<div id="dragarea">
-<div class="mlrk-drag-source" id="dragsource">
-  <span id="chip1" class="mlrk-draggable">Copied into three places, with a small change in each copy</span>
-  <span id="chip2" class="mlrk-draggable">Takes the column to clean as a parameter</span>
-  <span id="chip3" class="mlrk-draggable">Only works on a column named exactly <code>supplier_name</code></span>
-  <span id="chip4" class="mlrk-draggable">Returns a new cleaned column and lets the caller decide where it goes</span>
-</div>
-<div class="mlrk-grid">
-  <div><p><strong>One-off fix</strong></p><div class="mlrk-dropzone" id="zoneAdhoc"></div></div>
-  <div><p><strong>Reusable function</strong></p><div class="mlrk-dropzone" id="zoneReuse"></div></div>
-</div>
-<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my matches</button></div>
-<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+<h2>6. Check your understanding</h2>
+<div class="mlrk-card"><p><strong>Select every TRUE statement.</strong></p>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> <code>both.duplicated().sum()</code> found 0 because D104 and D105 came back with a changed spelling and a changed count.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> After <code>errors="coerce"</code>, the "TBD" delivery has a real bag count.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> <code>.str.lower()</code> on its own would still leave more than one spelling of Kenya.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> If <code>clean_deliveries</code> had no <code>df = df.drop_duplicates(...)</code> line, its column changes would also change the table passed in.</label>
+<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> A function called once, on one list, is already proven reusable.</label>
+<button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button>
+<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
 </div>
 </section>
 
 <section class="mlrk-section">
 <h2>7. Wrap-up</h2>
 <ul>
-<li>A reusable cleaning function takes the column in as a parameter and hands a new column back with <code>return</code>.</li>
-<li>The missing-value choice, like filling with <code>"Unknown"</code>, lives inside the function, so it's made the same way every time.</li>
-<li>A good cleaning function is idempotent: running it twice gives the same result as running it once.</li>
+<li>Stack lists with <code>pd.concat(..., ignore_index=True)</code>, then find and remove repeats on the key column with <code>subset=</code>.</li>
+<li>Use <code>pd.to_numeric(..., errors="coerce")</code> for numbers stored as text, then count the new NaN values. Use <code>.str.strip().str.lower()</code> for labels, and check <code>.value_counts()</code> before and after.</li>
+<li>Put the fixes in a function whose first line makes a new table, and prove it is reusable by calling it on a second, different input.</li>
 </ul>
-<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> Terra Bean's new list has a <code>farm_region</code> column with the same messy spacing and capitals. Empty cells there should say <code>"No Region Listed"</code>. What's the best move?</p>
-<button type="button" class="mlrk-choice" data-a="arg">Call <code>clean_text_column(deliveries["farm_region"], "No Region Listed")</code>.</button>
-<button type="button" class="mlrk-choice" data-a="copy">Copy the whole function, name it <code>clean_region</code>, and type <code>"No Region Listed"</code> inside it.</button>
-<button type="button" class="mlrk-choice" data-a="default">Change the default in the <code>def</code> line to <code>"No Region Listed"</code>.</button>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> July's list arrives. It repeats one June delivery, says "TBD" for two counts, and has " Peru" with a space. What should you do?</p>
+<button type="button" class="mlrk-choice" data-a="call">Stack it with the earlier lists and run <code>clean_deliveries</code> unchanged. Then check the row count and count the NaN values in <code>bags</code>.</button>
+<button type="button" class="mlrk-choice" data-a="paste">Copy the cleaning lines into a new cell and edit them for July.</button>
+<button type="button" class="mlrk-choice" data-a="whole">Run <code>.drop_duplicates()</code> with no <code>subset=</code>, then <code>.mean()</code> on <code>bags</code>.</button>
 <div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p><strong>In interviews:</strong> you may be shown the same few cleaning lines pasted in several places and asked how you'd improve them. Name the contract: what the function takes in, and what it returns.</p>
-<p><strong>Where this goes next:</strong> with clean columns you can trust, you can start digging into the data to find patterns worth reporting.</p>
+<p style="margin-top:1rem">In interviews, "When should repeated code become a function?" is a common question. A good answer: at the second real repeat, or right away when the same cleaning runs on every new file.</p>
+<p>A clean table is where the analysis starts. Next you can group it and look for patterns you can trust.</p>
 </section>
 
 <section class="mlrk-section">
 <h2>8. Reflection</h2>
-<label for="strategy"><strong>Your checking habit:</strong> how would you check whether a function changes its input in place or returns a new copy, before you rely on it?</label>
 <ol class="mlrk-steplist">
-  <li>Write 1 or 2 sentences, at least 8 words. The counter under the box tells you when it counts.</li>
-  <li>Try starting with: "I'd save the original column in a variable, then..."</li>
+  <li>Think of a list you update often: a budget, a playlist, a grocery list.</li>
+  <li>Write one sentence: "One fix I would put in a function is ___, because ___."</li>
 </ol>
-<textarea id="strategy" class="mlrk-response" data-save placeholder="I'd save the original column in a variable, then..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
+<p>Why: spotting the fix that repeats is the first step to writing a reusable function.</p>
+<label for="strategy"><strong>Your fix:</strong></label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="One fix I would put in a function is..."></textarea>
+<p>Stuck? <button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
 </section>
 
 <section class="mlrk-section">
-<h2>10. Go further (optional)</h2>
-<p>This video is optional and isn't part of the time estimate or your score. As you watch, notice how the video explains the cost of keeping the same logic in more than one place.</p>
-<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/IGH4-ZhfVDk" title="Why repeated code becomes a function, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=IGH4-ZhfVDk" target="_blank" rel="noopener">Watch on YouTube</a>
+<h2>Go further (optional): finding and removing duplicate rows</h2>
+<p>This video is optional and is not counted in the time estimate. As you watch, notice how the count of duplicates changes when the video checks only some columns instead of the whole row.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/ht5buXUMqkQ" title="How do I find and remove duplicate rows in pandas? (optional video)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=ht5buXUMqkQ" target="_blank" rel="noopener">Watch on YouTube</a>
 </section>
 
 <section class="mlrk-section">
-<h2>11. Your score &amp; keep a copy of your work</h2>
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.drop_duplicates.html" target="_blank" rel="noopener">pandas docs: DataFrame.drop_duplicates</a>: the <code>subset=</code> and <code>keep=</code> options.</li>
+<li><a href="https://pandas.pydata.org/docs/reference/api/pandas.to_numeric.html" target="_blank" rel="noopener">pandas docs: to_numeric</a>: what each <code>errors=</code> setting does.</li>
+<li><a href="https://www.w3schools.com/python/pandas/pandas_cleaning_duplicates.asp" target="_blank" rel="noopener">W3Schools: Pandas Removing Duplicates</a>: short examples to try.</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -453,20 +383,10 @@ git push</pre></li>
 </div>
 </section>
 
-<section class="mlrk-section">
-<h2>Additional resources</h2>
-<p class="mlrk-small">Not counted in the time estimate above.</p>
-<ul>
-<li><a href="https://docs.python.org/3/tutorial/controlflow.html#defining-functions" target="_blank" rel="noopener">Python docs: Defining Functions</a> — the official reference on parameters, return values, and docstrings.</li>
-<li><a href="https://peps.python.org/pep-0257/" target="_blank" rel="noopener">PEP 257: Docstring Conventions</a> — the standard for how a good docstring is written.</li>
-<li><a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.apply.html" target="_blank" rel="noopener">pandas docs: Series.apply()</a> — applying a function like this one to every value in a column.</li>
-<li><a href="https://www.w3schools.com/python/python_functions.asp" target="_blank" rel="noopener">W3Schools: Python Functions</a> — more worked examples of parameters and return values.</li>
-</ul>
-</section>
-
 </div></main>
 
 <footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
+
 
 <script src="../../../assets/reading-kit.js"></script>
 <script>
@@ -474,95 +394,106 @@ git push</pre></li>
   const K = ReadingKit;
   const $ = s => document.querySelector(s);
   const READING_ID = "cleaning-function-reading1-writeitonce";
-  const TITLE = "Write It Once — Turning a Cleaning Fix Into a Real Function";
+  const TITLE = "Write It Once — A Cleaning Function in pandas";
 
   K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
   K.Persona.renderPicker("#persona");
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-recall-return", buttonSelector:"#card-recall-return .mlrk-choice", feedbackSelector:"#recallreturnfb", correct:"none",
-    feedback:{none:"Right. bag_label prints \"12 bags\" but has no return line, so the call hands back None and result holds None.",
-              bags:"\"12 bags\" is the first line, printed inside the function. The function never returns it, so result holds None.",
-              twelve:"12 is the argument passed in. The function has no return line, so result holds None."}});
+  K.quiz({id:"q-recall-strip", buttonSelector:"#card-recall-strip .mlrk-choice", feedbackSelector:"#recallstripfb", correct:"peru",
+    feedback:{peru:"Right. .strip() removes the spaces at both ends, then .lower() makes every letter lowercase.",
+              spaces:".strip() runs first and removes the spaces at both ends, so no spaces are left.",
+              Peru:".lower() runs after .strip(), so the capital P becomes a lowercase p."}});
 
-  K.quiz({id:"q-recall-dff", buttonSelector:"#card-recall-dff .mlrk-choice", feedbackSelector:"#recalldfffb", correct:"fill",
-    feedback:{fill:"Right. The gap is small, the rest of each row is real, and a broken scale doesn't follow a pattern, so the median is a fair stand-in.",
-              drop:"Dropping throws away 3 real deliveries just because one cell is empty. A small, random gap can be filled.",
-              flag:"Leaving the cells empty forever means every weight total is off. A small, random gap can be filled with a typical value."}});
+  K.quiz({id:"q-recall-flag", buttonSelector:"#card-recall-flag .mlrk-choice", feedbackSelector:"#recallflagfb", correct:"flag",
+    feedback:{flag:"Right. Nobody knows the count yet, so any fill would be a guess. A flag keeps the row and says the count is unknown.",
+              drop:"The row still has a real supplier and country. Dropping it throws those away over one missing value.",
+              mode:"Counts from 6 to 12 have no clear favorite, so the mode would be a guess dressed up as data."}});
 
-  K.quiz({id:"q-contract", buttonSelector:"#card-contract .mlrk-choice", feedbackSelector:"#contractfb", correct:"generic",
-    feedback:{generic:"Right. It takes the column in, returns a new one, and names no file or column, so it works on any messy text column.",
-              hardcoded:"The file name and column are hardcoded, and it prints instead of returning. It can't be used on next month's file without editing.",
-              renamed:"It only works on one column name and returns nothing, so the caller can't use the result anywhere else."}});
+  K.quiz({id:"q-dupes", buttonSelector:"#card-dupes .mlrk-choice", feedbackSelector:"#dupesfb", correct:"02",
+    feedback:{"02":"Right. June's D104 says \"kenya \" and June's D105 says 10 bags, so no row matches in every column. On the key alone, D104 and D105 each repeat once: 2.",
+              "22":"A whole-row match needs every column to agree. D104's spelling and D105's count changed in June, so no row matches exactly.",
+              "20":"subset=\"delivery_id\" looks only at the ID, and D104 and D105 each appear twice. That gives 2, not 0."}});
 
-  K.quiz({id:"q-missing", buttonSelector:"#card-missing .mlrk-choice", feedbackSelector:"#missingfb", correct:"label",
-    feedback:{label:"Right. The 4 bags from Peru were really delivered. A clear label keeps the row and doesn't pretend to know the farm.",
-              mode:"A guess could give Hilltop Farm credit for a delivery from a different farm. A label is honest about the gap.",
-              drop:"Dropping would lose 4 real bags from the totals. Only the name is missing; the rest of the row is real."}});
+  K.quiz({id:"q-coerce", buttonSelector:"#card-coerce .mlrk-choice", feedbackSelector:"#coercefb", correct:"one",
+    feedback:{one:"Right. Only \"TBD\" can't become a number, so it becomes the one NaN. The other four become real numbers.",
+              zero:"Coerce doesn't fix \"TBD\". It replaces it with NaN, a new missing value.",
+              five:"The column was loaded as text, but \"6\", \"10\", \"11\" and \"7\" can still become numbers. Only \"TBD\" can't."}});
 
-  K.quiz({id:"q-copy", buttonSelector:"#card-copy .mlrk-choice", feedbackSelector:"#copyfb", correct:"raw",
-    feedback:{raw:"Right. The function returned a new column and the table's country column was replaced with it. before still holds the old, raw column.",
-              clean:"The function never edits its input. It returns a new column, so before still points to the raw one.",
-              error:"No error. Replacing a column in the table doesn't delete the old column that before still holds."}});
-
-  K.quiz({id:"q-twice", buttonSelector:"#card-twice .mlrk-choice", feedbackSelector:"#twicefb", correct:"same",
-    feedback:{same:"Right. Stripping clean text removes nothing, and title-casing \"Hilltop Farm\" gives \"Hilltop Farm\" again.",
-              change:".str.title() capitalizes every word, so \"Hilltop Farm\" stays \"Hilltop Farm.\"",
-              error:"Clean text is still text, so every method works and simply changes nothing."}});
-
-  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"arg",
-    feedback:{arg:"Right. Passing the label as an argument changes the label for this one call, and the function stays the same.",
-              copy:"A copy is the drift problem from the start of this reading: two fixes that can grow apart.",
-              default:"Changing the default would change the label for every other call that relies on \"Unknown.\" Pass the label as an argument instead."}});
-
-  K.dragDrop("#dragarea", "act-drag-buckets");
-  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
-    chip1:{expectedId:"zoneAdhoc", label:"Copied into three places, with a small change in each copy", expectedLabel:"One-off fix"},
-    chip2:{expectedId:"zoneReuse", label:"Takes the column to clean as a parameter", expectedLabel:"Reusable function"},
-    chip3:{expectedId:"zoneAdhoc", label:"Only works on a column named exactly supplier_name", expectedLabel:"One-off fix"},
-    chip4:{expectedId:"zoneReuse", label:"Returns a new cleaned column and lets the caller decide where it goes", expectedLabel:"Reusable function"}
-  }});
-  K.flipCards("#vocab", "act-flip-vocab");
-  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
-
-  K.Scoring.register("q-fillcode",1,"quiz");
-  let fillAttempts=0, fillDone=false;
+  K.Scoring.register("q-blank",1,"quiz");
+  let blankAttempts=0, blankDone=false;
   $("#blankcheck").addEventListener("click",()=>{
-    if(fillDone) return;
-    fillAttempts++;
-    const clean = v => v.trim().toLowerCase().replace(/[`'"\s]/g,"").replace(/^\.?(str\.)?/,"").replace(/\(.*\)$/,"");
-    const ok = [clean($("#blank1").value)==="strip", clean($("#blank2").value)==="title", clean($("#blank3").value)==="fillna"];
+    if(blankDone) return;
+    const raw=$("#blankinput").value.trim();
+    if(!raw) return;
+    blankAttempts++;
+    const val = raw.toLowerCase().replace(/^\.?str\./,"").replace(/^\./,"").replace(/\(\s*\)$/,"").replace(/\s+/g,"");
+    const ok = val==="strip";
     const fb=$("#blankfb");
-    if(ok.every(Boolean)){
-      K.Scoring.award("q-fillcode", fillAttempts===1?1:0.5);
+    if(ok){
+      K.Scoring.award("q-blank", blankAttempts===1?1:0.5);
       fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct"+(fillAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> strip removes the extra spaces, title fixes the capitals, and fillna puts missing_label into the empty cell. Run the file to see the result.";
-      fillDone=true;
-    } else if(fillAttempts>=2){
-      K.Scoring.award("q-fillcode",0);
+      fb.innerHTML="<strong>Correct.</strong> <code>.str.strip()</code> removes the spaces, then <code>.str.lower()</code> evens out the capitals. Press Run to see three countries.";
+      blankDone=true;
+    } else if(blankAttempts>=2){
+      K.Scoring.award("q-blank",0);
       fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here are the answers. You'll get it next time.</strong> Box (1) is <code>strip</code>, box (2) is <code>title</code>, and box (3) is <code>fillna</code>.";
-      fillDone=true;
-    } else {
-      const wrong = ok.map((v,i)=>v?null:"("+(i+1)+")").filter(Boolean);
+      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The blank is <code>strip</code>, as in <code>both[\"country\"].str.strip().str.lower()</code>.";
+      blankDone=true;
+    } else if(val==="lower"||val==="upper"){
       fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite yet.</strong> Box "+wrong.join(" and box ")+(wrong.length>1?" need":" needs")+" another look. The \"New in this file\" note names the two text methods. Box (3) is the pandas method that puts a value into empty cells.";
+      fb.innerHTML="<strong>Not quite.</strong> <code>"+val+"</code> changes capital letters, not spaces. You need the method that removes spaces at the start and end. <div class=\"mlrk-attempt-note\">One more try before the answer is revealed.</div>";
+    } else {
+      fb.className="mlrk-feedback mlrk-show mlrk-bad";
+      fb.innerHTML="<strong>Not quite.</strong> Look at the first recall question: the method that turned <code>\" Peru \"</code> into <code>\"Peru\"</code>. <div class=\"mlrk-attempt-note\">One more try before the answer is revealed.</div>";
     }
-    fb.setAttribute("tabindex","-1"); fb.focus();
-    if(fillDone) K.markDone("q-fillcode");
+    if(blankDone) K.markDone("q-blank");
+    fb.setAttribute("tabindex","-1");fb.focus();
   });
 
+  K.quiz({id:"q-reuse", buttonSelector:"#card-reuse .mlrk-choice", feedbackSelector:"#reusefb", correct:"85",
+    feedback:{"85":"Right. The stacked table loses its 2 repeats: 10 becomes 8. June alone has no repeats, so it keeps all 5. \"TBD\" became the 1 NaN.",
+              "105":"The first line of clean_deliveries drops repeats by delivery_id, so the 2 repeated IDs go: 10 becomes 8.",
+              "83":"June alone has 5 different IDs, so nothing is dropped. And \"TBD\" still becomes 1 NaN in bags."}});
+
+  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
+    {value:"a", label:"both.duplicated().sum() found 0 because D104 and D105 came back with a changed spelling and a changed count.", correct:true,
+      hint:"Compare May's and June's D104 and D105 rows column by column.",
+      explain:"A whole-row match needs every column to agree, and the re-sent rows changed."},
+    {value:"b", label:"After errors=\"coerce\", the \"TBD\" delivery has a real bag count.", correct:false,
+      hint:"Look at what cell [5] counted.",
+      explain:"Coerce turns \"TBD\" into NaN, a new missing value. You still have to drop, fill or flag it."},
+    {value:"c", label:".str.lower() on its own would still leave more than one spelling of Kenya.", correct:true,
+      hint:"What happens to \"kenya \" and \" Kenya\" if only the capitals change?",
+      explain:"Lowercasing leaves the spaces, so \"kenya \", \" kenya\" and \"kenya\" stay three labels."},
+    {value:"d", label:"If clean_deliveries had no df = df.drop_duplicates(...) line, its column changes would also change the table passed in.", correct:true,
+      hint:"Reread the paragraph right after cell [8].",
+      explain:"With no new table made first, setting a column on df inside the function also changes the table you handed in."},
+    {value:"e", label:"A function called once, on one list, is already proven reusable.", correct:false,
+      hint:"Check the reusable function key term.",
+      explain:"Reuse is proven by a second call on a different input, like clean_deliveries(june)."}
+  ]});
+
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"call",
+    feedback:{call:"Right. The function already handles repeats by ID, text counts and messy spellings. Checking the rows and the NaN count proves it worked on the new list.",
+              paste:"A pasted copy means every later change has to be made twice. The function already does these fixes.",
+              whole:"With no subset=, a re-sent row with any changed field survives. And .mean() would skip the TBD counts without telling you."}});
+
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
+
   const AI_PROMPTS = [
-    "Think about a chore you do the same way every time, like packing a lunch. If you wrote the steps down once, which parts would change each time, the way arguments change between calls?",
-    "How would you explain a function's contract to a friend, using a food order: what you hand over, and what you get back?",
-    "Where have you seen the same fix done slightly differently in a few places, because someone redid it by hand each time?"
+    "Ask an AI tool: \"Give me three ways the same city name could be typed differently in a spreadsheet.\" Which of them would .str.strip().str.lower() fix, and which would it miss?",
+    "Think of a chore you do the same way every week. If it were code, what would the function be called, and what would you pass in?",
+    "Explain to a friend why two copies of the same record can look different. Use an example from a group chat or the contact list on your phone."
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.hidden=false;
+    box.style.display="block";
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
+
+  K.flipCards("#vocab", "act-flip-vocab");
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
   $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));

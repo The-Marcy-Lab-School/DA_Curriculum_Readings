@@ -1,27 +1,23 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Two Sets of Eyes — Evaluating AI on Charts, Both Directions</title>
+<title>Two Sets of Eyes</title>
 <link rel="stylesheet" href="../../../assets/brand-tokens.css">
 <link rel="stylesheet" href="../../../assets/reading-kit.css">
 <style>
-.mlrk-illustration{width:100%;max-width:640px;height:auto;margin:1.1rem 0;display:block}
-.mlrk-fillblank{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.6rem}
-.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:12rem}
-.ai-msg{border:2px solid var(--mlrk-blue-700);border-radius:12px;padding:1rem 1.2rem;background:var(--mlrk-blue-100);margin:1rem 0}
-.ai-msg-tag{display:inline-block;font-size:.9rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-  background:var(--mlrk-blue-700);color:var(--mlrk-white);border-radius:999px;padding:.15rem .6rem;margin-bottom:.5rem}
-@media(max-width:650px){h2{font-size:1.5rem}}
+.mlrk-run img{display:block;width:100%;max-width:560px;height:auto;background:var(--mlrk-white);border-radius:8px;padding:.4rem;margin-top:.6rem}
+.mlrk-fillblank input{border:2px solid var(--mlrk-gray-500);border-radius:8px;padding:.4rem .6rem;width:10rem}
+.mlrk-quote{border-left:4px solid var(--mlrk-blue-700);background:var(--mlrk-white);padding:.7rem 1rem;border-radius:6px;margin:1rem 0}
 </style>
 </head><body>
 
 <header class="mlrk-header"><div class="mlrk-wrap">
 <div class="mlrk-eyebrow">Interactive reading</div>
 <h1>Two Sets of Eyes</h1>
-<p class="mlrk-lead">Devon works at a used-book shop and asks an AI assistant to review a chart. The AI catches two real problems. Then it confidently says something the chart can't show. Later, it suggests a chart that would hide the trend Devon needs to see. An AI can improve a chart, and it can get one wrong. You'll learn to tell which.</p>
+<p class="mlrk-lead">Devon runs a small used-book shop. Customers trade in old books for store credit. Devon saves a chart of the trade-ins and asks an AI chat to describe it. The AI answers fast and sounds sure. Some of what it says is right, and some is wrong. Your job is to tell which is which.</p>
 <div class="mlrk-meta">
-  <span class="mlrk-pill">~20&ndash;22 minutes</span>
+  <span class="mlrk-pill">~17–20 minutes</span>
   <span class="mlrk-pill">Interactive</span>
-  <span class="mlrk-pill">No setup needed</span>
+  <span class="mlrk-pill">No Python setup needed</span>
   <span class="mlrk-pill">Saves your progress automatically</span>
 </div>
 </div></header>
@@ -39,6 +35,7 @@
   <div class="mlrk-callout mlrk-callout-green">
     <p><strong>Skills you'll practice in this reading:</strong></p>
     <p><strong>AI Literacy</strong> — Using an AI tool thoughtfully, and being able to explain in writing what it got right, what it missed, and how you verified its answer.</p>
+    <p><strong>Data Distributions &amp; Shape</strong> — Reading the shape of a real distribution (skew, outliers, spread) across multiple variables and matching it to the right chart or summary.</p>
   </div>
 </section>
 
@@ -51,272 +48,220 @@
 </section>
 
 <section class="mlrk-section">
+<p><strong>Your goal:</strong> check an AI's description of your chart, and an AI's chart idea, against numbers you computed yourself. The person who shares a result is responsible for it, not the tool. You already know mean vs. median and how to pick a chart type.</p>
+</section>
+
+<section class="mlrk-section">
 <h2>Key terms for this reading</h2>
 <p>These are the words this reading uses. Flip a card to see what a word means. Each one comes up again below with an example.</p>
 <div class="mlrk-grid" id="vocab">
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>AI critique</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>AI critique</strong><br>Checking an AI's chart description or chart suggestion against the real numbers before trusting it.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Hallucinated insight</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Hallucinated insight</strong><br>A confident-sounding claim an AI makes about your data or chart that the real numbers don't support.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Verification</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Verification</strong><br>Checking one specific claim, from an AI or a person, against the real chart or the real dataset.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Blind trust</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Blind trust</strong><br>Acting on an AI's chart review, or a chart it made, without checking it against the real data first.</span></button>
-<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Second opinion</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Second opinion</strong><br>Treating an AI's read of a chart as one more view to weigh, never the final word.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>AI Critique</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>AI critique</strong><br>Checking an AI's chart description or chart suggestion against the real numbers before you trust it.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Direction 1</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Direction 1</strong><br>The AI describes a chart you made. You check whether its read matches the real chart.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Direction 2</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Direction 2</strong><br>The AI suggests a chart. You check whether the suggestion fits the question and the data.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Claim</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Claim</strong><br>One statement that could be checked. An AI sentence is a claim until you check it against the data.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Right-Skewed</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Right-skewed</strong><br>Most values are small, with a long tail to the right. The mean gets pulled above the median.</span></button>
+<button type="button" class="mlrk-term"><span class="mlrk-front"><strong>Unverifiable</strong><br><span class="mlrk-small">Flip</span></span><span class="mlrk-back"><strong>Unverifiable</strong><br>A claim that nothing you computed can settle. It is not right or wrong yet. It is unchecked.</span></button>
 </div>
 </section>
 
 <section class="mlrk-section">
-<h2>1. Two directions</h2>
-<p>The shop buys used books from customers. Each book a customer sells to the shop is a <em>trade-in</em>. Devon makes charts of trade-ins and sales, and uses an AI two ways:</p>
-<ul>
-<li><strong>Direction 1:</strong> Devon builds a chart, and the AI reviews it.</li>
-<li><strong>Direction 2:</strong> the AI describes a chart or suggests one, and Devon reviews the AI.</li>
-</ul>
+<h2>1. Quick recall</h2>
+<p>Two skills you already have come up in this reading.</p>
 
-<svg class="mlrk-illustration" viewBox="0 0 640 330" role="img" aria-labelledby="twoDirTitle twoDirDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="twoDirTitle">Two directions for checking AI on charts, both ending in the same check against the real data</title>
-  <desc id="twoDirDesc">Direction one: you build a chart, then the AI reviews it, then you judge the review. Direction two: the AI builds or suggests a chart, then you review it, then you check it against the real data. Both rows lead to one shared box at the bottom: nothing gets used until it is checked against the real chart or the real numbers.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="25" y="14" font-weight="800" font-size="14" letter-spacing="1" fill="#2274B5">DIRECTION 1</text>
-    <rect x="25" y="20" width="165" height="70" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
-    <text x="107" y="50" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">You build</text>
-    <text x="107" y="67" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">a chart</text>
-    <polygon points="190,50 205,50 205,44 218,55 205,66 205,60 190,60" fill="#264326"/>
-    <rect x="218" y="20" width="165" height="70" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
-    <text x="300" y="59" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">AI reviews it</text>
-    <polygon points="383,50 398,50 398,44 411,55 398,66 398,60 383,60" fill="#264326"/>
-    <rect x="411" y="20" width="165" height="70" rx="12" fill="#DEEAF4" stroke="#2274B5" stroke-width="3"/>
-    <text x="493" y="50" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">You judge</text>
-    <text x="493" y="67" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">the review</text>
-
-    <text x="25" y="122" font-weight="800" font-size="14" letter-spacing="1" fill="#83671C">DIRECTION 2</text>
-    <rect x="25" y="128" width="165" height="70" rx="12" fill="#FFEECA" stroke="#83671C" stroke-width="3"/>
-    <text x="107" y="158" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">AI describes or</text>
-    <text x="107" y="175" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">suggests a chart</text>
-    <polygon points="190,158 205,158 205,152 218,163 205,174 205,168 190,168" fill="#83671C"/>
-    <rect x="218" y="128" width="165" height="70" rx="12" fill="#FFEECA" stroke="#83671C" stroke-width="3"/>
-    <text x="300" y="167" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">You review it</text>
-    <polygon points="383,158 398,158 398,152 411,163 398,174 398,168 383,168" fill="#83671C"/>
-    <rect x="411" y="128" width="165" height="70" rx="12" fill="#FFEECA" stroke="#83671C" stroke-width="3"/>
-    <text x="493" y="150" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">You check it</text>
-    <text x="493" y="167" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">against the data</text>
-
-    <path d="M493,90 L493,110 L397,110 L397,225" fill="none" stroke="#264326" stroke-width="3"/>
-    <polygon points="397,225 391,212 403,212" fill="#264326"/>
-    <path d="M493,198 L493,213 L340,213 L340,225" fill="none" stroke="#83671C" stroke-width="3"/>
-    <polygon points="340,225 334,212 346,212" fill="#83671C"/>
-
-    <rect x="130" y="230" width="380" height="85" rx="14" fill="#A6C2B4" stroke="#264326" stroke-width="3"/>
-    <text x="320" y="258" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">Nothing gets used until it's</text>
-    <text x="320" y="277" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">checked against the real chart</text>
-    <text x="320" y="296" text-anchor="middle" font-weight="700" font-size="14" fill="#261F1D">or the real numbers behind it</text>
-  </g>
-</svg>
-
-<p>In both directions, you do an <strong>AI critique</strong>: you check what an AI says about a chart, or the chart it suggests, against the real numbers before you trust it. A wrong AI claim that nobody checks can end up in a report that someone acts on. You already know how to judge a chart's design and read mean and median. Now you use those skills on an AI's work.</p>
-<div class="mlrk-callout mlrk-callout-blue">
-<p><strong>How the examples work:</strong> the one pandas example is a <code>.py</code> file that reads a small <code>.csv</code> file. The Run button shows what the file prints. On your own laptop, you'd type <code>python3 name.py</code> in the terminal.</p>
-</div>
-</section>
-
-<section class="mlrk-section">
-<h2>2. Recall</h2>
-<p>Checking an AI uses two chart and statistics skills you already have.</p>
-
-<div class="mlrk-card" id="card-recall-type"><p><strong>Which question calls for a line chart rather than a pie chart?</strong></p>
-<button type="button" class="mlrk-choice" data-a="trend">"How has this number changed week by week?"</button>
-<button type="button" class="mlrk-choice" data-a="share">"What share of the total does each genre make up right now?"</button>
-<button type="button" class="mlrk-choice" data-a="either">Either question works with either chart.</button>
+<div class="mlrk-card" id="card-recall-type"><p><strong>Recall:</strong> you want to see the shape of one number column: where most values sit and how far they spread. Which chart fits?</p>
+<button type="button" class="mlrk-choice" data-a="hist">A histogram or a boxplot</button>
+<button type="button" class="mlrk-choice" data-a="line">A line graph</button>
+<button type="button" class="mlrk-choice" data-a="bar">A bar chart with one bar per row</button>
 <div id="recalltypefb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<div class="mlrk-card" id="card-recall-skew" style="margin-top:.8rem"><p><strong>A shop's daily sales are mostly close together, except one huge day from a single event. Which statistic gets pulled further toward that one day?</strong></p>
+<div class="mlrk-card" id="card-recall-mean" style="margin-top:1rem"><p><strong>Recall:</strong> one value in a column is much bigger than all the rest. Which number does it pull up more?</p>
 <button type="button" class="mlrk-choice" data-a="mean">The mean</button>
 <button type="button" class="mlrk-choice" data-a="median">The median</button>
-<div id="recallskewfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<button type="button" class="mlrk-choice" data-a="same">Both, by the same amount</button>
+<div id="recallmeanfb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>3. Direction 1: the AI reviews your chart</h2>
-<p>Here is Devon's chart of one quarter's trade-ins (three months), before any AI saw it:</p>
+<h2>2. Save the chart, and get your own numbers first</h2>
+<p>Each row of <code>tradeins.csv</code> is one customer's trade-in, with how many books they brought.</p>
+<div class="mlrk-code" data-file="tradeins.csv">customer,books_brought
+C01,2
+C02,3
+C03,3
+C04,4
+C05,4
+C06,5
+C07,5
+C08,6
+C09,7
+C10,60</div>
+<p>Before you read any AI answer, compute the numbers that can settle it. Otherwise the check has nothing to stand on.</p>
+<div class="mlrk-callout mlrk-callout-blue"><p><strong>New in this cell:</strong> <code>.describe()[["mean", "50%"]]</code> picks two rows of <code>describe()</code>. The <code>"50%"</code> row is the median. <code>.plot.hist(bins=12)</code> draws a histogram with 12 bars. <code>plt.savefig("tradeins_hist.png", dpi=150)</code> saves the chart as an image file. It must come <em>before</em> <code>plt.show()</code>. After <code>show</code>, you save a blank image.</p></div>
+<p><strong>Predict:</strong> which will be bigger, the mean or the median (<code>50%</code>)?</p>
+<pre class="mlrk-code" data-file="shop.ipynb" data-cell="1">import pandas as pd
+import matplotlib.pyplot as plt
 
-<svg class="mlrk-illustration" viewBox="0 0 560 260" role="img" aria-labelledby="tradeinTitle tradeinDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="tradeinTitle">Bar chart titled Trade-ins by Genre, five bars in one color, not sorted by size, no number labels</title>
-  <desc id="tradeinDesc">Bars for Sci-Fi at 95, Mystery at 140, Kids at 85, Romance at 310, and Nonfiction at 120, left to right in that unsorted order. Every bar is the same light blue. The axis starts at zero, and no numbers are printed on the bars.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="280" y="20" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Trade-ins by Genre</text>
-    <line x1="60" y1="210" x2="520" y2="210" stroke="#B3BBB0" stroke-width="2"/>
-    <line x1="60" y1="40" x2="60" y2="210" stroke="#B3BBB0" stroke-width="2"/>
-    <g fill="#DEEAF4" stroke="#2274B5" stroke-width="2.5">
-      <rect x="80" y="162" width="60" height="48"/>
-      <rect x="170" y="140" width="60" height="70"/>
-      <rect x="260" y="167" width="60" height="43"/>
-      <rect x="350" y="55" width="60" height="155"/>
-      <rect x="440" y="150" width="60" height="60"/>
-    </g>
-    <g font-size="14" fill="#261F1D" text-anchor="middle">
-      <text x="110" y="230">Sci-Fi</text>
-      <text x="200" y="230">Mystery</text>
-      <text x="290" y="230">Kids</text>
-      <text x="380" y="230">Romance</text>
-      <text x="470" y="230">Nonfiction</text>
-    </g>
-  </g>
-</svg>
+trades = pd.read_csv("tradeins.csv")
+print(trades["books_brought"].describe()[["mean", "50%"]])
+trades["books_brought"].plot.hist(bins=12)
+plt.title("Books brought per trade-in")
+plt.xlabel("Books brought")
+plt.ylabel("Customers")
+plt.savefig("tradeins_hist.png", dpi=150)
+plt.show()</pre>
+<button type="button" class="mlrk-btn" data-run="shop.ipynb" data-cell="1" data-after="q-meanmed"></button>
+<div class="mlrk-run" data-file="shop.ipynb" data-cell="1" hidden><pre>mean    9.9
+50%     4.5
+Name: books_brought, dtype: float64</pre><img src="chart-tradeins-hist.svg" alt="A histogram titled Books brought per trade-in. A tall bar holds 8 customers who brought 2 to 6 books, and a short bar holds 1 customer who brought 7. Then comes a long empty stretch, and a single customer at 60 books." /></div>
+<div class="mlrk-card" id="card-meanmed">
+<button type="button" class="mlrk-choice" data-a="mean">The mean, because the 60-book trade-in pulls it up</button>
+<button type="button" class="mlrk-choice" data-a="median">The median, because most customers bring a few books</button>
+<button type="button" class="mlrk-choice" data-a="same">They'll be about the same</button>
+<div id="meanmedfb" class="mlrk-feedback" tabindex="-1"></div></div>
 
-<p>Devon asks the AI, "What's wrong with this chart?" Here is its reply:</p>
-<div class="ai-msg"><span class="ai-msg-tag">AI's review</span>
-<p>"First, the bars aren't sorted by size. Second, no bar has its number printed on it. Third, the chart uses too many different colors. Fourth, the title only names the chart instead of stating a finding. And Romance has clearly been the shop's most popular trade-in genre all year."</p>
-</div>
-<p><strong>Verification</strong> means checking one claim at a time against the real chart or the real data. Don't judge the reply as a whole.</p>
-
-<div class="mlrk-card" id="card-colors"><p><strong>Look at the chart itself. Which claim in the AI's review is false about what the picture shows?</strong></p>
-<button type="button" class="mlrk-choice" data-a="colors">The chart uses too many different colors.</button>
-<button type="button" class="mlrk-choice" data-a="sort">The bars aren't sorted by size.</button>
-<button type="button" class="mlrk-choice" data-a="label">No bar has its number printed on it.</button>
-<div id="colorsfb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<p>The last claim is worse. The chart covers one quarter, not a year. And most of Romance's tall bar came from one customer who brought in 200 books in a single week. A confident claim that the real data doesn't support is a <strong>hallucinated insight</strong>.</p>
-<p>Acting on the review without checking it is <strong>blind trust</strong>. Treat the AI as a <strong>second opinion</strong> instead: one more view to weigh, never the final word. Devon keeps the three claims that held up (sort, label, title) and drops the other two.</p>
+<p style="margin-top:1rem">This column is <strong>right-skewed</strong>: most values are small, with a long tail to the right. A mean far above the median is the fastest sign of skew. Here the typical trade-in is the median, 4.5 books. Report that, and mention the 60-book trade-in on its own.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>4. Direction 2: the AI describes a chart</h2>
-<p>Devon asks the AI to look at a month of sales at another store. It hands back this chart and caption:</p>
-
-<svg class="mlrk-illustration" viewBox="0 0 560 260" role="img" aria-labelledby="salesTitle salesDesc" xmlns="http://www.w3.org/2000/svg">
-  <title id="salesTitle">Bar chart of average daily sales by weekday, with Saturday about twice as tall as every other day</title>
-  <desc id="salesDesc">Average sales in dollars: Monday 420, Tuesday 390, Wednesday 410, Thursday 430, Friday 500, Saturday 980, and Sunday 460. Saturday's bar is about double the others.</desc>
-  <g font-family="Helvetica, Arial, sans-serif">
-    <text x="280" y="20" text-anchor="middle" font-weight="700" font-size="15" fill="#261F1D">Average Daily Sales by Weekday</text>
-    <line x1="55" y1="215" x2="535" y2="215" stroke="#B3BBB0" stroke-width="2"/>
-    <line x1="55" y1="35" x2="55" y2="215" stroke="#B3BBB0" stroke-width="2"/>
-    <g fill="#FFEECA" stroke="#83671C" stroke-width="2.5">
-      <rect x="70" y="145" width="50" height="70"/>
-      <rect x="130" y="151" width="50" height="64"/>
-      <rect x="190" y="147" width="50" height="68"/>
-      <rect x="250" y="143" width="50" height="72"/>
-      <rect x="310" y="130" width="50" height="85"/>
-      <rect x="370" y="50" width="50" height="165"/>
-      <rect x="430" y="139" width="50" height="76"/>
-    </g>
-    <g font-size="14" fill="#261F1D" text-anchor="middle">
-      <text x="95" y="234">Mon</text>
-      <text x="155" y="234">Tue</text>
-      <text x="215" y="234">Wed</text>
-      <text x="275" y="234">Thu</text>
-      <text x="335" y="234">Fri</text>
-      <text x="395" y="234">Sat</text>
-      <text x="455" y="234">Sun</text>
-    </g>
-  </g>
-</svg>
-
-<div class="ai-msg"><span class="ai-msg-tag">AI's caption</span>
-<p>"Saturdays consistently bring in far more money than any other day. Adding extra staff every Saturday would raise sales further."</p>
-</div>
-<p>The bar for Saturday is a mean of four Saturdays. One of them had an author visit to sign books. <code>saturdays.csv</code> holds the four days.</p>
-<p><strong>Predict:</strong> <code>saturday_sales.py</code> prints the mean, then the median. The mean, 980.0, matches the chart's Saturday bar. What is the median?</p>
-
-<div class="mlrk-code" data-file="saturdays.csv"><div class="mlrk-screen">date,sales
-Mar 2,450
-Mar 9,2570
-Mar 16,430
-Mar 23,470</div></div>
-<div class="mlrk-code" data-file="saturday_sales.py"><div class="mlrk-screen">import pandas as pd
-
-saturdays = pd.read_csv("saturdays.csv")
-print(saturdays["sales"].mean())
-print(saturdays["sales"].median())</div></div>
-<button type="button" class="mlrk-btn" data-run="saturday_sales.py" data-after="q-median" data-after-note="Check your prediction first. Then you can run it."></button>
-<div class="mlrk-run" data-file="saturday_sales.py" hidden><pre>980.0
-460.0</pre></div>
-<ol class="mlrk-steplist">
-  <li>Put the four sales numbers in order from smallest to largest.</li>
-  <li>With four numbers, the median is halfway between the middle two. Add them and divide by 2.</li>
-  <li>Type only the number, like <code>512</code>. Leave out the $ sign. Press <strong>Check my prediction</strong>, and the Run button unlocks.</li>
+<h2>3. Direction 1: does the AI's read match the chart?</h2>
+<p><strong>AI critique</strong> means checking an AI's chart description or chart suggestion against the real numbers before you trust it. It goes two ways. In <strong>Direction 1</strong>, the AI describes a chart you made, and you check whether its read matches the real chart.</p>
+<ol>
+<li>Open a fresh chat and share just the saved image. Keep the CSV and its rows out of the chat.</li>
+<li>Ask a plain question that doesn't hint at the answer: "What does this chart show? How are the values spread out, and about how many books does one customer bring?"</li>
+<li>Paste the reply word for word. Then split it into separate <strong>claims</strong>: single statements you can check.</li>
 </ol>
-<div class="mlrk-fillblank">
-  <label for="medianinput">Median:</label>
-  <input type="text" id="medianinput" autocomplete="off">
-  <button type="button" id="mediancheck" class="mlrk-btn">Check my prediction</button>
-</div>
-<div id="medianfb" class="mlrk-feedback" tabindex="-1"></div>
-
-<div class="mlrk-card" id="card-caption" style="margin-top:.8rem"><p><strong>The median Saturday looks like any other day. Which word in the AI's caption claims more than the data shows?</strong></p>
-<button type="button" class="mlrk-choice" data-a="consistently">"consistently"</button>
-<button type="button" class="mlrk-choice" data-a="money">"money"</button>
-<button type="button" class="mlrk-choice" data-a="day">"day"</button>
-<div id="captionfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p>The staffing advice goes too far as well. One busy event day doesn't show that every Saturday needs extra staff.</p>
+<p class="mlrk-quote"><strong>AI reply:</strong> "The data looks roughly symmetric, centered around 10 books. The mean, about 10, is a good typical number for one trade-in."</p>
+<div class="mlrk-card" id="card-ai1"><p><strong>Check each claim against cell 1. What is your verdict?</strong></p>
+<button type="button" class="mlrk-choice" data-a="split">The mean really is about 10. But the shape is right-skewed, not symmetric, so report the median, 4.5.</button>
+<button type="button" class="mlrk-choice" data-a="all">It's all right. The mean really is 9.9.</button>
+<button type="button" class="mlrk-choice" data-a="none">It's all wrong, so don't use the AI for anything else.</button>
+<div id="ai1fb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>5. Direction 2: the AI suggests a chart</h2>
-<p>Devon asks: "What chart should I use to show how Romance trade-ins changed across the 12 weeks of the quarter?"</p>
-<div class="ai-msg"><span class="ai-msg-tag">AI's suggestion</span>
-<p>"A pie chart works well. Make each week a slice, so you can see which week gave the biggest share."</p>
+<h2>4. When the averages land in a gap</h2>
+<p>Devon also charts the prices of books on the shelf.</p>
+<div class="mlrk-code" data-file="books.csv">format,price
+paperback,3
+paperback,4
+paperback,4
+paperback,5
+paperback,4
+paperback,3
+hardcover,14
+hardcover,15
+hardcover,13
+hardcover,16
+hardcover,14
+hardcover,15</div>
+<p><strong>Predict:</strong> look at the prices. Where will the mean and median land?</p>
+<pre class="mlrk-code" data-file="shop.ipynb" data-cell="2">books = pd.read_csv("books.csv")
+print(books["price"].describe()[["mean", "50%"]])
+books["price"].plot.hist(bins=14)
+plt.title("Prices of used books on the shelf")
+plt.xlabel("Price (dollars)")
+plt.ylabel("Books")
+plt.savefig("price_hist.png", dpi=150)
+plt.show()</pre>
+<button type="button" class="mlrk-btn" data-run="shop.ipynb" data-cell="2" data-after="q-price"></button>
+<div class="mlrk-run" data-file="shop.ipynb" data-cell="2" hidden><pre>mean    9.166667
+50%     9.000000
+Name: price, dtype: float64</pre><img src="chart-price-hist.svg" alt="A histogram titled Prices of used books on the shelf. One group of bars sits between 3 and 5 dollars, and a second group sits between 13 and 16 dollars. Nothing is between 6 and 12 dollars." /></div>
+<div class="mlrk-card" id="card-price">
+<button type="button" class="mlrk-choice" data-a="gap">Both about $9, in the gap where no book is priced</button>
+<button type="button" class="mlrk-choice" data-a="split">The mean near $4 and the median near $14</button>
+<button type="button" class="mlrk-choice" data-a="high">Both near $14, where the hardcovers are</button>
+<div id="pricefb" class="mlrk-feedback" tabindex="-1"></div></div>
+
+<p style="margin-top:1rem">The histogram has two peaks. When the mean and median sit close together, it does not mean the data has one hump. Always look at the chart too. A summary number that lands where almost no data sits is a warning sign: the rows may be two groups mixed together. Group by the column that might split them.</p>
+<pre class="mlrk-code" data-file="shop.ipynb" data-cell="3">books.groupby("format")["price"].mean().round(2)</pre>
+<button type="button" class="mlrk-btn" data-run="shop.ipynb" data-cell="3"></button>
+<div class="mlrk-run" data-file="shop.ipynb" data-cell="3" hidden><pre>format
+hardcover    14.50
+paperback     3.83
+Name: price, dtype: float64</pre></div>
+
+<p style="margin-top:1rem">Devon uploads <code>price_hist.png</code> to a new chat with the same plain question. The AI replies:</p>
+<p class="mlrk-quote"><strong>AI reply:</strong> "The mean price is about $9. The mean and median are close. The prices are fairly symmetric, with one hump in the middle. So $9 is a typical price for a book here. Most books on the shelf are in good condition."</p>
+<p>A claim is <strong>unverifiable</strong> when nothing you computed can settle it. Sort each claim. Then press the self-check button.</p>
+<div id="dragarea">
+<div class="mlrk-drag-source" id="dragsource">
+  <span id="chip1" class="mlrk-draggable">The mean price is about $9.</span>
+  <span id="chip2" class="mlrk-draggable">The mean and median are close.</span>
+  <span id="chip3" class="mlrk-draggable">The prices are fairly symmetric, with one hump.</span>
+  <span id="chip4" class="mlrk-draggable">$9 is a typical price for a book here.</span>
+  <span id="chip5" class="mlrk-draggable">Most books on the shelf are in good condition.</span>
 </div>
-
-<div class="mlrk-card" id="card-pie"><p><strong>Is a pie chart a good fit for Devon's question?</strong></p>
-<button type="button" class="mlrk-choice" data-a="no">No. The question is about change over time, and a pie chart shows parts of one whole.</button>
-<button type="button" class="mlrk-choice" data-a="yes">Yes. A pie chart can hold 12 slices.</button>
-<div id="piefb" class="mlrk-feedback" tabindex="-1"></div></div>
-
-<div class="mlrk-card" id="card-fix" style="margin-top:.8rem"><p><strong>Which chart would show Devon's trend?</strong></p>
-<button type="button" class="mlrk-choice" data-a="line">A line chart with the 12 weeks in order along the bottom.</button>
-<button type="button" class="mlrk-choice" data-a="sorted">A bar chart with the weeks sorted from biggest to smallest.</button>
-<button type="button" class="mlrk-choice" data-a="smallpie">A pie chart with only 4 slices, one per month.</button>
-<div id="fixfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<div class="mlrk-grid">
+  <div><p class="mlrk-small"><strong>Right</strong></p><div class="mlrk-dropzone" id="zoneRight"></div></div>
+  <div><p class="mlrk-small"><strong>Wrong</strong></p><div class="mlrk-dropzone" id="zoneWrong"></div></div>
+  <div><p class="mlrk-small"><strong>Unverifiable</strong></p><div class="mlrk-dropzone" id="zoneUnver"></div></div>
+</div>
+<div class="mlrk-actions"><button type="button" id="dragcheck" class="mlrk-btn">Check my sorting (self-check, not graded)</button></div>
+<div id="dragcheckfb" class="mlrk-feedback" tabindex="-1"></div>
+</div>
+<p style="margin-top:1rem">The AI was partly right. Catching one wrong claim doesn't make the rest wrong. Each claim gets its own check.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>6. Mixed check</h2>
-<div class="mlrk-card">
-<p><strong>Select every statement that is TRUE about checking an AI's work on charts.</strong></p>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="a"> If an AI is right about three things, its fourth claim is probably right too.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="b"> You check each AI claim on its own against the real chart or the real numbers.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="c"> A chart the AI suggests needs the same check as the AI's review of your chart.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="d"> Asking the same AI to confirm its own claim counts as verification.</label>
-<label style="display:block;margin:.4rem 0"><input type="checkbox" class="sa-box" value="e"> A median far from the mean is a sign that one value may be pulling the average.</label>
-<p><button type="button" id="sasubmit" class="mlrk-btn">Check my selections</button></p>
-<div id="safb" class="mlrk-feedback" tabindex="-1"></div>
-</div>
+<h2>5. Direction 2: does the AI's chart idea fit?</h2>
+<p>In <strong>Direction 2</strong>, the AI suggests a chart, and you check whether the suggestion fits the question and the data. Judge it on two counts: the chart type, and whether its claims match your numbers. Devon asks: "Which chart should I use to see how these book prices are spread out? Explain your pick, and skip the code." The AI replies:</p>
+<p class="mlrk-quote"><strong>AI reply:</strong> "Make a bar chart with one bar for every book's price, so you can see each price. Hardcovers cost about twice as much as paperbacks."</p>
+<div class="mlrk-card" id="card-dir2"><p><strong>Judge the AI's idea on both counts: the chart type, and the price claim. Use cell 3. What is your verdict?</strong></p>
+<button type="button" class="mlrk-choice" data-a="type">The chart type fails, but the price claim checks out.</button>
+<button type="button" class="mlrk-choice" data-a="both">Both fail. Draw a histogram of price instead.</button>
+<button type="button" class="mlrk-choice" data-a="pass">Both pass. A bar for every book shows each price clearly.</button>
+<div id="dir2fb" class="mlrk-feedback" tabindex="-1"></div></div>
 </section>
 
 <section class="mlrk-section">
-<h2>7. Wrap-up</h2>
+<h2>6. Wrap-up</h2>
 <ul>
-<li>Split an AI's reply into separate claims, and check each one against the real chart or numbers.</li>
-<li>A confident claim the data doesn't support is a hallucinated insight. Tone tells you nothing.</li>
-<li>Check an AI's chart suggestion against the question: change over time needs a line chart, not a pie chart.</li>
+<li>Compute your own numbers first. Save the chart with <code>plt.savefig</code> before <code>plt.show()</code>, and upload only the image.</li>
+<li>Split an AI reply into claims. Mark each right, wrong, or unverifiable, and name the number that settles it.</li>
+<li>Judge an AI's chart idea on chart type and on whether its claims match your numbers.</li>
 </ul>
-<div class="mlrk-card" id="card-newsit"><p><strong>New situation:</strong> the AI looks at four weeks of Mystery trade-ins and says they are "clearly going down every week." One of the four weeks was a holiday week, when the shop was open only two days. What should Devon do before repeating the claim to the shop owner?</p>
-<button type="button" class="mlrk-choice" data-a="checkweeks">Check whether the four weeks can fairly be compared, starting with the short holiday week.</button>
-<button type="button" class="mlrk-choice" data-a="repeat">Repeat the claim, since the AI already looked at the numbers.</button>
-<button type="button" class="mlrk-choice" data-a="askagain">Ask the same AI again to confirm it.</button>
-<div id="newsitfb" class="mlrk-feedback" tabindex="-1"></div></div>
-<p><strong>In interviews:</strong> you may be asked, "How would you check an AI-made chart or chart summary before trusting it?" Name the claim, then the number you'd check it against.</p>
-<p><strong>Where this goes next:</strong> once a chart and its claims hold up, you write them up for a reader who never saw the data.</p>
+<div class="mlrk-card" id="card-summary"><p><strong>New situation:</strong> next month's trade-ins have a mean of 6.1 and a median of 5.9. The histogram shows one hump with no long tail. An AI says: "Roughly symmetric. The mean is a fine typical number." What do you do?</p>
+<button type="button" class="mlrk-choice" data-a="accept">Accept both claims, because your numbers and your chart back them up</button>
+<button type="button" class="mlrk-choice" data-a="reject">Reject it, since the AI was wrong about last month's chart</button>
+<button type="button" class="mlrk-choice" data-a="median">Always report the median instead, whatever the shape</button>
+<div id="summaryfb" class="mlrk-feedback" tabindex="-1"></div></div>
+<p style="margin-top:1rem">In interviews, "How would you check an AI-made chart summary before trusting it?" is a common question. A strong answer names the claim, the number you checked it with, and your verdict.</p>
+<p>The same habit applies to code an AI writes for you: run it, and compare its numbers with ones you computed.</p>
 </section>
 
 <section class="mlrk-section">
-<h2>8. Reflection</h2>
-<label for="rule"><strong>Your rule:</strong> what will you check before you act on an AI's review of your chart, or on a chart it suggests?</label>
+<h2>7. Reflection</h2>
 <ol class="mlrk-steplist">
-  <li>Write 1 or 2 sentences, at least 10 words. The counter under the box tells you when it counts.</li>
-  <li>Try starting with: "Before I trust an AI's read of a chart, I will check..."</li>
+  <li>Rewrite the AI's chart idea from Direction 2 with this frame: "Draw a ___ of ___, because the question is about ___."</li>
+  <li>Add one sentence on what Devon could wrongly believe from the AI's bar chart.</li>
 </ol>
-<textarea id="rule" class="mlrk-response" data-save placeholder="Before I trust an AI's read of a chart, I will check..."></textarea>
-<p><button type="button" id="aiprompt" class="mlrk-btn">Stuck? Get an AI-brainstormed prompt (optional)</button></p>
-<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" hidden></div>
+<p>Why: a rewrite that names a chart type and a reason turns a weak idea into one someone can use.</p>
+<label for="strategy"><strong>Your rewrite:</strong></label>
+<textarea id="strategy" class="mlrk-response" data-save placeholder="Draw a ___ of ___, because the question is about ___."></textarea>
+<p>Stuck? <button type="button" id="aiprompt" class="mlrk-btn">Get an AI-brainstormed prompt (optional)</button></p>
+<div id="aipromptbox" class="mlrk-callout mlrk-callout-blue" style="display:none"></div>
 </section>
 
 <section class="mlrk-section">
-<h2>10. Go further (optional)</h2>
-<p>This video is optional and isn't part of the time estimate or your score. As you watch an AI analyze a dataset, notice each moment where you'd want to check its output against the real data.</p>
-<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/hoTS5pIKgPU" title="AI doing data analysis, video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
-<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=hoTS5pIKgPU" target="_blank" rel="noopener">Watch on YouTube</a>
+<h2>Go further (optional): mean, median, and shape</h2>
+<p>This video is optional and is not counted in the time estimate. As you watch, notice when the speaker says the mean and median split apart, and what a chart with two peaks does to them.</p>
+<div class="mlrk-video-wrap"><iframe src="https://www.youtube.com/embed/kn83BA7cRNM" title="Mean, median, and mode (optional video)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<a class="mlrk-video-link" href="https://www.youtube.com/watch?v=kn83BA7cRNM" target="_blank" rel="noopener">Watch on YouTube</a>
 </section>
 
 <section class="mlrk-section">
-<h2>11. Your score &amp; keep a copy of your work</h2>
+<h2>Additional resources</h2>
+<p class="mlrk-small">Not counted in the time estimate above.</p>
+<ul>
+<li><a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html" target="_blank" rel="noopener">matplotlib docs: savefig</a>: every option for saving a chart as an image.</li>
+<li><a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.describe.html" target="_blank" rel="noopener">pandas docs: Series.describe</a>: what each row of <code>describe()</code> means.</li>
+<li><a href="https://www.data-to-viz.com/caveats.html" target="_blank" rel="noopener">Data to Viz: Caveats</a>: common chart mistakes to look for, in an AI's chart or your own.</li>
+</ul>
+</section>
+
+<section class="mlrk-section">
+<h2>Your score &amp; keep a copy of your work</h2>
 <div id="scorechip" class="mlrk-score-chip">0 / 0 points</div>
 <div class="mlrk-export" style="margin-top:1rem">
   <div class="mlrk-actions">
@@ -354,7 +299,7 @@ print(saturdays["sales"].median())</div></div>
         <pre class="mlrk-code">mv ~/Downloads/ai-two-sets-of-eyes-reading.json .</pre></li>
       <li>Save it to git and push it up to GitHub:
         <pre class="mlrk-code">git add ai-two-sets-of-eyes-reading.json
-git commit -m "Complete AI literacy reading: two sets of eyes"
+git commit -m "Complete two sets of eyes reading"
 git push</pre></li>
     </ol>
   </div>
@@ -368,7 +313,7 @@ git push</pre></li>
         <li>In your new repo: open <strong>Settings</strong>, then <strong>Collaborators</strong>, then <strong>Add people</strong>, and add your instructor's GitHub username so they can see your scores. Your instructor will share their username with you.</li>
         <li>Copy your repo's name <strong>exactly</strong> as it appears in GitHub's URL, including any hyphens, underscores, and capitalization. Paste it into the "Your submissions repo name" box below, along with your GitHub username, then click Submit for credit.</li>
       </ol>
-      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue — you still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
+      <p class="mlrk-small">Clicking "Submit for credit" opens a new tab with your answers pre-filled into a GitHub Issue. You still need to click "Submit new issue" on that page yourself to actually finish submitting.</p>
       <p class="mlrk-small"><strong>Getting a "404" page instead?</strong> Two usual causes: the repo name you typed doesn't exactly match the real one (check for a stray hyphen or different capitalization), or you're not signed in to GitHub as the account that owns the repo &mdash; a private repo looks like a 404 to anyone who isn't signed in to it.</p>
     </details>
     <div class="mlrk-fillblank">
@@ -385,16 +330,6 @@ git push</pre></li>
 </div>
 </section>
 
-<section class="mlrk-section">
-<h2>Additional resources</h2>
-<p class="mlrk-small">Not counted in the time estimate above.</p>
-<ul>
-<li><a href="https://www.callingbullshit.org/tools/tools_misleading_axes.html" target="_blank" rel="noopener">Calling Bullshit: Misleading Axes</a> — a short, sharp breakdown of how axis choices distort what a chart appears to show, useful for checking any chart an AI hands you.</li>
-<li><a href="https://ft-interactive.github.io/visual-vocabulary/" target="_blank" rel="noopener">Financial Times: Visual Vocabulary</a> — a reference of chart types sorted by the kind of question each one actually answers, handy for double-checking an AI's chart-type suggestion.</li>
-<li><a href="https://www.data-to-viz.com/caveats.html" target="_blank" rel="noopener">Data to Viz: Caveats You Should Be Aware Of</a> — common ways a chart can technically be accurate and still mislead, worth knowing whether a human or an AI built it.</li>
-</ul>
-</section>
-
 </div></main>
 
 <footer class="mlrk-footer">This reading is the property of <a href="https://marcylabschool.org" target="_blank" rel="noopener">The Marcy Lab School</a> and <a href="https://www.linkedin.com/in/angelicaspratley/" target="_blank" rel="noopener">Angelica Spratley</a>. Contact the owners before republishing, reusing, or monetizing this content elsewhere.</footer>
@@ -405,106 +340,71 @@ git push</pre></li>
   const K = ReadingKit;
   const $ = s => document.querySelector(s);
   const READING_ID = "ai-two-sets-of-eyes-reading";
-  const TITLE = "Two Sets of Eyes — Evaluating AI on Charts, Both Directions";
+  const TITLE = "Two Sets of Eyes";
 
   K.init({readingId: READING_ID, title: TITLE, progressBarSelector: "#bar", bannerSelector: "#banner"});
   K.Persona.renderPicker("#persona");
   K.Scoring.onChange(() => K.Scoring.renderChip("#scorechip"));
   K.Scoring.renderChip("#scorechip");
 
-  K.quiz({id:"q-recall-type", buttonSelector:"#card-recall-type .mlrk-choice", feedbackSelector:"#recalltypefb", correct:"trend",
-    feedback:{trend:"Right. Change over time, week by week, is what a line chart is built to show.",
-              share:"That asks for parts of a whole at one moment, which is a pie chart's job.",
-              either:"The two questions ask different things: change over time, or share of a whole right now. The question picks the chart."}});
+  K.quiz({id:"q-recall-type", buttonSelector:"#card-recall-type .mlrk-choice", feedbackSelector:"#recalltypefb", correct:"hist",
+    feedback:{hist:"Right. One variable's shape is a histogram or boxplot. Both show where values bunch up and how far they spread.",
+              line:"A line graph shows a trend over time. Here there is one column and no time order.",
+              bar:"One bar per row draws every value side by side, so you can't see where values bunch up. That's a histogram's job."}});
 
-  K.quiz({id:"q-recall-skew", buttonSelector:"#card-recall-skew .mlrk-choice", feedbackSelector:"#recallskewfb", correct:"mean", maxAttempts:1,
-    feedback:{mean:"Right. The mean adds in every value, so one huge day pulls it up. The median barely moves.",
-              median:"The median is the middle value, so one huge day barely moves it. The mean adds in every value and gets pulled up."}});
+  K.quiz({id:"q-recall-mean", buttonSelector:"#card-recall-mean .mlrk-choice", feedbackSelector:"#recallmeanfb", correct:"mean",
+    feedback:{mean:"Right. The mean adds up every value, so one huge value pulls it up. The median only cares about the middle position.",
+              median:"The median is the middle value once sorted. One huge value at the end barely moves the middle.",
+              same:"The mean uses every value's size, and the median uses only the middle position, so a huge value moves them differently."}});
 
-  K.quiz({id:"q-colors", buttonSelector:"#card-colors .mlrk-choice", feedbackSelector:"#colorsfb", correct:"colors",
-    feedback:{colors:"Right. Every bar is the same light blue. The AI described something that isn't in the picture.",
-              sort:"Check the chart: Sci-Fi, Mystery, Kids, Romance, Nonfiction is not biggest to smallest. This claim holds up.",
-              label:"Check the chart: no bar has a number on it. This claim holds up."}});
+  K.quiz({id:"q-meanmed", buttonSelector:"#card-meanmed .mlrk-choice", feedbackSelector:"#meanmedfb", correct:"mean",
+    feedback:{mean:"Right. The mean is 9.9 and the median is 4.5. The one 60-book trade-in pulls the mean far above where most customers sit.",
+              median:"Most customers do bring a few books, which keeps the median low, at 4.5. The 60-book trade-in pulls the mean up to 9.9.",
+              same:"They would be close if the values were balanced. One trade-in of 60 books pulls the mean to 9.9 while the median stays at 4.5."}});
 
-  K.quiz({id:"q-caption", buttonSelector:"#card-caption .mlrk-choice", feedbackSelector:"#captionfb", correct:"consistently",
-    feedback:{consistently:"Right. Three of the four Saturdays were normal days. One event made the mean tall, so \"consistently\" is a hallucinated insight.",
-              money:"The bar really does measure money from sales. Look for the word that says how often it happens.",
-              day:"\"Day\" is fine. Look for the word that claims every Saturday is like the tall bar."}});
+  K.quiz({id:"q-ai1", buttonSelector:"#card-ai1 .mlrk-choice", feedbackSelector:"#ai1fb", correct:"split",
+    feedback:{split:"Right. The number is right and the shape claim is wrong. The advice built on the shape claim is wrong too: with a mean of 9.9 and a median of 4.5, report the median.",
+              all:"The 9.9 is right, but the histogram has a long tail to the right. \"Symmetric\" is wrong, and so is using the mean as typical.",
+              none:"One claim, the mean of about 10, checks out. Judge each claim on its own instead of the whole answer at once."}});
 
-  K.quiz({id:"q-pie", buttonSelector:"#card-pie .mlrk-choice", feedbackSelector:"#piefb", correct:"no", maxAttempts:1,
-    feedback:{no:"Right. A pie chart shows one whole split into parts. It can't show a number rising or falling week to week.",
-              yes:"A pie chart can hold 12 slices, but it shows parts of one whole. It can't show change from week to week, which is Devon's question."}});
+  K.quiz({id:"q-price", buttonSelector:"#card-price .mlrk-choice", feedbackSelector:"#pricefb", correct:"gap",
+    feedback:{gap:"Right. Six cheap books and six pricey ones balance out, so the mean is $9.17 and the median $9.00. No book costs anywhere near $9.",
+              split:"Both numbers use all twelve prices. Half are $3 to $5 and half are $13 to $16, so both land in the middle.",
+              high:"Only half the books are hardcovers. The paperbacks pull both numbers down to about $9."}});
 
-  K.quiz({id:"q-fix", buttonSelector:"#card-fix .mlrk-choice", feedbackSelector:"#fixfb", correct:"line",
-    feedback:{line:"Right. Weeks in order along the bottom let the line show the rise and fall over time.",
-              sorted:"Sorting the weeks by size mixes up their order, so the trend over time disappears.",
-              smallpie:"Fewer slices is still a pie chart: parts of one whole, with no order in time."}});
+  K.dragDrop("#dragarea", "act-drag-claims");
+  K.selfCheck({buttonSelector:"#dragcheck", feedbackSelector:"#dragcheckfb", mapping:{
+    chip1:{expectedId:"zoneRight", label:"The mean price is about $9 (cell 2 shows 9.17)", expectedLabel:"Right"},
+    chip2:{expectedId:"zoneRight", label:"The mean and median are close (9.17 and 9.00)", expectedLabel:"Right"},
+    chip3:{expectedId:"zoneWrong", label:"Fairly symmetric, with one hump (the histogram has two peaks)", expectedLabel:"Wrong"},
+    chip4:{expectedId:"zoneWrong", label:"$9 is a typical price (no book costs near $9; cell 3 shows $3.83 and $14.50)", expectedLabel:"Wrong"},
+    chip5:{expectedId:"zoneUnver", label:"Most books are in good condition (the data has no condition column)", expectedLabel:"Unverifiable"}
+  }});
 
-  K.selectAll({id:"q-selectall", boxSelector:".sa-box", submitSelector:"#sasubmit", feedbackSelector:"#safb", options:[
-    {value:"a", label:"If an AI is right about three things, its fourth claim is probably right too.", correct:false,
-      hint:"Think about Devon's chart review. How many of its claims held up?",
-      explain:"The trade-in review was right about three things and still wrong about two. Each claim gets its own check."},
-    {value:"b", label:"You check each AI claim on its own against the real chart or the real numbers.", correct:true,
-      hint:"Think about how Devon handled the five claims in the trade-in review.",
-      explain:"That is verification: one claim at a time, against the real chart or data."},
-    {value:"c", label:"A chart the AI suggests needs the same check as the AI's review of your chart.", correct:true,
-      hint:"Think about the pie chart suggestion.",
-      explain:"Both directions get the same check. The pie chart suggestion would have hidden Devon's trend."},
-    {value:"d", label:"Asking the same AI to confirm its own claim counts as verification.", correct:false,
-      hint:"What does verification check a claim against?",
-      explain:"Verification checks against the real chart or data. Asking the same AI again only repeats its answer."},
-    {value:"e", label:"A median far from the mean is a sign that one value may be pulling the average.", correct:true,
-      hint:"Think about saturday_sales.py.",
-      explain:"The Saturday mean was 980.0 and the median was 460.0. One author visit pulled the mean up."}
-  ]});
+  K.quiz({id:"q-dir2", buttonSelector:"#card-dir2 .mlrk-choice", feedbackSelector:"#dir2fb", correct:"both",
+    feedback:{both:"Right. The question is about one variable's shape, and one bar per book draws a mark for every row: with 500 books, 500 bars and no shape. And cell 3 shows hardcovers average $14.50 and paperbacks $3.83, almost four times as much, not twice. A histogram (or a boxplot) of price shows the two peaks.",
+              type:"Check the claim against cell 3: hardcovers average $14.50 and paperbacks $3.83. That is almost four times as much, not twice.",
+              pass:"One bar per book draws a mark for every row. With 500 books that is 500 bars, and you can't see where prices bunch up. Showing one variable's shape is a histogram's job."}});
 
-  K.quiz({id:"q-newsit", buttonSelector:"#card-newsit .mlrk-choice", feedbackSelector:"#newsitfb", correct:"checkweeks",
-    feedback:{checkweeks:"Right. A week with two open days will have fewer trade-ins no matter what. Check that before calling it a trend.",
-              repeat:"The AI looking at the numbers doesn't mean its claim holds up. Four weeks, one of them short, is not a clear trend.",
-              askagain:"Asking the same AI again is not a check against the real data."}});
+  K.quiz({id:"q-summary", buttonSelector:"#card-summary .mlrk-choice", feedbackSelector:"#summaryfb", correct:"accept",
+    feedback:{accept:"Right. Mean 6.1 and median 5.9 sit close, and the chart shows one hump, so both claims check out. Checking doesn't mean rejecting.",
+              reject:"Last month's mistake doesn't make this answer wrong. Each claim gets its own check, and these two match your numbers.",
+              median:"The median is the safer pick for skewed data. Here the shape is symmetric with one hump, so the mean is fine too."}});
 
-  K.flipCards("#vocab", "act-flip-vocab");
-  K.freeResponse({id:"resp-rule", selector:"#rule", minWords:10});
-
-  // Typed prediction: the median of the four Saturdays.
-  K.Scoring.register("q-median",1,"quiz");
-  let medAttempts=0, medDone=false;
-  $("#mediancheck").addEventListener("click",()=>{
-    if(medDone) return;
-    medAttempts++;
-    const v = parseFloat($("#medianinput").value.replace(/[$\s,]/g,""));
-    const fb=$("#medianfb");
-    if(v===460){
-      K.Scoring.award("q-median", medAttempts===1?1:0.5);
-      fb.className="mlrk-feedback mlrk-show mlrk-good";
-      fb.innerHTML="<strong>Correct"+(medAttempts>1?" (2nd try — 0.5 pt)":" (1st try — 1 pt)")+".</strong> In order: 430, 450, 470, 2570. The middle two are 450 and 470, and halfway between them is 460. A typical Saturday is a normal day.";
-      medDone=true;
-    } else if(medAttempts>=2){
-      K.Scoring.award("q-median",0);
-      fb.className="mlrk-feedback mlrk-show mlrk-reveal";
-      fb.innerHTML="<strong>Here's the answer. You'll get it next time.</strong> The median is 460. In order the sales are 430, 450, 470, 2570, and halfway between 450 and 470 is 460.";
-      medDone=true;
-    } else {
-      const hint = v===980 ? "980 is the mean. The median is the middle of the sorted list."
-        : (v===450 || v===470) ? "That is one of the two middle numbers. With four numbers, take the halfway point between the middle two."
-        : "Sort the four numbers first. The median ignores how big the largest one is.";
-      fb.className="mlrk-feedback mlrk-show mlrk-bad";
-      fb.innerHTML="<strong>Not quite yet.</strong> "+hint;
-    }
-    fb.setAttribute("tabindex","-1");fb.focus();
-    if(medDone) K.markDone("q-median");
-  });
+  K.freeResponse({id:"resp-strategy", selector:"#strategy", minWords:8});
 
   const AI_PROMPTS = [
-    "Think of a time someone reviewed your work and caught something real, but also said one thing that missed. How did you decide which parts to use?",
-    "If a friend gave you directions that were mostly right, how would you check the one turn you weren't sure about?",
-    "What is one number you would check first the next time an AI tells you a chart shows a trend?"
+    "Draw a ___ of price, because the question is about ___. Which word fits the second blank: \"how prices are spread out\" or \"which format costs more\"? Each one leads to a different chart.",
+    "Ask an AI to explain the difference between a histogram and a bar chart, and to name a source you can read. Open that source and check that it is real and says the same thing.",
+    "Think about a time an app or a friend told you something with total confidence that turned out half right. How did you find out which half?"
   ];
   $("#aiprompt").addEventListener("click",()=>{
     const box=$("#aipromptbox");
-    box.hidden=false;
+    box.style.display="block";
     box.innerHTML="<strong>AI-brainstormed prompt:</strong> " + AI_PROMPTS[Math.floor(Math.random()*AI_PROMPTS.length)];
   });
+
+  K.flipCards("#vocab", "act-flip-vocab");
 
   $("#ghuser").value = localStorage.getItem("mlrk:ghuser") || "";
   $("#ghuser").addEventListener("input", e => localStorage.setItem("mlrk:ghuser", e.target.value));
@@ -530,7 +430,7 @@ git push</pre></li>
     if(!$("#ghuser").value.trim()){ $("#ghuser").focus(); return; }
     const fb=$("#submitfb");
     K.submitForCredit({readingId:READING_ID, title:TITLE, tags:["data-visualization"],
-      skills:["ai-literacy"], onDone(status,message){
+      skills:["ai-literacy","data-distributions-shape"], onDone(status,message){
       fb.textContent=message;
     }});
   });

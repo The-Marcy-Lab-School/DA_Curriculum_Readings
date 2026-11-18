@@ -148,7 +148,11 @@ activities gave answers away. This section **supersedes** the required-sections
 list in hard constraint 3/3a and the ~45-minute ceiling below wherever they
 conflict.
 
-### The template (target 20–25 minutes, about 1,100–1,300 words of content)
+### The template (20 minutes MAX, about 900–1,100 words of content)
+Angelica (2026-11-18): "no more than 20 mins max." The honest count from
+"Time estimate methodology" must land at 20 or under; if it doesn't, cut an
+idea block's second question or the mixed check before cutting a skill.
+About 8–11 graded items in all.
 1. **Hook + goal**: one familiar scenario, 60 words or fewer. One sentence of
    why it matters and one of what the reader already knows fold in here.
 2. **Key terms for this reading** (unnumbered, right after the hook, before
@@ -176,7 +180,7 @@ conflict.
 Do not add: a separate interviews section, "Thinking ahead", separate "Why
 this matters" / "Where you're coming from" paragraphs, more than one
 order-the-steps list, an "after watching" prompt, or the same code block shown
-more than twice. About 10–14 graded items in all.
+more than twice.
 
 ### Output rule
 Prompt above the code, then the file, then the locked Run button, then the
@@ -238,6 +242,47 @@ teaches it at first use in a 2–3 line "New in this file" note.
 Big-O (1.3) teaches growth only; Lookups (1.9) teaches building and using a
 dict. One name per idea across both: **linear search** ("also called a linear
 scan" once), **dictionary lookup**, worst case = the item is last or missing.
+
+## pandas examples are notebook cells (added 2026-11-18)
+
+From Mod 2 on, Fellows work in Jupyter notebooks with **pandas 3** (the labs
+repo was refreshed for pandas 3 on 2026-11-17). Readings in `NB_MODULES`
+(`qa/reading_qa.py`; Mod 2 now) show code as numbered notebook cells, not
+`python3` runs:
+
+```html
+<pre class="mlrk-code" data-file="pantry.ipynb" data-cell="2">df.dtypes</pre>
+<button class="mlrk-btn" data-run="pantry.ipynb" data-cell="2" data-after="q-id"></button>
+<div class="mlrk-run" data-file="pantry.ipynb" data-cell="2" hidden><pre>real output</pre></div>
+```
+The kit labels the tab "pantry.ipynb · In [2]", the output "Out [2]", and
+the button "Run cell [2]". A CSV the notebook reads is shown once as
+`<div class="mlrk-code" data-file="visits.csv">`. Keep it small (5–12 rows).
+
+- Cells run top to bottom in one namespace. The last line's value is shown
+  the way Jupyter shows it: `df["x"].mean()` shows `np.float64(21.0)`, and text
+  columns show dtype `str` (pandas 3), not `object`. Say once, in plain words,
+  what `np.float64(...)` means. Don't hand-tidy real output.
+- Keep DataFrames narrow (4–5 columns) so the text repr doesn't wrap.
+- A cell meant to fail carries `data-expect="KeyError"`; its Out block ends
+  with the real error line.
+- Fill-in cells keep `____` blanks (QA skips them). Run the completed cell
+  yourself.
+- Charts: show the cell, then the chart as an inline SVG or PNG you rendered
+  from that exact cell with matplotlib. QA runs the cell but can't compare
+  pictures, so screenshot-check it.
+- A chart-only cell (prints nothing) gets an Out block holding just the
+  `<img>`; QA accepts that when the real run prints nothing. Don't use
+  `data-live` to dodge a mismatch.
+- A pandas warning (e.g. `ChainedAssignmentError`) isn't printed output, so it
+  can't sit in an Out block. Show it in a callout under the cell.
+- Put `____` blanks only in a cell that no later cell depends on: QA skips the
+  blank cell, so a later cell using its variables would fail.
+- Screenshots: plain `--headless --screenshot` comes out blank on this Mac.
+  Try `--headless=new --run-all-compositor-stages-before-draw`; for a single
+  SVG, `qlmanage -t -s 1200 -o <dir> file.svg` always works.
+- `check_notebook_cells` runs every cell with pandas 3. Point it at one:
+  `READING_QA_PANDAS_PY=<python with pandas 3> python3 qa/reading_qa.py <path>`.
 
 ## SQL examples run in the page (added 2026-10-27)
 
@@ -400,7 +445,7 @@ Angelica's calibration: students are encountering this material for the first ti
 - Plus roughly 5-8 minutes of baseline for reading the prose/scenario/code snippets themselves, more if the reading has a lot of setup text or an SVG diagram to read.
 Add it up, round to a comfortable range (e.g. "~33-36 minutes"). This will usually land noticeably higher than a quick mental estimate — that's the point.
 
-**Target (2026-10-23, supersedes the 2026-09-01 ~45-minute ceiling): 20–25 minutes per reading, video excluded** (see "Readings a beginner can follow"). The old ceiling read: a non-complex-topic reading with videos and activities could run up to ~45 minutes. Complex topics (the list in "Inputs to gather" above — data structures, OOP, functions, recursion, stats/distributions, linear algebra, ACID, design patterns, gradient descent) can run longer than 45 minutes when the content genuinely calls for it. Either way: never under-report the time to make a reading look shorter than it actually is — if the honest count lands at 44 minutes, say 44 minutes. If a non-complex reading's honest count comes out well past 45, that's a real signal to trim activities or split the reading, not to shrink the displayed number.
+**Target (2026-11-18, supersedes both the 2026-10-23 20–25 minute target and the 2026-09-01 ~45-minute ceiling): 20 minutes MAX per reading, video excluded** (see "Readings a beginner can follow"). The old ceiling read: a non-complex-topic reading with videos and activities could run up to ~45 minutes. Complex topics (the list in "Inputs to gather" above — data structures, OOP, functions, recursion, stats/distributions, linear algebra, ACID, design patterns, gradient descent) can run longer than 45 minutes when the content genuinely calls for it. Either way: never under-report the time to make a reading look shorter than it actually is — if the honest count lands at 44 minutes, say 44 minutes. If a non-complex reading's honest count comes out well past 45, that's a real signal to trim activities or split the reading, not to shrink the displayed number.
 
 ## Submission / grading
 
